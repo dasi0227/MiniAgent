@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dasi.infrastructure.persistent.dao.IAiPromptDao">
+    <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiPrompt">
+        <result column="prompt_id" property="promptId"/>
+        <result column="prompt_name" property="promptName"/>
+        <result column="prompt_content" property="promptContent"/>
+        <result column="prompt_desc" property="promptDesc"/>
+        <result column="prompt_status" property="promptStatus"/>
+    </resultMap>
+
+    <select id="queryByPromptId" parameterType="java.lang.String" resultMap="dataMap">
+        SELECT
+            prompt_id,
+            prompt_name,
+            prompt_content,
+            prompt_desc,
+            prompt_status
+        FROM ai_prompt
+        WHERE prompt_id = #{promptId}
+    </select>
+
+    <update id="loadPromptContent">
+        UPDATE ai_prompt
+        SET prompt_content = #{promptContent}
+        WHERE prompt_id = #{promptId}
+    </update>
+</mapper>
