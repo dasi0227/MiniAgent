@@ -17,6 +17,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOriginPatterns(
+                        "https://dasi.asia",
+                        "https://www.dasi.asia",
+                        "http://dasi.asia",
+                        "http://www.dasi.asia",
                         "http://localhost:*",
                         "http://127.0.0.1:*"
                 )
