@@ -8,6 +8,7 @@ import workIconDark from '../assets/work-white.svg';
 import workIconLight from '../assets/work-black.svg';
 import { useAgentStore, useAuthStore, useChatStore, useSettingsStore } from '../router/pinia';
 import { deleteSession, insertSession, listSessions, updatePassword, updateSession } from '../request/api';
+import { parseAuthPayload } from '../request/auth';
 import { normalizeError } from '../request/request';
 
 const router = useRouter();
@@ -374,23 +375,12 @@ const saveProfile = async () => {
     }
     try {
         const resp = await updatePassword({
-            id: currentUser.value.id,
+            id: currentUser.value.userId,
             username: profileForm.username,
             oldPassword: profileForm.oldPassword,
             newPassword: profileForm.newPassword
         });
-        const payload = resp?.data || resp?.result || resp;
-        const token = payload?.token || payload?.data?.token;
-        const user =
-            payload?.user ||
-            payload?.data?.user ||
-            (payload && (payload.username || payload.role || payload.id)
-                ? {
-                      id: payload.id ?? payload.data?.id,
-                      username: payload.username ?? payload.data?.username,
-                      role: payload.role ?? payload.data?.role
-                  }
-                : null);
+        const { token, user } = parseAuthPayload(resp);
         authStore.setAuth({
             token: token || authStore.token,
             user: user || authStore.user

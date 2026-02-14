@@ -95,6 +95,24 @@ const loadSettings = () => {
     }
 };
 
+const normalizeStoredUser = (user) => {
+    if (!user || typeof user !== 'object') {
+        return null;
+    }
+    const userId = Number(user.userId);
+    const username = typeof user.username === 'string' ? user.username.trim() : '';
+    const role = typeof user.role === 'string' ? user.role.trim() : '';
+    if (!Number.isFinite(userId) || !username || !role) {
+        return null;
+    }
+    return {
+        userId,
+        username,
+        role,
+        userStatus: user.userStatus
+    };
+};
+
 const loadAuth = () => {
     try {
         const raw = localStorage.getItem(AUTH_KEY);
@@ -102,9 +120,14 @@ const loadAuth = () => {
             return { token: '', user: null };
         }
         const parsed = JSON.parse(raw);
+        const token = typeof parsed.token === 'string' ? parsed.token.trim() : '';
+        const user = normalizeStoredUser(parsed.user);
+        if (!token || !user) {
+            return { token: '', user: null };
+        }
         return {
-            token: parsed.token || '',
-            user: parsed.user || null
+            token,
+            user
         };
     } catch (error) {
         console.warn('无法解析登录信息，已清空', error);
@@ -133,7 +156,7 @@ export const useAuthStore = defineStore('auth', {
             this.persist();
         },
         setUser(user) {
-            this.user = user || null;
+            this.user = normalizeStoredUser(user);
             this.persist();
         },
         logout(redirectPath = '/login') {
@@ -141,8 +164,15 @@ export const useAuthStore = defineStore('auth', {
             window.location.href = withBasePath(redirectPath);
         },
         setAuth({ token, user }) {
-            this.token = token || '';
-            this.user = user || null;
+            const normalizedToken = typeof token === 'string' ? token.trim() : '';
+            const normalizedUser = normalizeStoredUser(user);
+            if (!normalizedToken || !normalizedUser) {
+                this.token = '';
+                this.user = null;
+            } else {
+                this.token = normalizedToken;
+                this.user = normalizedUser;
+            }
             this.persist();
         },
         clear() {

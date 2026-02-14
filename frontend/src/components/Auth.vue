@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { login, register } from '../request/api';
+import { parseAuthPayload } from '../request/auth';
 import { useAuthStore, useSettingsStore } from '../router/pinia';
 import AppFooter from './AppFooter.vue';
 
@@ -45,19 +46,7 @@ const submit = async () => {
     try {
         const api = mode.value === 'login' ? login : register;
         const resp = await api({ username: form.username.trim(), password: form.password });
-        const payload = resp?.data || resp?.result || resp;
-        const token = payload?.token || payload?.data?.token;
-        const user =
-            payload?.user ||
-            payload?.data?.user ||
-            (payload && (payload.username || payload.role || payload.id)
-                ? {
-                      id: payload.id ?? payload.data?.id,
-                      username: payload.username ?? payload.data?.username,
-                      role: payload.role ?? payload.data?.role,
-                      userStatus: payload.userStatus ?? payload.data?.userStatus
-                  }
-                : null);
+        const { token, user } = parseAuthPayload(resp);
         if (!token || !user) {
             throw new Error('登录信息异常');
         }

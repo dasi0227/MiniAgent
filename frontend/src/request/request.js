@@ -7,7 +7,6 @@ import { pushAdminErrorToast } from '../utils/adminErrorToast';
 // Prod behind nginx under /agent: VITE_API_BASE=/agent
 const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8066';
 const REQUEST_TIMEOUT = 600000;
-const SETTINGS_KEY = 'chat_settings';
 const AUTH_KEY = 'auth_info';
 const APP_BASE = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 const LOGIN_PATH = `${APP_BASE}/login`;
@@ -127,8 +126,6 @@ http.interceptors.request.use(
         } catch (e) {
             authStore = null;
         }
-        const storedSettings = localStorage.getItem(SETTINGS_KEY);
-        const settings = storedSettings ? JSON.parse(storedSettings) : {};
         const storedAuth = localStorage.getItem(AUTH_KEY);
         const auth = storedAuth ? JSON.parse(storedAuth) : {};
         const isFormData = config.data instanceof FormData;
@@ -137,7 +134,7 @@ http.interceptors.request.use(
             Accept: 'application/json',
             ...(config.headers || {})
         };
-        const token = authStore?.token || auth.token || settings.token;
+        const token = authStore?.token || auth.token;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -165,16 +162,6 @@ http.interceptors.response.use(
                 notifyAdminError(normalized, '未登录或登录已过期，请重新登录');
             }
             authStore?.clear();
-            try {
-                const settingsRaw = localStorage.getItem(SETTINGS_KEY);
-                if (settingsRaw) {
-                    const parsed = JSON.parse(settingsRaw);
-                    delete parsed.token;
-                    localStorage.setItem(SETTINGS_KEY, JSON.stringify(parsed));
-                }
-            } catch (_) {
-                // ignore
-            }
             if (router.currentRoute.value.path !== '/login' && router.currentRoute.value.path !== '/admin/login') {
                 router.replace('/login');
             }
@@ -195,9 +182,7 @@ export async function streamFetch(url, body, onData, onError, onDone, signal) {
     try {
         const storedAuth = localStorage.getItem(AUTH_KEY);
         const auth = storedAuth ? JSON.parse(storedAuth) : {};
-        const storedSettings = localStorage.getItem(SETTINGS_KEY);
-        const settings = storedSettings ? JSON.parse(storedSettings) : {};
-        const token = auth.token || settings.token;
+        const token = auth.token;
         if (token) {
             headers.Authorization = `Bearer ${token}`;
         }

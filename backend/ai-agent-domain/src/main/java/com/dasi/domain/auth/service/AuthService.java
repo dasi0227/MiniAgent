@@ -102,7 +102,7 @@ public class AuthService implements IAuthService {
         String token = jwtService.generateToken(userVO);
         return AuthResponse.builder()
                 .token(token)
-                .id(userVO.getId())
+                .userId(userVO.getId())
                 .username(userVO.getUsername())
                 .role(userVO.getRole())
                 .userStatus(userVO.getUserStatus())
