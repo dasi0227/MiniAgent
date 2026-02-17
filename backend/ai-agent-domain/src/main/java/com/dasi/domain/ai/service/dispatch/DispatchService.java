@@ -15,9 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static com.dasi.domain.ai.model.enumeration.AiArmoryType.ARMORY_WORK;
 import static com.dasi.types.constant.RedisConstant.AI_ARMORY_PREFIX;
 
 @Slf4j
@@ -83,6 +85,17 @@ public class DispatchService implements IDispatchService {
 
     @Override
     public void dispatchExecuteStrategy(ExecuteRequestEntity executeRequestEntity, SseEmitter sseEmitter) {
+
+        String agentId = executeRequestEntity.getAgentId();
+        if (agentId != null && !agentId.isBlank()) {
+            Set<String> armoryAgentIdSet = new HashSet<>();
+            armoryAgentIdSet.add(agentId);
+            try {
+                dispatchArmoryStrategy(ARMORY_WORK.getType(), armoryAgentIdSet);
+            } catch (Exception e) {
+                log.warn("【Agent 执行】动态装配失败：agentId={}, error={}", agentId, e.getMessage());
+            }
+        }
 
         IExecuteStrategy executeStrategy = executeStrategyFactory.getStrategyByAgentId(executeRequestEntity.getAgentId());
         AuthContext.UserInfo userInfo = authContext.getUser();

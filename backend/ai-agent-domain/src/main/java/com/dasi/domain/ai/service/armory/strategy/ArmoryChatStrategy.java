@@ -5,6 +5,7 @@ import com.dasi.domain.ai.model.vo.*;
 import com.dasi.domain.ai.repository.IAiRepository;
 import com.dasi.domain.ai.service.armory.ArmoryContext;
 import com.dasi.domain.ai.service.armory.IArmoryStrategy;
+import com.dasi.domain.util.jwt.AuthContext;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Supplier;
 
 import static com.dasi.domain.ai.model.enumeration.AiArmoryType.ARMORY_CHAT;
 import static com.dasi.domain.ai.model.enumeration.AiType.*;
@@ -27,6 +29,9 @@ public class ArmoryChatStrategy implements IArmoryStrategy {
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
 
+    @Resource
+    private AuthContext authContext;
+
     @Override
     public void armory(ArmoryRequestEntity armoryRequestEntity, ArmoryContext armoryContext) {
 
@@ -36,23 +41,24 @@ public class ArmoryChatStrategy implements IArmoryStrategy {
             throw new IllegalStateException("装配数据时 clientIdSet 为空");
         }
 
-        CompletableFuture<Set<AiApiVO>> aiApiSetFuture = CompletableFuture.supplyAsync(
-                () -> aiRepository.queryAiApiVOSetByClientIdSet(clientIdSet), threadPoolExecutor);
+        AuthContext.UserInfo userInfo = authContext.getUser();
+        CompletableFuture<Set<AiApiVO>> aiApiSetFuture = supplyAsyncWithAuth(
+                () -> aiRepository.queryAiApiVOSetByClientIdSet(clientIdSet), userInfo);
 
-        CompletableFuture<Set<AiModelVO>> aiModelSetFuture = CompletableFuture.supplyAsync(
-                () -> aiRepository.queryAiModelVOSetByClientIdSet(clientIdSet), threadPoolExecutor);
+        CompletableFuture<Set<AiModelVO>> aiModelSetFuture = supplyAsyncWithAuth(
+                () -> aiRepository.queryAiModelVOSetByClientIdSet(clientIdSet), userInfo);
 
-        CompletableFuture<Set<AiMcpVO>> aiMcpSetFuture = CompletableFuture.supplyAsync(
-                () -> aiRepository.queryAiMcpVOSetByClientIdSet(clientIdSet), threadPoolExecutor);
+        CompletableFuture<Set<AiMcpVO>> aiMcpSetFuture = supplyAsyncWithAuth(
+                () -> aiRepository.queryAiMcpVOSetByClientIdSet(clientIdSet), userInfo);
 
-        CompletableFuture<Map<String, AiPromptVO>> aiPromptMapFuture = CompletableFuture.supplyAsync(
-                () -> aiRepository.queryAiPromptVOMapByClientIdSet(clientIdSet), threadPoolExecutor);
+        CompletableFuture<Map<String, AiPromptVO>> aiPromptMapFuture = supplyAsyncWithAuth(
+                () -> aiRepository.queryAiPromptVOMapByClientIdSet(clientIdSet), userInfo);
 
-        CompletableFuture<Set<AiAdvisorVO>> aiAdvisorSetFuture = CompletableFuture.supplyAsync(
-                () -> aiRepository.queryAiAdvisorVOSetByClientIdSet(clientIdSet), threadPoolExecutor);
+        CompletableFuture<Set<AiAdvisorVO>> aiAdvisorSetFuture = supplyAsyncWithAuth(
+                () -> aiRepository.queryAiAdvisorVOSetByClientIdSet(clientIdSet), userInfo);
 
-        CompletableFuture<Set<AiClientVO>> aiClientSetFuture = CompletableFuture.supplyAsync(
-                () -> aiRepository.queryAiClientVOSetByClientIdSet(clientIdSet), threadPoolExecutor);
+        CompletableFuture<Set<AiClientVO>> aiClientSetFuture = supplyAsyncWithAuth(
+                () -> aiRepository.queryAiClientVOSetByClientIdSet(clientIdSet), userInfo);
 
         CompletableFuture.allOf(
                 aiApiSetFuture,
@@ -106,6 +112,19 @@ public class ArmoryChatStrategy implements IArmoryStrategy {
     @Override
     public String getType() {
         return ARMORY_CHAT.getType();
+    }
+
+    private <T> CompletableFuture<T> supplyAsyncWithAuth(Supplier<T> supplier, AuthContext.UserInfo userInfo) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (userInfo != null) {
+                authContext.set(userInfo);
+            }
+            try {
+                return supplier.get();
+            } finally {
+                authContext.clear();
+            }
+        }, threadPoolExecutor);
     }
 
 }
