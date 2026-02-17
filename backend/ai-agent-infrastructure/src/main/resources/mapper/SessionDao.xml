@@ -20,7 +20,7 @@
                session_type,
                created_at,
                updated_at
-        FROM session
+        FROM ai_session
         WHERE session_user = #{sessionUser}
         ORDER BY updated_at DESC, id DESC
     </select>
@@ -33,7 +33,7 @@
                session_type,
                created_at,
                updated_at
-        FROM session
+        FROM ai_session
         ORDER BY updated_at DESC, id DESC
     </select>
 
@@ -45,7 +45,7 @@
                session_type,
                created_at,
                updated_at
-        FROM session
+        FROM ai_session
         WHERE id = #{id}
     </select>
 
@@ -57,41 +57,41 @@
                session_type,
                created_at,
                updated_at
-        FROM session
+        FROM ai_session
         WHERE session_id = #{sessionId}
     </select>
 
     <select id="countByUserAndType" resultType="int">
         SELECT COUNT(1)
-        FROM session
+        FROM ai_session
         WHERE session_user = #{sessionUser}
           AND session_type = #{sessionType}
     </select>
 
     <select id="countAll" resultType="int">
         SELECT COUNT(1)
-        FROM session
+        FROM ai_session
     </select>
 
     <select id="countByType" resultType="int">
         SELECT COUNT(1)
-        FROM session
+        FROM ai_session
         WHERE session_type = #{sessionType}
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.Session" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO session (session_id, session_user, session_title, session_type)
+        INSERT INTO ai_session (session_id, session_user, session_title, session_type)
         VALUES (#{sessionId}, #{sessionUser}, #{sessionTitle}, #{sessionType})
     </insert>
 
     <update id="updateTitle">
-        UPDATE session
+        UPDATE ai_session
         SET session_title = #{sessionTitle}
         WHERE id = #{id}
     </update>
 
     <delete id="delete">
-        DELETE FROM session
+        DELETE FROM ai_session
         WHERE id = #{id}
     </delete>
 </mapper>
