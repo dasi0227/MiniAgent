@@ -44,6 +44,9 @@ public class ExecuteSupervisorNode extends AbstractExecuteNode {
         try {
             // 获取客户端
             AiFlowVO aiFlowVO = executeContext.getAiFlowVOMap().get(SUPERVISOR.getRole());
+            if (aiFlowVO == null) {
+                throw new IllegalStateException("Supervisor flow 未配置");
+            }
             String clientBeanName = CLIENT.getBeanName(aiFlowVO.getClientId());
             ChatClient supervisorClient = getBean(clientBeanName);
 

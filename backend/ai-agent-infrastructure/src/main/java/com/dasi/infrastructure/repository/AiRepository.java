@@ -340,7 +340,15 @@ public class AiRepository implements IAiRepository {
             return Map.of();
         }
 
-        AiAgent aiAgent = aiAgentDao.queryAgentByAgentIdWithFrom(agentId, authContext.getId());
+        Long userId = authContext.getId();
+        AiAgent aiAgent = null;
+        if (userId != null) {
+            aiAgent = aiAgentDao.queryAgentByAgentIdWithFrom(agentId, userId);
+        }
+        if (aiAgent == null) {
+            // 执行链路在异步线程下可能丢失或污染登录上下文，回退到 agentId 查询保证 flow 可用。
+            aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
+        }
         if (aiAgent == null || Integer.valueOf(0).equals(aiAgent.getAgentStatus())) {
             return Map.of();
         }

@@ -38,6 +38,9 @@ public class ExecutePerformerNode extends AbstractExecuteNode {
         try {
             // 获取客户端
             AiFlowVO aiFlowVO = executeContext.getAiFlowVOMap().get(PERFORMER.getRole());
+            if (aiFlowVO == null) {
+                throw new IllegalStateException("Performer flow 未配置");
+            }
             String clientBeanName = CLIENT.getBeanName(aiFlowVO.getClientId());
             ChatClient performerClient = getBean(clientBeanName);
 

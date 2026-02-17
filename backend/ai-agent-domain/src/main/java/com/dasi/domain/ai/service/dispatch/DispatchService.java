@@ -8,6 +8,7 @@ import com.dasi.domain.ai.service.armory.ArmoryStrategyFactory;
 import com.dasi.domain.ai.service.armory.IArmoryStrategy;
 import com.dasi.domain.ai.service.execute.ExecuteStrategyFactory;
 import com.dasi.domain.ai.service.execute.IExecuteStrategy;
+import com.dasi.domain.util.jwt.AuthContext;
 import com.dasi.domain.util.redis.IRedisService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,9 @@ public class DispatchService implements IDispatchService {
 
     @Resource
     private IRedisService redisService;
+
+    @Resource
+    private AuthContext authContext;
 
     @Override
     public void dispatchArmoryStrategy(String armoryType, Set<String> armoryIdSet) {
@@ -81,12 +85,16 @@ public class DispatchService implements IDispatchService {
     public void dispatchExecuteStrategy(ExecuteRequestEntity executeRequestEntity, SseEmitter sseEmitter) {
 
         IExecuteStrategy executeStrategy = executeStrategyFactory.getStrategyByAgentId(executeRequestEntity.getAgentId());
+        AuthContext.UserInfo userInfo = authContext.getUser();
 
         if (executeStrategy == null) {
             throw new IllegalStateException("执行策略不存在");
         }
 
         threadPoolExecutor.execute(() -> {
+            if (userInfo != null) {
+                authContext.set(userInfo);
+            }
             try {
                 log.info("========================================================================================");
                 executeStrategy.execute(executeRequestEntity, sseEmitter);
@@ -100,6 +108,7 @@ public class DispatchService implements IDispatchService {
                     log.error("【Agent 执行】error={}", e.getMessage(), e);
                 }
             } finally {
+                authContext.clear();
                 sseEmitter.complete();
             }
         });

@@ -39,6 +39,9 @@ public class ExecuteAnalyzerNode extends AbstractExecuteNode {
 
             // 获取客户端
             AiFlowVO aiFlowVO = executeContext.getAiFlowVOMap().get(ANALYZER.getRole());
+            if (aiFlowVO == null) {
+                throw new IllegalStateException("Analyzer flow 未配置");
+            }
             String clientBeanName = CLIENT.getBeanName(aiFlowVO.getClientId());
             ChatClient analyzerClient = getBean(clientBeanName);
 
