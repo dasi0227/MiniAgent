@@ -1,6 +1,8 @@
 package com.dasi.trigger.handler;
 
 import com.dasi.types.dto.result.Result;
+import com.dasi.types.exception.AdminException;
+import com.dasi.types.exception.AuthException;
 import com.dasi.types.exception.DependencyConflictException;
 import com.dasi.types.exception.SessionException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DependencyConflictException.class)
     public Result<Void> handleConflict(DependencyConflictException e) {
         log.warn("依赖冲突: {}", e.getMessage());
+        return Result.error(e.getMessage());
+    }
+
+    @ExceptionHandler(AdminException.class)
+    public Result<Void> handleAdmin(AdminException e) {
+        log.warn("业务异常: {}", e.getMessage());
+        return Result.error(e.getMessage());
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public Result<Void> handleAuth(AuthException e) {
+        log.warn("鉴权异常: {}", e.getMessage());
         return Result.error(e.getMessage());
     }
 

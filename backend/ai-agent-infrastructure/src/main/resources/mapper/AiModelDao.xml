@@ -8,6 +8,7 @@
         <result column="api_id" property="apiId"/>
         <result column="model_name" property="modelName"/>
         <result column="model_type" property="modelType"/>
+        <result column="model_from" property="modelFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -18,10 +19,35 @@
                api_id,
                model_name,
                model_type,
+               model_from,
                create_time,
                update_time
         FROM ai_model
         WHERE model_id = #{modelId}
+          AND model_from = 0
+    </select>
+
+    <select id="queryByModelIdWithFrom" resultMap="dataMap">
+        SELECT id,
+               model_id,
+               api_id,
+               model_name,
+               model_type,
+               model_from,
+               create_time,
+               update_time
+        FROM ai_model
+        WHERE model_id = #{modelId}
+        <choose>
+            <when test="userId != null">
+                AND model_from IN (0, #{userId})
+            </when>
+            <otherwise>
+                AND model_from = 0
+            </otherwise>
+        </choose>
+        ORDER BY model_from DESC, id DESC
+        LIMIT 1
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -30,10 +56,12 @@
                api_id,
                model_name,
                model_type,
+               model_from,
                create_time,
                update_time
         FROM ai_model
         <where>
+            AND model_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND model_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -41,7 +69,7 @@
                 AND model_name LIKE CONCAT('%', #{nameKeyword}, '%')
             </if>
             <if test="apiId != null and apiId != ''">
-                AND model_name LIKE CONCAT('%', #{apiId}, '%')
+                AND api_id = #{apiId}
             </if>
         </where>
         ORDER BY update_time DESC, id DESC
@@ -54,6 +82,7 @@
         SELECT COUNT(1)
         FROM ai_model
         <where>
+            AND model_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND model_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -66,6 +95,7 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_model
+        WHERE model_from = 0
     </select>
 
     <select id="queryById" resultMap="dataMap">
@@ -74,32 +104,41 @@
                api_id,
                model_name,
                model_type,
+               model_from,
                create_time,
                update_time
         FROM ai_model
         WHERE id = #{id}
+          AND model_from = 0
     </select>
 
     <select id="queryModelIdByApiId" resultType="java.lang.String">
         SELECT model_id
         FROM ai_model
         WHERE api_id = #{apiId}
+          AND model_from = 0
     </select>
 
     <select id="listModelId" resultType="java.lang.String">
         SELECT model_id
         FROM ai_model
+        WHERE model_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiModel">
         INSERT INTO ai_model (model_id,
                               api_id,
                               model_name,
-                              model_type)
+                              model_type,
+                              model_from)
         VALUES (#{modelId},
                 #{apiId},
                 #{modelName},
-                #{modelType})
+                #{modelType},
+                <choose>
+                    <when test="modelFrom != null">#{modelFrom}</when>
+                    <otherwise>0</otherwise>
+                </choose>)
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiModel">
@@ -111,11 +150,13 @@
             <if test="modelType != null">model_type = #{modelType},</if>
         </set>
         WHERE id = #{id}
+          AND model_from = 0
     </update>
 
     <delete id="delete">
         DELETE
         FROM ai_model
         WHERE id = #{id}
+          AND model_from = 0
     </delete>
 </mapper>

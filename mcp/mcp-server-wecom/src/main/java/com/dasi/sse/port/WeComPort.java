@@ -11,14 +11,18 @@ import com.dasi.sse.dto.SendTextHttpRequest;
 import com.dasi.sse.http.IWeComHttp;
 import com.dasi.type.properties.WeComProperties;
 import com.dasi.type.util.CacheUtil;
+import com.dasi.type.util.SecretHeaderUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -37,16 +41,17 @@ public class WeComPort implements IWeComPort {
     @Resource
     private CacheUtil cacheUtil;
 
-    private String getAccessToken() throws IOException {
+    private String getAccessToken(String corpid, String corpsecret) throws IOException {
 
-        String cachedToken = cacheUtil.getWithTtl(ACCESS_TOKEN_CACHE_KEY, String.class);
+        String cacheKey = buildAccessTokenCacheKey(corpid, corpsecret);
+        String cachedToken = cacheUtil.getWithTtl(cacheKey, String.class);
         if (cachedToken != null && !cachedToken.isBlank()) {
             return cachedToken;
         }
 
         Call<GetAccessTokenResponse> call = weComHttp.getAccessToken(
-                weComProperties.getCorpid(),
-                weComProperties.getCorpsecret()
+                corpid,
+                corpsecret
         );
 
         Response<GetAccessTokenResponse> callResponse = call.execute();
@@ -83,9 +88,9 @@ public class WeComPort implements IWeComPort {
             ttlSeconds = Math.max(1L, expiresIn - ACCESS_TOKEN_SKEW_SECONDS);
         }
 
-        cacheUtil.putWithTtl(ACCESS_TOKEN_CACHE_KEY, accessToken, Duration.ofSeconds(ttlSeconds));
+        cacheUtil.putWithTtl(cacheKey, accessToken, Duration.ofSeconds(ttlSeconds));
 
-        log.info("调用 HTTP 获取企业微信令牌：token={}", accessToken);
+        log.info("调用 HTTP 获取企业微信令牌成功");
 
         return accessToken;
     }
@@ -94,9 +99,15 @@ public class WeComPort implements IWeComPort {
     public SendMessageToolResponse sendTextCard(SendTextCardToolRequest toolRequest) throws IOException {
 
         SendMessageToolResponse toolResponse = new SendMessageToolResponse();
+        WeComConfig weComConfig = resolveConfig();
+        if (!StringUtils.hasText(weComConfig.corpid()) || !StringUtils.hasText(weComConfig.corpsecret()) || weComConfig.agentid() == null) {
+            toolResponse.setCode(500);
+            toolResponse.setInfo("WeCom 参数未配置");
+            return toolResponse;
+        }
 
         // 获取令牌
-        String accessToken = getAccessToken();
+        String accessToken = getAccessToken(weComConfig.corpid(), weComConfig.corpsecret());
         if (accessToken == null || accessToken.isBlank()) {
             toolResponse.setCode(500);
             toolResponse.setInfo("WeCom 获取 access_token 失败");
@@ -111,7 +122,7 @@ public class WeComPort implements IWeComPort {
 
         // 构造网络请求体
         SendTextCardHttpRequest httpRequest = new SendTextCardHttpRequest();
-        httpRequest.setAgentid(weComProperties.getAgentid());
+        httpRequest.setAgentid(weComConfig.agentid());
         httpRequest.setTextcard(textCard);
 
         // 发送网络请求
@@ -126,9 +137,15 @@ public class WeComPort implements IWeComPort {
     public SendMessageToolResponse sendText(SendTextToolRequest toolRequest) throws IOException {
 
         SendMessageToolResponse toolResponse = new SendMessageToolResponse();
+        WeComConfig weComConfig = resolveConfig();
+        if (!StringUtils.hasText(weComConfig.corpid()) || !StringUtils.hasText(weComConfig.corpsecret()) || weComConfig.agentid() == null) {
+            toolResponse.setCode(500);
+            toolResponse.setInfo("WeCom 参数未配置");
+            return toolResponse;
+        }
 
         // 获取令牌
-        String accessToken = getAccessToken();
+        String accessToken = getAccessToken(weComConfig.corpid(), weComConfig.corpsecret());
         if (accessToken == null || accessToken.isBlank()) {
             toolResponse.setCode(500);
             toolResponse.setInfo("WeCom access_token 获取失败");
@@ -141,7 +158,7 @@ public class WeComPort implements IWeComPort {
 
         // 构造网络请求体
         SendTextHttpRequest httpRequest = new SendTextHttpRequest();
-        httpRequest.setAgentid(weComProperties.getAgentid());
+        httpRequest.setAgentid(weComConfig.agentid());
         httpRequest.setText(text);
 
         // 发送网络请求
@@ -179,5 +196,33 @@ public class WeComPort implements IWeComPort {
         toolResponse.setMsgId(httpResponse.getMsgid());
 
         return toolResponse;
+    }
+
+    private WeComConfig resolveConfig() {
+        Map<String, String> secretMap = SecretHeaderUtil.getSecretMap();
+        String corpid = SecretHeaderUtil.resolve(secretMap, "corpid", weComProperties.getCorpid());
+        String corpsecret = SecretHeaderUtil.resolve(secretMap, "corpsecret", weComProperties.getCorpsecret());
+        String agentidRaw = SecretHeaderUtil.resolve(secretMap, "agentid", weComProperties.getAgentid() == null ? null : weComProperties.getAgentid().toString());
+        Integer agentid = parseInteger(agentidRaw);
+        return new WeComConfig(corpid, corpsecret, agentid);
+    }
+
+    private Integer parseInteger(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String buildAccessTokenCacheKey(String corpid, String corpsecret) {
+        int hash = Objects.hash(corpid, corpsecret);
+        return ACCESS_TOKEN_CACHE_KEY + ":" + Integer.toHexString(hash);
+    }
+
+    private record WeComConfig(String corpid, String corpsecret, Integer agentid) {
     }
 }

@@ -39,6 +39,9 @@ public class AiClient {
     /** 状态：0-禁用，1-启用 */
     private Integer clientStatus;
 
+    /** 归属用户 id：0-系统，其它-用户 id */
+    private Long clientFrom;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 

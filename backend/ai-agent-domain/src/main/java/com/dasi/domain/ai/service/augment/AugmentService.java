@@ -1,6 +1,8 @@
 package com.dasi.domain.ai.service.augment;
 
 import com.dasi.domain.ai.repository.IAiRepository;
+import com.dasi.domain.user.repository.IUserMcpRepository;
+import com.dasi.domain.util.jwt.AuthContext;
 import com.dasi.domain.ai.model.enumeration.AiMcpType;
 import com.dasi.domain.ai.model.vo.AiMcpVO;
 import io.modelcontextprotocol.client.McpClient;
@@ -21,16 +23,22 @@ import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class AugmentService implements IAugmentService {
+
+    private static final String MCP_SECRET_MAP_HEADER = "X-MCP-SECRET-MAP";
 
     public static final String RAG_SYSTEM_PROMPT = """
             你是一个检索增强问答助手（RAG），你会收到一段参考资料（DOCUMENTS）。
@@ -52,6 +60,12 @@ public class AugmentService implements IAugmentService {
 
     @Resource
     private IAiRepository aiRepository;
+
+    @Resource
+    private IUserMcpRepository userMcpRepository;
+
+    @Resource
+    private AuthContext authContext;
 
     @Override
     public List<Message> augmentRagMessage(String userMessage, String ragTag) {
@@ -103,6 +117,9 @@ public class AugmentService implements IAugmentService {
 
         for (AiMcpVO aiMcpVO : aiMcpVOList) {
 
+            Map<String, String> secretMap = resolveSensitiveMcpSecretMap(aiMcpVO.getMcpId());
+            String secretHeaderValue = encodeSecretHeader(secretMap);
+
             McpSyncClient mcpSyncClient = null;
 
             switch (AiMcpType.fromString(aiMcpVO.getMcpType())) {
@@ -111,10 +128,14 @@ public class AugmentService implements IAugmentService {
                     String baseUri = sseConfig.getBaseUri();
                     String sseEndPoint = sseConfig.getSseEndPoint();
 
-                    HttpClientSseClientTransport sseClient = HttpClientSseClientTransport
+                    HttpClientSseClientTransport.Builder transportBuilder = HttpClientSseClientTransport
                             .builder(baseUri)
-                            .sseEndpoint(sseEndPoint)
-                            .build();
+                            .sseEndpoint(sseEndPoint);
+                    if (secretHeaderValue != null) {
+                        transportBuilder.customizeRequest(builder -> builder.header(MCP_SECRET_MAP_HEADER, secretHeaderValue));
+                    }
+
+                    HttpClientSseClientTransport sseClient = transportBuilder.build();
 
                     mcpSyncClient = McpClient
                             .sync(sseClient)
@@ -128,10 +149,23 @@ public class AugmentService implements IAugmentService {
                     Map<String, AiMcpVO.StdioConfig.Stdio> stdioMap = stdioConfig.getStdio();
                     AiMcpVO.StdioConfig.Stdio stdio = stdioMap.get(aiMcpVO.getMcpId());
 
+                    Map<String, String> env = new HashMap<>();
+                    if (stdio.getEnv() != null && !stdio.getEnv().isEmpty()) {
+                        env.putAll(stdio.getEnv());
+                    }
+                    if (secretHeaderValue != null) {
+                        env.put("MCP_SECRET_MAP_B64", secretHeaderValue);
+                    }
+                    if (secretMap != null && !secretMap.isEmpty()) {
+                        for (Map.Entry<String, String> entry : secretMap.entrySet()) {
+                            env.put("DASI_SECRET_" + entry.getKey().toUpperCase(Locale.ROOT), entry.getValue());
+                        }
+                    }
+
                     ServerParameters serverParameters = ServerParameters
                             .builder(stdio.getCommand())
                             .args(stdio.getArgs())
-                            .env(stdio.getEnv())
+                            .env(env)
                             .build();
 
                     StdioClientTransport stdioClient = new StdioClientTransport(serverParameters);
@@ -149,6 +183,61 @@ public class AugmentService implements IAugmentService {
         }
 
         return new SyncMcpToolCallbackProvider(mcpSyncClientList.toArray(new McpSyncClient[0]));
+    }
+
+    private Map<String, String> resolveSensitiveMcpSecretMap(String mcpId) {
+        if (!isSensitiveMcp(mcpId)) {
+            return Map.of();
+        }
+
+        Long userId = authContext.getId();
+        if (userId == null) {
+            throw new IllegalStateException("请先完成配置");
+        }
+        Map<String, String> secretMap = userMcpRepository.querySecretPlainMap(userId, mcpId);
+        if (secretMap == null || secretMap.isEmpty()) {
+            throw new IllegalStateException("请先完成配置");
+        }
+
+        List<String> requiredKeyList = requiredSecretKeys(mcpId);
+        for (String requiredKey : requiredKeyList) {
+            String secretValue = secretMap.get(requiredKey);
+            if (secretValue == null || secretValue.isBlank()) {
+                throw new IllegalStateException("请先完成配置");
+            }
+        }
+
+        return secretMap;
+    }
+
+    private boolean isSensitiveMcp(String mcpId) {
+        if (mcpId == null) {
+            return false;
+        }
+        return "wecom".equalsIgnoreCase(mcpId)
+                || "email".equalsIgnoreCase(mcpId)
+                || "csdn".equalsIgnoreCase(mcpId);
+    }
+
+    private List<String> requiredSecretKeys(String mcpId) {
+        if ("wecom".equalsIgnoreCase(mcpId)) {
+            return List.of("corpid", "corpsecret", "agentid");
+        }
+        if ("email".equalsIgnoreCase(mcpId)) {
+            return List.of("smtpHost", "smtpPort", "smtpUsername", "smtpPassword", "fromAddress", "fromName");
+        }
+        if ("csdn".equalsIgnoreCase(mcpId)) {
+            return List.of("cookie", "coverUrl", "categories", "tags");
+        }
+        return List.of();
+    }
+
+    private String encodeSecretHeader(Map<String, String> secretMap) {
+        if (secretMap == null || secretMap.isEmpty()) {
+            return null;
+        }
+        String json = com.alibaba.fastjson2.JSON.toJSONString(secretMap);
+        return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
     }
 
 }

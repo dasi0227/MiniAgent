@@ -11,6 +11,8 @@ public interface IAiApiDao {
 
     AiApi queryByApiId(@Param("apiId") String apiId);
 
+    AiApi queryByApiIdWithFrom(@Param("apiId") String apiId, @Param("userId") Long userId);
+
     List<AiApi> page(@Param("idKeyword") String idKeyword,
                      @Param("offset") Integer offset,
                      @Param("size") Integer size);

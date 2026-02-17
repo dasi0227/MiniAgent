@@ -7,7 +7,20 @@ import chatIconLight from '../assets/chat-black.svg';
 import workIconDark from '../assets/work-white.svg';
 import workIconLight from '../assets/work-black.svg';
 import { useAgentStore, useAuthStore, useChatStore, useSettingsStore } from '../router/pinia';
-import { deleteSession, insertSession, listSessions, updatePassword, updateSession } from '../request/api';
+import {
+    deleteSession,
+    insertSession,
+    listSessions,
+    updatePassword,
+    updateSession,
+    userMcpDelete,
+    userMcpExport,
+    userMcpInsert,
+    userMcpList,
+    userMcpTest,
+    userMcpToggle,
+    userMcpUpdate
+} from '../request/api';
 import { parseAuthPayload } from '../request/auth';
 import { normalizeError } from '../request/request';
 
@@ -50,10 +63,26 @@ const showNewSessionPicker = ref(false);
 const showProfile = ref(false);
 const profileSaving = ref(false);
 const profileError = ref('');
+const profileTab = ref('profile');
+const mcpLoading = ref(false);
+const mcpError = ref('');
+const mcpList = ref([]);
+const mcpEditing = ref(false);
 const profileForm = reactive({
     username: currentUser.value.username || '',
     oldPassword: '',
     newPassword: ''
+});
+const mcpForm = reactive({
+    id: null,
+    mcpId: '',
+    mcpName: '',
+    mcpType: 'sse',
+    mcpConfig: '',
+    mcpDesc: '',
+    mcpTimeout: 180,
+    mcpChat: 1,
+    secretMapText: ''
 });
 const sessionLoading = ref(false);
 const sessionError = ref('');
@@ -104,6 +133,12 @@ const redirectWelcomeIfNoSession = () => {
 const goWelcome = () => {
     if (!isWelcomeRoute.value) {
         router.push('/welcome');
+    }
+};
+
+const goRoute = (path) => {
+    if (route.path !== path) {
+        router.push(path);
     }
 };
 
@@ -356,6 +391,9 @@ const openProfile = () => {
     profileForm.oldPassword = '';
     profileForm.newPassword = '';
     profileError.value = '';
+    profileTab.value = 'profile';
+    resetMcpForm();
+    loadUserMcp();
     showProfile.value = true;
 };
 
@@ -363,6 +401,8 @@ const closeProfile = () => {
     showProfile.value = false;
     profileSaving.value = false;
     profileError.value = '';
+    mcpError.value = '';
+    mcpEditing.value = false;
 };
 
 const saveProfile = async () => {
@@ -402,6 +442,137 @@ const handleLogout = () => {
 
 const toggleTheme = () => {
     settingsStore.updateSettings({ theme: isDarkTheme.value ? 'light' : 'dark' });
+};
+
+const resetMcpForm = () => {
+    mcpForm.id = null;
+    mcpForm.mcpId = '';
+    mcpForm.mcpName = '';
+    mcpForm.mcpType = 'sse';
+    mcpForm.mcpConfig = '';
+    mcpForm.mcpDesc = '';
+    mcpForm.mcpTimeout = 180;
+    mcpForm.mcpChat = 1;
+    mcpForm.secretMapText = '';
+    mcpEditing.value = false;
+};
+
+const loadUserMcp = async () => {
+    mcpLoading.value = true;
+    mcpError.value = '';
+    try {
+        const resp = await userMcpList({});
+        const list = pickData(resp, '获取 MCP 失败') || [];
+        mcpList.value = Array.isArray(list) ? list : [];
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || '获取 MCP 失败';
+    } finally {
+        mcpLoading.value = false;
+    }
+};
+
+const editMcp = (item) => {
+    if (!item || !item.editable) return;
+    mcpForm.id = item.id;
+    mcpForm.mcpId = item.mcpId || '';
+    mcpForm.mcpName = item.mcpName || '';
+    mcpForm.mcpType = item.mcpType || 'sse';
+    mcpForm.mcpConfig = item.mcpConfig || '';
+    mcpForm.mcpDesc = item.mcpDesc || '';
+    mcpForm.mcpTimeout = item.mcpTimeout ?? 180;
+    mcpForm.mcpChat = item.mcpChat ?? 1;
+    mcpForm.secretMapText = '';
+    mcpEditing.value = true;
+};
+
+const saveMcp = async () => {
+    if (!mcpForm.mcpId.trim() || !mcpForm.mcpName.trim() || !mcpForm.mcpType.trim() || !mcpForm.mcpConfig.trim()) {
+        mcpError.value = '请完整填写 MCP 必填字段';
+        return;
+    }
+    mcpError.value = '';
+    let secretMap = null;
+    if (mcpForm.secretMapText.trim()) {
+        try {
+            const parsed = JSON.parse(mcpForm.secretMapText);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                secretMap = parsed;
+            } else {
+                mcpError.value = 'secretMap 必须是 JSON 对象';
+                return;
+            }
+        } catch (error) {
+            mcpError.value = 'secretMap 不是合法 JSON';
+            return;
+        }
+    }
+    const payload = {
+        id: mcpForm.id,
+        mcpId: mcpForm.mcpId,
+        mcpName: mcpForm.mcpName,
+        mcpType: mcpForm.mcpType,
+        mcpConfig: mcpForm.mcpConfig,
+        mcpDesc: mcpForm.mcpDesc,
+        mcpTimeout: Number(mcpForm.mcpTimeout) || 180,
+        mcpChat: Number(mcpForm.mcpChat) || 0,
+        secretMap
+    };
+    try {
+        if (mcpEditing.value && mcpForm.id) {
+            await userMcpUpdate(payload);
+        } else {
+            await userMcpInsert(payload);
+        }
+        resetMcpForm();
+        await loadUserMcp();
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || '保存 MCP 失败';
+    }
+};
+
+const deleteMcp = async (item) => {
+    if (!item?.editable) return;
+    try {
+        await userMcpDelete(item.id);
+        if (mcpForm.id === item.id) {
+            resetMcpForm();
+        }
+        await loadUserMcp();
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || '删除 MCP 失败';
+    }
+};
+
+const toggleMcp = async (item) => {
+    if (!item?.editable) return;
+    try {
+        const nextStatus = item.mcpChat === 1 ? 0 : 1;
+        await userMcpToggle(item.id, nextStatus);
+        await loadUserMcp();
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || '切换 MCP 失败';
+    }
+};
+
+const testMcp = async (item) => {
+    try {
+        const resp = await userMcpTest({ mcpId: item.mcpId });
+        const result = pickData(resp, 'MCP 测试失败') || {};
+        mcpError.value = result.message || (result.ok ? '连接参数已配置' : '请先完成配置');
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || 'MCP 测试失败';
+    }
+};
+
+const exportMcp = async (item) => {
+    try {
+        const resp = await userMcpExport({ mcpId: item.mcpId });
+        const data = pickData(resp, '导出 MCP 失败') || {};
+        await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+        mcpError.value = '已复制导出 JSON 到剪贴板';
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || '导出 MCP 失败';
+    }
 };
 </script>
 
@@ -456,6 +627,29 @@ const toggleTheme = () => {
             >
                 ＋ 新建会话
             </button>
+            <div class="grid grid-cols-3 gap-[6px]">
+                <button
+                    class="rounded-[10px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[7px] text-[12px] hover:bg-[rgba(255,255,255,0.16)]"
+                    type="button"
+                    @click="goRoute('/studio')"
+                >
+                    Studio
+                </button>
+                <button
+                    class="rounded-[10px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[7px] text-[12px] hover:bg-[rgba(255,255,255,0.16)]"
+                    type="button"
+                    @click="goRoute('/plaza')"
+                >
+                    Plaza
+                </button>
+                <button
+                    class="rounded-[10px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[7px] text-[12px] hover:bg-[rgba(255,255,255,0.16)]"
+                    type="button"
+                    @click="goRoute('/repository')"
+                >
+                    Repo
+                </button>
+            </div>
             <div v-if="sessionLoading" class="text-[12px] text-[rgba(231,236,244,0.7)]">会话加载中...</div>
             <div v-else-if="sessionError" class="text-[12px] text-[#fca5a5]">{{ sessionError }}</div>
 
@@ -699,58 +893,113 @@ const toggleTheme = () => {
             @click.self="closeProfile"
         >
             <div
-                class="w-full max-w-[520px] rounded-[14px] border border-[var(--border-color)] bg-white text-[var(--text-primary)] shadow-[0_20px_50px_rgba(15,23,42,0.2)]"
+                class="w-full max-w-[820px] rounded-[14px] border border-[var(--border-color)] bg-white text-[var(--text-primary)] shadow-[0_20px_50px_rgba(15,23,42,0.2)]"
             >
                 <div class="flex items-center justify-between border-b border-[var(--border-color)] px-[18px] py-[14px]">
-                    <div class="text-[16px] font-bold">个人资料</div>
+                    <div class="text-[16px] font-bold">个人中心</div>
                     <button class="text-[20px] text-[var(--text-secondary)]" type="button" @click="closeProfile">×</button>
                 </div>
-                <div class="space-y-[14px] px-[18px] py-[16px]">
-                    <div>
-                        <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">用户名</div>
-                        <input
-                            v-model="profileForm.username"
-                            class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
-                            placeholder="请输入用户名"
-                        />
-                    </div>
-                    <div class="grid grid-cols-2 gap-[12px] max-[520px]:grid-cols-1">
-                        <div>
-                            <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">旧密码</div>
-                            <input
-                                v-model="profileForm.oldPassword"
-                                type="password"
-                                class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
-                                placeholder="修改密码时必填"
-                            />
-                        </div>
-                        <div>
-                            <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">新密码</div>
-                            <input
-                                v-model="profileForm.newPassword"
-                                type="password"
-                                class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
-                                placeholder="输入新密码"
-                            />
-                        </div>
-                    </div>
-                    <div class="text-[12px] text-[#f87171]" v-if="profileError">{{ profileError }}</div>
-                    <div class="flex items-center justify-end gap-[10px] border-t border-[var(--border-color)] pt-[14px]">
+                <div class="px-[18px] py-[14px]">
+                    <div class="mb-[12px] inline-flex rounded-[10px] border border-[var(--border-color)] bg-[#f7f9fc] p-[4px]">
                         <button
-                            class="rounded-[10px] border border-[var(--border-color)] bg-white px-[14px] py-[10px] text-[14px] font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fc]"
-                            type="button"
-                            @click="closeProfile"
+                            class="rounded-[8px] px-[12px] py-[6px] text-[13px] font-semibold"
+                            :class="profileTab === 'profile' ? 'bg-white text-[var(--accent-color)] shadow-sm' : 'text-[var(--text-secondary)]'"
+                            @click="profileTab = 'profile'"
                         >
-                            取消
+                            个人资料
                         </button>
                         <button
-                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
-                            type="button"
-                            :disabled="profileSaving"
-                            @click="saveProfile"
+                            class="rounded-[8px] px-[12px] py-[6px] text-[13px] font-semibold"
+                            :class="profileTab === 'mcp' ? 'bg-white text-[var(--accent-color)] shadow-sm' : 'text-[var(--text-secondary)]'"
+                            @click="profileTab = 'mcp'"
                         >
-                            {{ profileSaving ? '保存中...' : '保存' }}
+                            MCP 配置
                         </button>
+                    </div>
+
+                    <div v-if="profileTab === 'profile'" class="space-y-[14px]">
+                        <div>
+                            <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">用户名</div>
+                            <input
+                                v-model="profileForm.username"
+                                class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                                placeholder="请输入用户名"
+                            />
+                        </div>
+                        <div class="grid grid-cols-2 gap-[12px] max-[520px]:grid-cols-1">
+                            <div>
+                                <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">旧密码</div>
+                                <input
+                                    v-model="profileForm.oldPassword"
+                                    type="password"
+                                    class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                                    placeholder="修改密码时必填"
+                                />
+                            </div>
+                            <div>
+                                <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">新密码</div>
+                                <input
+                                    v-model="profileForm.newPassword"
+                                    type="password"
+                                    class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] text-[14px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                                    placeholder="输入新密码"
+                                />
+                            </div>
+                        </div>
+                        <div class="text-[12px] text-[#f87171]" v-if="profileError">{{ profileError }}</div>
+                        <div class="flex items-center justify-end gap-[10px] border-t border-[var(--border-color)] pt-[14px]">
+                            <button
+                                class="rounded-[10px] border border-[var(--border-color)] bg-white px-[14px] py-[10px] text-[14px] font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fc]"
+                                type="button"
+                                @click="closeProfile"
+                            >
+                                取消
+                            </button>
+                            <button
+                                class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+                                type="button"
+                                :disabled="profileSaving"
+                                @click="saveProfile"
+                            >
+                                {{ profileSaving ? '保存中...' : '保存' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-else class="space-y-[12px]">
+                        <div class="grid grid-cols-2 gap-[10px] max-[680px]:grid-cols-1">
+                            <input v-model="mcpForm.mcpId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="mcpId（如 wecom）" />
+                            <input v-model="mcpForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="mcpName" />
+                            <input v-model="mcpForm.mcpType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="mcpType（sse/stdio）" />
+                            <input v-model.number="mcpForm.mcpTimeout" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="timeout（秒）" />
+                            <input v-model.number="mcpForm.mcpChat" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="chat开关（1/0）" />
+                            <input v-model="mcpForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="描述" />
+                        </div>
+                        <textarea v-model="mcpForm.mcpConfig" class="min-h-[86px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder='mcpConfig JSON，例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
+                        <textarea v-model="mcpForm.secretMapText" class="min-h-[64px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder='secretMap JSON（可选），例如 {"corpid":"xxx","corpsecret":"yyy","agentid":"1"}'></textarea>
+                        <div class="flex gap-[8px]">
+                            <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] text-white" @click="saveMcp">{{ mcpEditing ? '更新 MCP' : '新增 MCP' }}</button>
+                            <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[12px]" @click="resetMcpForm">重置</button>
+                        </div>
+                        <div v-if="mcpError" class="text-[12px] text-[#f87171]">{{ mcpError }}</div>
+                        <div v-if="mcpLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
+                        <div class="max-h-[280px] space-y-[8px] overflow-y-auto">
+                            <div v-for="item in mcpList" :key="item.id" class="rounded-[10px] border border-[var(--border-color)] p-[10px]">
+                                <div class="flex items-center justify-between gap-[10px]">
+                                    <div class="min-w-0">
+                                        <div class="truncate text-[13px] font-semibold">{{ item.mcpName }} ({{ item.mcpId }})</div>
+                                        <div class="text-[12px] text-[var(--text-secondary)]">{{ item.sourceType }} · chat={{ item.mcpChat }}</div>
+                                    </div>
+                                    <div class="flex shrink-0 gap-[6px]">
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="testMcp(item)">测试</button>
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="exportMcp(item)">导出</button>
+                                        <button v-if="item.editable" class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="editMcp(item)">编辑</button>
+                                        <button v-if="item.editable" class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="toggleMcp(item)">{{ item.mcpChat === 1 ? '禁用' : '启用' }}</button>
+                                        <button v-if="item.editable" class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="deleteMcp(item)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

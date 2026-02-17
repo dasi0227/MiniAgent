@@ -200,6 +200,12 @@ const currentAgentLabel = computed(() => {
     return match?.label || currentAgentId.value;
 });
 
+const currentAgentSourceType = computed(() => {
+    if (!currentAgentId.value) return '';
+    const match = agentOptions.value.find((item) => item.value === currentAgentId.value);
+    return match?.sourceType || '';
+});
+
 const fetchAgents = async () => {
     try {
         const resp = await queryAgentList();
@@ -216,8 +222,9 @@ const fetchAgents = async () => {
                 const agentId = item.agentId || item.id || '';
                 const agentName = item.agentName || item.name || agentId;
                 const agentDesc = item.agentDesc || item.desc || '';
+                const sourceType = item.sourceType || 'system';
                 if (!agentId) return null;
-                return { label: agentName || agentId, value: agentId, desc: agentDesc };
+                return { label: agentName || agentId, value: agentId, desc: agentDesc, sourceType };
             })
             .filter(Boolean);
         const seen = new Set();
@@ -701,11 +708,19 @@ onBeforeUnmount(() => {
                         <label class="w-[36px] text-[14px] text-[var(--text-secondary)] text-right">AGENT</label>
                         <div
                             ref="agentSelectRef"
-                            class="inline-flex min-h-[36px] min-w-[200px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                            class="inline-flex min-h-[36px] min-w-[220px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
                             :class="agentOptions.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
                             @click="toggleAgentDropdown"
                         >
-                            <span class="font-bold text-[var(--text-primary)]">{{ currentAgentLabel }}</span>
+                            <span class="inline-flex items-center gap-[6px]">
+                                <span class="font-bold text-[var(--text-primary)]">{{ currentAgentLabel }}</span>
+                                <span
+                                    v-if="currentAgentSourceType"
+                                    class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] font-medium text-[var(--text-secondary)]"
+                                >
+                                    {{ currentAgentSourceType }}
+                                </span>
+                            </span>
                             <span
                                 class="caret transition-transform duration-150"
                                 :class="agentDropdownOpen ? 'caret-open' : 'caret-closed'"
@@ -722,7 +737,12 @@ onBeforeUnmount(() => {
                                 :class="item.value === currentAgentId ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
                                 @click.stop="selectAgent(item.value)"
                             >
-                                <span>{{ item.label }}</span>
+                                <span class="inline-flex items-center gap-[6px]">
+                                    <span>{{ item.label }}</span>
+                                    <span class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] font-medium text-[var(--text-secondary)]">
+                                        {{ item.sourceType || 'system' }}
+                                    </span>
+                                </span>
                                 <span v-if="item.value === currentAgentId" class="text-[13px]">✓</span>
                             </div>
                         </div>

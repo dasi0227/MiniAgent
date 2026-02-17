@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Chat from '../components/Chat.vue';
 import Work from '../components/Work.vue';
 import Welcome from '../components/Welcome.vue';
+import Studio from '../components/Studio.vue';
+import Plaza from '../components/Plaza.vue';
+import Repository from '../components/Repository.vue';
 import Auth from '../components/Auth.vue';
 import AuthAdmin from '../components/AuthAdmin.vue';
 import AdminTable from '../components/AdminTable.vue';
@@ -32,6 +35,21 @@ const routes = [
         path: '/work',
         name: 'work',
         component: Work
+    },
+    {
+        path: '/studio',
+        name: 'studio',
+        component: Studio
+    },
+    {
+        path: '/plaza',
+        name: 'plaza',
+        component: Plaza
+    },
+    {
+        path: '/repository',
+        name: 'repository',
+        component: Repository
     },
     {
         path: '/login',

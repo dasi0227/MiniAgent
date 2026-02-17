@@ -41,6 +41,36 @@ const ADMIN_STATUS_PARAM = {
     task: 'taskStatus'
 };
 
+const USER_MCP_BASE_PATH = '/api/v1/user/mcp';
+const USER_MCP_LIST_PATH = `${USER_MCP_BASE_PATH}/list`;
+const USER_MCP_INSERT_PATH = `${USER_MCP_BASE_PATH}/insert`;
+const USER_MCP_UPDATE_PATH = `${USER_MCP_BASE_PATH}/update`;
+const USER_MCP_DELETE_PATH = `${USER_MCP_BASE_PATH}/delete`;
+const USER_MCP_TOGGLE_PATH = `${USER_MCP_BASE_PATH}/toggle`;
+const USER_MCP_TEST_PATH = `${USER_MCP_BASE_PATH}/test`;
+const USER_MCP_EXPORT_PATH = `${USER_MCP_BASE_PATH}/export`;
+
+const STUDIO_BASE_PATH = '/api/v1/studio';
+const STUDIO_GENERATE_PATH = `${STUDIO_BASE_PATH}/generate`;
+const STUDIO_CREATE_PATH = `${STUDIO_BASE_PATH}/create`;
+const STUDIO_UPDATE_PATH = `${STUDIO_BASE_PATH}/update`;
+const STUDIO_DETAIL_PATH = `${STUDIO_BASE_PATH}/detail`;
+const STUDIO_LIST_MINE_PATH = `${STUDIO_BASE_PATH}/list-mine`;
+
+const PLAZA_BASE_PATH = '/api/v1/plaza';
+const PLAZA_LIST_PATH = `${PLAZA_BASE_PATH}/list`;
+const PLAZA_DETAIL_PATH = `${PLAZA_BASE_PATH}/detail`;
+const PLAZA_PUBLISH_PATH = `${PLAZA_BASE_PATH}/publish`;
+const PLAZA_LIKE_PATH = `${PLAZA_BASE_PATH}/like`;
+const PLAZA_FAVOR_PATH = `${PLAZA_BASE_PATH}/favor`;
+const PLAZA_COMMENT_PATH = `${PLAZA_BASE_PATH}/comment`;
+
+const REPO_BASE_PATH = '/api/v1/repo';
+const REPO_LIST_PATH = `${REPO_BASE_PATH}/list`;
+const REPO_ADD_PATH = `${REPO_BASE_PATH}/add`;
+const REPO_REMOVE_PATH = `${REPO_BASE_PATH}/remove`;
+const REPO_FORK_PATH = `${REPO_BASE_PATH}/fork`;
+
 export const fetchComplete = async ({
     clientId,
     userMessage,
@@ -263,3 +293,33 @@ export const listUserRole = async () => http.get(`${ADMIN_LIST_BASE}/userRole`);
 export const listApiId = async () => http.get(`${ADMIN_LIST_BASE}/apiId`);
 export const listModelId = async () => http.get(`${ADMIN_LIST_BASE}/modelId`);
 export const listClientRole = async () => http.get(`${ADMIN_LIST_BASE}/clientRole`);
+
+// -------------------- User MCP --------------------
+export const userMcpList = async (payload = {}) => http.post(USER_MCP_LIST_PATH, trimStrings(payload));
+export const userMcpInsert = async (payload = {}) => http.post(USER_MCP_INSERT_PATH, trimStrings(payload));
+export const userMcpUpdate = async (payload = {}) => http.post(USER_MCP_UPDATE_PATH, trimStrings(payload));
+export const userMcpDelete = async (id) => http.post(USER_MCP_DELETE_PATH, null, { params: { id } });
+export const userMcpToggle = async (id, mcpChat) => http.post(USER_MCP_TOGGLE_PATH, null, { params: { id, mcpChat } });
+export const userMcpTest = async (payload = {}) => http.post(USER_MCP_TEST_PATH, trimStrings(payload));
+export const userMcpExport = async (payload = {}) => http.post(USER_MCP_EXPORT_PATH, trimStrings(payload));
+
+// -------------------- Studio --------------------
+export const studioGenerate = async (payload = {}) => http.post(STUDIO_GENERATE_PATH, trimStrings(payload));
+export const studioCreate = async (payload = {}) => http.post(STUDIO_CREATE_PATH, trimStrings(payload));
+export const studioUpdate = async (payload = {}) => http.post(STUDIO_UPDATE_PATH, trimStrings(payload));
+export const studioDetail = async (agentId) => http.get(STUDIO_DETAIL_PATH, { params: { agentId } });
+export const studioListMine = async () => http.get(STUDIO_LIST_MINE_PATH);
+
+// -------------------- Plaza --------------------
+export const plazaList = async (params = {}) => http.get(PLAZA_LIST_PATH, { params: trimStrings(params) });
+export const plazaDetail = async (plazaId) => http.get(PLAZA_DETAIL_PATH, { params: { plazaId } });
+export const plazaPublish = async (payload = {}) => http.post(PLAZA_PUBLISH_PATH, trimStrings(payload));
+export const plazaLike = async (payload = {}) => http.post(PLAZA_LIKE_PATH, trimStrings(payload));
+export const plazaFavor = async (payload = {}) => http.post(PLAZA_FAVOR_PATH, trimStrings(payload));
+export const plazaComment = async (payload = {}) => http.post(PLAZA_COMMENT_PATH, trimStrings(payload));
+
+// -------------------- Repository --------------------
+export const repoList = async () => http.get(REPO_LIST_PATH);
+export const repoAdd = async (payload = {}) => http.post(REPO_ADD_PATH, trimStrings(payload));
+export const repoRemove = async (payload = {}) => http.post(REPO_REMOVE_PATH, trimStrings(payload));
+export const repoFork = async (payload = {}) => http.post(REPO_FORK_PATH, trimStrings(payload));

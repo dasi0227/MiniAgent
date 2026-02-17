@@ -6,10 +6,9 @@ import com.dasi.domain.ai.model.enumeration.AiAdvisorType;
 import com.dasi.domain.ai.model.enumeration.AiMcpType;
 import com.dasi.domain.ai.model.vo.*;
 import com.dasi.domain.ai.repository.IAiRepository;
+import com.dasi.domain.util.jwt.AuthContext;
 import com.dasi.infrastructure.persistent.dao.*;
 import com.dasi.infrastructure.persistent.po.*;
-import com.dasi.types.annotation.Cacheable;
-import com.dasi.types.enumeration.CacheType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Repository;
 import java.util.*;
 
 import static com.dasi.domain.ai.model.enumeration.AiType.*;
-import static com.dasi.types.constant.RedisConstant.*;
 
 @Slf4j
 @Repository
@@ -54,8 +52,10 @@ public class AiRepository implements IAiRepository {
     @Resource
     private IAiTaskDao aiTaskDao;
 
+    @Resource
+    private AuthContext authContext;
+
     @Override
-    @Cacheable(cachePrefix = AI_API_VO_PREFIX, cacheClass = AiApiVO.class, cacheType = CacheType.SET)
     public Set<AiApiVO> queryAiApiVOSetByClientIdSet(Set<String> clientIdSet) {
         if (clientIdSet == null || clientIdSet.isEmpty()) {
             return Set.of();
@@ -66,17 +66,17 @@ public class AiRepository implements IAiRepository {
         for (String clientId : clientIdSet) {
 
             // 1. 获取 Client
-            AiClient aiClient = aiClientDao.queryByClientId(clientId);
+            AiClient aiClient = aiClientDao.queryByClientIdWithFrom(clientId, authContext.getId());
             if (aiClient == null || aiClient.getClientStatus() == 0) continue;
 
             // 2. 获取 Model
             String modelId = aiClient.getModelId();
-            AiModel aiModel = aiModelDao.queryByModelId(modelId);
+            AiModel aiModel = aiModelDao.queryByModelIdWithFrom(modelId, authContext.getId());
             if (aiModel == null) continue;
 
             // 3. 获取 Api
             String apiId = aiModel.getApiId();
-            AiApi aiApi = aiApiDao.queryByApiId(apiId);
+            AiApi aiApi = aiApiDao.queryByApiIdWithFrom(apiId, authContext.getId());
             if (aiApi == null) continue;
 
             // 4. 构造 VO
@@ -95,7 +95,6 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_MODEL_VO_PREFIX, cacheClass = AiModelVO.class, cacheType = CacheType.SET)
     public Set<AiModelVO> queryAiModelVOSetByClientIdSet(Set<String> clientIdSet) {
         if (clientIdSet == null || clientIdSet.isEmpty()) {
             return Set.of();
@@ -106,12 +105,12 @@ public class AiRepository implements IAiRepository {
         for (String clientId : clientIdSet) {
 
             // 1. 获取 Client
-            AiClient aiClient = aiClientDao.queryByClientId(clientId);
+            AiClient aiClient = aiClientDao.queryByClientIdWithFrom(clientId, authContext.getId());
             if (aiClient == null || aiClient.getClientStatus() == 0) continue;
 
             // 2. 获取 Model
             String modelId = aiClient.getModelId();
-            AiModel aiModel = aiModelDao.queryByModelId(modelId);
+            AiModel aiModel = aiModelDao.queryByModelIdWithFrom(modelId, authContext.getId());
             if (aiModel == null) continue;
 
             // 3. 构造 VO
@@ -129,7 +128,6 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_ADVISOR_VO_PREFIX, cacheClass = AiAdvisorVO.class, cacheType = CacheType.SET)
     public Set<AiAdvisorVO> queryAiAdvisorVOSetByClientIdSet(Set<String> clientIdSet) {
         if (clientIdSet == null || clientIdSet.isEmpty()) {
             return Set.of();
@@ -186,7 +184,6 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_PROMPT_VO_PREFIX, cacheClass = AiPromptVO.class, cacheType = CacheType.MAP)
     public Map<String, AiPromptVO> queryAiPromptVOMapByClientIdSet(Set<String> clientIdSet) {
 
         if (clientIdSet == null || clientIdSet.isEmpty()) {
@@ -225,7 +222,6 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_MCP_VO_PREFIX, cacheClass = AiMcpVO.class, cacheType = CacheType.SET)
     public Set<AiMcpVO> queryAiMcpVOSetByClientIdSet(Set<String> clientIdSet) {
         if (clientIdSet == null || clientIdSet.isEmpty()) {
             return Set.of();
@@ -244,7 +240,7 @@ public class AiRepository implements IAiRepository {
                 String mcpId = clientConfig.getConfigValue();
 
                 // 2. 获取 MCP
-                AiMcp aiMcp = aiMcpDao.queryByMcpId(mcpId);
+                AiMcp aiMcp = aiMcpDao.queryByMcpIdWithFrom(mcpId, authContext.getId());
                 if (aiMcp == null) continue;
 
                 // 3. 构造 VO
@@ -284,7 +280,6 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_CLIENT_VO_PREFIX, cacheClass = AiClientVO.class, cacheType = CacheType.SET)
     public Set<AiClientVO> queryAiClientVOSetByClientIdSet(Set<String> clientIdSet) {
         if (clientIdSet == null || clientIdSet.isEmpty()) {
             return Set.of();
@@ -295,7 +290,7 @@ public class AiRepository implements IAiRepository {
         for (String clientId : clientIdSet) {
 
             // 1. 获取 Client
-            AiClient aiClient = aiClientDao.queryByClientId(clientId);
+            AiClient aiClient = aiClientDao.queryByClientIdWithFrom(clientId, authContext.getId());
             if (aiClient == null || aiClient.getClientStatus() == 0) continue;
 
             // 2. 获取 Config
@@ -339,10 +334,14 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_FLOW_VO_PREFIX, cacheClass = AiFlowVO.class, cacheType = CacheType.MAP)
     public Map<String, AiFlowVO> queryAiFlowVOMapByAgentId(String agentId) {
 
         if (agentId == null || agentId.isEmpty()) {
+            return Map.of();
+        }
+
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentIdWithFrom(agentId, authContext.getId());
+        if (aiAgent == null || Integer.valueOf(0).equals(aiAgent.getAgentStatus())) {
             return Map.of();
         }
 
@@ -369,15 +368,13 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_AGENT_TYPE_PREFIX, cacheClass = String.class, cacheType = CacheType.VALUE)
     public String queryExecuteTypeByAgentId(String agentId) {
-        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentIdWithFrom(agentId, authContext.getId());
         if (aiAgent == null) return null;
         return aiAgent.getAgentType();
     }
 
     @Override
-    @Cacheable(cacheKey = AI_TASK_VO_LIST_KEY, cacheClass = AiTaskVO.class, cacheType = CacheType.LIST)
     public List<AiTaskVO> queryTaskVOList() {
         List<AiTask> aiTaskList = aiTaskDao.queryTaskList();
         if (aiTaskList == null || aiTaskList.isEmpty()) return List.of();
@@ -396,7 +393,6 @@ public class AiRepository implements IAiRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = AI_MCP_VO_LIST_PREFIX, cacheClass = AiMcpVO.class, cacheType = CacheType.LIST)
     public List<AiMcpVO> queryAiMcpVOListByMcpIdList(List<String> mcpIdList) {
 
         if (mcpIdList == null || mcpIdList.isEmpty()) {
@@ -405,10 +401,14 @@ public class AiRepository implements IAiRepository {
 
         List<AiMcpVO> aiMcpVOList = new ArrayList<>();
 
-        List<AiMcp> aiMcpList = aiMcpDao.queryByMcpIdList(mcpIdList);
+        List<AiMcp> aiMcpList = aiMcpDao.queryByMcpIdListWithFrom(mcpIdList, authContext.getId());
         if (aiMcpList == null || aiMcpList.isEmpty()) return aiMcpVOList;
 
+        Set<String> seenMcpIdSet = new HashSet<>();
         for (AiMcp aiMcp : aiMcpList) {
+            if (!seenMcpIdSet.add(aiMcp.getMcpId())) {
+                continue;
+            }
             AiMcpVO aiMcpVO = AiMcpVO.builder()
                     .mcpId(aiMcp.getMcpId())
                     .mcpName(aiMcp.getMcpName())

@@ -415,13 +415,14 @@ const fetchModels = async () => {
         const normalized = list
             .map((item) => {
                 if (typeof item === 'string') {
-                    return { label: item, value: item };
+                    return { label: item, value: item, sourceType: 'system' };
                 }
                 if (item && typeof item === 'object') {
                     const clientId = item.clientId || item.modelId || item.id || '';
                     const modelName = item.modelName || item.name || clientId;
+                    const sourceType = item.sourceType || 'system';
                     if (!clientId) return null;
-                    return { label: modelName || clientId, value: clientId };
+                    return { label: modelName || clientId, value: clientId, sourceType };
                 }
                 return null;
             })
@@ -462,8 +463,9 @@ const fetchMcpTools = async () => {
                 const mcpId = item.mcpId || item.id || '';
                 const mcpName = item.mcpName || item.name || mcpId;
                 const mcpDesc = item.mcpDesc || item.desc || '';
+                const sourceType = item.sourceType || 'system';
                 if (!mcpId) return null;
-                return { label: mcpName || mcpId, value: mcpId, desc: mcpDesc };
+                return { label: mcpName || mcpId, value: mcpId, desc: mcpDesc, sourceType };
             })
             .filter(Boolean);
         const seen = new Set();
@@ -1234,7 +1236,10 @@ const handleUpload = async () => {
                                 :class="item.value === currentModel ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
                                 @click.stop="selectModel(item.value)"
                             >
-                                <span>{{ item.label }}</span>
+                                <span class="inline-flex items-center gap-[8px]">
+                                    <span>{{ item.label }}</span>
+                                    <span class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] text-[var(--text-secondary)]">{{ item.sourceType || 'system' }}</span>
+                                </span>
                                 <span v-if="item.value === currentModel" class="text-[13px]">✓</span>
                             </div>
                         </div>
@@ -1303,7 +1308,10 @@ const handleUpload = async () => {
                                 :class="selectedMcpIds.includes(item.value) ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
                                 @click.stop="toggleMcpSelection(item.value)"
                             >
-                                <span>{{ item.label }}</span>
+                                <span class="inline-flex items-center gap-[8px]">
+                                    <span>{{ item.label }}</span>
+                                    <span class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] text-[var(--text-secondary)]">{{ item.sourceType || 'system' }}</span>
+                                </span>
                                 <span v-if="selectedMcpIds.includes(item.value)" class="text-[13px]">✓</span>
                             </div>
                         </div>

@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 public enum AiAgentType {
 
     STEP("步骤规划", "step"),
-    LOOP("循环执行", "loop")
+    LOOP("循环执行", "loop"),
+    REACT("逐步反应", "react")
     ;
 
     private String name;

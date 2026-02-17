@@ -9,6 +9,7 @@
         <result column="api_key" property="apiKey"/>
         <result column="api_completions_path" property="apiCompletionsPath"/>
         <result column="api_embeddings_path" property="apiEmbeddingsPath"/>
+        <result column="api_from" property="apiFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -20,23 +21,51 @@
                api_key,
                api_completions_path,
                api_embeddings_path,
+               api_from,
                create_time,
                update_time
         FROM ai_api
         WHERE api_id = #{apiId}
+          AND api_from = 0
+    </select>
+
+    <select id="queryByApiIdWithFrom" resultMap="dataMap">
+        SELECT id,
+               api_id,
+               api_base_url,
+               api_key,
+               api_completions_path,
+               api_embeddings_path,
+               api_from,
+               create_time,
+               update_time
+        FROM ai_api
+        WHERE api_id = #{apiId}
+        <choose>
+            <when test="userId != null">
+                AND api_from IN (0, #{userId})
+            </when>
+            <otherwise>
+                AND api_from = 0
+            </otherwise>
+        </choose>
+        ORDER BY api_from DESC, id DESC
+        LIMIT 1
     </select>
 
     <select id="page" resultMap="dataMap">
         SELECT id,
-        api_id,
-        api_base_url,
-        api_key,
-        api_completions_path,
-        api_embeddings_path,
-        create_time,
-        update_time
+               api_id,
+               api_base_url,
+               api_key,
+               api_completions_path,
+               api_embeddings_path,
+               api_from,
+               create_time,
+               update_time
         FROM ai_api
         <where>
+            AND api_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND api_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -51,6 +80,7 @@
         SELECT COUNT(1)
         FROM ai_api
         <where>
+            AND api_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND api_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -60,6 +90,7 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_api
+        WHERE api_from = 0
     </select>
 
     <select id="queryById" resultMap="dataMap">
@@ -69,15 +100,18 @@
                api_key,
                api_completions_path,
                api_embeddings_path,
+               api_from,
                create_time,
                update_time
         FROM ai_api
         WHERE id = #{id}
+          AND api_from = 0
     </select>
 
     <select id="listApiId" resultType="java.lang.String">
         SELECT api_id
         FROM ai_api
+        WHERE api_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiApi">
@@ -85,12 +119,17 @@
                             api_base_url,
                             api_key,
                             api_completions_path,
-                            api_embeddings_path)
+                            api_embeddings_path,
+                            api_from)
         VALUES (#{apiId},
                 #{apiBaseUrl},
                 #{apiKey},
                 #{apiCompletionsPath},
-                #{apiEmbeddingsPath})
+                #{apiEmbeddingsPath},
+                <choose>
+                    <when test="apiFrom != null">#{apiFrom}</when>
+                    <otherwise>0</otherwise>
+                </choose>)
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiApi">
@@ -103,11 +142,13 @@
             <if test="apiEmbeddingsPath != null">api_embeddings_path = #{apiEmbeddingsPath},</if>
         </set>
         WHERE id = #{id}
+          AND api_from = 0
     </update>
 
     <delete id="delete">
         DELETE
         FROM ai_api
         WHERE id = #{id}
+          AND api_from = 0
     </delete>
 </mapper>

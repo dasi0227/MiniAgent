@@ -9,6 +9,7 @@
         <result column="agent_type" property="agentType"/>
         <result column="agent_desc" property="agentDesc"/>
         <result column="agent_status" property="agentStatus"/>
+        <result column="agent_from" property="agentFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -20,9 +21,54 @@
                agent_type,
                agent_desc,
                agent_status,
+               agent_from,
                create_time,
                update_time
         FROM ai_agent
+        WHERE agent_from = 0
+        ORDER BY update_time DESC, id DESC
+    </select>
+
+    <select id="queryAgentListByFrom" resultMap="dataMap">
+        SELECT id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               agent_status,
+               agent_from,
+               create_time,
+               update_time
+        FROM ai_agent
+        <where>
+            <choose>
+                <when test="userId != null">
+                    AND agent_from IN (0, #{userId})
+                </when>
+                <otherwise>
+                    AND agent_from = 0
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY agent_from DESC, update_time DESC, id DESC
+    </select>
+
+    <select id="queryAgentListByIdList" resultMap="dataMap">
+        SELECT id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               agent_status,
+               agent_from,
+               create_time,
+               update_time
+        FROM ai_agent
+        WHERE agent_id IN
+        <foreach collection="agentIdList" item="agentId" open="(" separator="," close=")">
+            #{agentId}
+        </foreach>
+        ORDER BY update_time DESC, id DESC
     </select>
 
     <select id="queryAgentByAgentId" resultMap="dataMap">
@@ -32,10 +78,52 @@
                agent_type,
                agent_desc,
                agent_status,
+               agent_from,
                create_time,
                update_time
         FROM ai_agent
         WHERE agent_id = #{agentId}
+          AND agent_from = 0
+    </select>
+
+    <select id="queryAgentByAgentIdWithFrom" resultMap="dataMap">
+        SELECT id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               agent_status,
+               agent_from,
+               create_time,
+               update_time
+        FROM ai_agent
+        WHERE agent_id = #{agentId}
+        <choose>
+            <when test="userId != null">
+                AND agent_from IN (0, #{userId})
+            </when>
+            <otherwise>
+                AND agent_from = 0
+            </otherwise>
+        </choose>
+        ORDER BY agent_from DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryAgentByAgentIdByOwner" resultMap="dataMap">
+        SELECT id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               agent_status,
+               agent_from,
+               create_time,
+               update_time
+        FROM ai_agent
+        WHERE agent_id = #{agentId}
+          AND agent_from = #{userId}
+        LIMIT 1
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -45,10 +133,12 @@
                agent_type,
                agent_desc,
                agent_status,
+               agent_from,
                create_time,
                update_time
         FROM ai_agent
         <where>
+            AND agent_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND agent_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -67,15 +157,17 @@
 
     <select id="list" resultMap="dataMap">
         SELECT id,
-        agent_id,
-        agent_name,
-        agent_type,
-        agent_desc,
-        agent_status,
-        create_time,
-        update_time
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               agent_status,
+               agent_from,
+               create_time,
+               update_time
         FROM ai_agent
         <where>
+            AND agent_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND agent_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -93,6 +185,7 @@
         SELECT COUNT(1)
         FROM ai_agent
         <where>
+            AND agent_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND agent_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -108,6 +201,7 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_agent
+        WHERE agent_from = 0
     </select>
 
     <select id="queryById" resultMap="dataMap">
@@ -117,10 +211,27 @@
                agent_type,
                agent_desc,
                agent_status,
+               agent_from,
                create_time,
                update_time
         FROM ai_agent
         WHERE id = #{id}
+          AND agent_from = 0
+    </select>
+
+    <select id="queryByIdWithOwner" resultMap="dataMap">
+        SELECT id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               agent_status,
+               agent_from,
+               create_time,
+               update_time
+        FROM ai_agent
+        WHERE id = #{id}
+          AND agent_from = #{userId}
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">
@@ -128,12 +239,17 @@
                               agent_name,
                               agent_type,
                               agent_desc,
-                              agent_status)
+                              agent_status,
+                              agent_from)
         VALUES (#{agentId},
                 #{agentName},
                 #{agentType},
                 #{agentDesc},
-                #{agentStatus})
+                #{agentStatus},
+                <choose>
+                    <when test="agentFrom != null">#{agentFrom}</when>
+                    <otherwise>0</otherwise>
+                </choose>)
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">
@@ -146,17 +262,32 @@
             <if test="agentStatus != null">agent_status = #{agentStatus},</if>
         </set>
         WHERE id = #{id}
+          AND agent_from = 0
+    </update>
+
+    <update id="updateByOwner" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">
+        UPDATE ai_agent
+        <set>
+            <if test="agentName != null">agent_name = #{agentName},</if>
+            <if test="agentType != null">agent_type = #{agentType},</if>
+            <if test="agentDesc != null">agent_desc = #{agentDesc},</if>
+            <if test="agentStatus != null">agent_status = #{agentStatus},</if>
+        </set>
+        WHERE id = #{id}
+          AND agent_from = #{agentFrom}
     </update>
 
     <update id="toggle" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">
         UPDATE ai_agent
         SET agent_status = #{agentStatus}
         WHERE id = #{id}
+          AND agent_from = 0
     </update>
 
     <delete id="delete">
         DELETE
         FROM ai_agent
         WHERE id = #{id}
+          AND agent_from = 0
     </delete>
 </mapper>
