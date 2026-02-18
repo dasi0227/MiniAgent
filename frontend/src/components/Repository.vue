@@ -1,7 +1,7 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { repoAdd, repoList, repoRemove, studioListMine } from '../request/api';
+import { plazaPublish, repoList, repoRemove, studioListMine } from '../request/api';
 import { normalizeError } from '../request/request';
 import { useWelcomeLaunchStore } from '../router/pinia';
 import AppFooter from './AppFooter.vue';
@@ -12,8 +12,10 @@ const loading = ref(false);
 const message = ref('');
 const repoItems = ref([]);
 const mineAgents = ref([]);
-const form = reactive({
-    agentId: ''
+const publishForm = reactive({
+    agentId: '',
+    plazaTitle: '',
+    plazaDesc: ''
 });
 
 const pickData = (resp) => {
@@ -44,22 +46,30 @@ const loadMine = async () => {
         const resp = await studioListMine();
         const list = pickData(resp) || [];
         mineAgents.value = Array.isArray(list) ? list : [];
+        if (!publishForm.agentId && mineAgents.value.length > 0) {
+            publishForm.agentId = mineAgents.value[0].agentId;
+        }
     } catch (error) {
         message.value = normalizeError(error).message || '获取我的 MiniAgent 失败';
     }
 };
 
-const doAdd = async () => {
-    if (!form.agentId.trim()) {
+const doPublish = async () => {
+    if (!publishForm.agentId || !publishForm.plazaTitle.trim()) {
+        message.value = '请选择 MiniAgent 并填写展示标题';
         return;
     }
     try {
-        await repoAdd({ agentId: form.agentId.trim() });
-        form.agentId = '';
-        message.value = '添加成功';
-        await loadRepo();
+        await plazaPublish({
+            agentId: publishForm.agentId,
+            plazaTitle: publishForm.plazaTitle,
+            plazaDesc: publishForm.plazaDesc
+        });
+        publishForm.plazaTitle = '';
+        publishForm.plazaDesc = '';
+        message.value = '发布成功';
     } catch (error) {
-        message.value = normalizeError(error).message || '添加失败';
+        message.value = normalizeError(error).message || '发布失败';
     }
 };
 
@@ -72,16 +82,9 @@ const doRemove = async (agentId) => {
     }
 };
 
-const addMineToRepo = async (agentId) => {
-    if (!agentId) return;
-    try {
-        await repoAdd({ agentId });
-        message.value = '已加入仓库';
-        await loadRepo();
-    } catch (error) {
-        message.value = normalizeError(error).message || '加入仓库失败';
-    }
-};
+const addedItems = computed(() =>
+    repoItems.value.filter((item) => `${item?.sourceType || ''}`.toLowerCase() !== 'mine')
+);
 
 const useAgent = (item) => {
     welcomeLaunchStore.setTask({
@@ -105,15 +108,20 @@ onMounted(async () => {
                 <h1 class="text-[24px] font-bold">MiniAgent Repository</h1>
 
                 <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px]">
-                    <div class="mb-[8px] text-[16px] font-semibold">添加 MiniAgent</div>
-                    <div class="flex gap-[8px]">
-                        <input v-model="form.agentId" class="flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="输入 agentId" />
-                        <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-white font-semibold" @click="doAdd">添加</button>
+                    <div class="mb-[10px] text-[16px] font-semibold">发布我的 MiniAgent</div>
+                    <div v-if="mineAgents.length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无可发布的 MiniAgent</div>
+                    <div v-else class="grid gap-[10px] md:grid-cols-[220px_1fr_1fr_auto]">
+                        <select v-model="publishForm.agentId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]">
+                            <option v-for="item in mineAgents" :key="item.agentId" :value="item.agentId">{{ item.agentName }}</option>
+                        </select>
+                        <input v-model="publishForm.plazaTitle" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="展示标题" />
+                        <input v-model="publishForm.plazaDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="展示描述" />
+                        <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-white font-semibold" @click="doPublish">发布</button>
                     </div>
                 </div>
 
                 <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px]">
-                    <div class="mb-[10px] text-[16px] font-semibold">我的 MiniAgent</div>
+                    <div class="mb-[10px] text-[16px] font-semibold">我创建的 MiniAgent</div>
                     <div v-if="mineAgents.length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无数据</div>
                     <div class="space-y-[8px]">
                         <div v-for="item in mineAgents" :key="item.agentId" class="rounded-[10px] border border-[var(--border-color)] p-[10px]">
@@ -124,7 +132,6 @@ onMounted(async () => {
                                     <div class="text-[12px] text-[var(--text-secondary)]">{{ item.agentDesc }}</div>
                                 </div>
                                 <div class="flex gap-[8px]">
-                                    <button class="rounded-[8px] border border-[var(--border-color)] px-[10px] py-[6px] text-[12px]" @click="addMineToRepo(item.agentId)">加入仓库</button>
                                     <button class="rounded-[8px] border border-[var(--border-color)] px-[10px] py-[6px] text-[12px]" @click="useAgent(item)">使用</button>
                                 </div>
                             </div>
@@ -135,11 +142,11 @@ onMounted(async () => {
                 <div v-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
 
                 <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px]">
-                    <div class="mb-[10px] text-[16px] font-semibold">我的仓库</div>
+                    <div class="mb-[10px] text-[16px] font-semibold">我添加的 MiniAgent</div>
                     <div v-if="loading" class="text-[13px] text-[var(--text-secondary)]">加载中...</div>
-                    <div v-else-if="repoItems.length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无数据</div>
+                    <div v-else-if="addedItems.length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无数据</div>
                     <div class="space-y-[8px]">
-                        <div v-for="item in repoItems" :key="item.repoId" class="rounded-[10px] border border-[var(--border-color)] p-[10px]">
+                        <div v-for="item in addedItems" :key="item.repoId" class="rounded-[10px] border border-[var(--border-color)] p-[10px]">
                             <div class="flex items-center justify-between gap-[12px]">
                                 <div>
                                     <div class="font-semibold">{{ item.agentName }}</div>

@@ -12,7 +12,6 @@ const commentData = ref(null);
 const detailOpen = ref(false);
 const commentOpen = ref(false);
 const searchKeyword = ref('');
-const commentedMap = ref({});
 
 const commentForm = reactive({
     plazaId: '',
@@ -31,7 +30,7 @@ const pickData = (resp) => {
 
 const displayAuthor = (item) => item?.username || '未知用户';
 const displayType = (item) => (item?.agentType || 'react').toUpperCase();
-const isCommented = (item) => Boolean(commentedMap.value[item?.plazaId]);
+const isCommented = (item) => Boolean(item?.commented);
 
 const resolveIconColor = (active, color) => (active ? color : '#94a3b8');
 
@@ -51,6 +50,35 @@ const filteredItems = computed(() => {
     });
 });
 
+const parseTimeValue = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return null;
+    }
+    return date;
+};
+
+const orderedCommentList = computed(() => {
+    const list = [...(commentData.value?.commentList || [])];
+    return list.sort((a, b) => {
+        const aTime = parseTimeValue(a?.createTime)?.getTime() || 0;
+        const bTime = parseTimeValue(b?.createTime)?.getTime() || 0;
+        return aTime - bTime;
+    });
+});
+
+const formatCommentTime = (value) => {
+    const date = parseTimeValue(value);
+    if (!date) return '时间未知';
+    return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
 const loadPlaza = async () => {
     loading.value = true;
     try {
@@ -64,13 +92,24 @@ const loadPlaza = async () => {
     }
 };
 
-const syncCommentCountByDetail = (plazaId, commentCount) => {
-    if (typeof commentCount !== 'number') {
-        return;
-    }
+const syncCardStateByDetail = (plazaItem) => {
+    const plazaId = plazaItem?.plazaId;
+    if (!plazaId) return;
+
     const target = plazaItems.value.find((item) => item.plazaId === plazaId);
     if (target) {
-        target.commentCount = commentCount;
+        if (typeof plazaItem.commentCount === 'number') {
+            target.commentCount = plazaItem.commentCount;
+        }
+        if (typeof plazaItem.commented === 'boolean') {
+            target.commented = plazaItem.commented;
+        }
+        if (typeof plazaItem.liked === 'boolean') {
+            target.liked = plazaItem.liked;
+        }
+        if (typeof plazaItem.favored === 'boolean') {
+            target.favored = plazaItem.favored;
+        }
     }
 };
 
@@ -78,30 +117,32 @@ const loadCommentDetail = async (plazaId) => {
     const resp = await plazaDetail(plazaId);
     const data = pickData(resp) || { plazaItem: {}, commentList: [] };
     commentData.value = data;
-    syncCommentCountByDetail(plazaId, data?.plazaItem?.commentCount);
+    syncCardStateByDetail(data?.plazaItem);
 };
 
 const doLike = async (item) => {
-    if (!item || item.liked) {
+    if (!item) {
         return;
     }
+    const currentLiked = Boolean(item.liked);
     try {
         await plazaLike({ plazaId: item.plazaId });
-        item.likeCount = (item.likeCount || 0) + 1;
-        item.liked = true;
+        item.likeCount = Math.max(0, (item.likeCount || 0) + (currentLiked ? -1 : 1));
+        item.liked = !currentLiked;
     } catch (error) {
         message.value = normalizeError(error).message || '点赞失败';
     }
 };
 
 const doFavor = async (item) => {
-    if (!item || item.favored) {
+    if (!item) {
         return;
     }
+    const currentFavored = Boolean(item.favored);
     try {
         await plazaFavor({ plazaId: item.plazaId });
-        item.favorCount = (item.favorCount || 0) + 1;
-        item.favored = true;
+        item.favorCount = Math.max(0, (item.favorCount || 0) + (currentFavored ? -1 : 1));
+        item.favored = !currentFavored;
     } catch (error) {
         message.value = normalizeError(error).message || '收藏失败';
     }
@@ -114,7 +155,6 @@ const openComment = async (item) => {
     commentOpen.value = true;
     commentForm.plazaId = item.plazaId;
     commentForm.commentContent = '';
-    commentedMap.value[item.plazaId] = true;
     commentData.value = {
         plazaItem: item,
         commentList: []
@@ -146,6 +186,10 @@ const doComment = async () => {
     try {
         await plazaComment(commentForm);
         await loadCommentDetail(commentForm.plazaId);
+        const target = plazaItems.value.find((item) => item.plazaId === commentForm.plazaId);
+        if (target) {
+            target.commented = true;
+        }
         commentForm.commentContent = '';
     } catch (error) {
         message.value = normalizeError(error).message || '评论失败';
@@ -165,7 +209,7 @@ onMounted(async () => {
 
                 <input
                     v-model="searchKeyword"
-                    class="w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-[14px]"
+                    class="w-full bg-transparent px-[2px] py-[8px] text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
                     placeholder="搜索 MiniAgent（标题 / 描述 / 作者 / 类型）"
                 />
 
@@ -175,13 +219,13 @@ onMounted(async () => {
                     <article
                         v-for="item in filteredItems"
                         :key="item.plazaId"
-                        class="group overflow-hidden rounded-[16px] border border-[var(--border-color)] bg-white px-[14px] py-[12px] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_16px_36px_rgba(15,23,42,0.1)]"
+                        class="group relative overflow-hidden rounded-[16px] border border-[var(--border-color)] bg-white px-[14px] py-[12px] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_16px_36px_rgba(15,23,42,0.1)]"
                     >
-                        <div class="relative space-y-[10px]">
-                            <div class="absolute right-0 top-0 inline-flex rounded-[999px] border border-[var(--border-color)] bg-[#f8fafc] px-[8px] py-[3px] text-[11px] font-semibold text-[#334155]">
-                                {{ displayType(item) }}
-                            </div>
-                            <button class="block w-full pr-[86px] pt-[2px] text-left text-[18px] font-bold leading-[1.35] text-[#0f172a]" @click="openDetail(item)">
+                        <div class="pointer-events-none absolute right-[14px] top-[12px] inline-flex rounded-[999px] border border-[var(--border-color)] bg-[#f8fafc] px-[8px] py-[3px] text-[11px] font-semibold text-[#334155]">
+                            {{ displayType(item) }}
+                        </div>
+                        <div class="space-y-[10px] pr-[78px]">
+                            <button class="block w-full pt-[2px] text-left text-[18px] font-bold leading-[1.35] text-[#0f172a]" @click="openDetail(item)">
                                 {{ item.plazaTitle }}
                             </button>
                             <button class="min-h-[38px] w-full text-left text-[13px] leading-[1.45] text-[var(--text-secondary)]" @click="openDetail(item)">
@@ -193,26 +237,24 @@ onMounted(async () => {
                             <div class="flex items-center justify-between pt-[2px]">
                                 <div class="flex items-center gap-[10px]">
                                     <button
-                                        class="inline-flex items-center gap-[5px] rounded-[8px] px-[6px] py-[4px] text-[13px] font-semibold hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-80"
+                                        class="inline-flex items-center gap-[5px] rounded-[8px] px-[6px] py-[4px] text-[13px] font-semibold hover:bg-[#f8fafc]"
                                         :style="{ color: resolveIconColor(item.liked, '#ef4444') }"
-                                        :disabled="item.liked"
                                         @click="doLike(item)"
                                     >
                                         <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
                                             <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09A5.96 5.96 0 0 1 16.5 3C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54z"/>
                                         </svg>
-                                        <span>{{ item.likeCount || 0 }}</span>
+                                        <span class="inline-block min-w-[2ch]" style="font-variant-numeric: tabular-nums;">{{ item.likeCount || 0 }}</span>
                                     </button>
                                     <button
-                                        class="inline-flex items-center gap-[5px] rounded-[8px] px-[6px] py-[4px] text-[13px] font-semibold hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-80"
+                                        class="inline-flex items-center gap-[5px] rounded-[8px] px-[6px] py-[4px] text-[13px] font-semibold hover:bg-[#f8fafc]"
                                         :style="{ color: resolveIconColor(item.favored, '#f59e0b') }"
-                                        :disabled="item.favored"
                                         @click="doFavor(item)"
                                     >
                                         <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
                                             <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
                                         </svg>
-                                        <span>{{ item.favorCount || 0 }}</span>
+                                        <span class="inline-block min-w-[2ch]" style="font-variant-numeric: tabular-nums;">{{ item.favorCount || 0 }}</span>
                                     </button>
                                     <button
                                         class="inline-flex items-center gap-[5px] rounded-[8px] px-[6px] py-[4px] text-[13px] font-semibold hover:bg-[#f8fafc]"
@@ -222,7 +264,7 @@ onMounted(async () => {
                                         <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
                                             <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/>
                                         </svg>
-                                        <span>{{ item.commentCount || 0 }}</span>
+                                        <span class="inline-block min-w-[2ch]" style="font-variant-numeric: tabular-nums;">{{ item.commentCount || 0 }}</span>
                                     </button>
                                 </div>
                                 <button class="rounded-[8px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[6px] text-[12px] font-semibold text-white" @click="doFork(item.plazaId)">Fork</button>
@@ -258,20 +300,25 @@ onMounted(async () => {
                     <button class="text-[20px]" @click="commentOpen=false">×</button>
                 </div>
                 <div class="text-[13px] text-[var(--text-secondary)]">{{ commentData?.plazaItem?.plazaDesc }}</div>
-                <div class="max-h-[280px] space-y-[8px] overflow-y-auto">
-                    <div
-                        v-for="item in commentData?.commentList || []"
-                        :key="item.commentId"
-                        class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[10px]"
-                    >
-                        <div class="text-[12px] font-semibold">{{ item.username }}</div>
-                        <div class="text-[15px] leading-[1.45]">{{ item.commentContent }}</div>
-                    </div>
-                    <div v-if="(commentData?.commentList || []).length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无评论</div>
-                </div>
                 <div class="flex gap-[8px]">
                     <input v-model="commentForm.commentContent" class="flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="写评论..." />
                     <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[13px] text-white" @click="doComment">发送</button>
+                </div>
+                <div class="text-[12px] text-[var(--text-secondary)]">评论 {{ orderedCommentList.length }} 条</div>
+                <div class="max-h-[340px] overflow-y-auto rounded-[12px] border border-[var(--border-color)] bg-[#f8fafc]">
+                    <div v-for="item in orderedCommentList" :key="item.commentId" class="flex gap-[10px] border-b border-[var(--border-color)] px-[12px] py-[10px] last:border-b-0">
+                        <div class="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-white text-[12px] font-semibold text-[#334155]">
+                            {{ (item.username || '?').slice(0, 1).toUpperCase() }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-[8px]">
+                                <div class="truncate text-[13px] font-semibold text-[#0f172a]">{{ item.username }}</div>
+                                <div class="shrink-0 text-[12px] text-[var(--text-secondary)]">{{ formatCommentTime(item.createTime) }}</div>
+                            </div>
+                            <div class="mt-[4px] break-words text-[15px] leading-[1.45] text-[#1e293b]">{{ item.commentContent }}</div>
+                        </div>
+                    </div>
+                    <div v-if="orderedCommentList.length === 0" class="px-[12px] py-[16px] text-[13px] text-[var(--text-secondary)]">暂无评论</div>
                 </div>
             </div>
         </div>

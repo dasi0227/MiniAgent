@@ -35,5 +35,7 @@ public class PlazaItemResponse {
 
     private Boolean favored;
 
+    private Boolean commented;
+
     private LocalDateTime createTime;
 }

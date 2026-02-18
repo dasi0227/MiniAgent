@@ -15,5 +15,8 @@ public interface IAiPlazaCommentDao {
 
     Integer countByPlazaId(@Param("plazaId") String plazaId);
 
+    AiPlazaComment queryByPlazaIdAndUserId(@Param("plazaId") String plazaId,
+                                           @Param("userId") Long userId);
+
     void insert(AiPlazaComment aiPlazaComment);
 }

@@ -155,7 +155,7 @@ const routes = [
 ];
 
 const router = createRouter({
-    history: createWebHistory('/agent/'),
+    history: createWebHistory('/miniagent/'),
     routes
 });
 

@@ -4,7 +4,7 @@ import { useAuthStore } from '../router/pinia';
 import { pushAdminErrorToast } from '../utils/adminErrorToast';
 
 // Dev: VITE_API_BASE=http://localhost:8066
-// Prod behind nginx under /agent: VITE_API_BASE=/agent
+// Prod behind nginx under /miniagent: VITE_API_BASE=/miniagent
 const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8066';
 const REQUEST_TIMEOUT = 600000;
 const AUTH_KEY = 'auth_info';

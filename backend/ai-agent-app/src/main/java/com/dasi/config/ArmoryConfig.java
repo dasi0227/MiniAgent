@@ -85,13 +85,13 @@ public class ArmoryConfig implements ApplicationListener<ApplicationReadyEvent> 
                 Resource systemPromptFile = resolver.getResource("classpath:prompt/system-prompt/" + fileName);
                 if (!systemPromptFile.exists()) {
                     log.error("【初始化配置】Prompt 文件不存在：{}", systemPromptFile.getDescription());
-                    throw new IllegalStateException();
+                    continue;
                 }
 
                 Resource userPromptFile = resolver.getResource("classpath:prompt/user-prompt/" + fileName);
                 if (!userPromptFile.exists()) {
                     log.error("【初始化配置】Prompt 文件不存在：{}", userPromptFile.getDescription());
-                    throw new IllegalStateException();
+                    continue;
                 }
 
                 // 更新 Prompt
@@ -104,8 +104,7 @@ public class ArmoryConfig implements ApplicationListener<ApplicationReadyEvent> 
                 log.info("【初始化配置】加载 Prompt：clientId={}", clientId);
 
             } catch (Exception e) {
-                log.error("【初始化配置】加载 prompt 失败：clientId={}", clientId, e);
-                throw new IllegalStateException();
+                log.error("【初始化配置】加载 prompt 失败：clientId={}", clientId);
             }
         }
     }

@@ -187,6 +187,7 @@ public class AgentRepository implements IAgentRepository {
         for (AiPlaza aiPlaza : aiPlazaList) {
             boolean liked = aiPlazaLikeDao.queryByPlazaIdAndUserId(aiPlaza.getPlazaId(), userId) != null;
             boolean favored = aiPlazaFavorDao.queryByPlazaIdAndUserId(aiPlaza.getPlazaId(), userId) != null;
+            boolean commented = aiPlazaCommentDao.queryByPlazaIdAndUserId(aiPlaza.getPlazaId(), userId) != null;
             responseList.add(PlazaItemResponse.builder()
                     .plazaId(aiPlaza.getPlazaId())
                     .agentId(aiPlaza.getAgentId())
@@ -199,6 +200,7 @@ public class AgentRepository implements IAgentRepository {
                     .commentCount(aiPlaza.getCommentCount())
                     .liked(liked)
                     .favored(favored)
+                    .commented(commented)
                     .createTime(aiPlaza.getCreateTime())
                     .build());
         }
@@ -222,6 +224,7 @@ public class AgentRepository implements IAgentRepository {
 
         boolean liked = aiPlazaLikeDao.queryByPlazaIdAndUserId(plazaId, userId) != null;
         boolean favored = aiPlazaFavorDao.queryByPlazaIdAndUserId(plazaId, userId) != null;
+        boolean commented = aiPlazaCommentDao.queryByPlazaIdAndUserId(plazaId, userId) != null;
         PlazaItemResponse plazaItem = PlazaItemResponse.builder()
                 .plazaId(aiPlaza.getPlazaId())
                 .agentId(aiPlaza.getAgentId())
@@ -234,6 +237,7 @@ public class AgentRepository implements IAgentRepository {
                 .commentCount(aiPlaza.getCommentCount())
                 .liked(liked)
                 .favored(favored)
+                .commented(commented)
                 .createTime(aiPlaza.getCreateTime())
                 .build();
 
