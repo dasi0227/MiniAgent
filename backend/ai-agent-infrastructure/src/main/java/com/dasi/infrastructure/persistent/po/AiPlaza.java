@@ -21,6 +21,10 @@ public class AiPlaza {
 
     private Long userId;
 
+    private String agentType;
+
+    private String username;
+
     private String plazaTitle;
 
     private String plazaDesc;

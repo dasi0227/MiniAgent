@@ -190,6 +190,8 @@ public class AgentRepository implements IAgentRepository {
             responseList.add(PlazaItemResponse.builder()
                     .plazaId(aiPlaza.getPlazaId())
                     .agentId(aiPlaza.getAgentId())
+                    .agentType(resolvePlazaAgentType(aiPlaza))
+                    .username(resolvePlazaUsername(aiPlaza))
                     .plazaTitle(aiPlaza.getPlazaTitle())
                     .plazaDesc(aiPlaza.getPlazaDesc())
                     .likeCount(aiPlaza.getLikeCount())
@@ -223,6 +225,8 @@ public class AgentRepository implements IAgentRepository {
         PlazaItemResponse plazaItem = PlazaItemResponse.builder()
                 .plazaId(aiPlaza.getPlazaId())
                 .agentId(aiPlaza.getAgentId())
+                .agentType(resolvePlazaAgentType(aiPlaza))
+                .username(resolvePlazaUsername(aiPlaza))
                 .plazaTitle(aiPlaza.getPlazaTitle())
                 .plazaDesc(aiPlaza.getPlazaDesc())
                 .likeCount(aiPlaza.getLikeCount())
@@ -269,6 +273,8 @@ public class AgentRepository implements IAgentRepository {
                 .plazaId(UUID.randomUUID().toString().replace("-", ""))
                 .agentId(request.getAgentId())
                 .userId(userId)
+                .agentType(aiAgent.getAgentType())
+                .username(resolveUsernameByUserId(userId))
                 .plazaTitle(request.getPlazaTitle())
                 .plazaDesc(StringUtils.hasText(request.getPlazaDesc()) ? request.getPlazaDesc() : "暂无")
                 .plazaStatus(1)
@@ -329,6 +335,15 @@ public class AgentRepository implements IAgentRepository {
                 .commentStatus(1)
                 .build());
         aiPlazaDao.increaseCommentCount(request.getPlazaId(), 1);
+    }
+
+    @Override
+    public void plazaCommentCount(Long userId, String plazaId) {
+        AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
+        if (aiPlaza == null) {
+            throw new AdminException("广场内容不存在");
+        }
+        aiPlazaDao.increaseCommentCount(plazaId, 1);
     }
 
     // -------------------- Repo --------------------
@@ -506,5 +521,25 @@ public class AgentRepository implements IAgentRepository {
             return "system";
         }
         return "fork";
+    }
+
+    private String resolvePlazaAgentType(AiPlaza aiPlaza) {
+        if (StringUtils.hasText(aiPlaza.getAgentType())) {
+            return aiPlaza.getAgentType();
+        }
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentIdWithFrom(aiPlaza.getAgentId(), aiPlaza.getUserId());
+        return aiAgent == null ? "react" : aiAgent.getAgentType();
+    }
+
+    private String resolvePlazaUsername(AiPlaza aiPlaza) {
+        if (StringUtils.hasText(aiPlaza.getUsername())) {
+            return aiPlaza.getUsername();
+        }
+        return resolveUsernameByUserId(aiPlaza.getUserId());
+    }
+
+    private String resolveUsernameByUserId(Long userId) {
+        User user = userDao.queryById(userId);
+        return user == null ? "未知用户" : user.getUsername();
     }
 }

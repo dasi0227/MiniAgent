@@ -42,6 +42,8 @@ public interface IAgentService {
 
     void plazaComment(PlazaCommentRequest request);
 
+    void plazaCommentCount(PlazaActionRequest request);
+
     List<RepoItemResponse> repoList();
 
     void repoAdd(RepoActionRequest request);

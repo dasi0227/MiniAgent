@@ -64,6 +64,7 @@ const PLAZA_PUBLISH_PATH = `${PLAZA_BASE_PATH}/publish`;
 const PLAZA_LIKE_PATH = `${PLAZA_BASE_PATH}/like`;
 const PLAZA_FAVOR_PATH = `${PLAZA_BASE_PATH}/favor`;
 const PLAZA_COMMENT_PATH = `${PLAZA_BASE_PATH}/comment`;
+const PLAZA_COMMENT_COUNT_PATH = `${PLAZA_BASE_PATH}/comment/count`;
 
 const REPO_BASE_PATH = '/api/v1/repo';
 const REPO_LIST_PATH = `${REPO_BASE_PATH}/list`;
@@ -317,6 +318,7 @@ export const plazaPublish = async (payload = {}) => http.post(PLAZA_PUBLISH_PATH
 export const plazaLike = async (payload = {}) => http.post(PLAZA_LIKE_PATH, trimStrings(payload));
 export const plazaFavor = async (payload = {}) => http.post(PLAZA_FAVOR_PATH, trimStrings(payload));
 export const plazaComment = async (payload = {}) => http.post(PLAZA_COMMENT_PATH, trimStrings(payload));
+export const plazaCommentCount = async (payload = {}) => http.post(PLAZA_COMMENT_COUNT_PATH, trimStrings(payload));
 
 // -------------------- Repository --------------------
 export const repoList = async () => http.get(REPO_LIST_PATH);

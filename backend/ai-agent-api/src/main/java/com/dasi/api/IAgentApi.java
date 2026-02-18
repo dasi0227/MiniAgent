@@ -43,6 +43,8 @@ public interface IAgentApi {
 
     Result<Void> plazaComment(PlazaCommentRequest request);
 
+    Result<Void> plazaCommentCount(PlazaActionRequest request);
+
     Result<List<RepoItemResponse>> repoList();
 
     Result<Void> repoAdd(RepoActionRequest request);

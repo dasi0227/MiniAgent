@@ -38,6 +38,8 @@ public interface IAgentRepository {
 
     void plazaComment(Long userId, PlazaCommentRequest request);
 
+    void plazaCommentCount(Long userId, String plazaId);
+
     List<RepoItemResponse> repoList(Long userId);
 
     void repoAdd(Long userId, String agentId);

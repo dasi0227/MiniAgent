@@ -17,6 +17,10 @@ public class PlazaItemResponse {
 
     private String agentId;
 
+    private String agentType;
+
+    private String username;
+
     private String plazaTitle;
 
     private String plazaDesc;

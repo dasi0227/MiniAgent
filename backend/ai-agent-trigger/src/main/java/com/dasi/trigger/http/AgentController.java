@@ -110,6 +110,13 @@ public class AgentController implements IAgentApi {
         return Result.success();
     }
 
+    @Override
+    @PostMapping("/plaza/comment/count")
+    public Result<Void> plazaCommentCount(@Valid @RequestBody PlazaActionRequest request) {
+        agentService.plazaCommentCount(request);
+        return Result.success();
+    }
+
     // -------------------- Repo --------------------
 
     @Override

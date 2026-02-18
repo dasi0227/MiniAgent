@@ -91,6 +91,11 @@ public class AgentService implements IAgentService {
         agentRepository.plazaComment(requiredUserId(), request);
     }
 
+    @Override
+    public void plazaCommentCount(PlazaActionRequest request) {
+        agentRepository.plazaCommentCount(requiredUserId(), request.getPlazaId());
+    }
+
     // -------------------- Repo --------------------
 
     @Override
