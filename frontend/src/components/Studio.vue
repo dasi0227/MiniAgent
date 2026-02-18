@@ -1,9 +1,11 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { queryChatMcps, studioCreate, studioGenerate, studioUpdate } from '../request/api';
 import { normalizeError } from '../request/request';
 import AppFooter from './AppFooter.vue';
 
+const router = useRouter();
 const loading = ref(false);
 const saveLoading = ref(false);
 const saveMode = ref('create');
@@ -102,43 +104,62 @@ const doSave = async () => {
     }
 };
 
+const goRepository = () => {
+    router.push('/repository');
+};
+
 onMounted(async () => {
     await loadMcps();
 });
 </script>
 
 <template>
-    <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--bg-page)]">
+    <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-white">
         <div class="overflow-y-auto py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
-            <div class="mx-auto max-w-[980px] space-y-[16px]">
-                <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Studio</h1>
+            <div class="mx-auto max-w-[1100px] space-y-[20px]">
+                <div class="flex items-center justify-between gap-[12px]">
+                    <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Studio</h1>
+                    <button
+                        class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[13px] font-semibold text-[#334155] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                        @click="goRepository"
+                    >
+                        我的仓库
+                    </button>
+                </div>
 
-                <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px] space-y-[10px]">
-                    <div class="grid gap-[10px] md:grid-cols-[1fr_160px]">
+                <div class="space-y-[12px] rounded-[16px] bg-[#f8fafc] p-[16px]">
+                    <div class="grid gap-[12px] md:grid-cols-[1fr_180px]">
                         <textarea
                             v-model="form.taskPrompt"
-                            class="w-full min-h-[110px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]"
-                            placeholder="输入你想创建的 MiniAgent 任务描述"
+                            class="w-full min-h-[140px] rounded-[14px] border border-[rgba(148,163,184,0.35)] bg-white px-[12px] py-[12px] text-[14px] outline-none focus:border-[var(--accent-color)]"
+                            placeholder="请输入你的 MiniAgent 需求"
                         ></textarea>
                         <div class="space-y-[10px]">
-                            <select v-model="form.strategy" class="w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]">
+                            <select
+                                v-model="form.strategy"
+                                class="w-full rounded-[12px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
+                            >
                                 <option value="step">step</option>
                                 <option value="loop">loop</option>
                                 <option value="react">react</option>
                             </select>
                             <button
-                                class="w-full rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[10px] text-white font-semibold disabled:opacity-70"
+                                class="w-full rounded-[12px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[10px] text-white font-semibold disabled:opacity-70"
                                 :disabled="loading"
                                 @click="doGenerate"
                             >
-                                {{ loading ? '生成中...' : '生成草稿' }}
+                                {{ loading ? '生成中...' : '一键生成' }}
                             </button>
                         </div>
                     </div>
                     <div>
-                        <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">MCP 选择</div>
+                        <div class="mb-[8px] text-[13px] text-[var(--text-secondary)]">MCP 工具</div>
                         <div class="flex flex-wrap gap-[8px]">
-                            <label v-for="item in mcpList" :key="item.mcpId" class="inline-flex items-center gap-[6px] rounded-[999px] border border-[var(--border-color)] px-[10px] py-[4px] text-[12px]">
+                            <label
+                                v-for="item in mcpList"
+                                :key="item.mcpId"
+                                class="inline-flex items-center gap-[6px] rounded-[999px] border border-[rgba(148,163,184,0.4)] bg-white px-[10px] py-[5px] text-[12px]"
+                            >
                                 <input v-model="form.mcpIdList" type="checkbox" :value="item.mcpId" />
                                 <span>{{ item.mcpName }}</span>
                                 <span class="text-[var(--text-secondary)]">({{ item.sourceType || 'system' }})</span>
@@ -147,19 +168,28 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px] space-y-[10px]">
+                <div class="space-y-[10px] border-t border-[var(--border-color)] pt-[16px]">
+                    <div class="text-[14px] font-semibold text-[var(--text-secondary)]">MiniAgent 草稿</div>
                     <div class="grid gap-[10px] md:grid-cols-2">
-                        <input v-model="generated.agentName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="MiniAgent 名称" />
-                        <input v-model="generated.agentDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="MiniAgent 描述" />
+                        <input
+                            v-model="generated.agentName"
+                            class="rounded-[12px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
+                            placeholder="MiniAgent 名称"
+                        />
+                        <input
+                            v-model="generated.agentDesc"
+                            class="rounded-[12px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
+                            placeholder="MiniAgent 描述"
+                        />
                     </div>
                     <textarea
                         v-model="generated.flowPrompt"
-                        class="w-full min-h-[140px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]"
+                        class="w-full min-h-[160px] rounded-[14px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
                         placeholder="Flow Prompt"
                     ></textarea>
                     <div class="flex justify-end">
                         <button
-                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-white font-semibold disabled:opacity-70"
+                            class="rounded-[12px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-white font-semibold disabled:opacity-70"
                             :disabled="saveLoading"
                             @click="doSave"
                         >
@@ -168,7 +198,6 @@ onMounted(async () => {
                     </div>
                     <div v-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
                 </div>
-
             </div>
         </div>
 

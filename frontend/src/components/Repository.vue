@@ -1,7 +1,7 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { plazaPublish, repoList, repoRemove, studioListMine } from '../request/api';
+import { repoList, repoRemove, studioListMine } from '../request/api';
 import { normalizeError } from '../request/request';
 import { useWelcomeLaunchStore } from '../router/pinia';
 import AppFooter from './AppFooter.vue';
@@ -12,11 +12,6 @@ const loading = ref(false);
 const message = ref('');
 const repoItems = ref([]);
 const mineAgents = ref([]);
-const publishForm = reactive({
-    agentId: '',
-    plazaTitle: '',
-    plazaDesc: ''
-});
 
 const pickData = (resp) => {
     if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
@@ -46,30 +41,8 @@ const loadMine = async () => {
         const resp = await studioListMine();
         const list = pickData(resp) || [];
         mineAgents.value = Array.isArray(list) ? list : [];
-        if (!publishForm.agentId && mineAgents.value.length > 0) {
-            publishForm.agentId = mineAgents.value[0].agentId;
-        }
     } catch (error) {
         message.value = normalizeError(error).message || '获取我的 MiniAgent 失败';
-    }
-};
-
-const doPublish = async () => {
-    if (!publishForm.agentId || !publishForm.plazaTitle.trim()) {
-        message.value = '请选择 MiniAgent 并填写展示标题';
-        return;
-    }
-    try {
-        await plazaPublish({
-            agentId: publishForm.agentId,
-            plazaTitle: publishForm.plazaTitle,
-            plazaDesc: publishForm.plazaDesc
-        });
-        publishForm.plazaTitle = '';
-        publishForm.plazaDesc = '';
-        message.value = '发布成功';
-    } catch (error) {
-        message.value = normalizeError(error).message || '发布失败';
     }
 };
 
@@ -102,22 +75,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--bg-page)]">
+    <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-white">
         <div class="overflow-y-auto py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
-            <div class="mx-auto max-w-[980px] space-y-[16px]">
-                <h1 class="text-[24px] font-bold">MiniAgent Repository</h1>
-
-                <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px]">
-                    <div class="mb-[10px] text-[16px] font-semibold">发布我的 MiniAgent</div>
-                    <div v-if="mineAgents.length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无可发布的 MiniAgent</div>
-                    <div v-else class="grid gap-[10px] md:grid-cols-[220px_1fr_1fr_auto]">
-                        <select v-model="publishForm.agentId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]">
-                            <option v-for="item in mineAgents" :key="item.agentId" :value="item.agentId">{{ item.agentName }}</option>
-                        </select>
-                        <input v-model="publishForm.plazaTitle" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="展示标题" />
-                        <input v-model="publishForm.plazaDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] text-[14px]" placeholder="展示描述" />
-                        <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-white font-semibold" @click="doPublish">发布</button>
-                    </div>
+            <div class="mx-auto max-w-[1100px] space-y-[16px]">
+                <div class="flex items-center justify-between gap-[12px]">
+                    <h1 class="text-[24px] font-bold">MiniAgent Repository</h1>
                 </div>
 
                 <div class="rounded-[14px] border border-[var(--border-color)] bg-white p-[14px]">

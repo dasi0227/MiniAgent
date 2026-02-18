@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { plazaComment, plazaDetail, plazaFavor, plazaLike, plazaList, repoFork } from '../request/api';
 import { normalizeError } from '../request/request';
 import AppFooter from './AppFooter.vue';
 
+const router = useRouter();
 const loading = ref(false);
 const message = ref('');
 const plazaItems = ref([]);
@@ -199,17 +201,29 @@ const doComment = async () => {
 onMounted(async () => {
     await loadPlaza();
 });
+
+const goRepository = () => {
+    router.push('/repository');
+};
 </script>
 
 <template>
     <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-white">
         <div class="overflow-y-auto py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
             <div class="mx-auto max-w-[1100px] space-y-[16px]">
-                <h1 class="text-[24px] font-bold">MiniAgent Plaza</h1>
+                <div class="flex items-center justify-between gap-[12px]">
+                    <h1 class="text-[24px] font-bold">MiniAgent Plaza</h1>
+                    <button
+                        class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[13px] font-semibold text-[#334155] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                        @click="goRepository"
+                    >
+                        我的仓库
+                    </button>
+                </div>
 
                 <input
                     v-model="searchKeyword"
-                    class="w-full bg-transparent px-[2px] py-[8px] text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
+                    class="w-full rounded-[999px] border border-[var(--border-color)] bg-white px-[16px] py-[10px] text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
                     placeholder="搜索 MiniAgent（标题 / 描述 / 作者 / 类型）"
                 />
 

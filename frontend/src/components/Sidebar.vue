@@ -48,7 +48,6 @@ const isChatRoute = computed(() => route.path.startsWith('/chat'));
 const isWelcomeRoute = computed(() => route.path.startsWith('/welcome'));
 const isStudioRoute = computed(() => route.path.startsWith('/studio'));
 const isPlazaRoute = computed(() => route.path.startsWith('/plaza'));
-const isRepoRoute = computed(() => route.path.startsWith('/repository'));
 
 const showChatList = ref(true);
 const showAgentList = ref(true);
@@ -741,9 +740,9 @@ const exportApi = async (item) => {
         <div
             class="mb-[12px] mt-[8px] flex flex-1 flex-col gap-[12px] overflow-y-auto pr-[4px] [scrollbar-gutter:stable_both-edges] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
-            <div class="grid grid-cols-3 gap-[6px]">
+            <div class="flex flex-col gap-[8px]">
                 <button
-                    class="rounded-[10px] border px-[8px] py-[7px] text-[12px] transition-all duration-200"
+                    class="w-full rounded-[12px] border px-[14px] py-[10px] text-[14px] font-semibold transition-all duration-200"
                     :class="
                         isStudioRoute
                             ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
@@ -752,10 +751,10 @@ const exportApi = async (item) => {
                     type="button"
                     @click="goRoute('/studio')"
                 >
-                    Studio
+                    MiniAgent Studio
                 </button>
                 <button
-                    class="rounded-[10px] border px-[8px] py-[7px] text-[12px] transition-all duration-200"
+                    class="w-full rounded-[12px] border px-[14px] py-[10px] text-[14px] font-semibold transition-all duration-200"
                     :class="
                         isPlazaRoute
                             ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
@@ -764,28 +763,21 @@ const exportApi = async (item) => {
                     type="button"
                     @click="goRoute('/plaza')"
                 >
-                    Plaza
+                    MiniAgent Plaza
                 </button>
                 <button
-                    class="rounded-[10px] border px-[8px] py-[7px] text-[12px] transition-all duration-200"
+                    class="w-full rounded-[12px] border px-[14px] py-[10px] text-[14px] font-semibold transition-all duration-200"
                     :class="
-                        isRepoRoute
+                        isWelcomeRoute
                             ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
                             : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
                     "
                     type="button"
-                    @click="goRoute('/repository')"
+                    @click="handleNewSession"
                 >
-                    Repo
+                    ＋ 新建会话
                 </button>
             </div>
-            <button
-                class="mb-[6px] flex w-full justify-center rounded-[12px] border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.12)] px-[14px] py-[10px] font-semibold text-[#e7ecf4] transition-all duration-200 hover:bg-[rgba(255,255,255,0.16)]"
-                type="button"
-                @click="handleNewSession"
-            >
-                ＋ 新建会话
-            </button>
             <div v-if="sessionLoading" class="text-[12px] text-[rgba(231,236,244,0.7)]">会话加载中...</div>
             <div v-else-if="sessionError" class="text-[12px] text-[#fca5a5]">{{ sessionError }}</div>
 
