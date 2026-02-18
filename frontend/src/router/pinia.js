@@ -234,7 +234,7 @@ const loadAgentSettings = () => {
         }
         return { ...defaultAgentSettings(), ...JSON.parse(raw) };
     } catch (error) {
-        console.warn('无法解析 Agent 设置，使用默认值', error);
+        console.warn('无法解析 MiniAgent 设置，使用默认值', error);
         return defaultAgentSettings();
     }
 };

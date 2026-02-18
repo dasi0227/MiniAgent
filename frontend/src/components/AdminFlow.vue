@@ -101,9 +101,9 @@ const loadAgents = async () => {
     loading.agents = true;
     try {
         const res = await adminAgentList({});
-        agents.value = pickData(res, '获取 Agent 失败') || [];
+        agents.value = pickData(res, '获取 MiniAgent 失败') || [];
     } catch (err) {
-        const msg = normalizeError(err).message || '获取 Agent 失败';
+        const msg = normalizeError(err).message || '获取 MiniAgent 失败';
         notifyAdminError(err, msg);
         agents.value = [];
     } finally {
@@ -245,9 +245,9 @@ onMounted(async () => {
             </header>
 
             <div class="flex-1 overflow-auto p-6">
-                <!-- Agent 网格 -->
+                <!-- MiniAgent 网格 -->
                 <div v-if="!selectedAgent" class="h-full overflow-auto">
-                    <div class="mb-4 text-left text-[14px] text-[#94a3b8]">共 {{ agents.length }} 个 Agent</div>
+                    <div class="mb-4 text-left text-[14px] text-[#94a3b8]">共 {{ agents.length }} 个 MiniAgent</div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         <div
                             v-for="agent in agents"
@@ -519,7 +519,7 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <AppFooter wrapper-class="bg-white border-[#e2e8f0] backdrop-blur-0" inner-class="px-6 text-[#64748b]" />
+            <AppFooter layout="admin" />
         </div>
 
         <!-- 确认弹窗 -->

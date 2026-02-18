@@ -260,7 +260,7 @@ const moduleDefs = [
         }),
         fields: [
             { prop: 'taskId', label: 'Task ID', required: true },
-            { prop: 'agentId', label: 'Agent ID', type: 'select', optionsKey: 'agents', required: true },
+            { prop: 'agentId', label: 'MiniAgent ID', type: 'select', optionsKey: 'agents', required: true },
             { prop: 'taskCron', label: 'Cron', required: true, placeholder: '如 0 */1 * * * ?' },
             { prop: 'taskDesc', label: '描述', type: 'textarea' },
             { prop: 'taskParam', label: '参数', type: 'textarea', required: true, placeholder: 'JSON' },
@@ -268,15 +268,15 @@ const moduleDefs = [
         ],
         columns: [
             { prop: 'taskId', label: 'ID' },
-            { prop: 'agentId', label: 'Agent' },
+            { prop: 'agentId', label: 'MiniAgent' },
             { prop: 'taskCron', label: 'Cron' }
         ]
     },
     {
         key: 'agent',
-        label: 'AGENT',
+        label: 'MiniAgent',
         group: 'model',
-        title: 'AGENT 管理',
+        title: 'MiniAgent 管理',
         statusField: 'agentStatus',
         search: ['idKeyword', 'nameKeyword', 'agentType'],
         query: { idKeyword: '', nameKeyword: '', agentType: '', pageNum: 1, pageSize: 10 },
@@ -289,7 +289,7 @@ const moduleDefs = [
             agentStatus: 1
         }),
         fields: [
-            { prop: 'agentId', label: 'Agent ID', required: true },
+            { prop: 'agentId', label: 'MiniAgent ID', required: true },
             { prop: 'agentName', label: '名称', required: true },
             {
                 prop: 'agentType',
@@ -634,7 +634,7 @@ const handleSelectModule = (key) => {
                                     v-model="stateMap[currentKey].query.agentId"
                                     class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
                                 >
-                                    <option value="">全部 Agent</option>
+                                    <option value="">全部 MiniAgent</option>
                                     <option v-for="opt in options.agents" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                                 </select>
                             </template>
@@ -795,7 +795,7 @@ const handleSelectModule = (key) => {
                     </div>
                 </div>
             </div>
-            <AppFooter wrapper-class="bg-white border-[#e2e8f0] backdrop-blur-0" inner-class="px-6 text-[#64748b]" />
+            <AppFooter layout="admin" />
         </div>
 
         <div

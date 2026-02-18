@@ -46,6 +46,9 @@ const currentAgentSessionId = computed(() => agentStore.currentSessionId);
 const isAgentRoute = computed(() => route.path.startsWith('/work'));
 const isChatRoute = computed(() => route.path.startsWith('/chat'));
 const isWelcomeRoute = computed(() => route.path.startsWith('/welcome'));
+const isStudioRoute = computed(() => route.path.startsWith('/studio'));
+const isPlazaRoute = computed(() => route.path.startsWith('/plaza'));
+const isRepoRoute = computed(() => route.path.startsWith('/repository'));
 
 const showChatList = ref(true);
 const showAgentList = ref(true);
@@ -68,6 +71,10 @@ const mcpLoading = ref(false);
 const mcpError = ref('');
 const mcpList = ref([]);
 const mcpEditing = ref(false);
+const apiError = ref('');
+const apiList = ref([]);
+const apiEditing = ref(false);
+const USER_API_STORAGE_KEY = 'dasi_user_api_config_v1';
 const profileForm = reactive({
     username: currentUser.value.username || '',
     oldPassword: '',
@@ -77,12 +84,21 @@ const mcpForm = reactive({
     id: null,
     mcpId: '',
     mcpName: '',
-    mcpType: 'sse',
+    mcpTransport: 'mcp',
     mcpConfig: '',
     mcpDesc: '',
     mcpTimeout: 180,
     mcpChat: 1,
     secretMapText: ''
+});
+const apiForm = reactive({
+    id: null,
+    apiId: '',
+    apiBaseUrl: '',
+    apiKey: '',
+    apiCompletionsPath: '/v1/chat/completions',
+    apiEmbeddingsPath: '/v1/embeddings',
+    apiDesc: ''
 });
 const sessionLoading = ref(false);
 const sessionError = ref('');
@@ -99,6 +115,21 @@ const pickData = (resp, message = '操作失败') => {
     }
     return resp?.data ?? resp?.result ?? resp;
 };
+
+const mapBackendMcpTypeToTransport = (mcpType) => {
+    const normalized = (mcpType || '').toString().toLowerCase();
+    return normalized === 'stdio' ? 'stdio' : 'mcp';
+};
+
+const mapTransportToBackendMcpType = (transport) => (transport === 'stdio' ? 'stdio' : 'sse');
+
+const getMcpTransportLabel = (mcpType) => mapBackendMcpTypeToTransport(mcpType);
+
+const mcpConfigPlaceholder = computed(() =>
+    mcpForm.mcpTransport === 'stdio'
+        ? '{"command":"npx","args":["-y","@modelcontextprotocol/server-filesystem","/tmp"]}'
+        : '{"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'
+);
 
 const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() : '');
 
@@ -393,7 +424,9 @@ const openProfile = () => {
     profileError.value = '';
     profileTab.value = 'profile';
     resetMcpForm();
+    resetApiForm();
     loadUserMcp();
+    loadUserApi();
     showProfile.value = true;
 };
 
@@ -403,6 +436,8 @@ const closeProfile = () => {
     profileError.value = '';
     mcpError.value = '';
     mcpEditing.value = false;
+    apiError.value = '';
+    apiEditing.value = false;
 };
 
 const saveProfile = async () => {
@@ -448,7 +483,7 @@ const resetMcpForm = () => {
     mcpForm.id = null;
     mcpForm.mcpId = '';
     mcpForm.mcpName = '';
-    mcpForm.mcpType = 'sse';
+    mcpForm.mcpTransport = 'mcp';
     mcpForm.mcpConfig = '';
     mcpForm.mcpDesc = '';
     mcpForm.mcpTimeout = 180;
@@ -457,13 +492,41 @@ const resetMcpForm = () => {
     mcpEditing.value = false;
 };
 
+const resetApiForm = () => {
+    apiForm.id = null;
+    apiForm.apiId = '';
+    apiForm.apiBaseUrl = '';
+    apiForm.apiKey = '';
+    apiForm.apiCompletionsPath = '/v1/chat/completions';
+    apiForm.apiEmbeddingsPath = '/v1/embeddings';
+    apiForm.apiDesc = '';
+    apiEditing.value = false;
+};
+
+const loadUserApi = () => {
+    apiError.value = '';
+    try {
+        const raw = localStorage.getItem(USER_API_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        apiList.value = Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        apiList.value = [];
+        apiError.value = '读取 API 配置失败';
+    }
+};
+
+const persistUserApi = () => {
+    localStorage.setItem(USER_API_STORAGE_KEY, JSON.stringify(apiList.value));
+};
+
 const loadUserMcp = async () => {
     mcpLoading.value = true;
     mcpError.value = '';
     try {
         const resp = await userMcpList({});
         const list = pickData(resp, '获取 MCP 失败') || [];
-        mcpList.value = Array.isArray(list) ? list : [];
+        const normalized = Array.isArray(list) ? list : [];
+        mcpList.value = normalized.filter((item) => item?.editable || `${item?.sourceType || ''}`.toLowerCase() === 'mine');
     } catch (error) {
         mcpError.value = normalizeError(error).message || '获取 MCP 失败';
     } finally {
@@ -476,7 +539,7 @@ const editMcp = (item) => {
     mcpForm.id = item.id;
     mcpForm.mcpId = item.mcpId || '';
     mcpForm.mcpName = item.mcpName || '';
-    mcpForm.mcpType = item.mcpType || 'sse';
+    mcpForm.mcpTransport = mapBackendMcpTypeToTransport(item.mcpType);
     mcpForm.mcpConfig = item.mcpConfig || '';
     mcpForm.mcpDesc = item.mcpDesc || '';
     mcpForm.mcpTimeout = item.mcpTimeout ?? 180;
@@ -486,7 +549,7 @@ const editMcp = (item) => {
 };
 
 const saveMcp = async () => {
-    if (!mcpForm.mcpId.trim() || !mcpForm.mcpName.trim() || !mcpForm.mcpType.trim() || !mcpForm.mcpConfig.trim()) {
+    if (!mcpForm.mcpId.trim() || !mcpForm.mcpName.trim() || !mcpForm.mcpTransport.trim() || !mcpForm.mcpConfig.trim()) {
         mcpError.value = '请完整填写 MCP 必填字段';
         return;
     }
@@ -510,7 +573,7 @@ const saveMcp = async () => {
         id: mcpForm.id,
         mcpId: mcpForm.mcpId,
         mcpName: mcpForm.mcpName,
-        mcpType: mcpForm.mcpType,
+        mcpType: mapTransportToBackendMcpType(mcpForm.mcpTransport),
         mcpConfig: mcpForm.mcpConfig,
         mcpDesc: mcpForm.mcpDesc,
         mcpTimeout: Number(mcpForm.mcpTimeout) || 180,
@@ -574,6 +637,64 @@ const exportMcp = async (item) => {
         mcpError.value = normalizeError(error).message || '导出 MCP 失败';
     }
 };
+
+const editApi = (item) => {
+    if (!item) return;
+    apiForm.id = item.id;
+    apiForm.apiId = item.apiId || '';
+    apiForm.apiBaseUrl = item.apiBaseUrl || '';
+    apiForm.apiKey = item.apiKey || '';
+    apiForm.apiCompletionsPath = item.apiCompletionsPath || '/v1/chat/completions';
+    apiForm.apiEmbeddingsPath = item.apiEmbeddingsPath || '/v1/embeddings';
+    apiForm.apiDesc = item.apiDesc || '';
+    apiEditing.value = true;
+};
+
+const saveApi = async () => {
+    if (!apiForm.apiId.trim() || !apiForm.apiBaseUrl.trim() || !apiForm.apiKey.trim()) {
+        apiError.value = '请完整填写 API 必填字段';
+        return;
+    }
+    apiError.value = '';
+    const payload = {
+        id: apiForm.id || `${Date.now()}`,
+        apiId: apiForm.apiId.trim(),
+        apiBaseUrl: apiForm.apiBaseUrl.trim(),
+        apiKey: apiForm.apiKey.trim(),
+        apiCompletionsPath: apiForm.apiCompletionsPath.trim() || '/v1/chat/completions',
+        apiEmbeddingsPath: apiForm.apiEmbeddingsPath.trim() || '/v1/embeddings',
+        apiDesc: apiForm.apiDesc.trim()
+    };
+
+    const nextList = [...apiList.value];
+    const targetIndex = nextList.findIndex((item) => `${item.id}` === `${payload.id}`);
+    if (targetIndex >= 0) {
+        nextList[targetIndex] = payload;
+    } else {
+        nextList.unshift(payload);
+    }
+    apiList.value = nextList;
+    persistUserApi();
+    resetApiForm();
+};
+
+const deleteApi = (item) => {
+    if (!item?.id) return;
+    apiList.value = apiList.value.filter((entry) => `${entry.id}` !== `${item.id}`);
+    persistUserApi();
+    if (`${apiForm.id}` === `${item.id}`) {
+        resetApiForm();
+    }
+};
+
+const exportApi = async (item) => {
+    try {
+        await navigator.clipboard.writeText(JSON.stringify(item || {}, null, 2));
+        apiError.value = '已复制导出 JSON 到剪贴板';
+    } catch (error) {
+        apiError.value = '导出 API 失败';
+    }
+};
 </script>
 
 <template>
@@ -593,7 +714,7 @@ const exportMcp = async (item) => {
                 </div>
                 <div>
                     <div class="text-[20px] font-bold transition-colors duration-200 group-hover:text-[#9ed7ff]">
-                        Dasi AI
+                        MiniAgent
                     </div>
                     <div class="text-[12px] text-[rgba(231,236,244,0.7)]">RAG · MCP · OPENAI</div>
                 </div>
@@ -620,6 +741,44 @@ const exportMcp = async (item) => {
         <div
             class="mb-[12px] mt-[8px] flex flex-1 flex-col gap-[12px] overflow-y-auto pr-[4px] [scrollbar-gutter:stable_both-edges] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
+            <div class="grid grid-cols-3 gap-[6px]">
+                <button
+                    class="rounded-[10px] border px-[8px] py-[7px] text-[12px] transition-all duration-200"
+                    :class="
+                        isStudioRoute
+                            ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
+                            : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+                    "
+                    type="button"
+                    @click="goRoute('/studio')"
+                >
+                    Studio
+                </button>
+                <button
+                    class="rounded-[10px] border px-[8px] py-[7px] text-[12px] transition-all duration-200"
+                    :class="
+                        isPlazaRoute
+                            ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
+                            : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+                    "
+                    type="button"
+                    @click="goRoute('/plaza')"
+                >
+                    Plaza
+                </button>
+                <button
+                    class="rounded-[10px] border px-[8px] py-[7px] text-[12px] transition-all duration-200"
+                    :class="
+                        isRepoRoute
+                            ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
+                            : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+                    "
+                    type="button"
+                    @click="goRoute('/repository')"
+                >
+                    Repo
+                </button>
+            </div>
             <button
                 class="mb-[6px] flex w-full justify-center rounded-[12px] border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.12)] px-[14px] py-[10px] font-semibold text-[#e7ecf4] transition-all duration-200 hover:bg-[rgba(255,255,255,0.16)]"
                 type="button"
@@ -627,29 +786,6 @@ const exportMcp = async (item) => {
             >
                 ＋ 新建会话
             </button>
-            <div class="grid grid-cols-3 gap-[6px]">
-                <button
-                    class="rounded-[10px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[7px] text-[12px] hover:bg-[rgba(255,255,255,0.16)]"
-                    type="button"
-                    @click="goRoute('/studio')"
-                >
-                    Studio
-                </button>
-                <button
-                    class="rounded-[10px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[7px] text-[12px] hover:bg-[rgba(255,255,255,0.16)]"
-                    type="button"
-                    @click="goRoute('/plaza')"
-                >
-                    Plaza
-                </button>
-                <button
-                    class="rounded-[10px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[7px] text-[12px] hover:bg-[rgba(255,255,255,0.16)]"
-                    type="button"
-                    @click="goRoute('/repository')"
-                >
-                    Repo
-                </button>
-            </div>
             <div v-if="sessionLoading" class="text-[12px] text-[rgba(231,236,244,0.7)]">会话加载中...</div>
             <div v-else-if="sessionError" class="text-[12px] text-[#fca5a5]">{{ sessionError }}</div>
 
@@ -878,7 +1014,7 @@ const exportMcp = async (item) => {
                         @click="confirmNewSession('work')"
                     >
                         <img :src="workIcon" alt="Work" class="h-[200px] w-[200px]" />
-                        <div class="text-[40px] font-semibold">Work Agent</div>
+                        <div class="text-[40px] font-semibold">Work MiniAgent</div>
                     </button>
                 </div>
                 <div v-if="sessionLimitError" class="rounded-[10px] border border-[rgba(15,23,42,0.1)] bg-white px-[16px] py-[10px] text-[14px] text-[#dc2626] shadow-[0_12px_30px_rgba(15,23,42,0.12)]">
@@ -906,7 +1042,7 @@ const exportMcp = async (item) => {
                             :class="profileTab === 'profile' ? 'bg-white text-[var(--accent-color)] shadow-sm' : 'text-[var(--text-secondary)]'"
                             @click="profileTab = 'profile'"
                         >
-                            个人资料
+                            Profile
                         </button>
                         <button
                             class="rounded-[8px] px-[12px] py-[6px] text-[13px] font-semibold"
@@ -914,6 +1050,13 @@ const exportMcp = async (item) => {
                             @click="profileTab = 'mcp'"
                         >
                             MCP 配置
+                        </button>
+                        <button
+                            class="rounded-[8px] px-[12px] py-[6px] text-[13px] font-semibold"
+                            :class="profileTab === 'api' ? 'bg-white text-[var(--accent-color)] shadow-sm' : 'text-[var(--text-secondary)]'"
+                            @click="profileTab = 'api'"
+                        >
+                            API 配置
                         </button>
                     </div>
 
@@ -966,16 +1109,23 @@ const exportMcp = async (item) => {
                         </div>
                     </div>
 
-                    <div v-else class="space-y-[12px]">
+                    <div v-else-if="profileTab === 'mcp'" class="space-y-[12px]">
                         <div class="grid grid-cols-2 gap-[10px] max-[680px]:grid-cols-1">
                             <input v-model="mcpForm.mcpId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="mcpId（如 wecom）" />
                             <input v-model="mcpForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="mcpName" />
-                            <input v-model="mcpForm.mcpType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="mcpType（sse/stdio）" />
+                            <select v-model="mcpForm.mcpTransport" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]">
+                                <option value="mcp">mcp</option>
+                                <option value="stdio">stdio</option>
+                            </select>
                             <input v-model.number="mcpForm.mcpTimeout" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="timeout（秒）" />
                             <input v-model.number="mcpForm.mcpChat" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="chat开关（1/0）" />
                             <input v-model="mcpForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="描述" />
                         </div>
-                        <textarea v-model="mcpForm.mcpConfig" class="min-h-[86px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder='mcpConfig JSON，例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
+                        <textarea
+                            v-model="mcpForm.mcpConfig"
+                            class="min-h-[86px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]"
+                            :placeholder="`mcpConfig JSON，例如 ${mcpConfigPlaceholder}`"
+                        ></textarea>
                         <textarea v-model="mcpForm.secretMapText" class="min-h-[64px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder='secretMap JSON（可选），例如 {"corpid":"xxx","corpsecret":"yyy","agentid":"1"}'></textarea>
                         <div class="flex gap-[8px]">
                             <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] text-white" @click="saveMcp">{{ mcpEditing ? '更新 MCP' : '新增 MCP' }}</button>
@@ -988,7 +1138,7 @@ const exportMcp = async (item) => {
                                 <div class="flex items-center justify-between gap-[10px]">
                                     <div class="min-w-0">
                                         <div class="truncate text-[13px] font-semibold">{{ item.mcpName }} ({{ item.mcpId }})</div>
-                                        <div class="text-[12px] text-[var(--text-secondary)]">{{ item.sourceType }} · chat={{ item.mcpChat }}</div>
+                                        <div class="text-[12px] text-[var(--text-secondary)]">{{ getMcpTransportLabel(item.mcpType) }} · chat={{ item.mcpChat }}</div>
                                     </div>
                                     <div class="flex shrink-0 gap-[6px]">
                                         <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="testMcp(item)">测试</button>
@@ -999,6 +1149,41 @@ const exportMcp = async (item) => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div v-else class="space-y-[12px]">
+                        <div class="rounded-[10px] border border-[var(--border-color)] bg-[#f8fafc] px-[10px] py-[8px] text-[12px] text-[var(--text-secondary)]">
+                            当前为前端配置页，数据会保存到浏览器本地。
+                        </div>
+                        <div class="grid grid-cols-2 gap-[10px] max-[680px]:grid-cols-1">
+                            <input v-model="apiForm.apiId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="apiId（如 openai）" />
+                            <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="apiBaseUrl（如 https://api.openai.com）" />
+                            <input v-model="apiForm.apiCompletionsPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="/v1/chat/completions" />
+                            <input v-model="apiForm.apiEmbeddingsPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="/v1/embeddings" />
+                            <input v-model="apiForm.apiDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="描述（可选）" />
+                            <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="apiKey" />
+                        </div>
+                        <div class="flex gap-[8px]">
+                            <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] text-white" @click="saveApi">{{ apiEditing ? '更新 API' : '新增 API' }}</button>
+                            <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[12px]" @click="resetApiForm">重置</button>
+                        </div>
+                        <div v-if="apiError" class="text-[12px] text-[#f87171]">{{ apiError }}</div>
+                        <div class="max-h-[280px] space-y-[8px] overflow-y-auto">
+                            <div v-for="item in apiList" :key="item.id" class="rounded-[10px] border border-[var(--border-color)] p-[10px]">
+                                <div class="flex items-center justify-between gap-[10px]">
+                                    <div class="min-w-0">
+                                        <div class="truncate text-[13px] font-semibold">{{ item.apiId }}</div>
+                                        <div class="truncate text-[12px] text-[var(--text-secondary)]">{{ item.apiBaseUrl }}</div>
+                                    </div>
+                                    <div class="flex shrink-0 gap-[6px]">
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="exportApi(item)">导出</button>
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="editApi(item)">编辑</button>
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="deleteApi(item)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 API 配置</div>
                         </div>
                     </div>
                 </div>

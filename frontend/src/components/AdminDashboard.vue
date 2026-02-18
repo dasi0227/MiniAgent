@@ -65,7 +65,7 @@ const handleRefresh = async () => {
 const statCardRows = computed(() => {
     const countInfo = dashboard.value?.countInfo || {};
     const cards = {
-        agent: { key: 'agent', label: 'AGENT', value: countInfo.agentCount ?? 0, path: '/admin/agent' },
+        agent: { key: 'agent', label: 'MiniAgent', value: countInfo.agentCount ?? 0, path: '/admin/agent' },
         client: { key: 'client', label: 'CLIENT', value: countInfo.clientCount ?? 0, path: '/admin/client' },
         flow: { key: 'flow', label: 'FLOW', value: countInfo.flowCount ?? 0, path: '/admin/flow' },
         config: { key: 'config', label: 'CONFIG', value: countInfo.configCount ?? 0, path: '/admin/config' },
@@ -523,7 +523,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
             </div>
-            <AppFooter inner-class="px-6" />
+            <AppFooter layout="admin" />
         </div>
     </div>
 </template>

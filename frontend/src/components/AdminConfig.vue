@@ -294,7 +294,7 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <AppFooter wrapper-class="bg-white border-[#e2e8f0] backdrop-blur-0" inner-class="px-6 text-[#64748b]" />
+            <AppFooter layout="admin" />
         </div>
 
         <div

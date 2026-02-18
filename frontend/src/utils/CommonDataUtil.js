@@ -12,7 +12,7 @@ export const adminMenuGroups = [
         name: 'model',
         label: '模型管理',
         items: [
-            { key: 'agent', label: 'AGENT', path: '/admin/agent' },
+            { key: 'agent', label: 'MiniAgent', path: '/admin/agent' },
             { key: 'client', label: 'CLIENT', path: '/admin/client' }
         ]
     },

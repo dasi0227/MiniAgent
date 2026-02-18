@@ -194,7 +194,7 @@ const currentAgentId = computed({
 
 const currentAgentLabel = computed(() => {
     if (!currentAgentId.value) {
-        return '选择AGENT';
+        return '选择 MiniAgent';
     }
     const match = agentOptions.value.find((item) => item.value === currentAgentId.value);
     return match?.label || currentAgentId.value;
@@ -239,7 +239,7 @@ const fetchAgents = async () => {
         }
         return unique;
     } catch (error) {
-        console.warn('获取 AGENT 列表失败', error);
+        console.warn('获取 MiniAgent 列表失败', error);
         return [];
     }
 };
@@ -640,7 +640,7 @@ const consumeWelcomeLaunchTask = async () => {
     }
 
     if (!currentAgentId.value) {
-        sendError.value = '暂无可用 AGENT，请先在后台配置 agent';
+        sendError.value = '暂无可用 MiniAgent，请先在后台配置 MiniAgent';
         return;
     }
 
@@ -654,7 +654,7 @@ const consumeWelcomeLaunchTask = async () => {
 
     const resolvedAgentId = (task.agentId || currentAgentId.value || '').trim();
     if (!resolvedAgentId) {
-        sendError.value = '暂无可用 AGENT，请先在后台配置 agent';
+        sendError.value = '暂无可用 MiniAgent，请先在后台配置 MiniAgent';
         return;
     }
     agentStore.setSessionAgent(validSession.id, resolvedAgentId);
@@ -705,7 +705,7 @@ onBeforeUnmount(() => {
             >
                 <div class="flex items-center gap-[10px]">
                     <div class="relative flex items-center gap-[14px] font-semibold">
-                        <label class="w-[36px] text-[14px] text-[var(--text-secondary)] text-right">AGENT</label>
+                        <label class="w-[72px] text-[14px] text-[var(--text-secondary)] text-right">MiniAgent</label>
                         <div
                             ref="agentSelectRef"
                             class="inline-flex min-h-[36px] min-w-[220px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
@@ -904,9 +904,7 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <AppFooter
-            inner-class="max-w-[900px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))] max-[720px]:pl-[8px] max-[720px]:pr-[calc(8px+var(--scrollbar-w))]"
-        />
+        <AppFooter />
 
         <div v-if="showSettings" class="fixed inset-0 z-[20] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="showSettings = false">
             <div class="w-full max-w-[520px] rounded-[16px] border border-[var(--border-color)] bg-white shadow-[0_20px_50px_rgba(15,23,42,0.2)]">

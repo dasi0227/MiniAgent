@@ -351,7 +351,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <AppFooter inner-class="px-6" />
+            <AppFooter layout="admin" />
         </div>
     </div>
 </template>

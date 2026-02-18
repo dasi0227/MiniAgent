@@ -214,16 +214,16 @@ const triggerWorkAction = async (action) => {
 
     const agents = normalizeOptions(agentList, 'agentId', 'agentName');
     if (!agents.length) {
-        throw new Error('暂无可用 AGENT，请先在后台配置 agent');
+        throw new Error('暂无可用 MiniAgent，请先在后台配置 MiniAgent');
     }
     const requestedAgentId = action?.agentId || '';
     const matchedAgent =
         (requestedAgentId && agents.find((item) => item.value === requestedAgentId)) || agents[0] || null;
     if (!matchedAgent?.value) {
-        throw new Error('未找到可用 AGENT');
+        throw new Error('未找到可用 MiniAgent');
     }
     if (requestedAgentId && matchedAgent.value !== requestedAgentId) {
-        throw new Error(`未找到指定 AGENT：${requestedAgentId}`);
+        throw new Error(`未找到指定 MiniAgent：${requestedAgentId}`);
     }
 
     welcomeLaunchStore.setTask({
@@ -320,8 +320,6 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <AppFooter
-            inner-class="max-w-[1060px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))] max-[720px]:pl-[8px] max-[720px]:pr-[calc(8px+var(--scrollbar-w))]"
-        />
+        <AppFooter />
     </section>
 </template>

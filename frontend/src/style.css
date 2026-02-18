@@ -15,6 +15,9 @@
         --shadow-soft: 0 12px 30px rgba(27, 36, 55, 0.08);
         --header-height: 60px;
         --footer-height: 46px;
+        --footer-content-max: 1060px;
+        --footer-pad-x: 24px;
+        --footer-pad-x-mobile: 8px;
         --avatar-bg: linear-gradient(135deg, #e0f3ff, #c7e1ff);
         --avatar-text: #0f172a;
         --scrollbar-w: 0px;

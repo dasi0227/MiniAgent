@@ -32,6 +32,6 @@ const goBack = () => router.back();
                 </div>
             </div>
         </div>
-        <AppFooter inner-class="px-[16px]" />
+        <AppFooter layout="auth" />
     </div>
 </template>
