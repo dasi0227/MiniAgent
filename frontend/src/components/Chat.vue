@@ -1211,108 +1211,108 @@ const handleUpload = async () => {
                 class="flex h-full w-full items-center justify-between gap-[12px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))] max-[720px]:pl-[8px] max-[720px]:pr-[calc(8px+var(--scrollbar-w))]"
             >
                 <div class="flex items-center gap-[10px]">
-                    <div class="relative flex items-center gap-[14px] font-semibold">
+                    <div class="flex items-center gap-[14px] font-semibold">
                         <label class="w-[36px] text-[14px] text-[var(--text-secondary)] text-right">CLIENT</label>
-                        <div
-                            ref="modelSelectRef"
-                            class="inline-flex min-h-[36px] min-w-[200px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
-                            :class="models.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
-                            @click="toggleModelDropdown"
-                        >
-                            <span class="font-bold text-[var(--text-primary)]">{{ currentModelLabel }}</span>
-                            <span
-                                class="caret transition-transform duration-150"
-                                :class="modelDropdownOpen ? 'caret-open' : 'caret-closed'"
-                            />
-                        </div>
-                        <div
-                            v-if="modelDropdownOpen && models.length > 0"
-                            class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
-                        >
+                        <div class="relative min-w-[200px]">
                             <div
-                                v-for="item in models"
-                                :key="item.value"
-                                class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
-                                :class="item.value === currentModel ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
-                                @click.stop="selectModel(item.value)"
+                                ref="modelSelectRef"
+                                class="inline-flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                                :class="models.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
+                                @click="toggleModelDropdown"
                             >
-                                <span class="inline-flex items-center gap-[8px]">
+                                <span class="font-bold text-[var(--text-primary)]">{{ currentModelLabel }}</span>
+                                <span
+                                    class="caret transition-transform duration-150"
+                                    :class="modelDropdownOpen ? 'caret-open' : 'caret-closed'"
+                                />
+                            </div>
+                            <div
+                                v-if="modelDropdownOpen && models.length > 0"
+                                class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
+                            >
+                                <div
+                                    v-for="item in models"
+                                    :key="item.value"
+                                    class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
+                                    :class="item.value === currentModel ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
+                                    @click.stop="selectModel(item.value)"
+                                >
                                     <span>{{ item.label }}</span>
-                                    <span class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] text-[var(--text-secondary)]">{{ item.sourceType || 'system' }}</span>
-                                </span>
-                                <span v-if="item.value === currentModel" class="text-[13px]">✓</span>
+                                    <span v-if="item.value === currentModel" class="text-[13px]">✓</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="relative flex items-center gap-[6px] font-semibold">
-                        <label class="w-[36px] text-[14px] text-[var(--text-secondary)] text-right">RAG</label>
-                        <div
-                            ref="ragSelectRef"
-                            class="inline-flex min-h-[36px] min-w-[200px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
-                            @click="toggleRagDropdown"
-                        >
-                            <span class="font-bold text-[var(--text-primary)]">
-                                {{ ragTags.find((t) => t.value === currentRagTag)?.label || '不使用知识库' }}
-                            </span>
-                            <span
-                                class="caret transition-transform duration-150"
-                                :class="ragDropdownOpen ? 'caret-open' : 'caret-closed'"
-                            />
-                        </div>
-                        <div
-                            v-if="ragDropdownOpen"
-                            class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
-                        >
-                            <div
-                                v-for="item in ragTags"
-                                :key="item.value || 'empty'"
-                                class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
-                                :class="item.value === currentRagTag ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
-                                @click.stop="selectRag(item.value)"
-                            >
-                                <span>{{ item.label }}</span>
-                                <span v-if="item.value === currentRagTag" class="text-[13px]">✓</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="relative flex items-center gap-[6px] font-semibold">
+                    <div class="flex items-center gap-[6px] font-semibold">
                         <label class="w-[36px] text-[14px] text-[var(--text-secondary)] text-right">MCP</label>
-                        <div
-                            ref="mcpSelectRef"
-                            class="inline-flex min-h-[36px] min-w-[200px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
-                            @click="toggleMcpDropdown"
-                        >
-                            <span class="font-bold text-[var(--text-primary)]">{{ currentMcpLabel }}</span>
-                            <span
-                                class="caret transition-transform duration-150"
-                                :class="mcpDropdownOpen ? 'caret-open' : 'caret-closed'"
-                            />
-                        </div>
-                        <div
-                            v-if="mcpDropdownOpen"
-                            class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
-                            @click.stop
-                        >
+                        <div class="relative min-w-[200px]">
                             <div
-                                v-if="mcpTools.length === 0"
-                                class="flex items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-secondary)]"
+                                ref="mcpSelectRef"
+                                class="inline-flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                                @click="toggleMcpDropdown"
                             >
-                                <span>暂无工具</span>
+                                <span class="font-bold text-[var(--text-primary)]">{{ currentMcpLabel }}</span>
+                                <span
+                                    class="caret transition-transform duration-150"
+                                    :class="mcpDropdownOpen ? 'caret-open' : 'caret-closed'"
+                                />
                             </div>
                             <div
-                                v-for="item in mcpTools"
-                                :key="item.value"
-                                class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
-                                :class="selectedMcpIds.includes(item.value) ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
-                                @click.stop="toggleMcpSelection(item.value)"
+                                v-if="mcpDropdownOpen"
+                                class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
+                                @click.stop
                             >
-                                <span class="inline-flex items-center gap-[8px]">
+                                <div
+                                    v-if="mcpTools.length === 0"
+                                    class="flex items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-secondary)]"
+                                >
+                                    <span>暂无工具</span>
+                                </div>
+                                <div
+                                    v-for="item in mcpTools"
+                                    :key="item.value"
+                                    class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
+                                    :class="selectedMcpIds.includes(item.value) ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
+                                    @click.stop="toggleMcpSelection(item.value)"
+                                >
                                     <span>{{ item.label }}</span>
-                                    <span class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] text-[var(--text-secondary)]">{{ item.sourceType || 'system' }}</span>
+                                    <span v-if="selectedMcpIds.includes(item.value)" class="text-[13px]">✓</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-[6px] font-semibold">
+                        <label class="w-[36px] text-[14px] text-[var(--text-secondary)] text-right">RAG</label>
+                        <div class="relative min-w-[200px]">
+                            <div
+                                ref="ragSelectRef"
+                                class="inline-flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                                @click="toggleRagDropdown"
+                            >
+                                <span class="font-bold text-[var(--text-primary)]">
+                                    {{ ragTags.find((t) => t.value === currentRagTag)?.label || '不使用知识库' }}
                                 </span>
-                                <span v-if="selectedMcpIds.includes(item.value)" class="text-[13px]">✓</span>
+                                <span
+                                    class="caret transition-transform duration-150"
+                                    :class="ragDropdownOpen ? 'caret-open' : 'caret-closed'"
+                                />
+                            </div>
+                            <div
+                                v-if="ragDropdownOpen"
+                                class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
+                            >
+                                <div
+                                    v-for="item in ragTags"
+                                    :key="item.value || 'empty'"
+                                    class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
+                                    :class="item.value === currentRagTag ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
+                                    @click.stop="selectRag(item.value)"
+                                >
+                                    <span>{{ item.label }}</span>
+                                    <span v-if="item.value === currentRagTag" class="text-[13px]">✓</span>
+                                </div>
                             </div>
                         </div>
                     </div>

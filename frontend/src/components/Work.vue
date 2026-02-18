@@ -200,12 +200,6 @@ const currentAgentLabel = computed(() => {
     return match?.label || currentAgentId.value;
 });
 
-const currentAgentSourceType = computed(() => {
-    if (!currentAgentId.value) return '';
-    const match = agentOptions.value.find((item) => item.value === currentAgentId.value);
-    return match?.sourceType || '';
-});
-
 const fetchAgents = async () => {
     try {
         const resp = await queryAgentList();
@@ -222,9 +216,8 @@ const fetchAgents = async () => {
                 const agentId = item.agentId || item.id || '';
                 const agentName = item.agentName || item.name || agentId;
                 const agentDesc = item.agentDesc || item.desc || '';
-                const sourceType = item.sourceType || 'system';
                 if (!agentId) return null;
-                return { label: agentName || agentId, value: agentId, desc: agentDesc, sourceType };
+                return { label: agentName || agentId, value: agentId, desc: agentDesc };
             })
             .filter(Boolean);
         const seen = new Set();
@@ -704,46 +697,37 @@ onBeforeUnmount(() => {
                 class="flex h-full w-full items-center justify-between gap-[12px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))] max-[720px]:pl-[8px] max-[720px]:pr-[calc(8px+var(--scrollbar-w))]"
             >
                 <div class="flex items-center gap-[10px]">
-                    <div class="relative flex items-center gap-[14px] font-semibold">
+                    <div class="flex items-center gap-[14px] font-semibold">
                         <label class="w-[72px] text-[14px] text-[var(--text-secondary)] text-right">MiniAgent</label>
-                        <div
-                            ref="agentSelectRef"
-                            class="inline-flex min-h-[36px] min-w-[220px] cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
-                            :class="agentOptions.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
-                            @click="toggleAgentDropdown"
-                        >
-                            <span class="inline-flex items-center gap-[6px]">
-                                <span class="font-bold text-[var(--text-primary)]">{{ currentAgentLabel }}</span>
-                                <span
-                                    v-if="currentAgentSourceType"
-                                    class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] font-medium text-[var(--text-secondary)]"
-                                >
-                                    {{ currentAgentSourceType }}
-                                </span>
-                            </span>
-                            <span
-                                class="caret transition-transform duration-150"
-                                :class="agentDropdownOpen ? 'caret-open' : 'caret-closed'"
-                            />
-                        </div>
-                        <div
-                            v-if="agentDropdownOpen && agentOptions.length > 0"
-                            class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
-                        >
+                        <div class="relative min-w-[220px]">
                             <div
-                                v-for="item in agentOptions"
-                                :key="item.value"
-                                class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
-                                :class="item.value === currentAgentId ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
-                                @click.stop="selectAgent(item.value)"
+                                ref="agentSelectRef"
+                                class="inline-flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                                :class="agentOptions.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
+                                @click="toggleAgentDropdown"
                             >
                                 <span class="inline-flex items-center gap-[6px]">
-                                    <span>{{ item.label }}</span>
-                                    <span class="rounded-[999px] border border-[var(--border-color)] px-[6px] py-[1px] text-[10px] font-medium text-[var(--text-secondary)]">
-                                        {{ item.sourceType || 'system' }}
-                                    </span>
+                                    <span class="font-bold text-[var(--text-primary)]">{{ currentAgentLabel }}</span>
                                 </span>
-                                <span v-if="item.value === currentAgentId" class="text-[13px]">✓</span>
+                                <span
+                                    class="caret transition-transform duration-150"
+                                    :class="agentDropdownOpen ? 'caret-open' : 'caret-closed'"
+                                />
+                            </div>
+                            <div
+                                v-if="agentDropdownOpen && agentOptions.length > 0"
+                                class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
+                            >
+                                <div
+                                    v-for="item in agentOptions"
+                                    :key="item.value"
+                                    class="flex cursor-pointer items-center justify-between rounded-[10px] px-[12px] py-[10px] text-[var(--text-primary)] transition-colors duration-150 hover:bg-[#f5f7fb]"
+                                    :class="item.value === currentAgentId ? 'bg-[#e8f1ff] text-[var(--accent-color)] font-bold' : ''"
+                                    @click.stop="selectAgent(item.value)"
+                                >
+                                    <span>{{ item.label }}</span>
+                                    <span v-if="item.value === currentAgentId" class="text-[13px]">✓</span>
+                                </div>
                             </div>
                         </div>
                     </div>

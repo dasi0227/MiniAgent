@@ -255,6 +255,14 @@ const runAction = async (kind, action) => {
     }
 };
 
+const goStudio = () => {
+    router.push('/studio');
+};
+
+const goPlaza = () => {
+    router.push('/plaza');
+};
+
 onMounted(() => {
     typewriterController.start();
 });
@@ -266,56 +274,102 @@ onBeforeUnmount(() => {
 
 <template>
     <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--bg-page)]">
-        <div class="overflow-y-auto bg-[var(--bg-page)] py-[10px]">
-            <div class="mx-auto flex w-full max-w-[1060px] flex-col gap-[8px] pt-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))] max-[720px]:pt-[14px]">
-                <div class="flex h-[210px] flex-col items-start gap-[10px] overflow-hidden pt-[8px] text-[var(--text-primary)] max-[720px]:h-[166px] max-[720px]:pt-[4px]">
+        <div class="h-full overflow-y-auto bg-[var(--bg-page)]">
+            <div class="mx-auto flex min-h-full w-full max-w-[1060px] flex-col px-[24px] pr-[calc(24px+var(--scrollbar-w))] py-[16px] max-[720px]:px-[12px] max-[720px]:pr-[calc(12px+var(--scrollbar-w))] max-[720px]:py-[10px]">
+                <div class="my-auto flex flex-col gap-[10px]">
+                    <div class="flex h-[156px] flex-col items-start gap-[6px] overflow-hidden text-[var(--text-primary)] max-[720px]:h-[136px]">
                     <div
                         v-for="(line, idx) in typewriterState.lines"
                         :key="idx"
-                        class="text-[32px] font-extrabold leading-[1.4] tracking-[0.3px] text-transparent opacity-[0.94] bg-clip-text max-[720px]:text-[28px]"
+                        class="text-[28px] font-extrabold leading-[1.34] tracking-[0.2px] text-transparent opacity-[0.94] bg-clip-text max-[720px]:text-[24px]"
                         :style="{ backgroundImage: 'var(--typewriter-gradient)' }"
                     >
                         {{ line }}
                         <span v-if="typewriterState.playing && idx === typewriterState.lineIndex" class="text-[var(--accent-color)] animate-caret">▍</span>
                     </div>
-                </div>
+                    </div>
 
-                <div class="grid items-stretch gap-[18px] md:grid-cols-2">
-                    <div class="flex h-full flex-col rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[18px] shadow-[var(--shadow-soft)]">
-                        <div class="mb-[14px] text-[18px] font-bold text-[var(--text-primary)] max-[720px]:text-[16px]">Chat 类型</div>
-                        <div class="flex flex-1 flex-col justify-between gap-[10px]">
-                            <button
-                                v-for="item in chatActions"
-                                :key="item.key"
-                                class="flex min-h-[56px] items-center rounded-[14px] border border-[var(--border-color)] bg-white px-[16px] py-[13px] text-left text-[17px] text-[var(--text-primary)] transition-all duration-200 hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[48px] max-[720px]:text-[15px]"
-                                :disabled="sending"
-                                type="button"
-                                @click="runAction('chat', item)"
-                            >
-                                <span class="line-clamp-2">{{ item.label }}</span>
-                            </button>
+                    <div class="grid items-stretch gap-[14px] md:grid-cols-2">
+                        <div class="group relative flex h-full flex-col overflow-hidden rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[14px] shadow-[var(--shadow-soft)]">
+                            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(59,130,246,0.18),transparent_56%)]"></div>
+                            <div class="relative">
+                                <div class="mt-[4px] mb-[10px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)] max-[720px]:text-[18px]">Chat 会话</div>
+                            </div>
+                            <div class="relative flex flex-1 flex-col justify-between gap-[8px]">
+                                <button
+                                    v-for="item in chatActions"
+                                    :key="item.key"
+                                    class="flex min-h-[46px] items-center rounded-[12px] border border-[rgba(148,163,184,0.28)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(241,245,249,0.62))] px-[14px] py-[10px] text-left text-[15px] font-semibold leading-[1.4] text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent-color)] hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.55),rgba(224,242,254,0.42))] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[42px] max-[720px]:text-[14px]"
+                                    :disabled="sending"
+                                    type="button"
+                                    @click="runAction('chat', item)"
+                                >
+                                    <span class="line-clamp-2">{{ item.label }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="group relative flex h-full flex-col overflow-hidden rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[14px] shadow-[var(--shadow-soft)]">
+                            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(14,165,233,0.16),transparent_56%)]"></div>
+                            <div class="relative">
+                                <div class="mt-[4px] mb-[10px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)] max-[720px]:text-[18px]">Work 会话</div>
+                            </div>
+                            <div class="relative flex flex-1 flex-col justify-between gap-[8px]">
+                                <button
+                                    v-for="item in workActions"
+                                    :key="item.key"
+                                    class="flex min-h-[46px] items-center rounded-[12px] border border-[rgba(148,163,184,0.28)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(241,245,249,0.62))] px-[14px] py-[10px] text-left text-[15px] font-semibold leading-[1.42] text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent-color)] hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.55),rgba(224,242,254,0.42))] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[42px] max-[720px]:text-[14px]"
+                                    :disabled="sending"
+                                    type="button"
+                                    @click="runAction('work', item)"
+                                >
+                                    <span class="whitespace-normal break-words pr-[8px] leading-[1.45]">{{ item.label }}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="flex h-full flex-col rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[18px] shadow-[var(--shadow-soft)]">
-                        <div class="mb-[14px] text-[18px] font-bold text-[var(--text-primary)] max-[720px]:text-[16px]">Work 类型</div>
-                        <div class="flex flex-1 flex-col justify-between gap-[10px]">
-                            <button
-                                v-for="item in workActions"
-                                :key="item.key"
-                                class="flex min-h-[56px] items-center rounded-[14px] border border-[var(--border-color)] bg-white px-[16px] py-[13px] text-left text-[17px] text-[var(--text-primary)] transition-all duration-200 hover:bg-[#f5f7fb] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[48px] max-[720px]:text-[15px]"
-                                :disabled="sending"
-                                type="button"
-                                @click="runAction('work', item)"
-                            >
-                                <span class="whitespace-normal break-words pr-[8px] leading-[1.45]">{{ item.label }}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    <div class="grid items-stretch gap-[14px] md:grid-cols-2">
+                        <button
+                            class="group relative overflow-hidden rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] px-[18px] py-[14px] text-left shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--accent-color)]"
+                            type="button"
+                            @click="goStudio"
+                        >
+                            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(59,130,246,0.2),transparent_56%)]"></div>
+                            <div class="relative">
+                                <div class="mt-[6px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)]">进入 Agent Studio</div>
+                                <div class="mt-[6px] text-[14px] leading-[1.45] text-[var(--text-secondary)]">
+                                    配置执行策略与工具组合，快速创建专属 MiniAgent。
+                                </div>
+                                <div class="mt-[10px] inline-flex items-center gap-[6px] text-[13px] font-semibold text-[var(--accent-color)]">
+                                    立即前往
+                                    <span aria-hidden="true">→</span>
+                                </div>
+                            </div>
+                        </button>
 
-                <div v-if="actionError" class="rounded-[12px] border border-[rgba(239,68,68,0.35)] bg-[rgba(254,242,242,0.8)] px-[12px] py-[10px] text-[13px] text-[#b91c1c]">
-                    {{ actionError }}
+                        <button
+                            class="group relative overflow-hidden rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] px-[18px] py-[14px] text-left shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--accent-color)]"
+                            type="button"
+                            @click="goPlaza"
+                        >
+                            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(14,165,233,0.2),transparent_56%)]"></div>
+                            <div class="relative">
+                                <div class="mt-[6px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)]">浏览 Agent Plaza</div>
+                                <div class="mt-[6px] text-[14px] leading-[1.45] text-[var(--text-secondary)]">
+                                    探索热门的 MiniAgent，查看案例并一键 Fork 到你的仓库。
+                                </div>
+                                <div class="mt-[10px] inline-flex items-center gap-[6px] text-[13px] font-semibold text-[var(--accent-color)]">
+                                    立即前往
+                                    <span aria-hidden="true">→</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div v-if="actionError" class="rounded-[12px] border border-[rgba(239,68,68,0.35)] bg-[rgba(254,242,242,0.8)] px-[12px] py-[10px] text-[13px] text-[#b91c1c]">
+                        {{ actionError }}
+                    </div>
                 </div>
             </div>
         </div>

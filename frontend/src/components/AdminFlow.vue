@@ -5,6 +5,7 @@ import SidebarAdmin from './SidebarAdmin.vue';
 import AppFooter from './AppFooter.vue';
 import arrowIcon from '../assets/arrow.svg';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
+import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
 import { useAuthStore } from '../router/pinia';
 import { adminAgentList, flowAgent, flowClients, flowDelete, flowInsert } from '../request/api';
 import { normalizeError, notifyAdminError } from '../request/request';
@@ -426,10 +427,19 @@ onMounted(async () => {
                     </div>
 
                     <div class="relative z-10 mt-6 flex min-h-[180px] flex-col rounded-[14px] border border-[#e2e8f0] bg-white p-4 shadow-sm">
-                        <div v-if="activeSlot === null || activeSlot === undefined" class="flex h-[140px] items-center justify-center text-center text-[48px] font-extrabold text-[#cbd5e1]">
-                            点击卡片以更换 Client
+                        <div
+                            :class="getCollapseClasses(activeSlot === null || activeSlot === undefined, { disablePointerWhenClosed: true })"
+                            :aria-hidden="!(activeSlot === null || activeSlot === undefined)"
+                        >
+                            <div :class="[COLLAPSE_INNER_CLASS, 'flex h-[140px] items-center justify-center text-center text-[48px] font-extrabold text-[#cbd5e1]']">
+                                点击卡片以更换 Client
+                            </div>
                         </div>
-                        <template v-else>
+                        <div
+                            :class="getCollapseClasses(!(activeSlot === null || activeSlot === undefined), { disablePointerWhenClosed: true })"
+                            :aria-hidden="activeSlot === null || activeSlot === undefined"
+                        >
+                            <div :class="[COLLAPSE_INNER_CLASS, 'space-y-0']">
                             <div class="mb-3 flex items-center justify-between">
                                 <div class="text-[14px] font-semibold text-[#0f172a]">
                                     为 {{ slotList[activeSlot]?.roleLabel }} 选择 Client
@@ -515,7 +525,8 @@ onMounted(async () => {
                                     </div>
                                 </div>
                             </div>
-                        </template>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -23,6 +23,7 @@ import {
 } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
 import { normalizeError } from '../request/request';
+import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
 
 const router = useRouter();
 const route = useRoute();
@@ -799,64 +800,69 @@ const exportApi = async (item) => {
                         <path d="M7 4.5L13 10L7 15.5V4.5z" />
                     </svg>
                 </button>
-                <div v-if="showChatList" class="flex flex-col gap-[8px]">
-                    <div
-                        v-for="chat in chats"
-                        :key="chat.id"
-                        :class="[
-                            'w-full rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-[12px] py-[10px] transition-all duration-200 hover:border-[rgba(111,125,255,0.8)] hover:bg-[rgba(255,255,255,0.07)]',
-                            chat.id === currentChatId && route.path.startsWith('/chat')
-                                ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.25),rgba(83,197,255,0.1))] shadow-[0_10px_20px_rgba(0,0,0,0.12)]'
-                                : ''
-                        ]"
-                    >
-                        <div
-                            class="flex items-center justify-between gap-[10px]"
-                            @click="editingChatId === chat.id ? null : handleSelectChat(chat.id)"
-                        >
-                            <div class="min-w-0 flex flex-col">
-                                <template v-if="editingChatId === chat.id">
-                                    <input
-                                        v-model="editChatTitle"
-                                        :ref="(el) => setChatTitleInputRef(chat.id, el)"
-                                        class="w-full rounded-[8px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[6px] font-semibold text-[#e7ecf4]"
-                                        :placeholder="chat.title || '未命名会话'"
-                                        maxlength="30"
-                                        @keydown.enter.prevent="saveRenameChat(chat)"
-                                        @keydown.esc.prevent="cancelRenameChat"
-                                        @blur="saveRenameChat(chat)"
-                                        @click.stop
-                                    />
-                                </template>
-                                <template v-else>
-                                    <div class="mb-[4px] max-w-[140px] truncate font-semibold" :title="chat.title || '未命名会话'">
-                                        {{ formatTitle(chat.title) }}
+                <div
+                    :class="getCollapseClasses(showChatList)"
+                    :aria-hidden="!showChatList"
+                >
+                    <div :class="[COLLAPSE_INNER_CLASS, 'flex flex-col gap-[8px]']">
+                            <div
+                                v-for="chat in chats"
+                                :key="chat.id"
+                                :class="[
+                                    'w-full rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-[12px] py-[10px] transition-all duration-200 hover:border-[rgba(111,125,255,0.8)] hover:bg-[rgba(255,255,255,0.07)]',
+                                    chat.id === currentChatId && route.path.startsWith('/chat')
+                                        ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.25),rgba(83,197,255,0.1))] shadow-[0_10px_20px_rgba(0,0,0,0.12)]'
+                                        : ''
+                                ]"
+                            >
+                                <div
+                                    class="flex items-center justify-between gap-[10px]"
+                                    @click="editingChatId === chat.id ? null : handleSelectChat(chat.id)"
+                                >
+                                    <div class="min-w-0 flex flex-col">
+                                        <template v-if="editingChatId === chat.id">
+                                            <input
+                                                v-model="editChatTitle"
+                                                :ref="(el) => setChatTitleInputRef(chat.id, el)"
+                                                class="w-full rounded-[8px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[6px] font-semibold text-[#e7ecf4]"
+                                                :placeholder="chat.title || '未命名会话'"
+                                                maxlength="30"
+                                                @keydown.enter.prevent="saveRenameChat(chat)"
+                                                @keydown.esc.prevent="cancelRenameChat"
+                                                @blur="saveRenameChat(chat)"
+                                                @click.stop
+                                            />
+                                        </template>
+                                        <template v-else>
+                                            <div class="mb-[4px] max-w-[140px] truncate font-semibold" :title="chat.title || '未命名会话'">
+                                                {{ formatTitle(chat.title) }}
+                                            </div>
+                                        </template>
+                                        <div class="text-[12px] text-[rgba(231,236,244,0.7)]">{{ formatDate(chat.createdAt) }}</div>
                                     </div>
-                                </template>
-                                <div class="text-[12px] text-[rgba(231,236,244,0.7)]">{{ formatDate(chat.createdAt) }}</div>
+                                    <div class="flex shrink-0 gap-[6px]" @click.stop>
+                                        <button
+                                            class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#7bc8ff] hover:text-[#7bc8ff] hover:bg-[rgba(123,200,255,0.12)]"
+                                            type="button"
+                                            title="重命名"
+                                            @click.stop="startRenameChat(chat)"
+                                        >
+                                            ✎
+                                        </button>
+                                        <button
+                                            class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#ef4444] hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.16)]"
+                                            type="button"
+                                            title="删除"
+                                            @click.stop="openDeleteConfirm('chat', chat.id)"
+                                        >
+                                            🗑
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex shrink-0 gap-[6px]" @click.stop>
-                                <button
-                                    class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#7bc8ff] hover:text-[#7bc8ff] hover:bg-[rgba(123,200,255,0.12)]"
-                                    type="button"
-                                    title="重命名"
-                                    @click.stop="startRenameChat(chat)"
-                                >
-                                    ✎
-                                </button>
-                                <button
-                                    class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#ef4444] hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.16)]"
-                                    type="button"
-                                    title="删除"
-                                    @click.stop="openDeleteConfirm('chat', chat.id)"
-                                >
-                                    🗑
-                                </button>
+                            <div v-if="chats.length === 0" class="mt-[4px] text-[13px] text-[rgba(231,236,244,0.7)]">
+                                暂无会话
                             </div>
-                        </div>
-                    </div>
-                    <div v-if="chats.length === 0" class="mt-[4px] text-[13px] text-[rgba(231,236,244,0.7)]">
-                        暂无会话
                     </div>
                 </div>
             </div>
@@ -879,64 +885,69 @@ const exportApi = async (item) => {
                         <path d="M7 4.5L13 10L7 15.5V4.5z" />
                     </svg>
                 </button>
-                <div v-if="showAgentList" class="flex flex-col gap-[8px]">
-                    <div
-                        v-for="session in agentSessions"
-                        :key="session.id"
-                        :class="[
-                            'w-full rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-[12px] py-[10px] transition-all duration-200 hover:border-[rgba(111,125,255,0.8)] hover:bg-[rgba(255,255,255,0.07)]',
-                            session.id === currentAgentSessionId && route.path.startsWith('/work')
-                                ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.25),rgba(83,197,255,0.1))] shadow-[0_10px_20px_rgba(0,0,0,0.12)]'
-                                : ''
-                        ]"
-                    >
-                        <div
-                            class="flex items-center justify-between gap-[10px]"
-                            @click="editingAgentId === session.id ? null : handleSelectAgent(session.id)"
-                        >
-                            <div class="min-w-0 flex flex-col">
-                                <template v-if="editingAgentId === session.id">
-                                    <input
-                                        v-model="editAgentTitle"
-                                        :ref="(el) => setAgentTitleInputRef(session.id, el)"
-                                        class="w-full rounded-[8px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[6px] font-semibold text-[#e7ecf4]"
-                                        :placeholder="session.title || '未命名会话'"
-                                        maxlength="30"
-                                        @keydown.enter.prevent="saveRenameAgent(session)"
-                                        @keydown.esc.prevent="cancelRenameAgent"
-                                        @blur="saveRenameAgent(session)"
-                                        @click.stop
-                                    />
-                                </template>
-                                <template v-else>
-                                    <div class="mb-[4px] max-w-[140px] truncate font-semibold" :title="session.title || '未命名会话'">
-                                        {{ formatTitle(session.title) }}
+                <div
+                    :class="getCollapseClasses(showAgentList)"
+                    :aria-hidden="!showAgentList"
+                >
+                    <div :class="[COLLAPSE_INNER_CLASS, 'flex flex-col gap-[8px]']">
+                            <div
+                                v-for="session in agentSessions"
+                                :key="session.id"
+                                :class="[
+                                    'w-full rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-[12px] py-[10px] transition-all duration-200 hover:border-[rgba(111,125,255,0.8)] hover:bg-[rgba(255,255,255,0.07)]',
+                                    session.id === currentAgentSessionId && route.path.startsWith('/work')
+                                        ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.25),rgba(83,197,255,0.1))] shadow-[0_10px_20px_rgba(0,0,0,0.12)]'
+                                        : ''
+                                ]"
+                            >
+                                <div
+                                    class="flex items-center justify-between gap-[10px]"
+                                    @click="editingAgentId === session.id ? null : handleSelectAgent(session.id)"
+                                >
+                                    <div class="min-w-0 flex flex-col">
+                                        <template v-if="editingAgentId === session.id">
+                                            <input
+                                                v-model="editAgentTitle"
+                                                :ref="(el) => setAgentTitleInputRef(session.id, el)"
+                                                class="w-full rounded-[8px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[6px] font-semibold text-[#e7ecf4]"
+                                                :placeholder="session.title || '未命名会话'"
+                                                maxlength="30"
+                                                @keydown.enter.prevent="saveRenameAgent(session)"
+                                                @keydown.esc.prevent="cancelRenameAgent"
+                                                @blur="saveRenameAgent(session)"
+                                                @click.stop
+                                            />
+                                        </template>
+                                        <template v-else>
+                                            <div class="mb-[4px] max-w-[140px] truncate font-semibold" :title="session.title || '未命名会话'">
+                                                {{ formatTitle(session.title) }}
+                                            </div>
+                                        </template>
+                                        <div class="text-[12px] text-[rgba(231,236,244,0.7)]">{{ formatDate(session.createdAt) }}</div>
                                     </div>
-                                </template>
-                                <div class="text-[12px] text-[rgba(231,236,244,0.7)]">{{ formatDate(session.createdAt) }}</div>
+                                    <div class="flex shrink-0 gap-[6px]" @click.stop>
+                                        <button
+                                            class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#7bc8ff] hover:text-[#7bc8ff] hover:bg-[rgba(123,200,255,0.12)]"
+                                            type="button"
+                                            title="重命名"
+                                            @click.stop="startRenameAgent(session)"
+                                        >
+                                            ✎
+                                        </button>
+                                        <button
+                                            class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#ef4444] hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.16)]"
+                                            type="button"
+                                            title="删除"
+                                            @click.stop="openDeleteConfirm('agent', session.id)"
+                                        >
+                                            🗑
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex shrink-0 gap-[6px]" @click.stop>
-                                <button
-                                    class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#7bc8ff] hover:text-[#7bc8ff] hover:bg-[rgba(123,200,255,0.12)]"
-                                    type="button"
-                                    title="重命名"
-                                    @click.stop="startRenameAgent(session)"
-                                >
-                                    ✎
-                                </button>
-                                <button
-                                    class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#ef4444] hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.16)]"
-                                    type="button"
-                                    title="删除"
-                                    @click.stop="openDeleteConfirm('agent', session.id)"
-                                >
-                                    🗑
-                                </button>
+                            <div v-if="agentSessions.length === 0" class="mt-[4px] text-[13px] text-[rgba(231,236,244,0.7)]">
+                                暂无会话
                             </div>
-                        </div>
-                    </div>
-                    <div v-if="agentSessions.length === 0" class="mt-[4px] text-[13px] text-[rgba(231,236,244,0.7)]">
-                        暂无会话
                     </div>
                 </div>
             </div>

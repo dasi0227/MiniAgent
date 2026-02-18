@@ -446,3 +446,26 @@
 [data-theme='dark'] .hover\:bg-\[\#f5f7fb\]:hover {
     background-color: var(--surface-4) !important;
 }
+
+.ui-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    contain: layout paint;
+    transition: grid-template-rows 240ms ease, opacity 180ms ease;
+}
+
+.ui-collapse--open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.ui-collapse--closed {
+    grid-template-rows: 0fr;
+    opacity: 0;
+}
+
+.ui-collapse__inner {
+    min-height: 0;
+    overflow: hidden;
+}
