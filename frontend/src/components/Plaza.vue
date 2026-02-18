@@ -248,7 +248,7 @@ const goRepository = () => {
                             <div class="text-[12px] text-[var(--text-secondary)]">
                                 Author: {{ displayAuthor(item) }}
                             </div>
-                            <div class="flex items-center justify-between pt-[2px]">
+                            <div class="-mr-[78px] flex items-center justify-between pt-[2px]">
                                 <div class="flex items-center gap-[10px]">
                                     <button
                                         class="inline-flex items-center gap-[5px] rounded-[8px] px-[6px] py-[4px] text-[13px] font-semibold hover:bg-[#f8fafc]"
@@ -281,7 +281,30 @@ const goRepository = () => {
                                         <span class="inline-block min-w-[2ch]" style="font-variant-numeric: tabular-nums;">{{ item.commentCount || 0 }}</span>
                                     </button>
                                 </div>
-                                <button class="rounded-[8px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[6px] text-[12px] font-semibold text-white" @click="doFork(item.plazaId)">Fork</button>
+                                <div class="ml-[16px] inline-flex items-center gap-[12px]">
+                                    <button
+                                        class="inline-flex h-[34px] items-center gap-[6px] rounded-[10px] border border-[rgba(59,130,246,0.5)] bg-[rgba(59,130,246,0.12)] px-[12px] text-[13px] font-semibold text-[var(--accent-color)] transition hover:border-[var(--accent-color)] hover:bg-[var(--accent-color)] hover:text-white"
+                                        @click="doFork(item.plazaId)"
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            class="h-[16px] w-[16px] shrink-0"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            aria-hidden="true"
+                                        >
+                                            <circle cx="6" cy="6" r="2.5" />
+                                            <circle cx="18" cy="6" r="2.5" />
+                                            <circle cx="12" cy="18" r="2.5" />
+                                            <path d="M8.2 7.8L10.3 15.1" />
+                                            <path d="M15.8 7.8L13.7 15.1" />
+                                        </svg>
+                                        <span>Fork</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </article>

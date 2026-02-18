@@ -328,6 +328,12 @@
     color: var(--text-primary) !important;
 }
 
+[data-theme='dark'] .text-\[\#334155\],
+[data-theme='dark'] .text-\[\#1f2a44\],
+[data-theme='dark'] .text-\[\#1e293b\] {
+    color: var(--text-primary) !important;
+}
+
 [data-theme='dark'] .text-\[\#475569\],
 [data-theme='dark'] .text-\[\#64748b\] {
     color: var(--text-secondary) !important;

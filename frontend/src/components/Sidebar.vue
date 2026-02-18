@@ -783,12 +783,21 @@ const exportApi = async (item) => {
 
             <div class="flex flex-col gap-[8px]">
                 <button
-                    class="flex w-full items-center px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
+                    class="flex w-full items-center justify-between px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
                     :class="isChatRoute ? 'text-[#7bc8ff]' : ''"
                     type="button"
                     @click="showChatList = !showChatList"
                 >
-                    Chat 会话
+                    <span class="inline-flex w-[140px] items-center">Chat 会话</span>
+                    <svg
+                        viewBox="0 0 20 20"
+                        class="h-[14px] w-[14px] shrink-0 transition-transform duration-200"
+                        :class="showChatList ? 'rotate-90' : ''"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path d="M7 4.5L13 10L7 15.5V4.5z" />
+                    </svg>
                 </button>
                 <div v-if="showChatList" class="flex flex-col gap-[8px]">
                     <div
@@ -854,12 +863,21 @@ const exportApi = async (item) => {
 
             <div class="flex flex-col gap-[8px]">
                 <button
-                    class="flex w-full items-center px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
+                    class="flex w-full items-center justify-between px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
                     :class="isAgentRoute ? 'text-[#7bc8ff]' : ''"
                     type="button"
                     @click="showAgentList = !showAgentList"
                 >
-                    Work 会话
+                    <span class="inline-flex w-[140px] items-center">Work 会话</span>
+                    <svg
+                        viewBox="0 0 20 20"
+                        class="h-[14px] w-[14px] shrink-0 transition-transform duration-200"
+                        :class="showAgentList ? 'rotate-90' : ''"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path d="M7 4.5L13 10L7 15.5V4.5z" />
+                    </svg>
                 </button>
                 <div v-if="showAgentList" class="flex flex-col gap-[8px]">
                     <div
@@ -927,7 +945,11 @@ const exportApi = async (item) => {
         <div
             class="group flex items-center justify-between gap-[12px] rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] p-[12px] transition-all duration-200 hover:border-[rgba(123,200,255,0.35)] hover:bg-[rgba(123,200,255,0.08)]"
         >
-            <button class="flex items-center gap-[10px] text-left" type="button" @click="openProfile">
+            <button
+                class="inline-flex w-auto shrink-0 items-center gap-[10px] rounded-[10px] px-[2px] py-[2px] text-left"
+                type="button"
+                @click.stop="openProfile"
+            >
                 <div
                     class="grid h-[40px] w-[40px] place-items-center rounded-[12px] border border-[rgba(15,23,42,0.18)] bg-[var(--avatar-bg)] font-bold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] transition-transform duration-200 group-hover:scale-[1.04]"
                 >
@@ -942,7 +964,7 @@ const exportApi = async (item) => {
                     v-if="isLogin"
                     class="main-logout rounded-[8px] px-2 py-1 text-[14px] text-[rgba(231,236,244,0.8)] transition hover:text-white"
                     type="button"
-                    @click="handleLogout"
+                    @click.stop="handleLogout"
                 >
                     退出登录
                 </button>

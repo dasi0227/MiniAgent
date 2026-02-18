@@ -94,96 +94,104 @@ onMounted(async () => {
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Studio</h1>
                     <button
-                        class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[13px] font-semibold text-[#334155] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                        class="rounded-[10px] border border-[var(--accent-color)] bg-white px-[12px] py-[8px] text-[14px] font-semibold text-[var(--accent-color)] transition hover:bg-[var(--accent-color)] hover:text-white"
                         @click="goRepository"
                     >
                         我的仓库
                     </button>
                 </div>
 
-                <div class="space-y-[18px] rounded-[16px] border border-[var(--border-color)] bg-white p-[18px]">
-                    <div class="space-y-[8px]">
-                        <div class="text-[13px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">API 选择（仅我的）</div>
-                        <div class="flex gap-[8px] overflow-x-auto pb-[4px]">
-                            <button
-                                v-for="item in apiList"
-                                :key="item.clientId"
-                                class="shrink-0 whitespace-nowrap rounded-[999px] border px-[12px] py-[7px] text-[13px] font-semibold transition"
-                                :class="
-                                    form.apiId === item.clientId
-                                        ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.1)] text-[var(--accent-color)]'
-                                        : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[var(--accent-color)]'
-                                "
-                                @click="form.apiId = item.clientId"
-                            >
-                                {{ item.modelName || item.clientId }}
-                            </button>
-                            <div
-                                v-if="apiList.length === 0"
-                                class="rounded-[999px] border border-dashed border-[var(--border-color)] px-[12px] py-[7px] text-[12px] text-[var(--text-secondary)]"
-                            >
-                                暂无可用的自建 API 客户端
+                <div class="space-y-[18px] rounded-[16px] bg-white p-[18px]">
+                    <div class="flex min-h-[50px] items-center gap-[12px]">
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">API 选择</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-[8px] overflow-x-auto pb-[4px]">
+                                <button
+                                    v-for="item in apiList"
+                                    :key="item.clientId"
+                                    class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
+                                    :class="
+                                        form.apiId === item.clientId
+                                            ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.1)] text-[var(--accent-color)]'
+                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[var(--accent-color)]'
+                                    "
+                                    @click="form.apiId = item.clientId"
+                                >
+                                    {{ item.modelName || item.clientId }}
+                                </button>
+                                <div
+                                    v-if="apiList.length === 0"
+                                    class="inline-flex h-[44px] shrink-0 items-center rounded-[999px] border border-dashed border-[var(--border-color)] px-[13px] text-[14px] text-[var(--text-secondary)]"
+                                >
+                                    暂无可用的自建 API 客户端
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-[8px]">
-                        <div class="text-[13px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">执行策略</div>
-                        <div class="flex flex-wrap gap-[8px]">
-                            <button
-                                v-for="strategy in ['step', 'loop', 'react']"
-                                :key="strategy"
-                                class="min-w-[90px] rounded-[10px] border px-[14px] py-[8px] text-[13px] font-semibold transition"
-                                :class="
-                                    form.strategy === strategy
-                                        ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]'
-                                        : 'border-[var(--border-color)] bg-white text-[#334155] hover:bg-[#f8fafc]'
-                                "
-                                @click="form.strategy = strategy"
-                            >
-                                {{ strategy }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-[8px]">
-                        <div class="text-[13px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">MCP 工具（仅我的）</div>
-                        <div class="flex gap-[8px] overflow-x-auto pb-[4px]">
-                            <button
-                                v-for="item in mcpList"
-                                :key="item.mcpId"
-                                class="shrink-0 whitespace-nowrap rounded-[999px] border px-[12px] py-[7px] text-[13px] font-semibold transition"
-                                :class="
-                                    form.mcpIdList.includes(item.mcpId)
-                                        ? 'border-[#16a34a] bg-[#eafcef] text-[#166534]'
-                                        : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#16a34a]'
-                                "
-                                @click="toggleMcp(item.mcpId)"
-                            >
-                                {{ item.mcpName || item.mcpId }}
-                            </button>
-                            <div
-                                v-if="mcpList.length === 0"
-                                class="rounded-[999px] border border-dashed border-[var(--border-color)] px-[12px] py-[7px] text-[12px] text-[var(--text-secondary)]"
-                            >
-                                暂无可用的自建 MCP
+                    <div class="flex min-h-[50px] items-center gap-[12px]">
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">MCP 工具</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-[8px] overflow-x-auto pb-[4px]">
+                                <button
+                                    v-for="item in mcpList"
+                                    :key="item.mcpId"
+                                    class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
+                                    :class="
+                                        form.mcpIdList.includes(item.mcpId)
+                                            ? 'border-[#16a34a] bg-[#eafcef] text-[#166534]'
+                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#16a34a]'
+                                    "
+                                    @click="toggleMcp(item.mcpId)"
+                                >
+                                    {{ item.mcpName || item.mcpId }}
+                                </button>
+                                <div
+                                    v-if="mcpList.length === 0"
+                                    class="inline-flex h-[44px] shrink-0 items-center rounded-[999px] border border-dashed border-[var(--border-color)] px-[13px] text-[14px] text-[var(--text-secondary)]"
+                                >
+                                    暂无可用的自建 MCP
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="grid gap-[12px] lg:grid-cols-[1fr_auto] lg:items-end">
+                    <div class="flex min-h-[50px] items-center gap-[12px]">
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">执行策略</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-[8px] overflow-x-auto pb-[4px]">
+                                <button
+                                    v-for="strategy in ['step', 'loop', 'react']"
+                                    :key="strategy"
+                                    class="h-[44px] min-w-[104px] shrink-0 rounded-[10px] border px-[17px] text-[16px] font-semibold transition"
+                                    :class="
+                                        form.strategy === strategy
+                                            ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]'
+                                            : 'border-[var(--border-color)] bg-white text-[#334155] hover:bg-[#f8fafc]'
+                                    "
+                                    @click="form.strategy = strategy"
+                                >
+                                    {{ strategy }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-[12px]">
                         <textarea
                             v-model="form.taskPrompt"
                             class="min-h-[320px] w-full rounded-[16px] border border-[var(--border-color)] bg-white px-[16px] py-[16px] text-[16px] leading-[1.6] outline-none focus:border-[var(--accent-color)] placeholder:text-[16px] placeholder:leading-[1.7] placeholder:text-[#94a3b8]"
                             placeholder="描述你希望 MiniAgent 完成的任务目标、输入上下文、执行约束和产出格式。例如：每周一早上 9 点汇总上周投放数据，给出异常原因与优化建议，并输出可直接发送给团队的简报。"
                         ></textarea>
-                        <button
-                            class="h-[84px] rounded-[20px] border border-[var(--border-color)] bg-white px-[22px] text-[46px] font-bold leading-none text-[#1f2a44] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] disabled:opacity-70"
-                            :disabled="loading"
-                            @click="doGenerate"
-                        >
-                            {{ loading ? '...' : '一键生成' }}
-                        </button>
+                        <div class="flex justify-center">
+                            <button
+                                class="h-[44px] rounded-[12px] border border-[var(--border-color)] bg-white px-[24px] text-[16px] font-semibold text-[#1f2a44] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] disabled:opacity-70"
+                                :disabled="loading"
+                                @click="doGenerate"
+                            >
+                                {{ loading ? '生成中...' : '一键生成' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
