@@ -1,29 +1,22 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { queryChatMcps, studioCreate, studioGenerate, studioUpdate } from '../request/api';
+import { queryChatMcps, queryChatModels, studioGenerate } from '../request/api';
 import { normalizeError } from '../request/request';
 import AppFooter from './AppFooter.vue';
 
 const router = useRouter();
 const loading = ref(false);
-const saveLoading = ref(false);
-const saveMode = ref('create');
 const message = ref('');
 const mcpList = ref([]);
-const currentAgentId = ref('');
+const apiList = ref([]);
+const showMcpSelector = ref(false);
 
 const form = reactive({
     taskPrompt: '',
     strategy: 'react',
-    mcpIdList: []
-});
-
-const generated = reactive({
-    agentName: '',
-    agentType: 'react',
-    agentDesc: '',
-    flowPrompt: ''
+    mcpIdList: [],
+    apiId: ''
 });
 
 const pickData = (resp) => {
@@ -36,10 +29,29 @@ const pickData = (resp) => {
     return resp?.data ?? resp?.result ?? resp;
 };
 
+const loadModels = async () => {
+    const resp = await queryChatModels();
+    const list = pickData(resp) || [];
+    apiList.value = Array.isArray(list) ? list : [];
+    if (!form.apiId && apiList.value.length > 0) {
+        form.apiId = apiList.value[0].clientId || '';
+    }
+};
+
 const loadMcps = async () => {
     const resp = await queryChatMcps();
     const list = pickData(resp) || [];
     mcpList.value = Array.isArray(list) ? list : [];
+};
+
+const toggleMcp = (mcpId) => {
+    const current = new Set(form.mcpIdList);
+    if (current.has(mcpId)) {
+        current.delete(mcpId);
+    } else {
+        current.add(mcpId);
+    }
+    form.mcpIdList = [...current];
 };
 
 const doGenerate = async () => {
@@ -50,57 +62,16 @@ const doGenerate = async () => {
     loading.value = true;
     message.value = '';
     try {
-        const resp = await studioGenerate({
+        await studioGenerate({
             taskPrompt: form.taskPrompt,
             strategy: form.strategy,
             mcpIdList: form.mcpIdList
         });
-        const data = pickData(resp) || {};
-        generated.agentName = data.agentName || '';
-        generated.agentType = data.agentType || form.strategy;
-        generated.agentDesc = data.agentDesc || '';
-        generated.flowPrompt = data.flowPrompt || '';
-        message.value = '已生成草稿，可直接保存';
+        message.value = '已完成生成';
     } catch (error) {
         message.value = normalizeError(error).message || '生成失败';
     } finally {
         loading.value = false;
-    }
-};
-
-const doSave = async () => {
-    if (!generated.agentName.trim()) {
-        message.value = '请先生成或填写 MiniAgent 名称';
-        return;
-    }
-    saveLoading.value = true;
-    message.value = '';
-    try {
-        if (saveMode.value === 'update' && currentAgentId.value) {
-            await studioUpdate({
-                agentId: currentAgentId.value,
-                agentName: generated.agentName,
-                agentDesc: generated.agentDesc,
-                flowPrompt: generated.flowPrompt
-            });
-            message.value = '更新成功';
-        } else {
-            const resp = await studioCreate({
-                agentName: generated.agentName,
-                agentType: generated.agentType || form.strategy,
-                agentDesc: generated.agentDesc,
-                flowPrompt: generated.flowPrompt,
-                mcpIdList: form.mcpIdList
-            });
-            const data = pickData(resp) || {};
-            currentAgentId.value = data.agentId || '';
-            saveMode.value = 'update';
-            message.value = '创建成功';
-        }
-    } catch (error) {
-        message.value = normalizeError(error).message || '保存失败';
-    } finally {
-        saveLoading.value = false;
     }
 };
 
@@ -109,14 +80,18 @@ const goRepository = () => {
 };
 
 onMounted(async () => {
-    await loadMcps();
+    try {
+        await Promise.all([loadModels(), loadMcps()]);
+    } catch (error) {
+        message.value = normalizeError(error).message || '初始化失败';
+    }
 });
 </script>
 
 <template>
     <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-white">
         <div class="overflow-y-auto py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
-            <div class="mx-auto max-w-[1100px] space-y-[20px]">
+            <div class="mx-auto max-w-[1100px] space-y-[16px]">
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Studio</h1>
                     <button
@@ -127,77 +102,88 @@ onMounted(async () => {
                     </button>
                 </div>
 
-                <div class="space-y-[12px] rounded-[16px] bg-[#f8fafc] p-[16px]">
-                    <div class="grid gap-[12px] md:grid-cols-[1fr_180px]">
-                        <textarea
-                            v-model="form.taskPrompt"
-                            class="w-full min-h-[140px] rounded-[14px] border border-[rgba(148,163,184,0.35)] bg-white px-[12px] py-[12px] text-[14px] outline-none focus:border-[var(--accent-color)]"
-                            placeholder="请输入你的 MiniAgent 需求"
-                        ></textarea>
-                        <div class="space-y-[10px]">
-                            <select
-                                v-model="form.strategy"
-                                class="w-full rounded-[12px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
-                            >
-                                <option value="step">step</option>
-                                <option value="loop">loop</option>
-                                <option value="react">react</option>
-                            </select>
+                <div class="space-y-[12px] rounded-[16px] border border-[var(--border-color)] bg-[#fcfdff] p-[16px]">
+                    <div class="grid gap-[10px] lg:grid-cols-[auto_auto_1fr] lg:items-center">
+                        <div class="text-[14px] font-semibold text-[var(--text-secondary)]">API 选择</div>
+                        <select
+                            v-model="form.apiId"
+                            class="min-w-[180px] rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[8px] text-[14px] outline-none focus:border-[var(--accent-color)]"
+                        >
+                            <option v-for="item in apiList" :key="item.clientId" :value="item.clientId">
+                                {{ item.clientName || item.clientId }}
+                            </option>
+                        </select>
+                        <div></div>
+
+                        <div class="text-[14px] font-semibold text-[var(--text-secondary)]">执行策略</div>
+                        <div class="flex flex-wrap gap-[8px] lg:col-span-2">
                             <button
-                                class="w-full rounded-[12px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[10px] text-white font-semibold disabled:opacity-70"
-                                :disabled="loading"
-                                @click="doGenerate"
+                                v-for="strategy in ['step', 'loop', 'react']"
+                                :key="strategy"
+                                class="min-w-[90px] rounded-[10px] border px-[14px] py-[8px] text-[13px] font-semibold transition"
+                                :class="
+                                    form.strategy === strategy
+                                        ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]'
+                                        : 'border-[var(--border-color)] bg-white text-[#334155] hover:bg-[#f8fafc]'
+                                "
+                                @click="form.strategy = strategy"
                             >
-                                {{ loading ? '生成中...' : '一键生成' }}
+                                {{ strategy }}
+                            </button>
+                        </div>
+
+                        <div class="text-[14px] font-semibold text-[var(--text-secondary)]">MCP 工具</div>
+                        <div class="flex flex-wrap items-center gap-[8px] lg:col-span-2">
+                            <button
+                                v-for="mcpId in form.mcpIdList.slice(0, 4)"
+                                :key="mcpId"
+                                class="rounded-[999px] border border-[#16a34a] bg-[#eafcef] px-[10px] py-[5px] text-[12px] font-semibold text-[#166534]"
+                                @click="toggleMcp(mcpId)"
+                            >
+                                {{ mcpId }}
+                            </button>
+                            <button
+                                class="grid h-[32px] w-[32px] place-items-center rounded-full border border-[#16a34a] bg-[#eafcef] text-[18px] leading-none text-[#166534] transition hover:scale-[1.03]"
+                                @click="showMcpSelector = !showMcpSelector"
+                            >
+                                +
                             </button>
                         </div>
                     </div>
-                    <div>
-                        <div class="mb-[8px] text-[13px] text-[var(--text-secondary)]">MCP 工具</div>
-                        <div class="flex flex-wrap gap-[8px]">
-                            <label
-                                v-for="item in mcpList"
-                                :key="item.mcpId"
-                                class="inline-flex items-center gap-[6px] rounded-[999px] border border-[rgba(148,163,184,0.4)] bg-white px-[10px] py-[5px] text-[12px]"
-                            >
-                                <input v-model="form.mcpIdList" type="checkbox" :value="item.mcpId" />
-                                <span>{{ item.mcpName }}</span>
-                                <span class="text-[var(--text-secondary)]">({{ item.sourceType || 'system' }})</span>
-                            </label>
-                        </div>
+
+                    <div v-if="showMcpSelector" class="flex flex-wrap gap-[8px] rounded-[12px] border border-[var(--border-color)] bg-white p-[10px]">
+                        <button
+                            v-for="item in mcpList"
+                            :key="item.mcpId"
+                            class="rounded-[999px] border px-[10px] py-[5px] text-[12px] transition"
+                            :class="
+                                form.mcpIdList.includes(item.mcpId)
+                                    ? 'border-[#16a34a] bg-[#dcfce7] text-[#166534]'
+                                    : 'border-[var(--border-color)] bg-white text-[var(--text-secondary)] hover:border-[#16a34a]'
+                            "
+                            @click="toggleMcp(item.mcpId)"
+                        >
+                            {{ item.mcpName }} ({{ item.sourceType || 'system' }})
+                        </button>
+                    </div>
+
+                    <div class="grid gap-[12px] lg:grid-cols-[1fr_auto] lg:items-end">
+                        <textarea
+                            v-model="form.taskPrompt"
+                            class="min-h-[220px] w-full rounded-[18px] border border-[var(--border-color)] bg-white px-[14px] py-[14px] text-[16px] leading-[1.45] outline-none focus:border-[var(--accent-color)] placeholder:text-[#94a3b8]"
+                            placeholder="请输入你的 MiniAgent 需求"
+                        ></textarea>
+                        <button
+                            class="h-[84px] rounded-[20px] border border-[var(--border-color)] bg-white px-[22px] text-[46px] font-bold leading-none text-[#1f2a44] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] disabled:opacity-70"
+                            :disabled="loading"
+                            @click="doGenerate"
+                        >
+                            {{ loading ? '...' : '一键生成' }}
+                        </button>
                     </div>
                 </div>
 
-                <div class="space-y-[10px] border-t border-[var(--border-color)] pt-[16px]">
-                    <div class="text-[14px] font-semibold text-[var(--text-secondary)]">MiniAgent 草稿</div>
-                    <div class="grid gap-[10px] md:grid-cols-2">
-                        <input
-                            v-model="generated.agentName"
-                            class="rounded-[12px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
-                            placeholder="MiniAgent 名称"
-                        />
-                        <input
-                            v-model="generated.agentDesc"
-                            class="rounded-[12px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
-                            placeholder="MiniAgent 描述"
-                        />
-                    </div>
-                    <textarea
-                        v-model="generated.flowPrompt"
-                        class="w-full min-h-[160px] rounded-[14px] border border-[rgba(148,163,184,0.35)] bg-white px-[10px] py-[10px] text-[14px] outline-none focus:border-[var(--accent-color)]"
-                        placeholder="Flow Prompt"
-                    ></textarea>
-                    <div class="flex justify-end">
-                        <button
-                            class="rounded-[12px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-white font-semibold disabled:opacity-70"
-                            :disabled="saveLoading"
-                            @click="doSave"
-                        >
-                            {{ saveLoading ? '保存中...' : saveMode === 'update' ? '更新 MiniAgent' : '保存私有 MiniAgent' }}
-                        </button>
-                    </div>
-                    <div v-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
-                </div>
+                <div v-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
             </div>
         </div>
 
