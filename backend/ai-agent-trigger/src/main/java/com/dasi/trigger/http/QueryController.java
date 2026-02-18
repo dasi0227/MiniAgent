@@ -7,6 +7,7 @@ import com.dasi.types.dto.result.Result;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,14 +23,18 @@ public class QueryController implements IQueryApi {
 
     @GetMapping("/chat-client-list")
     @Override
-    public Result<List<QueryChatClientResponse>> queryChatClientResponseList() {
-        return Result.success(queryService.queryChatClientResponseList());
+    public Result<List<QueryChatClientResponse>> queryChatClientResponseList(
+            @RequestParam(value = "mineOnly", required = false, defaultValue = "false") Boolean mineOnly
+    ) {
+        return Result.success(queryService.queryChatClientResponseList(mineOnly));
     }
 
     @GetMapping("/chat-mcp-list")
     @Override
-    public Result<List<QueryChatMcpResponse>> queryChatMcpResponseList() {
-        return Result.success(queryService.queryChatMcpResponseList());
+    public Result<List<QueryChatMcpResponse>> queryChatMcpResponseList(
+            @RequestParam(value = "mineOnly", required = false, defaultValue = "false") Boolean mineOnly
+    ) {
+        return Result.success(queryService.queryChatMcpResponseList(mineOnly));
     }
 
     @GetMapping("/chat-rag-list")

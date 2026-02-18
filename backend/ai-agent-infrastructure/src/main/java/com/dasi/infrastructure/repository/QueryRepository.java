@@ -54,9 +54,12 @@ public class QueryRepository implements IQueryRepository {
     private String embeddingTableName;
 
     @Override
-    public List<QueryChatClientResponse> queryChatClientResponseList() {
+    public List<QueryChatClientResponse> queryChatClientResponseList(Boolean mineOnly) {
 
         Long userId = authContext.getId();
+        if (Boolean.TRUE.equals(mineOnly) && userId == null) {
+            return new ArrayList<>();
+        }
         List<AiClient> aiClientList = aiClientDao.queryChatClientListByFrom(userId);
         if (aiClientList == null || aiClientList.isEmpty()) {
             return new ArrayList<>();
@@ -65,6 +68,13 @@ public class QueryRepository implements IQueryRepository {
         Map<String, QueryChatClientResponse> resultMap = new LinkedHashMap<>();
         for (AiClient aiClient : aiClientList) {
             if (aiClient == null || Integer.valueOf(1).equals(aiClient.getClientStatus()) == false) {
+                continue;
+            }
+            boolean mine = userId != null
+                    && aiClient.getClientFrom() != null
+                    && aiClient.getClientFrom() > 0
+                    && aiClient.getClientFrom().equals(userId);
+            if (Boolean.TRUE.equals(mineOnly) && !mine) {
                 continue;
             }
             resultMap.putIfAbsent(aiClient.getClientId(), QueryChatClientResponse.builder()
@@ -79,9 +89,12 @@ public class QueryRepository implements IQueryRepository {
 
 
     @Override
-    public List<QueryChatMcpResponse> queryChatMcpResponseList() {
+    public List<QueryChatMcpResponse> queryChatMcpResponseList(Boolean mineOnly) {
 
         Long userId = authContext.getId();
+        if (Boolean.TRUE.equals(mineOnly) && userId == null) {
+            return new ArrayList<>();
+        }
         List<AiMcp> aiMcpList = aiMcpDao.queryChatMcpListByFrom(userId);
         if (aiMcpList == null || aiMcpList.isEmpty()) {
             return new ArrayList<>();
@@ -90,6 +103,13 @@ public class QueryRepository implements IQueryRepository {
         Map<String, QueryChatMcpResponse> resultMap = new LinkedHashMap<>();
         for (AiMcp aiMcp : aiMcpList) {
             if (aiMcp == null) {
+                continue;
+            }
+            boolean mine = userId != null
+                    && aiMcp.getMcpFrom() != null
+                    && aiMcp.getMcpFrom() > 0
+                    && aiMcp.getMcpFrom().equals(userId);
+            if (Boolean.TRUE.equals(mineOnly) && !mine) {
                 continue;
             }
             resultMap.putIfAbsent(aiMcp.getMcpId(), QueryChatMcpResponse.builder()

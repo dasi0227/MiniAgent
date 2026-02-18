@@ -9,9 +9,9 @@ import java.util.List;
 
 public interface IQueryService {
 
-    List<QueryChatClientResponse> queryChatClientResponseList();
+    List<QueryChatClientResponse> queryChatClientResponseList(Boolean mineOnly);
 
-    List<QueryChatMcpResponse> queryChatMcpResponseList();
+    List<QueryChatMcpResponse> queryChatMcpResponseList(Boolean mineOnly);
 
     List<QueryChatRagResponse> queryChatRagList();
 

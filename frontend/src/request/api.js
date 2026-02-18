@@ -154,9 +154,9 @@ export const pickContentFromResult = (result) => {
 
 export const queryRagTags = async () => http.get(RAG_TAGS_PATH);
 
-export const queryChatModels = async () => http.get(CHAT_CLIENTS_PATH);
+export const queryChatModels = async (params = {}) => http.get(CHAT_CLIENTS_PATH, { params: trimStrings(params) });
 
-export const queryChatMcps = async () => http.get(CHAT_MCP_PATH);
+export const queryChatMcps = async (params = {}) => http.get(CHAT_MCP_PATH, { params: trimStrings(params) });
 
 export const queryAgentList = async () => http.get(AGENT_LIST_PATH);
 

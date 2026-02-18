@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface IQueryRepository {
 
-    List<QueryChatClientResponse> queryChatClientResponseList();
+    List<QueryChatClientResponse> queryChatClientResponseList(Boolean mineOnly);
 
     List<QueryChatRagResponse> queryChatRagList();
 
-    List<QueryChatMcpResponse> queryChatMcpResponseList();
+    List<QueryChatMcpResponse> queryChatMcpResponseList(Boolean mineOnly);
 
     List<QueryWorkAgentResponse> queryWorkAgentResponseList();
 

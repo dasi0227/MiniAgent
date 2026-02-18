@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface IQueryApi {
 
-    Result<List<QueryChatClientResponse>> queryChatClientResponseList();
+    Result<List<QueryChatClientResponse>> queryChatClientResponseList(Boolean mineOnly);
 
-    Result<List<QueryChatMcpResponse>> queryChatMcpResponseList();
+    Result<List<QueryChatMcpResponse>> queryChatMcpResponseList(Boolean mineOnly);
 
     Result<List<QueryChatRagResponse>> queryRagTagList();
 
