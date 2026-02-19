@@ -37,6 +37,26 @@ const isLogin = computed(() => authStore.isLogin);
 const currentUser = computed(() => authStore.user || { username: '访客', role: 'guest' });
 const avatarChar = computed(() => (currentUser.value.username || '访客').slice(0, 1).toUpperCase());
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
+const sidebarShellClass = computed(() =>
+    isDarkTheme.value
+        ? 'bg-[radial-gradient(120%_120%_at_0%_0%,#122544_0%,#0f172a_60%,#0b1220_100%)] text-[#e7ecf4] border-[rgba(255,255,255,0.06)] shadow-[10px_0_30px_rgba(0,0,0,0.08)]'
+        : 'bg-[radial-gradient(140%_130%_at_0%_0%,#2c476e_0%,#1f385a_50%,#162b46_100%)] text-[#edf3fb] border-[rgba(255,255,255,0.18)] shadow-[10px_0_30px_rgba(15,23,42,0.12)]'
+);
+const sidebarGhostButtonClass = computed(() =>
+    isDarkTheme.value
+        ? 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+        : 'border-[rgba(255,255,255,0.24)] bg-[rgba(255,255,255,0.14)] hover:bg-[rgba(255,255,255,0.22)]'
+);
+const sidebarIconButtonClass = computed(() =>
+    isDarkTheme.value
+        ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-[rgba(231,236,244,0.9)] hover:bg-[rgba(255,255,255,0.14)] hover:text-white'
+        : 'border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.2)] text-[rgba(237,243,251,0.95)] hover:bg-[rgba(255,255,255,0.3)] hover:text-white'
+);
+const sidebarProfileCardClass = computed(() =>
+    isDarkTheme.value
+        ? 'border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] hover:border-[rgba(123,200,255,0.35)] hover:bg-[rgba(123,200,255,0.08)]'
+        : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.1)] hover:border-[rgba(144,203,255,0.5)] hover:bg-[rgba(144,203,255,0.14)]'
+);
 const chatIcon = computed(() => (isDarkTheme.value ? chatIconDark : chatIconLight));
 const workIcon = computed(() => (isDarkTheme.value ? workIconDark : workIconLight));
 
@@ -64,6 +84,7 @@ const showDeleteConfirm = ref(false);
 const deleteTarget = ref({ type: 'chat', id: '' });
 const showNewSessionPicker = ref(false);
 const showProfile = ref(false);
+const showLogoutConfirm = ref(false);
 const profileSaving = ref(false);
 const profileError = ref('');
 const profileTab = ref('profile');
@@ -475,6 +496,19 @@ const handleLogout = () => {
     router.push('/login');
 };
 
+const openLogoutConfirm = () => {
+    if (!isLogin.value) {
+        router.push('/login');
+        return;
+    }
+    showLogoutConfirm.value = true;
+};
+
+const confirmLogout = () => {
+    showLogoutConfirm.value = false;
+    handleLogout();
+};
+
 const toggleTheme = () => {
     settingsStore.updateSettings({ theme: isDarkTheme.value ? 'light' : 'dark' });
 };
@@ -699,42 +733,26 @@ const exportApi = async (item) => {
 
 <template>
     <aside
-        class="flex h-screen flex-col bg-[radial-gradient(120%_120%_at_0%_0%,#122544_0%,#0f172a_60%,#0b1220_100%)] p-[20px] text-[#e7ecf4] shadow-[10px_0_30px_rgba(0,0,0,0.08)] border-r border-[rgba(255,255,255,0.06)] max-[720px]:hidden"
+        class="flex h-screen flex-col border-r p-[20px] max-[720px]:hidden"
+        :class="sidebarShellClass"
     >
-        <div class="mb-[12px] flex items-center justify-between gap-[12px]">
+        <div class="mb-[12px] pr-[4px]">
             <button
-                class="group flex items-center gap-[12px] rounded-[12px] border border-transparent px-[6px] py-[6px] text-left transition-all duration-200 hover:border-[rgba(123,200,255,0.35)] hover:bg-[rgba(123,200,255,0.08)]"
+                class="group flex w-full min-w-0 items-center gap-[12px] rounded-[14px] border border-transparent px-[10px] py-[8px] text-left transition-all duration-200 hover:border-[rgba(123,200,255,0.35)] hover:bg-[rgba(123,200,255,0.08)]"
                 type="button"
                 @click="goWelcome"
             >
                 <div
-                    class="h-[44px] w-[44px] overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.2)] bg-[radial-gradient(120%_120%_at_0%_0%,rgba(111,125,255,0.2),rgba(83,197,255,0.1))] transition-transform duration-200 group-hover:scale-[1.04]"
+                    class="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-[15px] border border-[rgba(255,255,255,0.2)] bg-[radial-gradient(120%_120%_at_0%_0%,rgba(111,125,255,0.2),rgba(83,197,255,0.1))] transition-transform duration-200 group-hover:scale-[1.04]"
                 >
                     <img :src="logoImg" alt="Logo" class="h-full w-full object-cover block" />
                 </div>
-                <div>
-                    <div class="text-[20px] font-bold transition-colors duration-200 group-hover:text-[#9ed7ff]">
+                <div class="flex min-w-0 flex-col gap-[4px]">
+                    <div class="text-[26px] font-bold leading-[1.1] transition-colors duration-200 group-hover:text-[#9ed7ff]">
                         MiniAgent
                     </div>
-                    <div class="text-[12px] text-[rgba(231,236,244,0.7)]">RAG · MCP · OPENAI</div>
+                    <div class="whitespace-nowrap text-[14px] tracking-[0.02em] text-[rgba(231,236,244,0.7)]">RAG · MCP · OPENAI</div>
                 </div>
-            </button>
-            <button
-                class="grid h-[34px] w-[34px] place-items-center rounded-[10px] border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-[rgba(231,236,244,0.9)] transition hover:bg-[rgba(255,255,255,0.14)] hover:text-white"
-                type="button"
-                :title="isDarkTheme ? '切换到白天' : '切换到黑天'"
-                @click="toggleTheme"
-            >
-                <svg v-if="isDarkTheme" viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
-                    <path
-                        d="M12 3.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0112 3.75zm6.22 2.53a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM20.25 11.25a.75.75 0 010 1.5h-1.5a.75.75 0 010-1.5h1.5zm-2.47 6.72a.75.75 0 011.06-1.06l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06zM12 18.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zm-6.22-.78a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM3.75 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013.75 12zm2.47-6.72a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L6.22 6.34a.75.75 0 010-1.06zM12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"
-                    />
-                </svg>
-                <svg v-else viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
-                    <path
-                        d="M21.752 15.002A9.718 9.718 0 0112 21.75 9.75 9.75 0 0112 2.25c.33 0 .658.016.983.048a.75.75 0 01.34 1.38 7.5 7.5 0 009.098 11.072.75.75 0 011.33.252z"
-                    />
-                </svg>
             </button>
         </div>
 
@@ -747,7 +765,7 @@ const exportApi = async (item) => {
                     :class="
                         isStudioRoute
                             ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
-                            : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+                            : sidebarGhostButtonClass
                     "
                     type="button"
                     @click="goRoute('/studio')"
@@ -759,7 +777,7 @@ const exportApi = async (item) => {
                     :class="
                         isPlazaRoute
                             ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
-                            : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+                            : sidebarGhostButtonClass
                     "
                     type="button"
                     @click="goRoute('/plaza')"
@@ -771,7 +789,7 @@ const exportApi = async (item) => {
                     :class="
                         isWelcomeRoute
                             ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
-                            : 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
+                            : sidebarGhostButtonClass
                     "
                     type="button"
                     @click="handleNewSession"
@@ -954,30 +972,63 @@ const exportApi = async (item) => {
         </div>
 
         <div
-            class="group flex items-center justify-between gap-[12px] rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] p-[12px] transition-all duration-200 hover:border-[rgba(123,200,255,0.35)] hover:bg-[rgba(123,200,255,0.08)]"
+            class="group flex w-full items-center justify-between gap-[12px] rounded-[14px] border p-[12px] text-left transition-all duration-200"
+            :class="sidebarProfileCardClass"
+            role="button"
+            tabindex="0"
+            title="进入 Settings"
+            @click="openProfile"
+            @keydown.enter.prevent="openProfile"
+            @keydown.space.prevent="openProfile"
         >
-            <button
-                class="inline-flex w-auto shrink-0 items-center gap-[10px] rounded-[10px] px-[2px] py-[2px] text-left"
-                type="button"
-                @click.stop="openProfile"
-            >
+            <div class="flex min-w-0 items-center gap-[10px]">
                 <div
-                    class="grid h-[40px] w-[40px] place-items-center rounded-[12px] border border-[rgba(15,23,42,0.18)] bg-[var(--avatar-bg)] font-bold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] transition-transform duration-200 group-hover:scale-[1.04]"
+                    class="grid h-[40px] w-[40px] shrink-0 place-items-center rounded-[12px] border border-[rgba(15,23,42,0.18)] bg-[var(--avatar-bg)] font-bold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] transition-transform duration-200 group-hover:scale-[1.04]"
                 >
                     {{ avatarChar }}
                 </div>
-                <div>
-                    <div class="font-bold text-white transition-colors duration-200 group-hover:text-[#9ed7ff]">{{ currentUser.username || '访客' }}</div>
+                <div class="min-w-0">
+                    <div class="truncate font-bold text-white transition-colors duration-200 group-hover:text-[#9ed7ff]">{{ currentUser.username || '访客' }}</div>
+                    <div class="text-[12px] text-[rgba(231,236,244,0.68)] transition-colors duration-200 group-hover:text-[rgba(158,215,255,0.92)]">
+                        Settings
+                    </div>
                 </div>
-            </button>
-            <div class="flex items-center gap-[8px]">
+            </div>
+            <div class="flex shrink-0 items-center gap-[8px]">
                 <button
                     v-if="isLogin"
-                    class="main-logout rounded-[8px] px-2 py-1 text-[14px] text-[rgba(231,236,244,0.8)] transition hover:text-white"
+                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] border transition"
+                    :class="sidebarIconButtonClass"
                     type="button"
-                    @click.stop="handleLogout"
+                    title="退出登录"
+                    @click.stop="openLogoutConfirm"
                 >
-                    退出登录
+                    <svg viewBox="0 0 24 24" class="h-[17px] w-[17px]" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M10.5 3.75a.75.75 0 000 1.5h6.75v13.5H10.5a.75.75 0 000 1.5H18a.75.75 0 00.75-.75V4.5A.75.75 0 0018 3.75h-7.5z"
+                        />
+                        <path
+                            d="M12.53 12.53a.75.75 0 000-1.06L9.81 8.75a.75.75 0 00-1.06 1.06l1.44 1.44H4.5a.75.75 0 000 1.5h5.69l-1.44 1.44a.75.75 0 101.06 1.06l2.72-2.72z"
+                        />
+                    </svg>
+                </button>
+                <button
+                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] border transition"
+                    :class="sidebarIconButtonClass"
+                    type="button"
+                    :title="isDarkTheme ? '切换到白天' : '切换到黑天'"
+                    @click.stop="toggleTheme"
+                >
+                    <svg v-if="isDarkTheme" viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M12 3.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0112 3.75zm6.22 2.53a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06zM20.25 11.25a.75.75 0 010 1.5h-1.5a.75.75 0 010-1.5h1.5zm-2.47 6.72a.75.75 0 011.06-1.06l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06zM12 18.75a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zm-6.22-.78a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zM3.75 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013.75 12zm2.47-6.72a.75.75 0 011.06 0l1.06 1.06a.75.75 0 11-1.06 1.06L6.22 6.34a.75.75 0 010-1.06zM12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"
+                        />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M21.752 15.002A9.718 9.718 0 0112 21.75 9.75 9.75 0 0112 2.25c.33 0 .658.016.983.048a.75.75 0 01.34 1.38 7.5 7.5 0 009.098 11.072.75.75 0 011.33.252z"
+                        />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -1013,6 +1064,34 @@ const exportApi = async (item) => {
                         @click="handleDelete"
                     >
                         确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showLogoutConfirm" class="fixed inset-0 z-[21] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="showLogoutConfirm = false">
+            <div class="w-full max-w-[420px] rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[#0f172a] text-[#e7ecf4] shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+                <div class="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-[16px] py-[14px]">
+                    <div class="text-[16px] font-bold">退出登录</div>
+                    <button class="text-[20px] text-[#e7ecf4]" type="button" @click="showLogoutConfirm = false">×</button>
+                </div>
+                <div class="px-[16px] py-[14px]">
+                    <div class="text-[14px]">确认退出当前账号吗？</div>
+                </div>
+                <div class="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-[16px] py-[14px]">
+                    <button
+                        class="flex items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] px-[14px] py-[10px] font-semibold text-[#e7ecf4] transition-all duration-200 hover:bg-[rgba(255,255,255,0.16)]"
+                        type="button"
+                        @click="showLogoutConfirm = false"
+                    >
+                        取消
+                    </button>
+                    <button
+                        class="flex items-center justify-center rounded-[12px] border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] px-[14px] py-[10px] font-semibold text-[#e7ecf4] transition-all duration-200 hover:bg-[rgba(255,255,255,0.16)]"
+                        type="button"
+                        @click="confirmLogout"
+                    >
+                        确认退出
                     </button>
                 </div>
             </div>
@@ -1054,20 +1133,20 @@ const exportApi = async (item) => {
             @click.self="closeProfile"
         >
             <div
-                class="w-full max-w-[820px] rounded-[14px] border border-[var(--border-color)] bg-white text-[var(--text-primary)] shadow-[0_20px_50px_rgba(15,23,42,0.2)]"
+                class="flex h-[760px] max-h-[88vh] w-full max-w-[820px] flex-col rounded-[14px] border border-[var(--border-color)] bg-white text-[var(--text-primary)] shadow-[0_20px_50px_rgba(15,23,42,0.2)]"
             >
                 <div class="flex items-center justify-between border-b border-[var(--border-color)] px-[18px] py-[14px]">
                     <div class="text-[16px] font-bold">个人中心</div>
                     <button class="text-[20px] text-[var(--text-secondary)]" type="button" @click="closeProfile">×</button>
                 </div>
-                <div class="px-[18px] py-[14px]">
+                <div class="min-h-0 flex-1 overflow-y-auto px-[18px] py-[14px]">
                     <div class="mb-[12px] inline-flex rounded-[10px] border border-[var(--border-color)] bg-[#f7f9fc] p-[4px]">
                         <button
                             class="rounded-[8px] px-[12px] py-[6px] text-[13px] font-semibold"
                             :class="profileTab === 'profile' ? 'bg-white text-[var(--accent-color)] shadow-sm' : 'text-[var(--text-secondary)]'"
                             @click="profileTab = 'profile'"
                         >
-                            Profile
+                            Profile 编辑
                         </button>
                         <button
                             class="rounded-[8px] px-[12px] py-[6px] text-[13px] font-semibold"

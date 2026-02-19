@@ -1,14 +1,16 @@
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryAgentList, queryChatMcps, queryChatModels } from '../request/api';
 import { normalizeError } from '../request/request';
-import { useWelcomeLaunchStore } from '../router/pinia';
+import { useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
 import { createTypewriter, DEFAULT_TYPEWRITER_SEGMENTS } from '../utils/TypeWriter';
 import AppFooter from './AppFooter.vue';
 
 const router = useRouter();
 const welcomeLaunchStore = useWelcomeLaunchStore();
+const settingsStore = useSettingsStore();
+const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 
 const sending = ref(false);
 const actionError = ref('');
@@ -296,13 +298,18 @@ onBeforeUnmount(() => {
                                 <div class="mt-[4px] mb-[10px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)] max-[720px]:text-[18px]">Chat 会话</div>
                             </div>
                             <div class="relative flex flex-1 flex-col justify-between gap-[8px]">
-                                <button
-                                    v-for="item in chatActions"
-                                    :key="item.key"
-                                    class="flex min-h-[46px] items-center rounded-[12px] border border-[rgba(148,163,184,0.28)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(241,245,249,0.62))] px-[14px] py-[10px] text-left text-[15px] font-semibold leading-[1.4] text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent-color)] hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.55),rgba(224,242,254,0.42))] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[42px] max-[720px]:text-[14px]"
-                                    :disabled="sending"
-                                    type="button"
-                                    @click="runAction('chat', item)"
+                            <button
+                                v-for="item in chatActions"
+                                :key="item.key"
+                                class="flex min-h-[46px] items-center rounded-[12px] border px-[14px] py-[10px] text-left text-[15px] font-semibold leading-[1.4] text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-200 hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[42px] max-[720px]:text-[14px]"
+                                :class="
+                                    isDarkTheme
+                                        ? 'border-[rgba(148,163,184,0.34)] bg-[linear-gradient(135deg,rgba(30,41,59,0.84),rgba(51,65,85,0.72))] hover:border-[rgba(96,165,250,0.65)] hover:bg-[linear-gradient(135deg,rgba(30,58,138,0.42),rgba(30,64,175,0.3))]'
+                                        : 'border-[rgba(148,163,184,0.28)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(241,245,249,0.62))] hover:border-[var(--accent-color)] hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.55),rgba(224,242,254,0.42))]'
+                                "
+                                :disabled="sending"
+                                type="button"
+                                @click="runAction('chat', item)"
                                 >
                                     <span class="line-clamp-2">{{ item.label }}</span>
                                 </button>
@@ -315,13 +322,18 @@ onBeforeUnmount(() => {
                                 <div class="mt-[4px] mb-[10px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)] max-[720px]:text-[18px]">Work 会话</div>
                             </div>
                             <div class="relative flex flex-1 flex-col justify-between gap-[8px]">
-                                <button
-                                    v-for="item in workActions"
-                                    :key="item.key"
-                                    class="flex min-h-[46px] items-center rounded-[12px] border border-[rgba(148,163,184,0.28)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(241,245,249,0.62))] px-[14px] py-[10px] text-left text-[15px] font-semibold leading-[1.42] text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent-color)] hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.55),rgba(224,242,254,0.42))] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[42px] max-[720px]:text-[14px]"
-                                    :disabled="sending"
-                                    type="button"
-                                    @click="runAction('work', item)"
+                            <button
+                                v-for="item in workActions"
+                                :key="item.key"
+                                class="flex min-h-[46px] items-center rounded-[12px] border px-[14px] py-[10px] text-left text-[15px] font-semibold leading-[1.42] text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-200 hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-70 max-[720px]:min-h-[42px] max-[720px]:text-[14px]"
+                                :class="
+                                    isDarkTheme
+                                        ? 'border-[rgba(148,163,184,0.34)] bg-[linear-gradient(135deg,rgba(30,41,59,0.84),rgba(51,65,85,0.72))] hover:border-[rgba(96,165,250,0.65)] hover:bg-[linear-gradient(135deg,rgba(30,58,138,0.42),rgba(30,64,175,0.3))]'
+                                        : 'border-[rgba(148,163,184,0.28)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(241,245,249,0.62))] hover:border-[var(--accent-color)] hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.55),rgba(224,242,254,0.42))]'
+                                "
+                                :disabled="sending"
+                                type="button"
+                                @click="runAction('work', item)"
                                 >
                                     <span class="whitespace-normal break-words pr-[8px] leading-[1.45]">{{ item.label }}</span>
                                 </button>

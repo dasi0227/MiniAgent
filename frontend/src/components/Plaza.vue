@@ -1,11 +1,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useSettingsStore } from '../router/pinia';
 import { plazaComment, plazaDetail, plazaFavor, plazaLike, plazaList, repoFork } from '../request/api';
 import { normalizeError } from '../request/request';
 import AppFooter from './AppFooter.vue';
 
 const router = useRouter();
+const settingsStore = useSettingsStore();
+const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const loading = ref(false);
 const message = ref('');
 const plazaItems = ref([]);
@@ -35,6 +38,82 @@ const displayType = (item) => (item?.agentType || 'react').toUpperCase();
 const isCommented = (item) => Boolean(item?.commented);
 
 const resolveIconColor = (active, color) => (active ? color : '#94a3b8');
+
+const resolveCardTone = (item) => {
+    if (isDarkTheme.value) {
+        const type = displayType(item);
+        if (type === 'STEP') {
+            return {
+                overlay:
+                    'linear-gradient(160deg, rgba(251,191,36,0.14), rgba(15,23,42,0) 48%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.24), rgba(15,23,42,0) 56%)',
+                badgeBg: 'rgba(251,191,36,0.16)',
+                badgeBorder: 'rgba(251,191,36,0.45)',
+                badgeText: '#fcd34d',
+                forkBg: 'rgba(251,191,36,0.14)',
+                forkBorder: 'rgba(251,191,36,0.45)',
+                forkText: '#fbbf24'
+            };
+        }
+        if (type === 'LOOP') {
+            return {
+                overlay:
+                    'linear-gradient(160deg, rgba(14,165,233,0.14), rgba(15,23,42,0) 48%), radial-gradient(circle at 100% 0, rgba(14,165,233,0.24), rgba(15,23,42,0) 56%)',
+                badgeBg: 'rgba(56,189,248,0.16)',
+                badgeBorder: 'rgba(56,189,248,0.42)',
+                badgeText: '#7dd3fc',
+                forkBg: 'rgba(56,189,248,0.14)',
+                forkBorder: 'rgba(56,189,248,0.42)',
+                forkText: '#38bdf8'
+            };
+        }
+        return {
+            overlay:
+                'linear-gradient(160deg, rgba(59,130,246,0.14), rgba(15,23,42,0) 48%), radial-gradient(circle at 100% 0, rgba(59,130,246,0.24), rgba(15,23,42,0) 56%)',
+            badgeBg: 'rgba(96,165,250,0.16)',
+            badgeBorder: 'rgba(96,165,250,0.42)',
+            badgeText: '#93c5fd',
+            forkBg: 'rgba(96,165,250,0.14)',
+            forkBorder: 'rgba(96,165,250,0.42)',
+            forkText: '#60a5fa'
+        };
+    }
+
+    const type = displayType(item);
+    if (type === 'STEP') {
+        return {
+            overlay:
+                'linear-gradient(160deg, rgba(251,191,36,0.09), rgba(255,255,255,0) 46%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.22), rgba(255,255,255,0) 54%)',
+            badgeBg: 'rgba(251,191,36,0.12)',
+            badgeBorder: 'rgba(245,158,11,0.28)',
+            badgeText: '#92400e',
+            forkBg: 'rgba(251,191,36,0.14)',
+            forkBorder: 'rgba(245,158,11,0.45)',
+            forkText: '#b45309'
+        };
+    }
+    if (type === 'LOOP') {
+        return {
+            overlay:
+                'linear-gradient(160deg, rgba(14,165,233,0.08), rgba(255,255,255,0) 46%), radial-gradient(circle at 100% 0, rgba(14,165,233,0.2), rgba(255,255,255,0) 54%)',
+            badgeBg: 'rgba(14,165,233,0.11)',
+            badgeBorder: 'rgba(14,165,233,0.25)',
+            badgeText: '#075985',
+            forkBg: 'rgba(14,165,233,0.12)',
+            forkBorder: 'rgba(14,165,233,0.42)',
+            forkText: '#0369a1'
+        };
+    }
+    return {
+        overlay:
+            'linear-gradient(160deg, rgba(59,130,246,0.09), rgba(255,255,255,0) 46%), radial-gradient(circle at 100% 0, rgba(59,130,246,0.2), rgba(255,255,255,0) 54%)',
+        badgeBg: 'rgba(59,130,246,0.11)',
+        badgeBorder: 'rgba(59,130,246,0.25)',
+        badgeText: '#1d4ed8',
+        forkBg: 'rgba(59,130,246,0.13)',
+        forkBorder: 'rgba(59,130,246,0.45)',
+        forkText: '#2563eb'
+    };
+};
 
 const filteredItems = computed(() => {
     const keyword = searchKeyword.value.trim().toLowerCase();
@@ -233,13 +312,21 @@ const goRepository = () => {
                     <article
                         v-for="item in filteredItems"
                         :key="item.plazaId"
-                        class="group relative overflow-hidden rounded-[16px] border border-[var(--border-color)] bg-white px-[14px] py-[12px] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_16px_36px_rgba(15,23,42,0.1)]"
+                        class="group relative overflow-hidden rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-1)] px-[14px] py-[12px] shadow-[0_14px_30px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.32)] transition-all duration-300 hover:-translate-y-[3px] hover:shadow-[0_22px_42px_rgba(15,23,42,0.14)]"
                     >
-                        <div class="pointer-events-none absolute right-[14px] top-[12px] inline-flex rounded-[999px] border border-[var(--border-color)] bg-[#f8fafc] px-[8px] py-[3px] text-[11px] font-semibold text-[#334155]">
+                        <div class="pointer-events-none absolute inset-0" :style="{ backgroundImage: resolveCardTone(item).overlay }"></div>
+                        <div
+                            class="pointer-events-none absolute right-[14px] top-[12px] inline-flex rounded-[999px] border px-[9px] py-[4px] text-[11px] font-semibold tracking-[0.03em] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+                            :style="{
+                                borderColor: resolveCardTone(item).badgeBorder,
+                                backgroundColor: resolveCardTone(item).badgeBg,
+                                color: resolveCardTone(item).badgeText
+                            }"
+                        >
                             {{ displayType(item) }}
                         </div>
-                        <div class="space-y-[10px] pr-[78px]">
-                            <button class="block w-full pt-[2px] text-left text-[18px] font-bold leading-[1.35] text-[#0f172a]" @click="openDetail(item)">
+                        <div class="relative space-y-[10px] pr-[78px]">
+                            <button class="block w-full pt-[2px] text-left text-[18px] font-bold leading-[1.35] text-[var(--text-primary)]" @click="openDetail(item)">
                                 {{ item.plazaTitle }}
                             </button>
                             <button class="min-h-[38px] w-full text-left text-[13px] leading-[1.45] text-[var(--text-secondary)]" @click="openDetail(item)">
@@ -283,7 +370,12 @@ const goRepository = () => {
                                 </div>
                                 <div class="ml-[16px] inline-flex items-center gap-[12px]">
                                     <button
-                                        class="inline-flex h-[34px] items-center gap-[6px] rounded-[10px] border border-[rgba(59,130,246,0.5)] bg-[rgba(59,130,246,0.12)] px-[12px] text-[13px] font-semibold text-[var(--accent-color)] transition hover:border-[var(--accent-color)] hover:bg-[var(--accent-color)] hover:text-white"
+                                        class="inline-flex h-[34px] items-center gap-[6px] rounded-[10px] border border-[var(--fork-border)] bg-[var(--fork-bg)] px-[12px] text-[13px] font-semibold text-[var(--fork-text)] transition hover:border-[var(--fork-text)] hover:bg-[var(--fork-text)] hover:text-white"
+                                        :style="{
+                                            '--fork-border': resolveCardTone(item).forkBorder,
+                                            '--fork-bg': resolveCardTone(item).forkBg,
+                                            '--fork-text': resolveCardTone(item).forkText
+                                        }"
                                         @click="doFork(item.plazaId)"
                                     >
                                         <svg
