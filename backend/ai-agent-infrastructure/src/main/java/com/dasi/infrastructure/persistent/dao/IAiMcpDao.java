@@ -11,7 +11,7 @@ public interface IAiMcpDao {
 
     AiMcp queryByMcpId(@Param("mcpId") String mcpId);
 
-    List<AiMcp> queryChatMcpList();
+    List<AiMcp> queryChatMcpList(@Param("userId") Long userId);
 
     List<AiMcp> queryByMcpIdList(@Param("mcpIdList") List<String> mcpIdList);
 

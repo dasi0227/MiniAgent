@@ -10,7 +10,7 @@ import java.util.List;
 public interface IAiClientDao {
     AiClient queryByClientId(@Param("clientId") String clientId);
 
-    List<AiClient> queryChatClientList();
+    List<AiClient> queryChatClientList(@Param("userId") Long userId);
 
     List<AiClient> queryWorkClientList();
 

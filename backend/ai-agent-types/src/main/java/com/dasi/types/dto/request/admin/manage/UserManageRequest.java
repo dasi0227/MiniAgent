@@ -21,7 +21,7 @@ public class UserManageRequest {
     private String password;
 
     @NotBlank
-    private String role;
+    private String userrole;
 
     @Builder.Default
     private Integer userStatus = 1;

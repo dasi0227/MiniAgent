@@ -3,10 +3,10 @@ package com.dasi.infrastructure.repository;
 import com.dasi.domain.session.model.vo.MessageVO;
 import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.session.repository.ISessionRepository;
-import com.dasi.infrastructure.persistent.dao.IMessageDao;
-import com.dasi.infrastructure.persistent.dao.ISessionDao;
-import com.dasi.infrastructure.persistent.po.Message;
-import com.dasi.infrastructure.persistent.po.Session;
+import com.dasi.infrastructure.persistent.dao.IAiMessageDao;
+import com.dasi.infrastructure.persistent.dao.IAiSessionDao;
+import com.dasi.infrastructure.persistent.po.AiMessage;
+import com.dasi.infrastructure.persistent.po.AiSession;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -18,14 +18,14 @@ import java.util.List;
 public class SessionRepository implements ISessionRepository {
 
     @Resource
-    private ISessionDao sessionDao;
+    private IAiSessionDao sessionDao;
 
     @Resource
-    private IMessageDao messageDao;
+    private IAiMessageDao messageDao;
 
     @Override
     public List<SessionVO> listSession(String sessionUser) {
-        List<Session> list = sessionDao.queryByUser(sessionUser);
+        List<AiSession> list = sessionDao.queryByUser(sessionUser);
         return list.stream().map(this::toSessionVO).toList();
     }
 
@@ -36,7 +36,7 @@ public class SessionRepository implements ISessionRepository {
 
     @Override
     public void insertSession(String sessionId, String sessionUser, String sessionTitle, String sessionType) {
-        Session session = Session.builder()
+        AiSession session = AiSession.builder()
                 .sessionId(sessionId)
                 .sessionUser(sessionUser)
                 .sessionTitle(sessionTitle)
@@ -72,11 +72,11 @@ public class SessionRepository implements ISessionRepository {
 
     @Override
     public List<MessageVO> listMessageBySessionAndType(String sessionId, String messageType) {
-        List<Message> list = messageDao.queryBySessionAndType(sessionId, messageType);
+        List<AiMessage> list = messageDao.queryBySessionAndType(sessionId, messageType);
         return list.stream().map(this::toMessageVO).toList();
     }
 
-    private SessionVO toSessionVO(Session session) {
+    private SessionVO toSessionVO(AiSession session) {
         if (session == null) {
             return null;
         }
@@ -90,7 +90,7 @@ public class SessionRepository implements ISessionRepository {
                 .build();
     }
 
-    private MessageVO toMessageVO(Message message) {
+    private MessageVO toMessageVO(AiMessage message) {
         if (message == null) {
             return null;
         }

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Session {
+public class AiSession {
     /** 自增 id */
     private Long id;
 

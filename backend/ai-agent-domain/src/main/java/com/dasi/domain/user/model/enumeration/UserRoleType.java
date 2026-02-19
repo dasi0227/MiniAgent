@@ -1,4 +1,4 @@
-package com.dasi.domain.auth.model.enumeration;
+package com.dasi.domain.user.model.enumeration;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

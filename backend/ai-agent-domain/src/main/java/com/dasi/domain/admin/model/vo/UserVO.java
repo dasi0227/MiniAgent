@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class UserVO {
     private Long id;
     private String username;
-    private String role;
+    private String userrole;
     private Integer userStatus;
     private LocalDateTime updateTime;
 }

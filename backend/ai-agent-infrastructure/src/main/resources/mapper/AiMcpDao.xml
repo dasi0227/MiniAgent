@@ -11,6 +11,7 @@
         <result column="mcp_desc" property="mcpDesc"/>
         <result column="mcp_timeout" property="mcpTimeout"/>
         <result column="mcp_chat" property="mcpChat"/>
+        <result column="mcp_from" property="mcpFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -24,6 +25,7 @@
                mcp_desc,
                mcp_timeout,
                mcp_chat,
+               mcp_from,
                create_time,
                update_time
         FROM ai_mcp
@@ -32,15 +34,16 @@
 
     <select id="queryByMcpIdList" parameterType="java.util.List" resultMap="dataMap">
         SELECT id,
-        mcp_id,
-        mcp_name,
-        mcp_type,
-        mcp_config,
-        mcp_desc,
-        mcp_timeout,
-        mcp_chat,
-        create_time,
-        update_time
+               mcp_id,
+               mcp_name,
+               mcp_type,
+               mcp_config,
+               mcp_desc,
+               mcp_timeout,
+               mcp_chat,
+               mcp_from,
+               create_time,
+               update_time
         FROM ai_mcp
         WHERE mcp_chat = 1 AND mcp_id IN
         <foreach collection="mcpIdList" item="id" open="(" separator="," close=")">
@@ -57,10 +60,12 @@
                mcp_desc,
                mcp_timeout,
                mcp_chat,
+               mcp_from,
                create_time,
                update_time
         FROM ai_mcp
         WHERE mcp_chat = 1
+          AND (mcp_from = #{userId} OR mcp_from = 0)
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -72,6 +77,7 @@
                mcp_desc,
                mcp_timeout,
                mcp_chat,
+               mcp_from,
                create_time,
                update_time
         FROM ai_mcp
@@ -116,6 +122,7 @@
                mcp_desc,
                mcp_timeout,
                mcp_chat,
+               mcp_from,
                create_time,
                update_time
         FROM ai_mcp

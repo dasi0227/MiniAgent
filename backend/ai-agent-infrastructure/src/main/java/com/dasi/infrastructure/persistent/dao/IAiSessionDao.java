@@ -1,21 +1,21 @@
 package com.dasi.infrastructure.persistent.dao;
 
-import com.dasi.infrastructure.persistent.po.Session;
+import com.dasi.infrastructure.persistent.po.AiSession;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 @Mapper
-public interface ISessionDao {
+public interface IAiSessionDao {
 
-    List<Session> queryAll();
+    List<AiSession> queryAll();
 
-    List<Session> queryByUser(@Param("sessionUser") String sessionUser);
+    List<AiSession> queryByUser(@Param("sessionUser") String sessionUser);
 
-    Session queryById(@Param("id") Long id);
+    AiSession queryById(@Param("id") Long id);
 
-    Session queryBySessionId(@Param("sessionId") String sessionId);
+    AiSession queryBySessionId(@Param("sessionId") String sessionId);
 
     int countByUserAndType(@Param("sessionUser") String sessionUser, @Param("sessionType") String sessionType);
 
@@ -23,7 +23,7 @@ public interface ISessionDao {
 
     int countByType(@Param("sessionType") String sessionType);
 
-    void insert(Session session);
+    void insert(AiSession session);
 
     void updateTitle(@Param("id") Long id, @Param("sessionTitle") String sessionTitle);
 

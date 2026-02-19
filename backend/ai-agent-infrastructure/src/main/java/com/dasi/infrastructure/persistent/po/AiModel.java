@@ -27,6 +27,9 @@ public class AiModel {
     /** 模型类型 */
     private String modelType;
 
+    /** 归属用户 id：0-系统，其它-用户 id */
+    private Long modelFrom;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 

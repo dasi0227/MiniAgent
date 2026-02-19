@@ -1,7 +1,7 @@
 package com.dasi.domain.util.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.dasi.domain.auth.model.vo.UserVO;
+import com.dasi.domain.user.model.vo.UserVO;
 
 public interface IJwtService {
 

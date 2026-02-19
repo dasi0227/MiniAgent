@@ -1,12 +1,11 @@
-package com.dasi.domain.auth.service;
+package com.dasi.domain.user.service.auth;
 
+import com.dasi.domain.user.model.vo.UserVO;
+import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.AuthContext;
-import com.dasi.domain.auth.model.vo.UserVO;
-import com.dasi.domain.auth.repository.IAuthRepository;
 import com.dasi.domain.util.jwt.IJwtService;
-import com.dasi.types.dto.request.auth.AuthRequest;
-import com.dasi.types.dto.request.auth.PasswordRequest;
-import com.dasi.types.dto.response.auth.AuthResponse;
+import com.dasi.types.dto.request.user.AuthRequest;
+import com.dasi.types.dto.response.user.AuthResponse;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class AuthService implements IAuthService {
 
     @Resource
-    private IAuthRepository authRepository;
+    private IUserRepository userRepository;
 
     @Resource
     private IJwtService jwtService;
@@ -33,14 +32,16 @@ public class AuthService implements IAuthService {
         String username = request.getUsername();
         String password = request.getPassword();
 
-        UserVO userVO = authRepository.queryByUsername(username);
+        UserVO userVO = userRepository.queryByUsername(username);
         if (userVO == null) {
             throw new AuthException("用户不存在");
         }
         if (!passwordEncoder.matches(password, userVO.getPassword())) {
             throw new AuthException("用户名或密码错误");
         }
-        assertUserActive(userVO);
+        if (Integer.valueOf(0).equals(userVO.getUserStatus())) {
+            throw new AuthException("账号已被禁用");
+        }
 
         return buildAuthResponse(userVO);
     }
@@ -51,50 +52,29 @@ public class AuthService implements IAuthService {
         String username = request.getUsername();
         String password = request.getPassword();
 
-        if (authRepository.queryByUsername(username) != null) {
+        if (userRepository.queryByUsername(username) != null) {
             throw new AuthException("用户名已存在");
         }
 
         String encodedPwd = passwordEncoder.encode(password);
-        UserVO userVO = authRepository.insertUser(username, encodedPwd);
+        UserVO userVO = userRepository.insertUser(username, encodedPwd);
         return buildAuthResponse(userVO);
     }
 
     @Override
     public AuthResponse profile() {
-        if (authContext.getId() == null) {
+        if (authContext.getUserId() == null) {
             throw new AuthException("未登录");
         }
 
-        UserVO userVO = authRepository.queryById(authContext.getId());
+        UserVO userVO = userRepository.queryById(authContext.getUserId());
         if (userVO == null) {
             throw new AuthException("用户不存在或已被删除");
         }
-        assertUserActive(userVO);
-
-        return buildAuthResponse(userVO);
-    }
-
-    @Override
-    public AuthResponse password(PasswordRequest request) {
-
-        String username = request.getUsername();
-        String newPassword = request.getNewPassword();
-        String oldPassword = request.getOldPassword();
-
-        UserVO userVO = authRepository.queryById(authContext.getId());
-        if (userVO == null) {
-            throw new AuthException("用户不存在或已被删除");
-        }
-        assertUserActive(userVO);
-
-        String originalPassword = userVO.getPassword();
-        if (!passwordEncoder.matches(oldPassword, originalPassword)) {
-            throw new AuthException("旧密码不正确");
+        if (Integer.valueOf(0).equals(userVO.getUserStatus())) {
+            throw new AuthException("账号已被禁用");
         }
 
-        String encodedPwd = passwordEncoder.encode(newPassword);
-        userVO = authRepository.updateUser(userVO.getId(), username, encodedPwd);
         return buildAuthResponse(userVO);
     }
 
@@ -104,15 +84,9 @@ public class AuthService implements IAuthService {
                 .token(token)
                 .userId(userVO.getId())
                 .username(userVO.getUsername())
-                .role(userVO.getRole())
+                .userrole(userVO.getUserrole())
                 .userStatus(userVO.getUserStatus())
                 .build();
-    }
-
-    private void assertUserActive(UserVO userVO) {
-        if (userVO != null && Integer.valueOf(0).equals(userVO.getUserStatus())) {
-            throw new AuthException("账号已被禁用");
-        }
     }
 
 }

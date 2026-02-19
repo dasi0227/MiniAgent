@@ -1,8 +1,8 @@
-package com.dasi.domain.auth.repository;
+package com.dasi.domain.user.repository;
 
-import com.dasi.domain.auth.model.vo.UserVO;
+import com.dasi.domain.user.model.vo.UserVO;
 
-public interface IAuthRepository {
+public interface IUserRepository {
 
     UserVO queryByUsername(String username);
 

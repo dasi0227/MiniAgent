@@ -6,7 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.dasi.domain.util.jwt.JwtProperties;
-import com.dasi.domain.auth.model.vo.UserVO;
+import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.util.jwt.IJwtService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class JwtService implements IJwtService {
                 .withExpiresAt(expireAt)
                 .withClaim(CLAIM_USER_ID, userVO.getId())
                 .withClaim(CLAIM_USERNAME, userVO.getUsername())
-                .withClaim(CLAIM_ROLE, userVO.getRole())
+                .withClaim(CLAIM_ROLE, userVO.getUserrole())
                 .sign(getAlgorithm());
     }
 
@@ -69,7 +69,7 @@ public class JwtService implements IJwtService {
         return UserVO.builder()
                 .id(userId)
                 .username(username)
-                .role(role)
+                .userrole(role)
                 .build();
     }
 

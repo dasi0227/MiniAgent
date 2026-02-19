@@ -1,10 +1,11 @@
 package com.dasi.trigger.http;
 
-import com.dasi.api.IAuthApi;
-import com.dasi.domain.auth.service.IAuthService;
-import com.dasi.types.dto.request.auth.AuthRequest;
-import com.dasi.types.dto.request.auth.PasswordRequest;
-import com.dasi.types.dto.response.auth.AuthResponse;
+import com.dasi.api.IUserApi;
+import com.dasi.domain.user.service.auth.IAuthService;
+import com.dasi.domain.user.service.edit.IEditService;
+import com.dasi.types.dto.request.user.AuthRequest;
+import com.dasi.types.dto.request.user.EditProfileRequest;
+import com.dasi.types.dto.response.user.AuthResponse;
 import com.dasi.types.dto.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -17,10 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/auth")
-public class AuthController implements IAuthApi {
+public class UserController implements IUserApi {
 
     @Resource
     private IAuthService authService;
+
+    @Resource
+    private IEditService editService;
 
     @PostMapping("/login")
     @Override
@@ -43,8 +47,8 @@ public class AuthController implements IAuthApi {
 
     @PostMapping("/password")
     @Override
-    public Result<AuthResponse> password(@Valid @RequestBody PasswordRequest request) {
-        return Result.success(authService.password(request));
+    public Result<AuthResponse> editProfile(@Valid @RequestBody EditProfileRequest request) {
+        return Result.success(editService.editProfile(request));
     }
 
 }

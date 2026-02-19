@@ -1,31 +1,31 @@
 package com.dasi.infrastructure.persistent.dao;
 
-import com.dasi.infrastructure.persistent.po.User;
+import com.dasi.infrastructure.persistent.po.AiUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 @Mapper
-public interface IUserDao {
+public interface IAiUserDao {
 
-    User queryById(@Param("id") Long id);
+    AiUser queryById(@Param("id") Long id);
 
-    User queryByUsername(@Param("username") String username);
+    AiUser queryByUsername(@Param("username") String username);
 
-    List<User> page(@Param("username") String username,
-                    @Param("role") String role,
+    List<AiUser> page(@Param("username") String username,
+                    @Param("userrole") String userrole,
                     @Param("offset") Integer offset,
                     @Param("size") Integer size);
 
     Long count(@Param("username") String username,
-               @Param("role") String role);
+               @Param("userrole") String userrole);
 
     Long countAll();
 
-    void insert(User user);
+    void insert(AiUser aiUser);
 
-    void update(User user);
+    void update(AiUser aiUser);
 
     void delete(@Param("id") Long id);
 

@@ -24,9 +24,9 @@ public class AuthContext {
         return userInfo == null ? null : userInfo.getUsername();
     }
 
-    public Long getId() {
+    public Long getUserId() {
         UserInfo userInfo = USER_CONTEXT.get();
-        return userInfo == null ? null : userInfo.getId();
+        return userInfo == null ? null : userInfo.getUserId();
     }
 
     public String getRole() {
@@ -43,7 +43,7 @@ public class AuthContext {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserInfo {
-        private Long id;
+        private Long userId;
         private String username;
         private String role;
     }

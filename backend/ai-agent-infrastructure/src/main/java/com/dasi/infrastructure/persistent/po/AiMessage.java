@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Message {
+public class AiMessage {
     /** 自增 id */
     private Long id;
 

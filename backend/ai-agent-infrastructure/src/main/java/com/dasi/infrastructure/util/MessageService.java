@@ -2,10 +2,10 @@ package com.dasi.infrastructure.util;
 
 import com.dasi.domain.session.model.enumeration.MessageType;
 import com.dasi.domain.util.message.IMessageService;
-import com.dasi.infrastructure.persistent.dao.IMessageDao;
-import com.dasi.infrastructure.persistent.dao.ISessionDao;
-import com.dasi.infrastructure.persistent.po.Message;
-import com.dasi.infrastructure.persistent.po.Session;
+import com.dasi.infrastructure.persistent.dao.IAiMessageDao;
+import com.dasi.infrastructure.persistent.dao.IAiSessionDao;
+import com.dasi.infrastructure.persistent.po.AiMessage;
+import com.dasi.infrastructure.persistent.po.AiSession;
 import com.dasi.types.exception.SessionException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +24,10 @@ import static com.dasi.types.constant.ChatConstant.WORK_USER_LIMIT;
 public class MessageService implements IMessageService {
 
     @Resource
-    private IMessageDao messageDao;
+    private IAiMessageDao messageDao;
 
     @Resource
-    private ISessionDao sessionDao;
+    private IAiSessionDao sessionDao;
 
     @Override
     public void saveChatUserMessage(String sessionId, String messageContent) {
@@ -55,7 +55,7 @@ public class MessageService implements IMessageService {
     }
 
     private void saveMessage(String sessionId, String messageType, String messageRole, String messageContent) {
-        Session session = sessionDao.queryBySessionId(sessionId);
+        AiSession session = sessionDao.queryBySessionId(sessionId);
         if (session == null) {
             throw new SessionException("会话不存在");
         }
@@ -64,7 +64,7 @@ public class MessageService implements IMessageService {
         Integer maxSeq = messageDao.maxSeqBySessionAndType(sessionId, messageType);
         int nextSeq = maxSeq == null ? 1 : maxSeq + 1;
 
-        Message message = Message.builder()
+        AiMessage message = AiMessage.builder()
                 .sessionId(sessionId)
                 .messageContent(messageContent == null ? "" : messageContent)
                 .messageRole(messageRole)
@@ -74,7 +74,7 @@ public class MessageService implements IMessageService {
         messageDao.insert(message);
     }
 
-    private void checkUserLimit(Session session, String messageRole) {
+    private void checkUserLimit(AiSession session, String messageRole) {
         if (!USER.getRole().equalsIgnoreCase(messageRole)) {
             return;
         }

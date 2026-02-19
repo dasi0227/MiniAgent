@@ -1,4 +1,4 @@
-package com.dasi.types.dto.request.auth;
+package com.dasi.types.dto.request.user;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

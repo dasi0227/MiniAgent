@@ -1,4 +1,4 @@
-package com.dasi.types.dto.response.auth;
+package com.dasi.types.dto.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +17,7 @@ public class AuthResponse {
 
     private String username;
 
-    private String role;
+    private String userrole;
 
     private Integer userStatus;
 

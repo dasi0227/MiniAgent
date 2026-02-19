@@ -1,6 +1,6 @@
 package com.dasi.infrastructure.persistent.dao;
 
-import com.dasi.infrastructure.persistent.po.Message;
+import com.dasi.infrastructure.persistent.po.AiMessage;
 import com.dasi.infrastructure.persistent.vo.MessageDailyCount;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
-public interface IMessageDao {
+public interface IAiMessageDao {
 
-    List<Message> queryBySessionAndType(@Param("sessionId") String sessionId,
-                                        @Param("messageType") String messageType);
+    List<AiMessage> queryBySessionAndType(@Param("sessionId") String sessionId,
+                                          @Param("messageType") String messageType);
 
     int countBySessionAndType(@Param("sessionId") String sessionId,
                               @Param("messageType") String messageType);
@@ -25,7 +25,7 @@ public interface IMessageDao {
 
     int countAll();
 
-    void insert(Message message);
+    void insert(AiMessage aiMessage);
 
     void deleteBySessionId(@Param("sessionId") String sessionId);
 }

@@ -1,6 +1,7 @@
 package com.dasi.infrastructure.repository;
 
 import com.dasi.domain.query.repository.IQueryRepository;
+import com.dasi.domain.util.jwt.AuthContext;
 import com.dasi.infrastructure.persistent.dao.IAiAgentDao;
 import com.dasi.infrastructure.persistent.dao.IAiClientDao;
 import com.dasi.infrastructure.persistent.dao.IAiMcpDao;
@@ -40,6 +41,9 @@ public class QueryRepository implements IQueryRepository {
     @Resource(name = "postgresqlTemplate")
     private JdbcTemplate jdbcTemplate;
 
+    @Resource
+    private AuthContext authContext;
+
     @Value("${openai.embedding.schema-name}")
     private String embeddingSchemaName;
 
@@ -50,7 +54,9 @@ public class QueryRepository implements IQueryRepository {
     @Cacheable(cacheKey = QUERY_CHAT_CLIENT_KEY, cacheClass = QueryChatClientResponse.class, cacheType = CacheType.LIST)
     public List<QueryChatClientResponse> queryChatClientResponseList() {
 
-        List<AiClient> aiClientList = aiClientDao.queryChatClientList();
+        Long userId = authContext.getUserId();
+
+        List<AiClient> aiClientList = aiClientDao.queryChatClientList(userId);
         if (aiClientList == null || aiClientList.isEmpty()) {
             return new ArrayList<>();
         }
@@ -70,7 +76,9 @@ public class QueryRepository implements IQueryRepository {
     @Cacheable(cacheKey = QUERY_CHAT_MCP_KEY, cacheClass = QueryChatMcpResponse.class, cacheType = CacheType.LIST)
     public List<QueryChatMcpResponse> queryChatMcpResponseList() {
 
-        List<AiMcp> aiMcpList = aiMcpDao.queryChatMcpList();
+        Long userId = authContext.getUserId();
+
+        List<AiMcp> aiMcpList = aiMcpDao.queryChatMcpList(userId);
         if (aiMcpList == null || aiMcpList.isEmpty()) {
             return new ArrayList<>();
         }
@@ -88,10 +96,14 @@ public class QueryRepository implements IQueryRepository {
     @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = QueryWorkAgentResponse.class, cacheType = CacheType.LIST)
     public List<QueryWorkAgentResponse> queryWorkAgentResponseList() {
 
-        List<AiAgent> aiAgentList = aiAgentDao.queryAgentList();
+        Long userId = authContext.getUserId();
+
+        List<AiAgent> aiAgentList = aiAgentDao.queryWorkAgentList(userId);
         if (aiAgentList == null || aiAgentList.isEmpty()) {
             return new ArrayList<>();
         }
+
+        // TODO：还需要把用户 fork 到仓库的 agent 加入进来
 
         return aiAgentList.stream()
                 .filter(a -> a != null && Integer.valueOf(1).equals(a.getAgentStatus()))

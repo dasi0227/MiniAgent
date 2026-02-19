@@ -35,6 +35,9 @@ public class AiMcp {
     /** 是否允许 chat 使用：0-允许，1-不允许 */
     private Integer mcpChat;
 
+    /** 归属用户 id：0-系统，其它-用户 id */
+    private Long mcpFrom;
+
     /** 工具描述 */
     private String mcpDesc;
 

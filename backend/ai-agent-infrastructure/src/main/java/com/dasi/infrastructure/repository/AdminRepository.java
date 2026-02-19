@@ -62,7 +62,7 @@ public class AdminRepository implements IAdminRepository {
     private IAiAgentDao aiAgentDao;
 
     @Resource
-    private IUserDao userDao;
+    private IAiUserDao userDao;
 
     @Resource
     private IAiFlowDao aiFlowDao;
@@ -71,10 +71,10 @@ public class AdminRepository implements IAdminRepository {
     private IAiTaskDao aiTaskDao;
 
     @Resource
-    private ISessionDao sessionDao;
+    private IAiSessionDao sessionDao;
 
     @Resource
-    private IMessageDao messageDao;
+    private IAiMessageDao messageDao;
 
     @Resource
     private IAiStatDao aiStatDao;
@@ -548,12 +548,12 @@ public class AdminRepository implements IAdminRepository {
         aiAgentDao.toggle(po);
     }
 
-    // -------------------- User --------------------
+    // -------------------- AiUser --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.LIST)
     public List<UserVO> userPage(UserPageRequest request) {
         Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<User> poList = userDao.page(request.getUsernameKeyWord(), request.getRole(), offset, request.getPageSize());
+        List<AiUser> poList = userDao.page(request.getUsernameKeyWord(), request.getUserrole(), offset, request.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -563,7 +563,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer userCount(UserPageRequest request) {
-        Long count = userDao.count(request.getUsernameKeyWord(), request.getRole());
+        Long count = userDao.count(request.getUsernameKeyWord(), request.getUserrole());
         return count == null ? 0 : count.intValue();
     }
 
@@ -808,10 +808,10 @@ public class AdminRepository implements IAdminRepository {
         aiTaskDao.toggle(po);
     }
 
-    // -------------------- Session --------------------
+    // -------------------- AiSession --------------------
     @Override
     public List<SessionVO> listSession() {
-        List<Session> list = sessionDao.queryAll();
+        List<AiSession> list = sessionDao.queryAll();
         return list.stream().map(this::toSessionVO).toList();
     }
 
@@ -1055,25 +1055,25 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private UserVO toUserVO(User po) {
+    private UserVO toUserVO(AiUser po) {
         if (po == null) {
             return null;
         }
         return UserVO.builder()
                 .id(po.getId())
                 .username(po.getUsername())
-                .role(po.getRole())
+                .userrole(po.getUserrole())
                 .userStatus(po.getUserStatus())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
 
-    private User toUserPo(UserManageRequest request) {
-        return User.builder()
+    private AiUser toUserPo(UserManageRequest request) {
+        return AiUser.builder()
                 .id(request.getId())
                 .username(request.getUsername())
                 .password(request.getPassword())
-                .role(request.getRole())
+                .userrole(request.getUserrole())
                 .userStatus(request.getUserStatus())
                 .build();
     }
@@ -1158,7 +1158,7 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private SessionVO toSessionVO(Session session) {
+    private SessionVO toSessionVO(AiSession session) {
         if (session == null) {
             return null;
         }

@@ -1,4 +1,4 @@
-package com.dasi.types.dto.request.auth;
+package com.dasi.types.dto.request.user;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PasswordRequest {
+public class EditProfileRequest {
 
     @NotBlank(message = "id 不能为空")
     private Long id;

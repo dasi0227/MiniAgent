@@ -9,6 +9,7 @@
         <result column="api_key" property="apiKey"/>
         <result column="api_completions_path" property="apiCompletionsPath"/>
         <result column="api_embeddings_path" property="apiEmbeddingsPath"/>
+        <result column="api_from" property="apiFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -20,6 +21,7 @@
                api_key,
                api_completions_path,
                api_embeddings_path,
+               api_from,
                create_time,
                update_time
         FROM ai_api
@@ -33,6 +35,7 @@
         api_key,
         api_completions_path,
         api_embeddings_path,
+        api_from,
         create_time,
         update_time
         FROM ai_api
@@ -69,6 +72,7 @@
                api_key,
                api_completions_path,
                api_embeddings_path,
+               api_from,
                create_time,
                update_time
         FROM ai_api

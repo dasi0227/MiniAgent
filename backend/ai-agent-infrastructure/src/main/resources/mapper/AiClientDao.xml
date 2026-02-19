@@ -12,6 +12,7 @@
         <result column="client_name" property="clientName"/>
         <result column="client_desc" property="clientDesc"/>
         <result column="client_status" property="clientStatus"/>
+        <result column="client_from" property="clientFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -26,6 +27,7 @@
                client_name,
                client_desc,
                client_status,
+               client_from,
                create_time,
                update_time
         FROM ai_client
@@ -42,10 +44,12 @@
                client_name,
                client_desc,
                client_status,
+               client_from,
                create_time,
                update_time
         FROM ai_client
         WHERE client_type = 'chat'
+          AND (client_from = #{userId} OR client_from = 0)
     </select>
 
     <select id="queryWorkClientList" resultMap="dataMap">
@@ -58,6 +62,7 @@
                client_name,
                client_desc,
                client_status,
+               client_from,
                create_time,
                update_time
         FROM ai_client
@@ -74,6 +79,7 @@
                client_name,
                client_desc,
                client_status,
+               client_from,
                create_time,
                update_time
         FROM ai_client
@@ -137,6 +143,7 @@
                client_name,
                client_desc,
                client_status,
+               client_from,
                create_time,
                update_time
         FROM ai_client

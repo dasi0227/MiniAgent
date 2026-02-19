@@ -31,6 +31,9 @@ public class AiAgent {
     /** 状态：0-禁用，1-启用 */
     private Integer agentStatus;
 
+    /** 归属用户 id：0-系统，其它-用户 id */
+    private Long agentFrom;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 

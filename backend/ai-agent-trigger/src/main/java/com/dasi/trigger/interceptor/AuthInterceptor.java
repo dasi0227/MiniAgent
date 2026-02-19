@@ -2,7 +2,7 @@ package com.dasi.trigger.interceptor;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.dasi.domain.util.jwt.AuthContext;
-import com.dasi.domain.auth.model.vo.UserVO;
+import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.util.jwt.IJwtService;
 import com.dasi.types.dto.result.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,12 +68,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         authContext.set(AuthContext.UserInfo.builder()
-                .id(userVO.getId())
+                .userId(userVO.getId())
                 .username(userVO.getUsername())
-                .role(userVO.getRole())
+                .role(userVO.getUserrole())
                 .build());
 
-        if (uri.startsWith("/miniagent/api/v1/admin") && (userVO.getRole() == null || !ADMIN.getRole().equalsIgnoreCase(userVO.getRole()))) {
+        if (uri.startsWith("/miniagent/api/v1/admin") && (userVO.getUserrole() == null || !ADMIN.getRole().equalsIgnoreCase(userVO.getUserrole()))) {
             return forbidden(response, "无权限访问该资源");
         }
 

@@ -16,7 +16,7 @@ public class UserPageRequest {
 
     private String usernameKeyWord;
 
-    private String role;
+    private String userrole;
 
     @NotNull
     @Min(1)

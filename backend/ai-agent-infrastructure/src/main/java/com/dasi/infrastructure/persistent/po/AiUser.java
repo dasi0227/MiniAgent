@@ -1,15 +1,17 @@
-package com.dasi.domain.auth.model.vo;
+package com.dasi.infrastructure.persistent.po;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserVO {
+public class AiUser {
 
     private Long id;
 
@@ -17,8 +19,12 @@ public class UserVO {
 
     private String password;
 
-    private String role;
+    private String userrole;
 
     private Integer userStatus;
+
+    private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
 
 }
