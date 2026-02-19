@@ -11,9 +11,9 @@ public interface IQueryRepository {
 
     List<QueryChatClientResponse> queryChatClientResponseList();
 
-    List<QueryChatMcpResponse> queryChatMcpResponseList();
-
     List<QueryChatRagResponse> queryChatRagList();
+
+    List<QueryChatMcpResponse> queryChatMcpResponseList();
 
     List<QueryWorkAgentResponse> queryWorkAgentResponseList();
 

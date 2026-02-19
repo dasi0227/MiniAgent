@@ -12,7 +12,6 @@
         <result column="client_name" property="clientName"/>
         <result column="client_desc" property="clientDesc"/>
         <result column="client_status" property="clientStatus"/>
-        <result column="client_from" property="clientFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -27,39 +26,10 @@
                client_name,
                client_desc,
                client_status,
-               client_from,
                create_time,
                update_time
         FROM ai_client
         WHERE client_id = #{clientId}
-          AND client_from = 0
-    </select>
-
-    <select id="queryByClientIdWithFrom" resultMap="dataMap">
-        SELECT id,
-               client_id,
-               client_type,
-               client_role,
-               model_id,
-               model_name,
-               client_name,
-               client_desc,
-               client_status,
-               client_from,
-               create_time,
-               update_time
-        FROM ai_client
-        WHERE client_id = #{clientId}
-        <choose>
-            <when test="userId != null">
-                AND client_from IN (0, #{userId})
-            </when>
-            <otherwise>
-                AND client_from = 0
-            </otherwise>
-        </choose>
-        ORDER BY client_from DESC, id DESC
-        LIMIT 1
     </select>
 
     <select id="queryChatClientList" resultMap="dataMap">
@@ -72,14 +42,10 @@
                client_name,
                client_desc,
                client_status,
-               client_from,
                create_time,
                update_time
         FROM ai_client
         WHERE client_type = 'chat'
-          AND (client_from = 0
-            OR client_from = #{userId})
-        ORDER BY client_from DESC, update_time DESC, id DESC
     </select>
 
     <select id="queryWorkClientList" resultMap="dataMap">
@@ -92,12 +58,10 @@
                client_name,
                client_desc,
                client_status,
-               client_from,
                create_time,
                update_time
         FROM ai_client
         WHERE client_type = 'work'
-          AND client_from = 0
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -110,12 +74,10 @@
                client_name,
                client_desc,
                client_status,
-               client_from,
                create_time,
                update_time
         FROM ai_client
         <where>
-            AND client_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -142,7 +104,6 @@
         SELECT COUNT(1)
         FROM ai_client
         <where>
-            AND client_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -164,7 +125,6 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_client
-        WHERE client_from = 0
     </select>
 
     <select id="queryById" resultMap="dataMap">
@@ -177,19 +137,16 @@
                client_name,
                client_desc,
                client_status,
-               client_from,
                create_time,
                update_time
         FROM ai_client
         WHERE id = #{id}
-          AND client_from = 0
     </select>
 
     <select id="queryClientIdByModelId" resultType="java.lang.String">
         SELECT client_id
         FROM ai_client
         WHERE model_id = #{modelId}
-          AND client_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiClient">
@@ -200,8 +157,7 @@
                                model_name,
                                client_name,
                                client_desc,
-                               client_status,
-                               client_from)
+                               client_status)
         VALUES (#{clientId},
                 #{clientType},
                 #{clientRole},
@@ -209,11 +165,7 @@
                 #{modelName},
                 #{clientName},
                 #{clientDesc},
-                #{clientStatus},
-                <choose>
-                    <when test="clientFrom != null">#{clientFrom}</when>
-                    <otherwise>0</otherwise>
-                </choose>)
+                #{clientStatus})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiClient">
@@ -229,20 +181,17 @@
             <if test="clientStatus != null">client_status = #{clientStatus},</if>
         </set>
         WHERE id = #{id}
-          AND client_from = 0
     </update>
 
     <update id="toggle" parameterType="com.dasi.infrastructure.persistent.po.AiClient">
         UPDATE ai_client
         SET client_status = #{clientStatus}
         WHERE id = #{id}
-          AND client_from = 0
     </update>
 
     <delete id="delete">
         DELETE
         FROM ai_client
         WHERE id = #{id}
-          AND client_from = 0
     </delete>
 </mapper>

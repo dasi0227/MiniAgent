@@ -17,6 +17,4 @@ public class QueryChatClientResponse {
 
     private String clientDesc;
 
-    private String clientFrom;
-
 }

@@ -7,17 +7,14 @@ import com.dasi.sse.http.ICsdnHttp;
 import com.dasi.mcp.dto.SaveArticleToolRequest;
 import com.dasi.mcp.dto.SaveArticleToolResponse;
 import com.dasi.type.properties.CsdnProperties;
-import com.dasi.type.util.SecretHeaderUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -31,28 +28,16 @@ public class CsdnPort implements ICsdnPort {
 
     @Override
     public SaveArticleToolResponse saveArticle(SaveArticleToolRequest toolRequest) throws IOException {
-        Map<String, String> secretMap = SecretHeaderUtil.getSecretMap();
-        String cookie = SecretHeaderUtil.resolve(secretMap, "cookie", csdnProperties.getCookie());
-        String coverUrl = SecretHeaderUtil.resolve(secretMap, "coverUrl", csdnProperties.getCoverUrl());
-        String categories = SecretHeaderUtil.resolve(secretMap, "categories", csdnProperties.getCategories());
-        String tags = SecretHeaderUtil.resolve(secretMap, "tags", csdnProperties.getTags());
-
-        if (!StringUtils.hasText(cookie)) {
-            SaveArticleToolResponse toolResponse = new SaveArticleToolResponse();
-            toolResponse.setCode(500);
-            toolResponse.setInfo("CSDN 参数未配置");
-            return toolResponse;
-        }
 
         SaveArticleHttpRequest httpRequest = new SaveArticleHttpRequest();
         httpRequest.setTitle(toolRequest.getTitle());
         httpRequest.setMarkdowncontent(toolRequest.getMarkdownContent());
         httpRequest.setContent(toolRequest.getHtmlContent());
-        httpRequest.setCover_images(StringUtils.hasText(coverUrl) ? List.of(coverUrl) : List.of());
-        httpRequest.setTags(tags);
-        httpRequest.setCategories(categories);
+        httpRequest.setCover_images(List.of(csdnProperties.getCoverUrl()));
+        httpRequest.setTags(csdnProperties.getTags());
+        httpRequest.setCategories(csdnProperties.getCategories());
 
-        Call<SaveArticleHttpResponse> call = csdnHttp.saveArticle(httpRequest, cookie);
+        Call<SaveArticleHttpResponse> call = csdnHttp.saveArticle(httpRequest, csdnProperties.getCookie());
         Response<SaveArticleHttpResponse> result = call.execute();
 
         log.info("调用 HTTP 进行 CSDN 发帖：标题={}", toolRequest.getTitle());

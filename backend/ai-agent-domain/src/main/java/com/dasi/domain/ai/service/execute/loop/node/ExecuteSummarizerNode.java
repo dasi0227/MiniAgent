@@ -34,9 +34,6 @@ public class ExecuteSummarizerNode extends AbstractExecuteNode {
 
             // 获取客户端
             AiFlowVO aiFlowVO = executeContext.getAiFlowVOMap().get(SUMMARIZER.getRole());
-            if (aiFlowVO == null) {
-                throw new IllegalStateException("Summarizer flow 未配置");
-            }
             String clientBeanName = CLIENT.getBeanName(aiFlowVO.getClientId());
             ChatClient summarizerClient = getBean(clientBeanName);
 

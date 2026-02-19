@@ -31,9 +31,6 @@ public class AiApi {
     /** 嵌入路径 */
     private String apiEmbeddingsPath;
 
-    /** 归属用户 id：0-系统，其它-用户 id */
-    private Long apiFrom;
-
     /** 创建时间 */
     private LocalDateTime createTime;
 

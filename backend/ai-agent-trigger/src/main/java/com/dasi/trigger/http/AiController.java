@@ -185,9 +185,6 @@ public class AiController implements IAiApi {
             return response;
         } catch (Exception e) {
             log.error("【AI 对话】完整对话失败：clientId={}", clientId, e);
-            if (StringUtils.hasText(e.getMessage()) && e.getMessage().contains("请先完成配置")) {
-                return "请先完成配置";
-            }
             return CHAT_ERROR_RESPONSE;
         } finally {
             try {
@@ -268,17 +265,9 @@ public class AiController implements IAiApi {
                         }
                     })
                     .doFinally(signalType -> log.info("【AI 对话】流式对话结束：clientId={}, signal={}", clientId, signalType))
-                    .onErrorResume(e -> {
-                        if (StringUtils.hasText(e.getMessage()) && e.getMessage().contains("请先完成配置")) {
-                            return Flux.just("请先完成配置");
-                        }
-                        return Flux.just(CHAT_ERROR_RESPONSE);
-                    });
+                    .onErrorResume(e -> Flux.just(CHAT_ERROR_RESPONSE));
         } catch (Exception e) {
             log.error("【AI 对话】流式对话失败：clientId={}", clientId, e);
-            if (StringUtils.hasText(e.getMessage()) && e.getMessage().contains("请先完成配置")) {
-                return Flux.just("请先完成配置");
-            }
             return Flux.just(CHAT_ERROR_RESPONSE);
         } finally {
             try {

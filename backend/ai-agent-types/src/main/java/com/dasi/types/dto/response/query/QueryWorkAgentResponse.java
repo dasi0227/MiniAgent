@@ -17,6 +17,4 @@ public class QueryWorkAgentResponse {
 
     private String agentDesc;
 
-    private String sourceType;
-
 }

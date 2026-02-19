@@ -17,6 +17,4 @@ public class QueryChatMcpResponse {
 
     private String mcpDesc;
 
-    private String sourceType;
-
 }

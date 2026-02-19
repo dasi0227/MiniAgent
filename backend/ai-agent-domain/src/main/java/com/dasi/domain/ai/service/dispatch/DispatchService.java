@@ -8,18 +8,15 @@ import com.dasi.domain.ai.service.armory.ArmoryStrategyFactory;
 import com.dasi.domain.ai.service.armory.IArmoryStrategy;
 import com.dasi.domain.ai.service.execute.ExecuteStrategyFactory;
 import com.dasi.domain.ai.service.execute.IExecuteStrategy;
-import com.dasi.domain.util.jwt.AuthContext;
 import com.dasi.domain.util.redis.IRedisService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static com.dasi.domain.ai.model.enumeration.AiArmoryType.ARMORY_WORK;
 import static com.dasi.types.constant.RedisConstant.AI_ARMORY_PREFIX;
 
 @Slf4j
@@ -37,9 +34,6 @@ public class DispatchService implements IDispatchService {
 
     @Resource
     private IRedisService redisService;
-
-    @Resource
-    private AuthContext authContext;
 
     @Override
     public void dispatchArmoryStrategy(String armoryType, Set<String> armoryIdSet) {
@@ -86,28 +80,13 @@ public class DispatchService implements IDispatchService {
     @Override
     public void dispatchExecuteStrategy(ExecuteRequestEntity executeRequestEntity, SseEmitter sseEmitter) {
 
-        String agentId = executeRequestEntity.getAgentId();
-        if (agentId != null && !agentId.isBlank()) {
-            Set<String> armoryAgentIdSet = new HashSet<>();
-            armoryAgentIdSet.add(agentId);
-            try {
-                dispatchArmoryStrategy(ARMORY_WORK.getType(), armoryAgentIdSet);
-            } catch (Exception e) {
-                log.warn("【Agent 执行】动态装配失败：agentId={}, error={}", agentId, e.getMessage());
-            }
-        }
-
         IExecuteStrategy executeStrategy = executeStrategyFactory.getStrategyByAgentId(executeRequestEntity.getAgentId());
-        AuthContext.UserInfo userInfo = authContext.getUser();
 
         if (executeStrategy == null) {
             throw new IllegalStateException("执行策略不存在");
         }
 
         threadPoolExecutor.execute(() -> {
-            if (userInfo != null) {
-                authContext.set(userInfo);
-            }
             try {
                 log.info("========================================================================================");
                 executeStrategy.execute(executeRequestEntity, sseEmitter);
@@ -121,7 +100,6 @@ public class DispatchService implements IDispatchService {
                     log.error("【Agent 执行】error={}", e.getMessage(), e);
                 }
             } finally {
-                authContext.clear();
                 sseEmitter.complete();
             }
         });

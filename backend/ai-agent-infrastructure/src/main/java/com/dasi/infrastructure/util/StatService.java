@@ -61,18 +61,10 @@ public class StatService implements IStatService {
         increase(statCategory, STAT_CLIENT, clientId);
 
         AiClient aiClient = aiClientDao.queryByClientId(clientId);
-        if (aiClient == null) {
-            log.warn("【运行统计】client 不存在：clientId={}", clientId);
-            return;
-        }
         String modelId = aiClient.getModelId();
         increase(statCategory, STAT_MODEL, modelId);
 
         AiModel aiModel = aiModelDao.queryByModelId(modelId);
-        if (aiModel == null) {
-            log.warn("【运行统计】model 不存在：modelId={}", modelId);
-            return;
-        }
         String apiId = aiModel.getApiId();
         increase(statCategory, STAT_API, apiId);
 

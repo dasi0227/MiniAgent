@@ -22,7 +22,7 @@
                message_seq,
                created_at,
                updated_at
-        FROM ai_message
+        FROM message
         WHERE session_id = #{sessionId}
           AND message_type = #{messageType}
         ORDER BY message_seq, created_at
@@ -30,7 +30,7 @@
 
     <select id="countBySessionAndType" resultType="int">
         SELECT COUNT(1)
-        FROM ai_message
+        FROM message
         WHERE session_id = #{sessionId}
           AND message_type = #{messageType}
           AND message_role = 'user'
@@ -38,14 +38,14 @@
 
     <select id="maxSeqBySessionAndType" resultType="int">
         SELECT MAX(message_seq)
-        FROM ai_message
+        FROM message
         WHERE session_id = #{sessionId}
           AND message_type = #{messageType}
     </select>
 
     <select id="countByDateRange" resultType="com.dasi.infrastructure.persistent.vo.MessageDailyCount">
         SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(1) AS count
-        FROM ai_message
+        FROM message
         WHERE created_at <![CDATA[>=]]> #{start}
           AND created_at <![CDATA[<]]> #{end}
         GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
@@ -54,18 +54,18 @@
 
     <select id="countAll" resultType="int">
         SELECT COUNT(1)
-        FROM ai_message
+        FROM message
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.Message" useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO ai_message (session_id, message_content, message_role, message_type, message_seq)
+        INSERT INTO message (session_id, message_content, message_role, message_type, message_seq)
         VALUES (#{sessionId}, #{messageContent}, #{messageRole}, #{messageType}, #{messageSeq})
     </insert>
 
     <delete id="deleteBySessionId">
         DELETE
-        FROM ai_message
+        FROM message
         WHERE session_id = #{sessionId}
     </delete>
 </mapper>

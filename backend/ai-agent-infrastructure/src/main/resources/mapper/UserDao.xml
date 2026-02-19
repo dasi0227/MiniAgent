@@ -15,7 +15,7 @@
 
     <select id="queryByUsername" parameterType="string" resultMap="dataMap">
         SELECT id, username, password, role, user_status, create_time, update_time
-        FROM `ai_user`
+        FROM `user`
         WHERE username = #{username}
         LIMIT 1
     </select>
@@ -28,7 +28,7 @@
         user_status,
         create_time,
         update_time
-        FROM `ai_user`
+        FROM `user`
         <where>
             <if test="username != null and username != ''">
                 AND username LIKE CONCAT('%', #{username}, '%')
@@ -45,7 +45,7 @@
 
     <select id="count" resultType="java.lang.Long">
         SELECT COUNT(1)
-        FROM `ai_user`
+        FROM `user`
         <where>
             <if test="username != null and username != ''">
                 AND username LIKE CONCAT('%', #{username}, '%')
@@ -58,7 +58,7 @@
 
     <select id="countAll" resultType="java.lang.Long">
         SELECT COUNT(1)
-        FROM `ai_user`
+        FROM `user`
     </select>
 
     <select id="queryById" resultMap="dataMap">
@@ -69,12 +69,12 @@
                user_status,
                create_time,
                update_time
-        FROM `ai_user`
+        FROM `user`
         WHERE id = #{id}
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO `ai_user` (username,
+        INSERT INTO `user` (username,
                             password,
                             role,
                             user_status)
@@ -85,7 +85,7 @@
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.User">
-        UPDATE `ai_user`
+        UPDATE `user`
         <set>
             <if test="username != null">username = #{username},</if>
             <if test="password != null">password = #{password},</if>
@@ -96,14 +96,14 @@
     </update>
 
     <update id="toggle">
-        UPDATE `ai_user`
+        UPDATE `user`
         SET user_status = #{status}
         WHERE id = #{id}
     </update>
 
     <delete id="delete">
         DELETE
-        FROM `ai_user`
+        FROM `user`
         WHERE id = #{id}
     </delete>
 </mapper>
