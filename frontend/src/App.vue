@@ -2,7 +2,7 @@
 import { computed, watchEffect } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
-import AdminErrorToastContainer from './components/AdminErrorToastContainer.vue';
+import AdminErrorToast from './components/AdminErrorToast.vue';
 import { useSettingsStore } from './router/pinia';
 
 const route = useRoute();
@@ -28,6 +28,6 @@ watchEffect(() => {
     >
         <Sidebar v-if="!hideSidebar" />
         <RouterView />
-        <AdminErrorToastContainer />
+        <AdminErrorToast />
     </div>
 </template>

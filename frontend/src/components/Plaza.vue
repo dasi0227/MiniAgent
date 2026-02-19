@@ -293,7 +293,7 @@ const goRepository = () => {
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold">MiniAgent Plaza</h1>
                     <button
-                        class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[13px] font-semibold text-[#334155] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                        class="rounded-[10px] border border-[var(--accent-color)] bg-white px-[12px] py-[8px] text-[14px] font-semibold text-[var(--accent-color)] transition hover:bg-[var(--accent-color)] hover:text-white"
                         @click="goRepository"
                     >
                         我的仓库
