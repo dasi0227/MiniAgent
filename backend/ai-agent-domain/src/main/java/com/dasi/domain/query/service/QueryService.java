@@ -17,13 +17,13 @@ public class QueryService implements IQueryService {
     private IQueryRepository queryRepository;
 
     @Override
-    public List<QueryChatClientResponse> queryChatClientResponseList(Boolean mineOnly) {
-        return queryRepository.queryChatClientResponseList(mineOnly);
+    public List<QueryChatClientResponse> queryChatClientResponseList() {
+        return queryRepository.queryChatClientResponseList();
     }
 
     @Override
-    public List<QueryChatMcpResponse> queryChatMcpResponseList(Boolean mineOnly) {
-        return queryRepository.queryChatMcpResponseList(mineOnly);
+    public List<QueryChatMcpResponse> queryChatMcpResponseList() {
+        return queryRepository.queryChatMcpResponseList();
     }
 
     @Override

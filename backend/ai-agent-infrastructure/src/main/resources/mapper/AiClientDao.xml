@@ -77,33 +77,8 @@
                update_time
         FROM ai_client
         WHERE client_type = 'chat'
-          AND client_from = 0
-        ORDER BY update_time DESC, id DESC
-    </select>
-
-    <select id="queryChatClientListByFrom" resultMap="dataMap">
-        SELECT id,
-               client_id,
-               client_type,
-               client_role,
-               model_id,
-               model_name,
-               client_name,
-               client_desc,
-               client_status,
-               client_from,
-               create_time,
-               update_time
-        FROM ai_client
-        WHERE client_type = 'chat'
-        <choose>
-            <when test="userId != null">
-                AND client_from IN (0, #{userId})
-            </when>
-            <otherwise>
-                AND client_from = 0
-            </otherwise>
-        </choose>
+          AND (client_from = 0
+            OR client_from = #{userId})
         ORDER BY client_from DESC, update_time DESC, id DESC
     </select>
 

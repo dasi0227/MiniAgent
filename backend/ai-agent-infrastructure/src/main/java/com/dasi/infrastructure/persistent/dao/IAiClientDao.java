@@ -12,9 +12,7 @@ public interface IAiClientDao {
 
     AiClient queryByClientIdWithFrom(@Param("clientId") String clientId, @Param("userId") Long userId);
 
-    List<AiClient> queryChatClientList();
-
-    List<AiClient> queryChatClientListByFrom(@Param("userId") Long userId);
+    List<AiClient> queryChatClientList(@Param("userId") Long userId);
 
     List<AiClient> queryWorkClientList();
 

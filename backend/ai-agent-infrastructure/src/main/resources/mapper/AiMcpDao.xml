@@ -16,7 +16,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <select id="queryByMcpId" parameterType="java.lang.String" resultMap="dataMap">
+    <select id="queryByMcpId" resultMap="dataMap">
         SELECT id,
                mcp_id,
                mcp_name,
@@ -128,24 +128,6 @@
     </select>
 
     <select id="queryChatMcpList" resultMap="dataMap">
-        SELECT id,
-               mcp_id,
-               mcp_name,
-               mcp_type,
-               mcp_config,
-               mcp_desc,
-               mcp_timeout,
-               mcp_chat,
-               mcp_from,
-               create_time,
-               update_time
-        FROM ai_mcp
-        WHERE mcp_chat = 1
-          AND mcp_from = 0
-        ORDER BY update_time DESC, id DESC
-    </select>
-
-    <select id="queryChatMcpListByFrom" resultMap="dataMap">
         SELECT id,
                mcp_id,
                mcp_name,

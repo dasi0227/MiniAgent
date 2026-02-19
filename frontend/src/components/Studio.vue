@@ -29,16 +29,16 @@ const pickData = (resp) => {
 };
 
 const loadModels = async () => {
-    const resp = await queryChatModels({ mineOnly: true });
+    const resp = await queryChatModels();
     const list = pickData(resp) || [];
-    apiList.value = Array.isArray(list) ? list.filter((item) => item?.sourceType === 'mine') : [];
+    apiList.value = Array.isArray(list) ? list.filter((item) => item?.clientFrom === 'mine') : [];
     if (!form.apiId && apiList.value.length > 0) {
         form.apiId = apiList.value[0].clientId || '';
     }
 };
 
 const loadMcps = async () => {
-    const resp = await queryChatMcps({ mineOnly: true });
+    const resp = await queryChatMcps();
     const list = pickData(resp) || [];
     mcpList.value = Array.isArray(list) ? list.filter((item) => item?.sourceType === 'mine') : [];
 };

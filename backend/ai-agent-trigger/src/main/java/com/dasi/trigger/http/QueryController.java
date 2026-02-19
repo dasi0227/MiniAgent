@@ -2,12 +2,14 @@ package com.dasi.trigger.http;
 
 import com.dasi.api.IQueryApi;
 import com.dasi.domain.query.service.IQueryService;
-import com.dasi.types.dto.response.query.*;
+import com.dasi.types.dto.response.query.QueryChatClientResponse;
+import com.dasi.types.dto.response.query.QueryChatMcpResponse;
+import com.dasi.types.dto.response.query.QueryChatRagResponse;
+import com.dasi.types.dto.response.query.QueryWorkAgentResponse;
 import com.dasi.types.dto.result.Result;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,18 +25,14 @@ public class QueryController implements IQueryApi {
 
     @GetMapping("/chat-client-list")
     @Override
-    public Result<List<QueryChatClientResponse>> queryChatClientResponseList(
-            @RequestParam(value = "mineOnly", required = false, defaultValue = "false") Boolean mineOnly
-    ) {
-        return Result.success(queryService.queryChatClientResponseList(mineOnly));
+    public Result<List<QueryChatClientResponse>> queryChatClientResponseList() {
+        return Result.success(queryService.queryChatClientResponseList());
     }
 
     @GetMapping("/chat-mcp-list")
     @Override
-    public Result<List<QueryChatMcpResponse>> queryChatMcpResponseList(
-            @RequestParam(value = "mineOnly", required = false, defaultValue = "false") Boolean mineOnly
-    ) {
-        return Result.success(queryService.queryChatMcpResponseList(mineOnly));
+    public Result<List<QueryChatMcpResponse>> queryChatMcpResponseList() {
+        return Result.success(queryService.queryChatMcpResponseList());
     }
 
     @GetMapping("/chat-rag-list")

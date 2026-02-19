@@ -9,19 +9,13 @@ import java.util.List;
 @Mapper
 public interface IAiMcpDao {
 
-    AiMcp queryByMcpId(@Param("mcpId") String mcpId);
-
-    AiMcp queryByMcpIdWithFrom(@Param("mcpId") String mcpId, @Param("userId") Long userId);
+    AiMcp queryByMcpId(@Param("mcpId") String mcpId, @Param("userId") Long userId);
 
     AiMcp queryByMcpIdByOwner(@Param("mcpId") String mcpId, @Param("userId") Long userId);
 
-    List<AiMcp> queryChatMcpList();
+    List<AiMcp> queryChatMcpList(@Param("userId") Long userId);
 
-    List<AiMcp> queryChatMcpListByFrom(@Param("userId") Long userId);
-
-    List<AiMcp> queryByMcpIdList(@Param("mcpIdList") List<String> mcpIdList);
-
-    List<AiMcp> queryByMcpIdListWithFrom(@Param("mcpIdList") List<String> mcpIdList, @Param("userId") Long userId);
+    List<AiMcp> queryByMcpIdList(@Param("mcpIdList") List<String> mcpIdList, @Param("userId") Long userId);
 
     List<AiMcp> queryVisibleList(@Param("userId") Long userId,
                                  @Param("idKeyword") String idKeyword,
