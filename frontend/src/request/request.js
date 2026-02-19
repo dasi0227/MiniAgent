@@ -3,9 +3,9 @@ import router from '../router/router';
 import { useAuthStore } from '../router/pinia';
 import { pushAdminErrorToast } from '../utils/adminErrorToast';
 
-// Dev: VITE_API_BASE=http://localhost:8066
+// Dev: VITE_API_BASE=http://localhost:8066/miniagent
 // Prod behind nginx under /miniagent: VITE_API_BASE=/miniagent
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8066';
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8066/miniagent';
 const REQUEST_TIMEOUT = 600000;
 const AUTH_KEY = 'auth_info';
 const APP_BASE = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');

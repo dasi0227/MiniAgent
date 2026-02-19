@@ -24,9 +24,11 @@ import static com.dasi.domain.admin.model.enumeration.UserRole.ADMIN;
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
+    private static final String API_PREFIX = "/miniagent/api/v1";
+
     private static final Set<String> WHITE_LIST = Set.of(
-            "/api/v1/auth/login",
-            "/api/v1/auth/register"
+            API_PREFIX + "/auth/login",
+            API_PREFIX + "/auth/register"
     );
 
     @Resource
@@ -73,7 +75,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                 .role(userVO.getRole())
                 .build());
 
-        if (uri.startsWith("/api/v1/admin") && (userVO.getRole() == null || !ADMIN.getRole().equalsIgnoreCase(userVO.getRole()))) {
+        if (uri.startsWith(API_PREFIX + "/admin") && (userVO.getRole() == null || !ADMIN.getRole().equalsIgnoreCase(userVO.getRole()))) {
             return forbidden(response, "无权限访问该资源");
         }
 
