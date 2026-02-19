@@ -1,4 +1,4 @@
-package com.dasi.types.dto.request.admin.query;
+package com.dasi.types.dto.request.admin.page;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

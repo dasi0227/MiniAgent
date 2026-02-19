@@ -1,4 +1,4 @@
-package com.dasi.types.dto.request.admin.query;
+package com.dasi.types.dto.request.admin.list;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class AgentListRequest {
+@NoArgsConstructor
+public class ConfigListRequest {
 
     private String idKeyword;
 
-    private String nameKeyword;
+    private String valueKeyword;
 
-    private String agentType;
+    private String configType;
 
 }
