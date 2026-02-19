@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/session")
+@RequestMapping("/session")
 public class SessionController implements ISessionApi {
 
     @Resource

@@ -42,7 +42,7 @@ import static com.dasi.types.constant.ChatConstant.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/ai")
+@RequestMapping("/ai")
 public class AiController implements IAiApi {
 
     @Resource

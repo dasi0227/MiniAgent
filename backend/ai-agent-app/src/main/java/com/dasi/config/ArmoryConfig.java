@@ -85,13 +85,13 @@ public class ArmoryConfig implements ApplicationListener<ApplicationReadyEvent> 
                 Resource systemPromptFile = resolver.getResource("classpath:prompt/system-prompt/" + fileName);
                 if (!systemPromptFile.exists()) {
                     log.error("【初始化配置】Prompt 文件不存在：{}", systemPromptFile.getDescription());
-                    throw new IllegalStateException();
+                    continue;
                 }
 
                 Resource userPromptFile = resolver.getResource("classpath:prompt/user-prompt/" + fileName);
                 if (!userPromptFile.exists()) {
                     log.error("【初始化配置】Prompt 文件不存在：{}", userPromptFile.getDescription());
-                    throw new IllegalStateException();
+                    continue;
                 }
 
                 // 更新 Prompt

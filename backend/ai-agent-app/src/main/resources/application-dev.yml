@@ -3,6 +3,8 @@ server:
   address: 127.0.0.1
   port: 8066
   forward-headers-strategy: framework
+  servlet:
+    context-path: /miniagent/api/v1
 
 # 线程池
 thread:
