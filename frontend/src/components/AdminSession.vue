@@ -4,8 +4,8 @@ import { useRouter } from 'vue-router';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
-import SidebarAdmin from './SidebarAdmin.vue';
-import AppFooter from './AppFooter.vue';
+import AdminSidebar from './AdminSidebar.vue';
+import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { listAdminSessions, listChatMessages, listWorkAnswerMessages, listWorkSseMessages } from '../request/api';
 import { normalizeError, notifyAdminError } from '../request/request';
@@ -190,7 +190,7 @@ onMounted(() => {
 
 <template>
     <div class="admin-font flex h-screen bg-[var(--bg-page)] text-[var(--text-primary)]">
-        <SidebarAdmin :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
+        <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--surface-1)] px-6 py-4 shadow-[var(--shadow-soft)]">
                 <div class="text-[18px] font-semibold">
@@ -351,7 +351,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <AppFooter layout="admin" />
+            <Footer layout="admin" />
         </div>
     </div>
 </template>

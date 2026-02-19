@@ -1,8 +1,8 @@
 <script setup>
 import { computed, reactive, ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import SidebarAdmin from './SidebarAdmin.vue';
-import AppFooter from './AppFooter.vue';
+import AdminSidebar from './AdminSidebar.vue';
+import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import {
     adminPage,
@@ -260,7 +260,7 @@ const moduleDefs = [
         }),
         fields: [
             { prop: 'taskId', label: 'Task ID', required: true },
-            { prop: 'agentId', label: 'MiniAgent ID', type: 'select', optionsKey: 'agents', required: true },
+            { prop: 'agentId', label: 'Agent ID', type: 'select', optionsKey: 'agents', required: true },
             { prop: 'taskCron', label: 'Cron', required: true, placeholder: '如 0 */1 * * * ?' },
             { prop: 'taskDesc', label: '描述', type: 'textarea' },
             { prop: 'taskParam', label: '参数', type: 'textarea', required: true, placeholder: 'JSON' },
@@ -268,15 +268,15 @@ const moduleDefs = [
         ],
         columns: [
             { prop: 'taskId', label: 'ID' },
-            { prop: 'agentId', label: 'MiniAgent' },
+            { prop: 'agentId', label: 'Agent' },
             { prop: 'taskCron', label: 'Cron' }
         ]
     },
     {
         key: 'agent',
-        label: 'MiniAgent',
+        label: 'Agent',
         group: 'model',
-        title: 'MiniAgent 管理',
+        title: 'Agent 管理',
         statusField: 'agentStatus',
         search: ['idKeyword', 'nameKeyword', 'agentType'],
         query: { idKeyword: '', nameKeyword: '', agentType: '', pageNum: 1, pageSize: 10 },
@@ -289,7 +289,7 @@ const moduleDefs = [
             agentStatus: 1
         }),
         fields: [
-            { prop: 'agentId', label: 'MiniAgent ID', required: true },
+            { prop: 'agentId', label: 'Agent ID', required: true },
             { prop: 'agentName', label: '名称', required: true },
             {
                 prop: 'agentType',
@@ -561,7 +561,7 @@ const handleSelectModule = (key) => {
 
 <template>
     <div class="admin-font flex h-screen bg-[#f8fafc]">
-        <SidebarAdmin :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
+        <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
                 <div class="text-[18px] font-semibold text-[#0f172a]">{{ currentModule.title }}</div>
@@ -634,7 +634,7 @@ const handleSelectModule = (key) => {
                                     v-model="stateMap[currentKey].query.agentId"
                                     class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
                                 >
-                                    <option value="">全部 MiniAgent</option>
+                                    <option value="">全部 Agent</option>
                                     <option v-for="opt in options.agents" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                                 </select>
                             </template>
@@ -795,7 +795,7 @@ const handleSelectModule = (key) => {
                     </div>
                 </div>
             </div>
-            <AppFooter layout="admin" />
+            <Footer layout="admin" />
         </div>
 
         <div

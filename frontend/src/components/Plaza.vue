@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../router/pinia';
 import { plazaComment, plazaDetail, plazaFavor, plazaLike, plazaList, repoFork } from '../request/api';
 import { normalizeError } from '../request/request';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 const settingsStore = useSettingsStore();
@@ -408,7 +408,7 @@ const goRepository = () => {
             </div>
         </div>
 
-        <AppFooter />
+        <Footer />
 
         <div v-if="detailOpen" class="fixed inset-0 z-[20] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="detailOpen=false">
             <div class="w-full max-w-[760px] space-y-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">

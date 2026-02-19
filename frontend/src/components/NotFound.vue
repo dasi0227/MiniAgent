@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 
@@ -32,6 +32,6 @@ const goBack = () => router.back();
                 </div>
             </div>
         </div>
-        <AppFooter layout="auth" />
+        <Footer layout="auth" />
     </div>
 </template>

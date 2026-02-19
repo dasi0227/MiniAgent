@@ -1,8 +1,8 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import SidebarAdmin from './SidebarAdmin.vue';
-import AppFooter from './AppFooter.vue';
+import AdminSidebar from './AdminSidebar.vue';
+import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { useAuthStore } from '../router/pinia';
 import {
@@ -127,7 +127,7 @@ const fetchData = async () => {
             configList({}),
             listConfigType()
         ]);
-        const agentList = unwrapResult(agentResp, '获取 MiniAgent 失败') || [];
+        const agentList = unwrapResult(agentResp, '获取 Agent 失败') || [];
         agentInfo.value = agentList.find((item) => item.agentId === agentId.value) || null;
         flowList.value = unwrapResult(flowResp, '获取 Flow 失败') || [];
         clientDetails.value = unwrapResult(clientResp, '获取 Client 失败') || [];
@@ -399,9 +399,9 @@ const pendingCreate = reactive({
 const formSchemas = {
     agent: {
         moduleKey: 'agent',
-        title: 'MiniAgent',
+        title: 'Agent',
         fields: [
-            { prop: 'agentId', label: 'MiniAgent ID', required: true },
+            { prop: 'agentId', label: 'Agent ID', required: true },
             { prop: 'agentName', label: '名称', required: true },
             { prop: 'agentType', label: '类型', type: 'select', optionsKey: 'agentTypes', required: true },
             { prop: 'agentDesc', label: '描述', type: 'textarea' },
@@ -1065,7 +1065,7 @@ onMounted(async () => {
 
 <template>
     <div class="admin-font flex h-screen bg-[#f8fafc]">
-        <SidebarAdmin :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
+        <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
                 <div class="text-[18px] font-semibold text-[#0f172a]">
@@ -1076,7 +1076,7 @@ onMounted(async () => {
 
             <div class="flex items-center justify-between gap-3 border-b border-[#e2e8f0] bg-white px-6 py-3">
                 <div class="text-[14px] text-[#475569]">
-                    {{ agentInfo?.agentName || agentId || '未选择 MiniAgent' }}
+                    {{ agentInfo?.agentName || agentId || '未选择 Agent' }}
                 </div>
                 <div class="flex items-center gap-2">
                     <button
@@ -1189,7 +1189,7 @@ onMounted(async () => {
                     </VueFlow>
                 </div>
             </div>
-            <AppFooter layout="admin" />
+            <Footer layout="admin" />
         </div>
 
         <!-- 新增节点选择弹窗 -->
@@ -1282,7 +1282,7 @@ onMounted(async () => {
                 </div>
 
                 <div v-if="modalType === 'client'" class="mt-6 border-t border-[#e2e8f0] pt-5">
-                    <div class="text-[14px] font-semibold text-[#0f172a]">Flow 配置（当前 MiniAgent）</div>
+                    <div class="text-[14px] font-semibold text-[#0f172a]">Flow 配置（当前 Agent）</div>
                     <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div class="flex flex-col gap-1">
                             <label class="text-[13px] font-semibold text-[#0f172a]">Flow Seq</label>

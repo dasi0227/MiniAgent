@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { repoList, repoRemove, studioListMine } from '../request/api';
 import { normalizeError } from '../request/request';
 import { useWelcomeLaunchStore } from '../router/pinia';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 const welcomeLaunchStore = useWelcomeLaunchStore();
@@ -126,6 +126,6 @@ onMounted(async () => {
             </div>
         </div>
 
-        <AppFooter />
+        <Footer />
     </section>
 </template>

@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import SidebarAdmin from './SidebarAdmin.vue';
-import AppFooter from './AppFooter.vue';
+import AdminSidebar from './AdminSidebar.vue';
+import Footer from './Footer.vue';
 import arrowIcon from '../assets/arrow.svg';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
@@ -102,9 +102,9 @@ const loadAgents = async () => {
     loading.agents = true;
     try {
         const res = await adminAgentList({});
-        agents.value = pickData(res, '获取 MiniAgent 失败') || [];
+        agents.value = pickData(res, '获取 Agent 失败') || [];
     } catch (err) {
-        const msg = normalizeError(err).message || '获取 MiniAgent 失败';
+        const msg = normalizeError(err).message || '获取 Agent 失败';
         notifyAdminError(err, msg);
         agents.value = [];
     } finally {
@@ -236,7 +236,7 @@ onMounted(async () => {
 
 <template>
     <div class="admin-font flex h-screen bg-[#f8fafc]">
-        <SidebarAdmin :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
+        <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
                 <div class="text-[18px] font-semibold text-[#0f172a]">
@@ -246,9 +246,9 @@ onMounted(async () => {
             </header>
 
             <div class="flex-1 overflow-auto p-6">
-                <!-- MiniAgent 网格 -->
+                <!-- Agent 网格 -->
                 <div v-if="!selectedAgent" class="h-full overflow-auto">
-                    <div class="mb-4 text-left text-[14px] text-[#94a3b8]">共 {{ agents.length }} 个 MiniAgent</div>
+                    <div class="mb-4 text-left text-[14px] text-[#94a3b8]">共 {{ agents.length }} 个 Agent</div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         <div
                             v-for="agent in agents"
@@ -530,7 +530,7 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <AppFooter layout="admin" />
+            <Footer layout="admin" />
         </div>
 
         <!-- 确认弹窗 -->

@@ -2,8 +2,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import * as echarts from 'echarts';
-import SidebarAdmin from './SidebarAdmin.vue';
-import AppFooter from './AppFooter.vue';
+import AdminSidebar from './AdminSidebar.vue';
+import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { fetchAdminDashboard } from '../request/api';
 import { normalizeError, notifyAdminError } from '../request/request';
@@ -65,7 +65,7 @@ const handleRefresh = async () => {
 const statCardRows = computed(() => {
     const countInfo = dashboard.value?.countInfo || {};
     const cards = {
-        agent: { key: 'agent', label: 'MiniAgent', value: countInfo.agentCount ?? 0, path: '/admin/agent' },
+        agent: { key: 'agent', label: 'Agent', value: countInfo.agentCount ?? 0, path: '/admin/agent' },
         client: { key: 'client', label: 'CLIENT', value: countInfo.clientCount ?? 0, path: '/admin/client' },
         flow: { key: 'flow', label: 'FLOW', value: countInfo.flowCount ?? 0, path: '/admin/flow' },
         config: { key: 'config', label: 'CONFIG', value: countInfo.configCount ?? 0, path: '/admin/config' },
@@ -368,7 +368,7 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="admin-font flex h-screen bg-[var(--bg-page)] text-[var(--text-primary)]">
-        <SidebarAdmin :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
+        <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--surface-1)] px-6 py-4 shadow-[var(--shadow-soft)]">
                 <div class="text-[18px] font-semibold">DASHBOARD</div>
@@ -523,7 +523,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
             </div>
-            <AppFooter layout="admin" />
+            <Footer layout="admin" />
         </div>
     </div>
 </template>

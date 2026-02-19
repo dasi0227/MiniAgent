@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { login, register } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
 import { useAuthStore, useSettingsStore } from '../router/pinia';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -127,6 +127,6 @@ const submit = async () => {
                 </div>
             </div>
         </div>
-        <AppFooter layout="auth" />
+        <Footer layout="auth" />
     </div>
 </template>

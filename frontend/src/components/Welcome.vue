@@ -5,7 +5,7 @@ import { queryAgentList, queryChatMcps, queryChatModels } from '../request/api';
 import { normalizeError } from '../request/request';
 import { useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
 import { createTypewriter, DEFAULT_TYPEWRITER_SEGMENTS } from '../utils/TypeWriter';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 const welcomeLaunchStore = useWelcomeLaunchStore();
@@ -386,6 +386,6 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <AppFooter />
+        <Footer />
     </section>
 </template>

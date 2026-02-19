@@ -1,8 +1,8 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import SidebarAdmin from './SidebarAdmin.vue';
-import AppFooter from './AppFooter.vue';
+import AdminSidebar from './AdminSidebar.vue';
+import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { configList, configInsert, configUpdate, configDelete, configToggle, listConfigType } from '../request/api';
 import { normalizeError, notifyAdminError } from '../request/request';
@@ -169,7 +169,7 @@ onMounted(async () => {
 
 <template>
     <div class="admin-font flex h-screen bg-[#f8fafc]">
-        <SidebarAdmin :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
+        <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
                 <div class="text-[18px] font-semibold text-[#0f172a]">CONFIG 管理</div>
@@ -294,7 +294,7 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <AppFooter layout="admin" />
+            <Footer layout="admin" />
         </div>
 
         <div

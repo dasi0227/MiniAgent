@@ -17,7 +17,7 @@ import {
 import { normalizeError } from '../request/request';
 import { formatMcpJson } from '../utils/StringUtil';
 import { useAgentSettingsStore, useAgentStore, useChatStore, useWelcomeLaunchStore } from '../router/pinia';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 const agentStore = useAgentStore();
@@ -888,7 +888,7 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <AppFooter />
+        <Footer />
 
         <div v-if="showSettings" class="fixed inset-0 z-[20] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="showSettings = false">
             <div class="w-full max-w-[520px] rounded-[16px] border border-[var(--border-color)] bg-white shadow-[0_20px_50px_rgba(15,23,42,0.2)]">

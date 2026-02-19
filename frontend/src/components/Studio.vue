@@ -3,7 +3,7 @@ import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryChatMcps, queryChatModels, studioGenerate } from '../request/api';
 import { normalizeError } from '../request/request';
-import AppFooter from './AppFooter.vue';
+import Footer from './Footer.vue';
 
 const router = useRouter();
 const loading = ref(false);
@@ -199,6 +199,6 @@ onMounted(async () => {
             </div>
         </div>
 
-        <AppFooter />
+        <Footer />
     </section>
 </template>

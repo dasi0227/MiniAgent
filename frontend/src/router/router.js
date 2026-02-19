@@ -6,7 +6,7 @@ import Studio from '../components/Studio.vue';
 import Plaza from '../components/Plaza.vue';
 import Repository from '../components/Repository.vue';
 import Auth from '../components/Auth.vue';
-import AuthAdmin from '../components/AuthAdmin.vue';
+import AdminAuth from '../components/AdminAuth.vue';
 import AdminTable from '../components/AdminTable.vue';
 import AdminConfig from '../components/AdminConfig.vue';
 import AdminFlow from '../components/AdminFlow.vue';
@@ -70,7 +70,7 @@ const routes = [
     {
         path: '/admin/login',
         name: 'admin-login',
-        component: AuthAdmin,
+        component: AdminAuth,
         meta: {
             hideSidebar: true
         }
