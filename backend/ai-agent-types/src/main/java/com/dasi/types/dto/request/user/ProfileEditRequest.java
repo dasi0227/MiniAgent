@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EditProfileRequest {
+public class ProfileEditRequest {
 
     @NotNull(message = "id 不能为空")
     private Long id;

@@ -28,7 +28,7 @@ public class AdminController implements IAdminApi {
     private IAdminService adminService;
 
     // -------------------- Dashboard --------------------
-    @GetMapping("/dashboard")
+    @PostMapping("/dashboard")
     public Result<DashboardResponse> dashboard() {
         return Result.success(adminService.dashboard());
     }
@@ -339,43 +339,43 @@ public class AdminController implements IAdminApi {
     }
 
     // -------------------- Session --------------------
-    @GetMapping("/session/list")
+    @PostMapping("/session/list")
     public Result<List<SessionVO>> listSession() {
         return Result.success(adminService.listSession());
     }
 
     // -------------------- List --------------------
-    @GetMapping("/list/clientType")
+    @PostMapping("/list/clientType")
     public Result<List<String>> listClientType() {
         return Result.success(adminService.listClientType());
     }
 
-    @GetMapping("/list/agentType")
+    @PostMapping("/list/agentType")
     public Result<List<String>> listAgentType() {
         return Result.success(adminService.listAgentType());
     }
 
-    @GetMapping("/list/configType")
+    @PostMapping("/list/configType")
     public Result<List<String>> listConfigType() {
         return Result.success(adminService.listConfigType());
     }
 
-    @GetMapping("/list/clientRole")
+    @PostMapping("/list/clientRole")
     public Result<List<String>> listClientRole() {
         return Result.success(adminService.listClientRole());
     }
 
-    @GetMapping("/list/userRole")
+    @PostMapping("/list/userRole")
     public Result<List<String>> listUserRole() {
         return Result.success(adminService.listUserRole());
     }
 
-    @GetMapping("/list/apiId")
+    @PostMapping("/list/apiId")
     public Result<List<String>> listApiId() {
         return Result.success(adminService.listApiId());
     }
 
-    @GetMapping("/list/modelId")
+    @PostMapping("/list/modelId")
     public Result<List<String>> listModelId() {
         return Result.success(adminService.listModelId());
     }

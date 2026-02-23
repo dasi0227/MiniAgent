@@ -7,35 +7,35 @@ import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuthContext {
+public class UserContext {
 
-    private final ThreadLocal<UserInfo> USER_CONTEXT = new ThreadLocal<>();
+    private final ThreadLocal<UserInfo> threadLocal = new ThreadLocal<>();
 
     public void set(UserInfo userInfo) {
-        USER_CONTEXT.set(userInfo);
+        threadLocal.set(userInfo);
     }
 
     public UserInfo getUser() {
-        return USER_CONTEXT.get();
+        return threadLocal.get();
     }
 
     public String getUserName() {
-        UserInfo userInfo = USER_CONTEXT.get();
+        UserInfo userInfo = threadLocal.get();
         return userInfo == null ? null : userInfo.getUserName();
     }
 
     public Long getUserId() {
-        UserInfo userInfo = USER_CONTEXT.get();
+        UserInfo userInfo = threadLocal.get();
         return userInfo == null ? null : userInfo.getUserId();
     }
 
     public String getUserRole() {
-        UserInfo userInfo = USER_CONTEXT.get();
+        UserInfo userInfo = threadLocal.get();
         return userInfo == null ? null : userInfo.getUserRole();
     }
 
     public void clear() {
-        USER_CONTEXT.remove();
+        threadLocal.remove();
     }
 
     @Data

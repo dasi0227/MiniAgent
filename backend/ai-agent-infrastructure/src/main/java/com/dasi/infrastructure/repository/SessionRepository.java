@@ -51,13 +51,9 @@ public class SessionRepository implements ISessionRepository {
     }
 
     @Override
-    public void deleteSession(Long id) {
-        sessionDao.delete(id);
-    }
-
-    @Override
-    public void deleteMessagesBySessionId(String sessionId) {
+    public void deleteSession(Long id, String sessionId) {
         messageDao.deleteBySessionId(sessionId);
+        sessionDao.delete(id);
     }
 
     @Override

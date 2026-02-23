@@ -1,5 +1,6 @@
 package com.dasi.infrastructure.persistent.dao;
 
+import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.infrastructure.persistent.po.AiApi;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -25,7 +26,12 @@ public interface IAiApiDao {
 
     void update(AiApi aiApi);
 
-    void delete(@Param("id") Long id);
+    void deleteById(@Param("id") Long id);
 
     List<String> listApiId();
+
+    List<UserApiVO> listUserApi(@Param("keyword") String keyword, @Param("userId") Long userId);
+
+
+
 }

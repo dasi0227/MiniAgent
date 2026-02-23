@@ -89,12 +89,14 @@
                             api_base_url,
                             api_key,
                             api_completions_path,
-                            api_embeddings_path)
+                            api_embeddings_path,
+                            api_from)
         VALUES (#{apiId},
                 #{apiBaseUrl},
                 #{apiKey},
                 #{apiCompletionsPath},
-                #{apiEmbeddingsPath})
+                #{apiEmbeddingsPath},
+                #{apiFrom})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiApi">
@@ -109,9 +111,34 @@
         WHERE id = #{id}
     </update>
 
-    <delete id="delete">
+    <delete id="deleteById">
         DELETE
         FROM ai_api
         WHERE id = #{id}
     </delete>
+
+    <select id="listUserApi" resultType="com.dasi.domain.user.model.vo.UserApiVO">
+        SELECT
+        a.id AS id,
+        a.api_id AS apiId,
+        m.model_name AS modelName,
+        m.model_type AS modelType,
+        a.api_base_url AS apiBaseUrl,
+        a.api_key AS apiKey,
+        a.api_completions_path AS apiCompletionPath
+        FROM ai_api a
+        INNER JOIN ai_model m
+        ON m.api_id = a.api_id
+        WHERE m.model_from = #{userId} AND a.api_from = #{userId}
+        <if test="keyword != null and keyword != ''">
+            AND (
+            a.api_id LIKE CONCAT('%', #{keyword}, '%')
+            OR a.api_base_url LIKE CONCAT('%', #{keyword}, '%')
+            OR m.model_name LIKE CONCAT('%', #{keyword}, '%')
+            OR m.model_type LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY a.create_time DESC, a.id DESC
+    </select>
+
 </mapper>

@@ -17,9 +17,7 @@ public interface ISessionRepository {
 
     void updateSessionTitle(Long id, String sessionTitle);
 
-    void deleteSession(Long id);
-
-    void deleteMessagesBySessionId(String sessionId);
+    void deleteSession(Long id, String sessionId);
 
     List<MessageVO> listMessageBySessionAndType(String sessionId, String messageType);
 

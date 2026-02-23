@@ -99,11 +99,13 @@
         INSERT INTO ai_model (model_id,
                               api_id,
                               model_name,
-                              model_type)
+                              model_type,
+                              model_from)
         VALUES (#{modelId},
                 #{apiId},
                 #{modelName},
-                #{modelType})
+                #{modelType},
+                #{modelFrom})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiModel">
@@ -117,9 +119,15 @@
         WHERE id = #{id}
     </update>
 
-    <delete id="delete">
+    <delete id="deleteById">
         DELETE
         FROM ai_model
         WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByModelId">
+        DELETE
+        FROM ai_model
+        WHERE model_id = #{modelId}
     </delete>
 </mapper>

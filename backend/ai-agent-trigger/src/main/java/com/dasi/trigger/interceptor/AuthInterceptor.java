@@ -1,7 +1,7 @@
 package com.dasi.trigger.interceptor;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.dasi.domain.util.jwt.AuthContext;
+import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.util.jwt.IJwtService;
 import com.dasi.types.dto.result.Result;
@@ -33,7 +33,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private IJwtService jwtService;
 
     @Resource
-    private AuthContext authContext;
+    private UserContext userContext;
 
     @Resource
     private ObjectMapper objectMapper;
@@ -67,7 +67,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             return unauthorized(response, "登录状态无效，请重新登录");
         }
 
-        authContext.set(AuthContext.UserInfo.builder()
+        userContext.set(UserContext.UserInfo.builder()
                 .userId(userVO.getId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
@@ -82,7 +82,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        authContext.clear();
+        userContext.clear();
     }
 
     private boolean unauthorized(HttpServletResponse response, String message) throws IOException {

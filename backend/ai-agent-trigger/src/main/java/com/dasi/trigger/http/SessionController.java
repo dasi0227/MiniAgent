@@ -19,7 +19,7 @@ public class SessionController implements ISessionApi {
     @Resource
     private ISessionService sessionService;
 
-    @GetMapping("/list")
+    @PostMapping("/list")
     @Override
     public Result<List<SessionVO>> listSession() {
         return Result.success(sessionService.listSession());
@@ -45,19 +45,19 @@ public class SessionController implements ISessionApi {
         return Result.success();
     }
 
-    @GetMapping("/message/chat")
+    @PostMapping("/message/chat")
     @Override
     public Result<List<MessageVO>> listChatMessage(@RequestParam("sessionId") String sessionId) {
         return Result.success(sessionService.listChatMessage(sessionId));
     }
 
-    @GetMapping("/message/work-sse")
+    @PostMapping("/message/work-sse")
     @Override
     public Result<List<MessageVO>> listWorkSseMessage(@RequestParam("sessionId") String sessionId) {
         return Result.success(sessionService.listWorkSseMessage(sessionId));
     }
 
-    @GetMapping("/message/work-answer")
+    @PostMapping("/message/work-answer")
     @Override
     public Result<List<MessageVO>> listWorkAnswerSession(@RequestParam("sessionId") String sessionId) {
         return Result.success(sessionService.listWorkAnswerMessage(sessionId));

@@ -221,7 +221,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void apiDelete(Long id) {
-        aiApiDao.delete(id);
+        aiApiDao.deleteById(id);
     }
 
     // -------------------- Model --------------------
@@ -278,7 +278,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void modelDelete(Long id) {
-        aiModelDao.delete(id);
+        aiModelDao.deleteById(id);
     }
 
     // -------------------- MCP --------------------
@@ -888,6 +888,7 @@ public class AdminRepository implements IAdminRepository {
                 .apiKey(request.getApiKey())
                 .apiCompletionsPath(request.getApiCompletionsPath())
                 .apiEmbeddingsPath(request.getApiEmbeddingsPath())
+                .apiFrom(0L)
                 .build();
     }
 
@@ -898,6 +899,7 @@ public class AdminRepository implements IAdminRepository {
                 .apiId(request.getApiId())
                 .modelName(request.getModelName())
                 .modelType(request.getModelType())
+                .modelFrom(0L)
                 .build();
     }
 
@@ -942,6 +944,7 @@ public class AdminRepository implements IAdminRepository {
                 .mcpDesc(request.getMcpDesc())
                 .mcpTimeout(request.getMcpTimeout())
                 .mcpChat(request.getMcpChat())
+                .mcpFrom(0L)
                 .build();
     }
 
@@ -1026,6 +1029,7 @@ public class AdminRepository implements IAdminRepository {
                 .clientName(request.getClientName())
                 .clientDesc(request.getClientDesc())
                 .clientStatus(request.getClientStatus())
+                .clientFrom(0L)
                 .build();
     }
 
@@ -1052,6 +1056,7 @@ public class AdminRepository implements IAdminRepository {
                 .agentType(request.getAgentType())
                 .agentDesc(request.getAgentDesc())
                 .agentStatus(request.getAgentStatus())
+                .agentFrom(0L)
                 .build();
     }
 

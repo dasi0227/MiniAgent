@@ -8,7 +8,7 @@ public class ExceptionMessage {
 
     public static final String AVATAR_SIZE_NOT_ALLOW = "头像文件大小不允许，只支持 1MB 以下";
 
-    public static final String AVATAR_UPLOAD_FILE = "头像上传失败";
+    public static final String AVATAR_UPLOAD_FILE = "";
 
     public static final String AUTH_USER_NOT_EXISTS = "用户不存在";
 
@@ -20,17 +20,20 @@ public class ExceptionMessage {
 
     public static final String AUTH_PASSWORD_WRONG = "旧密码不正确";
 
-    public static final String AUTH_PASSWORD_ILLEGAL = "旧密码和新密码不正确";
+    public static final String AUTH_PASSWORD_FAIL = "旧密码和新密码不符合规则";
 
-    public static final String AVATAR_UPLOAD_7 = "头像上传失败";
+    public static final String SETTING_API_USER_ILLEGAL = "用户行为不合法";
 
-    public static final String AVATAR_UPLOAD_8 = "头像上传失败";
-
-    public static final String AVATAR_UPLOAD_9 = "头像上传失败";
-
-    public static final String AVATAR_UPLOAD_w = "头像上传失败";
-
-    public static final String AVATAR_UPLOAD_f = "头像上传失败";
+    public static final String AVATAR_UPLOAD_2 = "";
+    public static final String AVATAR_UPLOAD_3 = "";
+    public static final String AVATAR_UPLOAD_4 = "";
+    public static final String AVATAR_UPLOAD_5 = "";
+    public static final String AVATAR_UPLOAD_6 = "";
+    public static final String AVATAR_UPLOAD_7 = "";
+    public static final String AVATAR_UPLOAD_8 = "";
+    public static final String AVATAR_UPLOAD_9 = "";
+    public static final String AVATAR_UPLOAD_a = "";
+    public static final String AVATAR_UPLOAD_b = "";
 
 
 }

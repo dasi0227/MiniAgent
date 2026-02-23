@@ -4,11 +4,12 @@ import com.dasi.domain.session.model.enumeration.UserRoleType;
 import com.dasi.domain.session.model.vo.MessageVO;
 import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.session.repository.ISessionRepository;
-import com.dasi.domain.util.jwt.AuthContext;
+import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.types.exception.SessionException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -29,16 +30,16 @@ public class SessionService implements ISessionService {
     private ISessionRepository sessionRepository;
 
     @Resource
-    private AuthContext authContext;
+    private UserContext userContext;
 
     @Override
     public List<SessionVO> listSession() {
-        return sessionRepository.listSession(authContext.getUserName());
+        return sessionRepository.listSession(userContext.getUserName());
     }
 
     @Override
     public SessionVO insertSession(String sessionTitle, String sessionType) {
-        String sessionUser = authContext.getUserName();
+        String sessionUser = userContext.getUserName();
 
         int count = sessionRepository.countSessionByType(sessionUser, sessionType);
         if (count >= CHAT_SESSION_LIMIT) {
@@ -63,6 +64,7 @@ public class SessionService implements ISessionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteSession(Long id, String sessionId) {
         SessionVO sessionVO = requireSession(sessionId);
         String sessionUser = requireUser();
@@ -70,8 +72,7 @@ public class SessionService implements ISessionService {
             throw new SessionException("无权限修改该会话");
         }
 
-        sessionRepository.deleteMessagesBySessionId(sessionId);
-        sessionRepository.deleteSession(id);
+        sessionRepository.deleteSession(id, sessionId);
     }
 
     @Override
@@ -122,13 +123,13 @@ public class SessionService implements ISessionService {
             return "会话类型不匹配";
         }
 
-        String role = authContext.getUserRole();
+        String role = userContext.getUserRole();
         if (!StringUtils.hasText(role)) {
             return "用户信息缺失";
         }
 
         if (!UserRoleType.ADMIN.getType().equals(role)) {
-            String sessionUser = authContext.getUserName();
+            String sessionUser = userContext.getUserName();
             if (!StringUtils.hasText(sessionUser)) {
                 return "用户信息缺失";
             }
@@ -141,7 +142,7 @@ public class SessionService implements ISessionService {
     }
 
     private boolean notAdmin() {
-        String role = authContext.getUserRole();
+        String role = userContext.getUserRole();
         if (!StringUtils.hasText(role)) {
             throw new SessionException("用户信息缺失");
         }
@@ -166,7 +167,7 @@ public class SessionService implements ISessionService {
     }
 
     private String requireUser() {
-        String userName = authContext.getUserName();
+        String userName = userContext.getUserName();
         if (!StringUtils.hasText(userName)) {
             throw new SessionException("用户信息缺失");
         }

@@ -34,7 +34,7 @@ public class AuthService implements IAuthService {
         String userName = request.getUserName();
         String password = request.getPassword();
 
-        UserVO userVO = userRepository.queryByUserName(userName);
+        UserVO userVO = userRepository.queryUserByUserName(userName);
         if (userVO == null) {
             throw new AuthException(AUTH_USER_NOT_EXISTS);
         }
@@ -54,7 +54,7 @@ public class AuthService implements IAuthService {
         String userName = request.getUserName();
         String password = request.getPassword();
 
-        if (userRepository.queryByUserName(userName) != null) {
+        if (userRepository.queryUserByUserName(userName) != null) {
             throw new AuthException(AUTH_USER_ALREADY_EXISTS);
         }
 

@@ -136,14 +136,16 @@
                             mcp_config,
                             mcp_desc,
                             mcp_timeout,
-                            mcp_chat)
+                            mcp_chat,
+                            mcp_from)
         VALUES (#{mcpId},
                 #{mcpName},
                 #{mcpType},
                 #{mcpConfig},
                 #{mcpDesc},
                 #{mcpTimeout},
-                #{mcpChat})
+                #{mcpChat},
+                #{mcpFrom})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiMcp">

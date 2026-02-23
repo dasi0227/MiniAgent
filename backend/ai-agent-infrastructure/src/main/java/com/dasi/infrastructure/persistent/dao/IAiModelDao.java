@@ -28,9 +28,12 @@ public interface IAiModelDao {
 
     void update(AiModel aiModel);
 
-    void delete(@Param("id") Long id);
+    void deleteById(@Param("id") Long id);
+
+    void deleteByModelId(@Param("modelId") String modelId);
 
     List<String> queryModelIdByApiId(@Param("apiId") String apiId);
 
     List<String> listModelId();
+
 }

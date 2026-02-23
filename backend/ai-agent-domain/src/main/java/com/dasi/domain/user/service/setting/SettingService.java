@@ -1,21 +1,26 @@
 package com.dasi.domain.user.service.setting;
 
+import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
-import com.dasi.domain.util.jwt.AuthContext;
+import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.jwt.IJwtService;
 import com.dasi.domain.util.oss.IOssService;
-import com.dasi.types.dto.request.user.EditProfileRequest;
+import com.dasi.types.dto.request.user.ApiManageRequest;
+import com.dasi.types.dto.request.user.ProfileEditRequest;
 import com.dasi.types.dto.response.user.AuthResponse;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.dasi.types.constant.ExceptionMessage.AUTH_PASSWORD_ILLEGAL;
+import java.util.List;
+
+import static com.dasi.types.constant.ExceptionMessage.AUTH_PASSWORD_FAIL;
 import static com.dasi.types.constant.ExceptionMessage.AUTH_PASSWORD_WRONG;
 
 @Slf4j
@@ -26,7 +31,7 @@ public class SettingService implements ISettingService {
     private IUserRepository userRepository;
 
     @Resource
-    private AuthContext authContext;
+    private UserContext userContext;
 
     @Resource
     private IJwtService jwtService;
@@ -38,13 +43,13 @@ public class SettingService implements ISettingService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AuthResponse queryProfile() {
-        UserVO userVO = userRepository.queryById(authContext.getUserId());
+    public AuthResponse profileQuery() {
+        UserVO userVO = userRepository.queryUserById(userContext.getUserId());
         return buildAuthResponse(userVO);
     }
 
     @Override
-    public AuthResponse editProfile(EditProfileRequest request, MultipartFile avatar) {
+    public AuthResponse profileEdit(ProfileEditRequest request, MultipartFile avatar) {
         String userName = request.getUserName();
         String oldPassword = request.getOldPassword();
         String newPassword = request.getNewPassword();
@@ -52,10 +57,10 @@ public class SettingService implements ISettingService {
         boolean hasOld = StringUtils.hasText(oldPassword);
         boolean hasNew = StringUtils.hasText(newPassword);
         if (hasOld != hasNew) {
-            throw new AuthException(AUTH_PASSWORD_ILLEGAL);
+            throw new AuthException(AUTH_PASSWORD_FAIL);
         }
 
-        UserVO userVO = userRepository.queryById(authContext.getUserId());
+        UserVO userVO = userRepository.queryUserById(userContext.getUserId());
 
         String originalPassword = userVO.getPassword();
         if (hasOld) {
@@ -90,5 +95,28 @@ public class SettingService implements ISettingService {
                 .userAvatar( ossService.getObjectUrl(userVO.getUserAvatar()))
                 .userStatus(userVO.getUserStatus())
                 .build();
+    }
+
+    @Override
+    public List<UserApiVO> apiList(String keyword) {
+        return userRepository.apiList(keyword);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void apiInsert(ApiManageRequest request) {
+        userRepository.apiInsert(request);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void apiUpdate(ApiManageRequest request) {
+        userRepository.apiUpdate(request);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void apiDelete(Long id) {
+        userRepository.apiDelete(id);
     }
 }

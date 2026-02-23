@@ -164,7 +164,8 @@
                                model_name,
                                client_name,
                                client_desc,
-                               client_status)
+                               client_status,
+                               client_from)
         VALUES (#{clientId},
                 #{clientType},
                 #{clientRole},
@@ -172,7 +173,8 @@
                 #{modelName},
                 #{clientName},
                 #{clientDesc},
-                #{clientStatus})
+                #{clientStatus},
+                #{clientFrom})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiClient">

@@ -135,12 +135,14 @@
                               agent_name,
                               agent_type,
                               agent_desc,
-                              agent_status)
+                              agent_status,
+                              agent_from)
         VALUES (#{agentId},
                 #{agentName},
                 #{agentType},
                 #{agentDesc},
-                #{agentStatus})
+                #{agentStatus},
+                #{agentFrom})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">

@@ -1,7 +1,7 @@
 package com.dasi.infrastructure.util;
 
 import com.aliyun.oss.OSS;
-import com.dasi.domain.util.jwt.AuthContext;
+import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.oss.IOssService;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
@@ -29,7 +29,7 @@ public class OssService implements IOssService {
     private OSS ossClient;
 
     @Resource
-    private AuthContext authContext;
+    private UserContext userContext;
 
     @Override
     public void deleteObject(String objectName) {
@@ -86,7 +86,7 @@ public class OssService implements IOssService {
     }
 
     private String createObjectName(String extensionName) {
-        return authContext.getUserName() + "_" + System.currentTimeMillis() + "." + extensionName;
+        return userContext.getUserName() + "_" + System.currentTimeMillis() + "." + extensionName;
     }
 
     private String normalizeObjectName(String objectName) {

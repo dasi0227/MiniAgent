@@ -1,7 +1,7 @@
 package com.dasi.infrastructure.repository;
 
 import com.dasi.domain.query.repository.IQueryRepository;
-import com.dasi.domain.util.jwt.AuthContext;
+import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.infrastructure.persistent.dao.IAiAgentDao;
 import com.dasi.infrastructure.persistent.dao.IAiClientDao;
 import com.dasi.infrastructure.persistent.dao.IAiMcpDao;
@@ -42,7 +42,7 @@ public class QueryRepository implements IQueryRepository {
     private JdbcTemplate jdbcTemplate;
 
     @Resource
-    private AuthContext authContext;
+    private UserContext userContext;
 
     @Value("${openai.embedding.schema-name}")
     private String embeddingSchemaName;
@@ -54,7 +54,7 @@ public class QueryRepository implements IQueryRepository {
     @Cacheable(cacheKey = QUERY_CHAT_CLIENT_KEY, cacheClass = QueryChatClientResponse.class, cacheType = CacheType.LIST)
     public List<QueryChatClientResponse> queryChatClientResponseList() {
 
-        Long userId = authContext.getUserId();
+        Long userId = userContext.getUserId();
 
         List<AiClient> aiClientList = aiClientDao.queryChatClientList(userId);
         if (aiClientList == null || aiClientList.isEmpty()) {
@@ -76,7 +76,7 @@ public class QueryRepository implements IQueryRepository {
     @Cacheable(cacheKey = QUERY_CHAT_MCP_KEY, cacheClass = QueryChatMcpResponse.class, cacheType = CacheType.LIST)
     public List<QueryChatMcpResponse> queryChatMcpResponseList() {
 
-        Long userId = authContext.getUserId();
+        Long userId = userContext.getUserId();
 
         List<AiMcp> aiMcpList = aiMcpDao.queryChatMcpList(userId);
         if (aiMcpList == null || aiMcpList.isEmpty()) {
@@ -96,7 +96,7 @@ public class QueryRepository implements IQueryRepository {
     @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = QueryWorkAgentResponse.class, cacheType = CacheType.LIST)
     public List<QueryWorkAgentResponse> queryWorkAgentResponseList() {
 
-        Long userId = authContext.getUserId();
+        Long userId = userContext.getUserId();
 
         List<AiAgent> aiAgentList = aiAgentDao.queryWorkAgentList(userId);
         if (aiAgentList == null || aiAgentList.isEmpty()) {
