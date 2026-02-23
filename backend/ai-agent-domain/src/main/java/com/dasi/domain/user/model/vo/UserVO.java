@@ -13,11 +13,13 @@ public class UserVO {
 
     private Long id;
 
-    private String username;
+    private String userName;
 
     private String password;
 
-    private String userrole;
+    private String userRole;
+
+    private String userAvatar;
 
     private Integer userStatus;
 

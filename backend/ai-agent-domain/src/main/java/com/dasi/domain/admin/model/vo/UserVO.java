@@ -13,8 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserVO {
     private Long id;
-    private String username;
-    private String userrole;
+    private String userName;
+    private String userRole;
+    private String userAvatar;
     private Integer userStatus;
     private LocalDateTime updateTime;
 }

@@ -11,15 +11,15 @@ public interface IAiUserDao {
 
     AiUser queryById(@Param("id") Long id);
 
-    AiUser queryByUsername(@Param("username") String username);
+    AiUser queryByUserName(@Param("userName") String userName);
 
-    List<AiUser> page(@Param("username") String username,
-                    @Param("userrole") String userrole,
+    List<AiUser> page(@Param("userName") String userName,
+                    @Param("userRole") String userRole,
                     @Param("offset") Integer offset,
                     @Param("size") Integer size);
 
-    Long count(@Param("username") String username,
-               @Param("userrole") String userrole);
+    Long count(@Param("userName") String userName,
+               @Param("userRole") String userRole);
 
     Long countAll();
 

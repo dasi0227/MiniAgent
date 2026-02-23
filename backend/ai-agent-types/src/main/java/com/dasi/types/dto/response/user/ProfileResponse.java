@@ -9,18 +9,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponse {
-
-    private String token;
+public class ProfileResponse {
 
     private Long userId;
 
     private String userName;
 
-    private String userRole;
-
     private String userAvatar;
 
-    private Integer userStatus;
+    private String userRole;
 
 }

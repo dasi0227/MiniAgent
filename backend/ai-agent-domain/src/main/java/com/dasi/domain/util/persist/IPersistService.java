@@ -1,6 +1,6 @@
-package com.dasi.domain.util.message;
+package com.dasi.domain.util.persist;
 
-public interface IMessageService {
+public interface IPersistService {
 
     void saveChatUserMessage(String sessionId, String messageContent);
 

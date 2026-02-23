@@ -9,6 +9,4 @@ public interface IAuthService {
 
     AuthResponse register(AuthRequest request);
 
-    AuthResponse profile();
-
 }

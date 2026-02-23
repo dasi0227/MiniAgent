@@ -14,9 +14,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserPageRequest {
 
-    private String usernameKeyWord;
+    private String userNameKeyWord;
 
-    private String userrole;
+    private String userRole;
 
     @NotNull
     @Min(1)

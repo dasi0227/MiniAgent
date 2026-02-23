@@ -8,7 +8,7 @@ import com.dasi.domain.ai.service.rag.IRagService;
 import com.dasi.domain.query.service.IQueryService;
 import com.dasi.domain.session.model.enumeration.SessionType;
 import com.dasi.domain.session.service.ISessionService;
-import com.dasi.domain.util.message.IMessageService;
+import com.dasi.domain.util.persist.IPersistService;
 import com.dasi.domain.util.stat.IStatService;
 import com.dasi.types.dto.response.query.QueryChatClientResponse;
 import com.dasi.types.dto.response.query.QueryWorkAgentResponse;
@@ -64,7 +64,7 @@ public class AiController implements IAiApi {
     private ISessionService sessionService;
 
     @Resource
-    private IMessageService messageService;
+    private IPersistService persistService;
 
     @Resource
     private IStatService statService;
@@ -119,7 +119,7 @@ public class AiController implements IAiApi {
             return sseEmitter;
         } finally {
             try {
-                messageService.saveWorkUserMessage(sessionId, userMessage);
+                persistService.saveWorkUserMessage(sessionId, userMessage);
             } catch (Exception e) {
                 log.warn("【AI 执行】持久化消息失败：sessionId={}, error={}", sessionId, e.getMessage());
             }
@@ -188,13 +188,13 @@ public class AiController implements IAiApi {
             return CHAT_ERROR_RESPONSE;
         } finally {
             try {
-                messageService.saveChatUserMessage(sessionId, userMessage);
+                persistService.saveChatUserMessage(sessionId, userMessage);
             } catch (Exception e) {
                 log.warn("【AI 对话】持久化用户消息失败：sessionId={}, error={}", sessionId, e.getMessage());
             }
             if (StringUtils.hasText(response) && !CHAT_ERROR_RESPONSE.equals(response)) {
                 try {
-                    messageService.saveChatAssistantMessage(sessionId, response);
+                    persistService.saveChatAssistantMessage(sessionId, response);
                 } catch (Exception e) {
                     log.warn("【AI 对话】持久化助手消息失败：sessionId={}, error={}", sessionId, e.getMessage());
                 }
@@ -259,7 +259,7 @@ public class AiController implements IAiApi {
                             return;
                         }
                         try {
-                            messageService.saveChatAssistantMessage(sessionId, answerBuffer.toString());
+                            persistService.saveChatAssistantMessage(sessionId, answerBuffer.toString());
                         } catch (Exception e) {
                             log.warn("【AI 对话】持久化消息失败：{}", e.getMessage());
                         }
@@ -271,7 +271,7 @@ public class AiController implements IAiApi {
             return Flux.just(CHAT_ERROR_RESPONSE);
         } finally {
             try {
-                messageService.saveChatUserMessage(sessionId, userMessage);
+                persistService.saveChatUserMessage(sessionId, userMessage);
             } catch (Exception e) {
                 log.warn("【AI 对话】持久化用户消息失败：sessionId={}, error={}", sessionId, e.getMessage());
             }

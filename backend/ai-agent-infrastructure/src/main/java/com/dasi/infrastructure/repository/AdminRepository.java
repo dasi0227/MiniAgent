@@ -553,7 +553,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.LIST)
     public List<UserVO> userPage(UserPageRequest request) {
         Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiUser> poList = userDao.page(request.getUsernameKeyWord(), request.getUserrole(), offset, request.getPageSize());
+        List<AiUser> poList = userDao.page(request.getUserNameKeyWord(), request.getUserRole(), offset, request.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -563,7 +563,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer userCount(UserPageRequest request) {
-        Long count = userDao.count(request.getUsernameKeyWord(), request.getUserrole());
+        Long count = userDao.count(request.getUserNameKeyWord(), request.getUserRole());
         return count == null ? 0 : count.intValue();
     }
 
@@ -575,8 +575,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.VALUE)
-    public UserVO userQuery(String username) {
-        return toUserVO(userDao.queryByUsername(username));
+    public UserVO userQuery(String userName) {
+        return toUserVO(userDao.queryByUserName(userName));
     }
 
     @Override
@@ -1061,8 +1061,9 @@ public class AdminRepository implements IAdminRepository {
         }
         return UserVO.builder()
                 .id(po.getId())
-                .username(po.getUsername())
-                .userrole(po.getUserrole())
+                .userName(po.getUserName())
+                .userRole(po.getUserRole())
+                .userAvatar(po.getUserAvatar())
                 .userStatus(po.getUserStatus())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1071,9 +1072,10 @@ public class AdminRepository implements IAdminRepository {
     private AiUser toUserPo(UserManageRequest request) {
         return AiUser.builder()
                 .id(request.getId())
-                .username(request.getUsername())
+                .userName(request.getUserName())
                 .password(request.getPassword())
-                .userrole(request.getUserrole())
+                .userRole(request.getUserRole())
+                .userAvatar(request.getUserAvatar())
                 .userStatus(request.getUserStatus())
                 .build();
     }

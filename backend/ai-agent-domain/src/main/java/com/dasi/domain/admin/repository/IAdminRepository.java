@@ -86,7 +86,7 @@ public interface IAdminRepository {
     List<UserVO> userPage(UserPageRequest request);
     Integer userCount(UserPageRequest request);
     UserVO userQuery(Long id);
-    UserVO userQuery(String username);
+    UserVO userQuery(String userName);
     void userInsert(UserManageRequest request);
     void userUpdate(UserManageRequest request);
     void userDelete(Long id);

@@ -69,11 +69,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         authContext.set(AuthContext.UserInfo.builder()
                 .userId(userVO.getId())
-                .username(userVO.getUsername())
-                .role(userVO.getUserrole())
+                .userName(userVO.getUserName())
+                .userRole(userVO.getUserRole())
                 .build());
 
-        if (uri.startsWith("/miniagent/api/v1/admin") && (userVO.getUserrole() == null || !ADMIN.getRole().equalsIgnoreCase(userVO.getUserrole()))) {
+        if (uri.startsWith("/miniagent/api/v1/admin") && (userVO.getUserRole() == null || !ADMIN.getRole().equalsIgnoreCase(userVO.getUserRole()))) {
             return forbidden(response, "无权限访问该资源");
         }
 

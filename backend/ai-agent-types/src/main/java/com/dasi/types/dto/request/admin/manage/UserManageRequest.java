@@ -15,13 +15,15 @@ public class UserManageRequest {
     private Long id;
 
     @NotBlank
-    private String username;
+    private String userName;
 
     @NotBlank
     private String password;
 
     @NotBlank
-    private String userrole;
+    private String userRole;
+
+    private String userAvatar;
 
     @Builder.Default
     private Integer userStatus = 1;

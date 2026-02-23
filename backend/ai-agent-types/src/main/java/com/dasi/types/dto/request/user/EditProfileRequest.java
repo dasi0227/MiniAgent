@@ -1,6 +1,8 @@
 package com.dasi.types.dto.request.user;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,16 +14,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EditProfileRequest {
 
-    @NotBlank(message = "id 不能为空")
+    @NotNull(message = "id 不能为空")
     private Long id;
 
     @NotBlank(message = "用户名不能为空")
-    private String username;
+    private String userName;
 
-    @NotBlank(message = "旧密码不能为空")
+    @Pattern(regexp = "^$|^.{6}$", message = "长度必须为 6 位")
     private String oldPassword;
 
-    @NotBlank(message = "新密码不能为空")
+    @Pattern(regexp = "^$|^.{6}$", message = "长度必须为 6 位")
     private String newPassword;
 
 }

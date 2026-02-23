@@ -18,8 +18,8 @@ import java.util.Date;
 public class JwtService implements IJwtService {
 
     private static final String CLAIM_USER_ID = "userId";
-    private static final String CLAIM_USERNAME = "username";
-    private static final String CLAIM_ROLE = "role";
+    private static final String CLAIM_USER_NAME = "userName";
+    private static final String CLAIM_USER_ROLE = "userRole";
 
     @Resource
     private JwtProperties jwtProperties;
@@ -39,8 +39,8 @@ public class JwtService implements IJwtService {
                 .withIssuedAt(now)
                 .withExpiresAt(expireAt)
                 .withClaim(CLAIM_USER_ID, userVO.getId())
-                .withClaim(CLAIM_USERNAME, userVO.getUsername())
-                .withClaim(CLAIM_ROLE, userVO.getUserrole())
+                .withClaim(CLAIM_USER_NAME, userVO.getUserName())
+                .withClaim(CLAIM_USER_ROLE, userVO.getUserRole())
                 .sign(getAlgorithm());
     }
 
@@ -61,15 +61,15 @@ public class JwtService implements IJwtService {
     public UserVO parseToken(String token) {
         DecodedJWT jwt = verifyToken(token);
         Long userId = jwt.getClaim(CLAIM_USER_ID).asLong();
-        String username = jwt.getClaim(CLAIM_USERNAME).asString();
-        String role = jwt.getClaim(CLAIM_ROLE).asString();
-        if (userId == null || !StringUtils.hasText(username) || !StringUtils.hasText(role)) {
+        String userName = jwt.getClaim(CLAIM_USER_NAME).asString();
+        String userRole = jwt.getClaim(CLAIM_USER_ROLE).asString();
+        if (userId == null || !StringUtils.hasText(userName) || !StringUtils.hasText(userRole)) {
             throw new JWTVerificationException("Token 缺少必要用户信息");
         }
         return UserVO.builder()
                 .id(userId)
-                .username(username)
-                .userrole(role)
+                .userName(userName)
+                .userRole(userRole)
                 .build();
     }
 

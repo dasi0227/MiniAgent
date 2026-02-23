@@ -19,9 +19,9 @@ public class AuthContext {
         return USER_CONTEXT.get();
     }
 
-    public String getUsername() {
+    public String getUserName() {
         UserInfo userInfo = USER_CONTEXT.get();
-        return userInfo == null ? null : userInfo.getUsername();
+        return userInfo == null ? null : userInfo.getUserName();
     }
 
     public Long getUserId() {
@@ -29,9 +29,9 @@ public class AuthContext {
         return userInfo == null ? null : userInfo.getUserId();
     }
 
-    public String getRole() {
+    public String getUserRole() {
         UserInfo userInfo = USER_CONTEXT.get();
-        return userInfo == null ? null : userInfo.getRole();
+        return userInfo == null ? null : userInfo.getUserRole();
     }
 
     public void clear() {
@@ -44,7 +44,7 @@ public class AuthContext {
     @AllArgsConstructor
     public static class UserInfo {
         private Long userId;
-        private String username;
-        private String role;
+        private String userName;
+        private String userRole;
     }
 }

@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class DependencyConflictException extends RuntimeException {
+public class DependencyConflictException extends MiniAgentException {
 
     private final List<String> dependents;
 

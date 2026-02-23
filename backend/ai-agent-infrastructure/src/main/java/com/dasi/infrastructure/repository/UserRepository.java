@@ -16,8 +16,8 @@ public class UserRepository implements IUserRepository {
     private IAiUserDao userDao;
 
     @Override
-    public UserVO queryByUsername(String username) {
-        AiUser user = userDao.queryByUsername(username);
+    public UserVO queryByUserName(String userName) {
+        AiUser user = userDao.queryByUserName(userName);
         return toUserVO(user);
     }
 
@@ -28,11 +28,12 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserVO insertUser(String username, String password) {
+    public UserVO insertUser(String userName, String password) {
         AiUser user = AiUser.builder()
-                .username(username)
+                .userName(userName)
                 .password(password)
-                .userrole(ACCOUNT.getType())
+                .userRole(ACCOUNT.getType())
+                .userAvatar("")
                 .userStatus(1)
                 .build();
         userDao.insert(user);
@@ -40,11 +41,12 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserVO updateUser(Long id, String username, String password) {
+    public UserVO updateUser(Long id, String userName, String password, String userAvatar) {
         AiUser user = AiUser.builder()
                 .id(id)
-                .username(username)
+                .userName(userName)
                 .password(password)
+                .userAvatar(userAvatar)
                 .build();
         userDao.update(user);
         return toUserVO(user);
@@ -56,9 +58,10 @@ public class UserRepository implements IUserRepository {
         }
         return UserVO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .userName(user.getUserName())
                 .password(user.getPassword())
-                .userrole(user.getUserrole())
+                .userRole(user.getUserRole())
+                .userAvatar(user.getUserAvatar())
                 .userStatus(user.getUserStatus())
                 .build();
     }

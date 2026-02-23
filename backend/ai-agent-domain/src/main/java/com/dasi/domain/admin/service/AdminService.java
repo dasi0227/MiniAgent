@@ -381,7 +381,7 @@ public class AdminService implements IAdminService {
 
     @Override
     public void userInsert(UserManageRequest request) {
-        if (adminRepository.userQuery(request.getUsername()) != null) {
+        if (adminRepository.userQuery(request.getUserName()) != null) {
             throw new AdminException("USER 已存在，请修改后重新添加");
         }
         request.setPassword(passwordEncoder.encode(request.getPassword()));

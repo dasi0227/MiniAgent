@@ -33,12 +33,12 @@ public class SessionService implements ISessionService {
 
     @Override
     public List<SessionVO> listSession() {
-        return sessionRepository.listSession(authContext.getUsername());
+        return sessionRepository.listSession(authContext.getUserName());
     }
 
     @Override
     public SessionVO insertSession(String sessionTitle, String sessionType) {
-        String sessionUser = authContext.getUsername();
+        String sessionUser = authContext.getUserName();
 
         int count = sessionRepository.countSessionByType(sessionUser, sessionType);
         if (count >= CHAT_SESSION_LIMIT) {
@@ -122,13 +122,13 @@ public class SessionService implements ISessionService {
             return "会话类型不匹配";
         }
 
-        String role = authContext.getRole();
+        String role = authContext.getUserRole();
         if (!StringUtils.hasText(role)) {
             return "用户信息缺失";
         }
 
         if (!UserRoleType.ADMIN.getType().equals(role)) {
-            String sessionUser = authContext.getUsername();
+            String sessionUser = authContext.getUserName();
             if (!StringUtils.hasText(sessionUser)) {
                 return "用户信息缺失";
             }
@@ -141,7 +141,7 @@ public class SessionService implements ISessionService {
     }
 
     private boolean notAdmin() {
-        String role = authContext.getRole();
+        String role = authContext.getUserRole();
         if (!StringUtils.hasText(role)) {
             throw new SessionException("用户信息缺失");
         }
@@ -166,11 +166,11 @@ public class SessionService implements ISessionService {
     }
 
     private String requireUser() {
-        String username = authContext.getUsername();
-        if (!StringUtils.hasText(username)) {
+        String userName = authContext.getUserName();
+        if (!StringUtils.hasText(userName)) {
             throw new SessionException("用户信息缺失");
         }
-        return username;
+        return userName;
     }
 
     private String generateSessionId(String type) {

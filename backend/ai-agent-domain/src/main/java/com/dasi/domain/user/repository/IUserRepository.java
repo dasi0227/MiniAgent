@@ -4,12 +4,12 @@ import com.dasi.domain.user.model.vo.UserVO;
 
 public interface IUserRepository {
 
-    UserVO queryByUsername(String username);
+    UserVO queryByUserName(String userName);
 
     UserVO queryById(Long id);
 
-    UserVO insertUser(String username, String password);
+    UserVO insertUser(String userName, String password);
 
-    UserVO updateUser(Long id, String username, String password);
+    UserVO updateUser(Long id, String userName, String password, String userAvatar);
 
 }
