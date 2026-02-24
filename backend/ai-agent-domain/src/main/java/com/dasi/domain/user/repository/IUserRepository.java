@@ -2,7 +2,7 @@ package com.dasi.domain.user.repository;
 
 import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserVO;
-import com.dasi.types.dto.request.user.ApiManageRequest;
+import com.dasi.types.dto.request.user.SettingApiRequest;
 
 import java.util.List;
 
@@ -18,9 +18,9 @@ public interface IUserRepository {
 
     List<UserApiVO> apiList(String keyword);
 
-    void apiInsert(ApiManageRequest request);
+    void apiInsert(SettingApiRequest request);
 
-    void apiUpdate(ApiManageRequest request);
+    void apiUpdate(SettingApiRequest request);
 
     void apiDelete(Long id);
 

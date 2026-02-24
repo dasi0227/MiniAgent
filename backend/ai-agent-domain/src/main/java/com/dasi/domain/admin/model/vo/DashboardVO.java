@@ -1,4 +1,4 @@
-package com.dasi.types.dto.response.admin;
+package com.dasi.domain.admin.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DashboardResponse {
+public class DashboardVO {
 
     private CountInfo countInfo;
 

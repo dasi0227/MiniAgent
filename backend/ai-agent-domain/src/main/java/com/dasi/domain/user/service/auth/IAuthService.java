@@ -1,12 +1,12 @@
 package com.dasi.domain.user.service.auth;
 
 import com.dasi.types.dto.request.user.AuthRequest;
-import com.dasi.types.dto.response.user.AuthResponse;
+import com.dasi.domain.user.model.vo.AuthVO;
 
 public interface IAuthService {
 
-    AuthResponse login(AuthRequest request);
+    AuthVO login(AuthRequest request);
 
-    AuthResponse register(AuthRequest request);
+    AuthVO register(AuthRequest request);
 
 }

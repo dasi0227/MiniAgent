@@ -6,15 +6,15 @@ import com.dasi.types.dto.request.admin.list.AgentListRequest;
 import com.dasi.types.dto.request.admin.list.ConfigListRequest;
 import com.dasi.types.dto.request.admin.manage.*;
 import com.dasi.types.dto.request.admin.page.*;
-import com.dasi.types.dto.response.admin.DashboardResponse;
+import com.dasi.domain.admin.model.vo.DashboardVO;
 
 import java.util.List;
 
 public interface IAdminRepository {
 
     // Dashboard
-    DashboardResponse.CountInfo dashboardCount();
-    DashboardResponse.GraphInfo dashboardChart();
+    DashboardVO.CountInfo dashboardCount();
+    DashboardVO.GraphInfo dashboardChart();
 
     // Api
     List<ApiVO> apiPage(ApiPageRequest apiPageRequest);

@@ -10,7 +10,7 @@ import com.dasi.infrastructure.persistent.dao.IAiUserDao;
 import com.dasi.infrastructure.persistent.po.AiApi;
 import com.dasi.infrastructure.persistent.po.AiModel;
 import com.dasi.infrastructure.persistent.po.AiUser;
-import com.dasi.types.dto.request.user.ApiManageRequest;
+import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -94,7 +94,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void apiInsert(ApiManageRequest request) {
+    public void apiInsert(SettingApiRequest request) {
         Long userId = userContext.getUserId();
 
         AiApi aiApi = AiApi.builder()
@@ -117,7 +117,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void apiUpdate(ApiManageRequest request) {
+    public void apiUpdate(SettingApiRequest request) {
         Long userId = userContext.getUserId();
 
         String apiId = request.getApiId();

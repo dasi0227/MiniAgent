@@ -8,7 +8,7 @@ import com.dasi.types.dto.request.admin.list.AgentListRequest;
 import com.dasi.types.dto.request.admin.list.ConfigListRequest;
 import com.dasi.types.dto.request.admin.manage.*;
 import com.dasi.types.dto.request.admin.page.*;
-import com.dasi.types.dto.response.admin.DashboardResponse;
+import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.dto.result.PageResult;
 import com.dasi.types.dto.result.Result;
 import jakarta.annotation.Resource;
@@ -29,7 +29,7 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Dashboard --------------------
     @PostMapping("/dashboard")
-    public Result<DashboardResponse> dashboard() {
+    public Result<DashboardVO> dashboard() {
         return Result.success(adminService.dashboard());
     }
 

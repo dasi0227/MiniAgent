@@ -5,13 +5,13 @@ import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.service.augment.IAugmentService;
 import com.dasi.domain.ai.service.dispatch.IDispatchService;
 import com.dasi.domain.ai.service.rag.IRagService;
-import com.dasi.domain.query.service.IQueryService;
+import com.dasi.domain.user.service.query.IQueryService;
 import com.dasi.domain.session.model.enumeration.SessionType;
 import com.dasi.domain.session.service.ISessionService;
 import com.dasi.domain.util.persist.IPersistService;
 import com.dasi.domain.util.stat.IStatService;
-import com.dasi.types.dto.response.query.QueryChatClientResponse;
-import com.dasi.types.dto.response.query.QueryWorkAgentResponse;
+import com.dasi.domain.user.model.vo.query.ChatClientVO;
+import com.dasi.domain.user.model.vo.query.WorkAgentVO;
 import com.dasi.types.dto.request.ai.AiChatRequest;
 import com.dasi.types.dto.request.ai.AiArmoryRequest;
 import com.dasi.types.dto.request.ai.AiWorkRequest;
@@ -326,7 +326,7 @@ public class AiController implements IAiApi {
         if (clientId == null || clientId.isBlank()) {
             return true;
         }
-        List<QueryChatClientResponse> list = queryService.queryChatClientResponseList();
+        List<ChatClientVO> list = queryService.queryChatClientResponseList();
         if (list == null || list.isEmpty()) {
             return true;
         }
@@ -337,7 +337,7 @@ public class AiController implements IAiApi {
         if (agentId == null || agentId.isBlank()) {
             return true;
         }
-        List<QueryWorkAgentResponse> list = queryService.queryWorkAgentResponseList();
+        List<WorkAgentVO> list = queryService.queryWorkAgentResponseList();
         if (list == null || list.isEmpty()) {
             return true;
         }

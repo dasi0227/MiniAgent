@@ -5,7 +5,7 @@ import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.IJwtService;
 import com.dasi.domain.util.oss.IOssService;
 import com.dasi.types.dto.request.user.AuthRequest;
-import com.dasi.types.dto.response.user.AuthResponse;
+import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +29,7 @@ public class AuthService implements IAuthService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AuthResponse login(AuthRequest request) {
+    public AuthVO login(AuthRequest request) {
 
         String userName = request.getUserName();
         String password = request.getPassword();
@@ -49,7 +49,7 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public AuthResponse register(AuthRequest request) {
+    public AuthVO register(AuthRequest request) {
 
         String userName = request.getUserName();
         String password = request.getPassword();
@@ -63,9 +63,9 @@ public class AuthService implements IAuthService {
         return buildAuthResponse(userVO);
     }
 
-    private AuthResponse buildAuthResponse(UserVO userVO) {
+    private AuthVO buildAuthResponse(UserVO userVO) {
         String token = jwtService.generateToken(userVO);
-        return AuthResponse.builder()
+        return AuthVO.builder()
                 .token(token)
                 .userId(userVO.getId())
                 .userName(userVO.getUserName())

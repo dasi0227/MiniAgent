@@ -1,6 +1,6 @@
 package com.dasi.infrastructure.repository;
 
-import com.dasi.domain.query.repository.IQueryRepository;
+import com.dasi.domain.user.repository.IQueryRepository;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.infrastructure.persistent.dao.IAiAgentDao;
 import com.dasi.infrastructure.persistent.dao.IAiClientDao;
@@ -9,10 +9,10 @@ import com.dasi.infrastructure.persistent.po.AiAgent;
 import com.dasi.infrastructure.persistent.po.AiClient;
 import com.dasi.infrastructure.persistent.po.AiMcp;
 import com.dasi.types.annotation.Cacheable;
-import com.dasi.types.dto.response.query.QueryChatClientResponse;
-import com.dasi.types.dto.response.query.QueryChatMcpResponse;
-import com.dasi.types.dto.response.query.QueryChatRagResponse;
-import com.dasi.types.dto.response.query.QueryWorkAgentResponse;
+import com.dasi.domain.user.model.vo.query.ChatClientVO;
+import com.dasi.domain.user.model.vo.query.ChatMcpVO;
+import com.dasi.domain.user.model.vo.query.ChatRagVO;
+import com.dasi.domain.user.model.vo.query.WorkAgentVO;
 import com.dasi.types.enumeration.CacheType;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +51,8 @@ public class QueryRepository implements IQueryRepository {
     private String embeddingTableName;
 
     @Override
-    @Cacheable(cacheKey = QUERY_CHAT_CLIENT_KEY, cacheClass = QueryChatClientResponse.class, cacheType = CacheType.LIST)
-    public List<QueryChatClientResponse> queryChatClientResponseList() {
+    @Cacheable(cacheKey = QUERY_CHAT_CLIENT_KEY, cacheClass = ChatClientVO.class, cacheType = CacheType.LIST)
+    public List<ChatClientVO> queryChatClientResponseList() {
 
         Long userId = userContext.getUserId();
 
@@ -63,7 +63,7 @@ public class QueryRepository implements IQueryRepository {
 
         return aiClientList.stream()
                 .filter(c -> c != null && Integer.valueOf(1).equals(c.getClientStatus()))
-                .map(aiClient -> QueryChatClientResponse.builder()
+                .map(aiClient -> ChatClientVO.builder()
                         .clientId(aiClient.getClientId())
                         .modelName(aiClient.getModelName())
                         .clientDesc(aiClient.getClientDesc())
@@ -73,8 +73,8 @@ public class QueryRepository implements IQueryRepository {
 
 
     @Override
-    @Cacheable(cacheKey = QUERY_CHAT_MCP_KEY, cacheClass = QueryChatMcpResponse.class, cacheType = CacheType.LIST)
-    public List<QueryChatMcpResponse> queryChatMcpResponseList() {
+    @Cacheable(cacheKey = QUERY_CHAT_MCP_KEY, cacheClass = ChatMcpVO.class, cacheType = CacheType.LIST)
+    public List<ChatMcpVO> queryChatMcpResponseList() {
 
         Long userId = userContext.getUserId();
 
@@ -84,7 +84,7 @@ public class QueryRepository implements IQueryRepository {
         }
 
         return aiMcpList.stream()
-                .map(aiMcp -> QueryChatMcpResponse.builder()
+                .map(aiMcp -> ChatMcpVO.builder()
                         .mcpId(aiMcp.getMcpId())
                         .mcpName(aiMcp.getMcpName())
                         .mcpDesc(aiMcp.getMcpDesc())
@@ -93,8 +93,8 @@ public class QueryRepository implements IQueryRepository {
     }
 
     @Override
-    @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = QueryWorkAgentResponse.class, cacheType = CacheType.LIST)
-    public List<QueryWorkAgentResponse> queryWorkAgentResponseList() {
+    @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = WorkAgentVO.class, cacheType = CacheType.LIST)
+    public List<WorkAgentVO> queryWorkAgentResponseList() {
 
         Long userId = userContext.getUserId();
 
@@ -107,7 +107,7 @@ public class QueryRepository implements IQueryRepository {
 
         return aiAgentList.stream()
                 .filter(a -> a != null && Integer.valueOf(1).equals(a.getAgentStatus()))
-                .map(aiAgent -> QueryWorkAgentResponse.builder()
+                .map(aiAgent -> WorkAgentVO.builder()
                         .agentId(aiAgent.getAgentId())
                         .agentName(aiAgent.getAgentName())
                         .agentDesc(aiAgent.getAgentDesc())
@@ -116,8 +116,8 @@ public class QueryRepository implements IQueryRepository {
     }
 
     @Override
-    @Cacheable(cacheKey = QUERY_CHAT_RAG_KEY, cacheClass = QueryChatRagResponse.class, cacheType = CacheType.LIST)
-    public List<QueryChatRagResponse> queryChatRagList() {
+    @Cacheable(cacheKey = QUERY_CHAT_RAG_KEY, cacheClass = ChatRagVO.class, cacheType = CacheType.LIST)
+    public List<ChatRagVO> queryChatRagList() {
 
         String tableRef = embeddingSchemaName + "." + embeddingTableName;
         String sql = """
@@ -128,7 +128,7 @@ public class QueryRepository implements IQueryRepository {
                 .formatted(tableRef);
         List<String> ragTagList = jdbcTemplate.queryForList(sql, String.class);
         return ragTagList.stream()
-                .map(ragTag -> QueryChatRagResponse.builder().ragTag(ragTag).build())
+                .map(ragTag -> ChatRagVO.builder().ragTag(ragTag).build())
                 .toList();
     }
 

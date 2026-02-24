@@ -6,28 +6,30 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ApiManageRequest {
+public class SettingMcpRequest {
 
     @NotNull
-    private String apiId;
+    private String mcpId;
 
     @NotNull
-    private String modelName;
+    private String mcpName;
 
     @NotNull
-    private String modelType;
+    private String mcpType;
 
     @NotNull
-    private String apiBaseUrl;
+    private String mcpConfig;
 
     @NotNull
-    private String apiKey;
+    private String mcpDesc;
 
     @NotNull
-    private String apiCompletionPath;
+    private Map<String, String> mcpSecret;
 
 }

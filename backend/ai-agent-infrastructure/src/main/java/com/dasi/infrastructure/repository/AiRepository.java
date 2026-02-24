@@ -418,7 +418,7 @@ public class AiRepository implements IAiRepository {
                     .build();
 
             try {
-                switch (com.dasi.domain.query.model.enumeration.AiMcpType.fromCode(aiMcp.getMcpType())) {
+                switch (AiMcpType.fromString(aiMcp.getMcpType())) {
                     case SSE -> {
                         ObjectMapper objectMapper = new ObjectMapper();
                         AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpConfig(), AiMcpVO.SseConfig.class);

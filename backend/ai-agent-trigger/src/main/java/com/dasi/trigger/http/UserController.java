@@ -2,12 +2,14 @@ package com.dasi.trigger.http;
 
 import com.dasi.api.IUserApi;
 import com.dasi.domain.user.model.vo.UserApiVO;
+import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.service.auth.IAuthService;
 import com.dasi.domain.user.service.setting.ISettingService;
-import com.dasi.types.dto.request.user.ApiManageRequest;
 import com.dasi.types.dto.request.user.AuthRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
-import com.dasi.types.dto.response.user.AuthResponse;
+import com.dasi.types.dto.request.user.SettingApiRequest;
+import com.dasi.types.dto.request.user.SettingMcpRequest;
+import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.types.dto.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -31,26 +33,26 @@ public class UserController implements IUserApi {
 
     @PostMapping("/auth/login")
     @Override
-    public Result<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
+    public Result<AuthVO> login(@Valid @RequestBody AuthRequest request) {
         return Result.success(authService.login(request));
     }
 
     @PostMapping("/auth/register")
     @Override
-    public Result<AuthResponse> register(@Valid @RequestBody AuthRequest request) {
+    public Result<AuthVO> register(@Valid @RequestBody AuthRequest request) {
         return Result.success(authService.register(request));
     }
 
     @PostMapping("/profile/query")
     @Override
-    public Result<AuthResponse> profileQuery() {
+    public Result<AuthVO> profileQuery() {
         return Result.success(settingService.profileQuery());
     }
 
     @PostMapping(value = "/profile/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Override
-    public Result<AuthResponse> profileEdit(@Valid @RequestPart("profile") ProfileEditRequest request,
-                                            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+    public Result<AuthVO> profileEdit(@Valid @RequestPart("profile") ProfileEditRequest request,
+                                      @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
         return Result.success(settingService.profileEdit(request, avatar));
     }
 
@@ -62,14 +64,14 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/api/insert")
     @Override
-    public Result<Void> apiInsert(@Valid @RequestBody ApiManageRequest request) {
+    public Result<Void> apiInsert(@Valid @RequestBody SettingApiRequest request) {
         settingService.apiInsert(request);
         return Result.success();
     }
 
     @PostMapping(value = "/api/update")
     @Override
-    public Result<Void> apiUpdate(@Valid @RequestBody ApiManageRequest request) {
+    public Result<Void> apiUpdate(@Valid @RequestBody SettingApiRequest request) {
         settingService.apiUpdate(request);
         return Result.success();
     }
@@ -78,6 +80,33 @@ public class UserController implements IUserApi {
     @Override
     public Result<Void> apiDelete(@RequestParam Long id) {
         settingService.apiDelete(id);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/mcp/list")
+    @Override
+    public Result<List<UserMcpVO>> mcpList(@RequestParam(required = false, defaultValue = "") String keyword) {
+        return Result.success(settingService.mcpList(keyword));
+    }
+
+    @PostMapping(value = "/mcp/insert")
+    @Override
+    public Result<Void> mcpInsert(@Valid @RequestBody SettingMcpRequest request) {
+        settingService.mcpInsert(request);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/mcp/update")
+    @Override
+    public Result<Void> mcpUpdate(@Valid @RequestBody SettingMcpRequest request) {
+        settingService.mcpUpdate(request);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/mcp/delete")
+    @Override
+    public Result<Void> mcpDelete(@RequestParam Long id) {
+        settingService.mcpDelete(id);
         return Result.success();
     }
 

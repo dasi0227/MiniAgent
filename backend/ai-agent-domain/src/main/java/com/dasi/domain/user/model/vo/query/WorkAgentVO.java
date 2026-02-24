@@ -1,4 +1,4 @@
-package com.dasi.types.dto.response.query;
+package com.dasi.domain.user.model.vo.query;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueryWorkAgentResponse {
+public class WorkAgentVO {
 
     private String agentId;
 

@@ -1,21 +1,21 @@
 package com.dasi.api;
 
-import com.dasi.types.dto.response.query.QueryChatRagResponse;
-import com.dasi.types.dto.response.query.QueryWorkAgentResponse;
-import com.dasi.types.dto.response.query.QueryChatClientResponse;
-import com.dasi.types.dto.response.query.QueryChatMcpResponse;
+import com.dasi.domain.user.model.vo.query.ChatRagVO;
+import com.dasi.domain.user.model.vo.query.WorkAgentVO;
+import com.dasi.domain.user.model.vo.query.ChatClientVO;
+import com.dasi.domain.user.model.vo.query.ChatMcpVO;
 import com.dasi.types.dto.result.Result;
 
 import java.util.List;
 
 public interface IQueryApi {
 
-    Result<List<QueryChatClientResponse>> queryChatClientResponseList();
+    Result<List<ChatClientVO>> queryChatClientResponseList();
 
-    Result<List<QueryChatMcpResponse>> queryChatMcpResponseList();
+    Result<List<ChatMcpVO>> queryChatMcpResponseList();
 
-    Result<List<QueryChatRagResponse>> queryRagTagList();
+    Result<List<ChatRagVO>> queryRagTagList();
 
-    Result<List<QueryWorkAgentResponse>> queryWorkAgentResponseList();
+    Result<List<WorkAgentVO>> queryWorkAgentResponseList();
 
 }

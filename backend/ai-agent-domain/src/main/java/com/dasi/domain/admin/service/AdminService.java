@@ -7,7 +7,7 @@ import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.types.dto.request.admin.list.AgentListRequest;
 import com.dasi.types.dto.request.admin.list.ConfigListRequest;
 import com.dasi.types.dto.request.admin.page.*;
-import com.dasi.types.dto.response.admin.DashboardResponse;
+import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.dto.request.admin.manage.*;
 import com.dasi.types.dto.result.PageResult;
 import com.dasi.types.exception.AdminException;
@@ -34,10 +34,10 @@ public class AdminService implements IAdminService {
 
     // -------------------- Dashboard --------------------
     @Override
-    public DashboardResponse dashboard() {
-        DashboardResponse.CountInfo countInfo = adminRepository.dashboardCount();
-        DashboardResponse.GraphInfo graphInfo = adminRepository.dashboardChart();
-        return DashboardResponse.builder()
+    public DashboardVO dashboard() {
+        DashboardVO.CountInfo countInfo = adminRepository.dashboardCount();
+        DashboardVO.GraphInfo graphInfo = adminRepository.dashboardChart();
+        return DashboardVO.builder()
                 .countInfo(countInfo)
                 .graphInfo(graphInfo)
                 .build();

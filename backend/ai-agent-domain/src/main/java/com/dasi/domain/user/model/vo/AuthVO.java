@@ -1,4 +1,4 @@
-package com.dasi.types.dto.response.user;
+package com.dasi.domain.user.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +9,18 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProfileResponse {
+public class AuthVO {
+
+    private String token;
 
     private Long userId;
 
     private String userName;
 
+    private String userRole;
+
     private String userAvatar;
 
-    private String userRole;
+    private Integer userStatus;
 
 }

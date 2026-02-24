@@ -6,7 +6,7 @@ import com.dasi.types.dto.request.admin.list.AgentListRequest;
 import com.dasi.types.dto.request.admin.list.ConfigListRequest;
 import com.dasi.types.dto.request.admin.manage.*;
 import com.dasi.types.dto.request.admin.page.*;
-import com.dasi.types.dto.response.admin.DashboardResponse;
+import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.dto.result.PageResult;
 import com.dasi.types.dto.result.Result;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 
 public interface IAdminApi {
 
-    Result<DashboardResponse> dashboard();
+    Result<DashboardVO> dashboard();
 
     Result<PageResult<ApiVO>> apiPage(ApiPageRequest request);
 

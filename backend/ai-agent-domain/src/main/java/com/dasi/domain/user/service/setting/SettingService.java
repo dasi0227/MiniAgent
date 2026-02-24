@@ -6,9 +6,9 @@ import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.jwt.IJwtService;
 import com.dasi.domain.util.oss.IOssService;
-import com.dasi.types.dto.request.user.ApiManageRequest;
+import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
-import com.dasi.types.dto.response.user.AuthResponse;
+import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -43,13 +43,13 @@ public class SettingService implements ISettingService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AuthResponse profileQuery() {
+    public AuthVO profileQuery() {
         UserVO userVO = userRepository.queryUserById(userContext.getUserId());
         return buildAuthResponse(userVO);
     }
 
     @Override
-    public AuthResponse profileEdit(ProfileEditRequest request, MultipartFile avatar) {
+    public AuthVO profileEdit(ProfileEditRequest request, MultipartFile avatar) {
         String userName = request.getUserName();
         String oldPassword = request.getOldPassword();
         String newPassword = request.getNewPassword();
@@ -85,9 +85,9 @@ public class SettingService implements ISettingService {
         return buildAuthResponse(userVO);
     }
 
-    private AuthResponse buildAuthResponse(UserVO userVO) {
+    private AuthVO buildAuthResponse(UserVO userVO) {
         String token = jwtService.generateToken(userVO);
-        return AuthResponse.builder()
+        return AuthVO.builder()
                 .token(token)
                 .userId(userVO.getId())
                 .userName(userVO.getUserName())
@@ -104,13 +104,13 @@ public class SettingService implements ISettingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiInsert(ApiManageRequest request) {
+    public void apiInsert(SettingApiRequest request) {
         userRepository.apiInsert(request);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiUpdate(ApiManageRequest request) {
+    public void apiUpdate(SettingApiRequest request) {
         userRepository.apiUpdate(request);
     }
 

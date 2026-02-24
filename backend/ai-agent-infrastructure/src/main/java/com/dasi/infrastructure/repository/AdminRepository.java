@@ -13,7 +13,7 @@ import com.dasi.types.dto.request.admin.list.AgentListRequest;
 import com.dasi.types.dto.request.admin.list.ConfigListRequest;
 import com.dasi.types.dto.request.admin.manage.*;
 import com.dasi.types.dto.request.admin.page.*;
-import com.dasi.types.dto.response.admin.DashboardResponse;
+import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.enumeration.CacheType;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
@@ -81,8 +81,8 @@ public class AdminRepository implements IAdminRepository {
 
     // -------------------- Dashboard --------------------
     @Override
-    public DashboardResponse.CountInfo dashboardCount() {
-        return DashboardResponse.CountInfo.builder()
+    public DashboardVO.CountInfo dashboardCount() {
+        return DashboardVO.CountInfo.builder()
                 .apiCount(safeInt(aiApiDao.countAll()))
                 .modelCount(safeInt(aiModelDao.countAll()))
                 .clientCount(safeInt(aiClientDao.countAll()))
@@ -104,19 +104,19 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    public DashboardResponse.GraphInfo dashboardChart() {
-        List<DashboardResponse.ChartValue> messageLastWeek = buildMessageChart(7);
-        List<DashboardResponse.ChartValue> messageLastMonth = buildMessageChart(30);
+    public DashboardVO.GraphInfo dashboardChart() {
+        List<DashboardVO.ChartValue> messageLastWeek = buildMessageChart(7);
+        List<DashboardVO.ChartValue> messageLastMonth = buildMessageChart(30);
 
-        Map<String, List<DashboardResponse.BarValue>> workUsage = buildUsageMap(STAT_WORK);
-        Map<String, List<DashboardResponse.BarValue>> chatUsage = buildUsageMap(STAT_CHAT);
+        Map<String, List<DashboardVO.BarValue>> workUsage = buildUsageMap(STAT_WORK);
+        Map<String, List<DashboardVO.BarValue>> chatUsage = buildUsageMap(STAT_CHAT);
 
-        DashboardResponse.PieValue sessionWorkVsChat = DashboardResponse.PieValue.builder()
+        DashboardVO.PieValue sessionWorkVsChat = DashboardVO.PieValue.builder()
                 .workCount(safeInt(sessionDao.countByType(STAT_WORK)))
                 .chatCount(safeInt(sessionDao.countByType(STAT_CHAT)))
                 .build();
 
-        return DashboardResponse.GraphInfo.builder()
+        return DashboardVO.GraphInfo.builder()
                 .messageLastWeek(messageLastWeek)
                 .messageLastMonth(messageLastMonth)
                 .workUsage(workUsage)
@@ -125,13 +125,13 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private Map<String, List<DashboardResponse.BarValue>> buildUsageMap(String statCategory) {
-        Map<String, List<DashboardResponse.BarValue>> result = new LinkedHashMap<>();
+    private Map<String, List<DashboardVO.BarValue>> buildUsageMap(String statCategory) {
+        Map<String, List<DashboardVO.BarValue>> result = new LinkedHashMap<>();
 
         for (String key : STAT_USAGE_LIST) {
-            List<DashboardResponse.BarValue> list = aiStatDao.sumByCategoryAndKey(statCategory, key, STAT_TOP_N)
+            List<DashboardVO.BarValue> list = aiStatDao.sumByCategoryAndKey(statCategory, key, STAT_TOP_N)
                     .stream()
-                    .map(it -> DashboardResponse.BarValue.builder()
+                    .map(it -> DashboardVO.BarValue.builder()
                             .id(it.getStatValue())
                             .value(safeInt(it.getTotalCount()))
                             .build())
@@ -142,7 +142,7 @@ public class AdminRepository implements IAdminRepository {
         return result;
     }
 
-    private List<DashboardResponse.ChartValue> buildMessageChart(int days) {
+    private List<DashboardVO.ChartValue> buildMessageChart(int days) {
         LocalDate today = LocalDate.now();
         LocalDate startDate = today.minusDays(days - 1L);
         LocalDateTime start = startDate.atStartOfDay();
@@ -158,7 +158,7 @@ public class AdminRepository implements IAdminRepository {
         return startDate.datesUntil(today.plusDays(1))
                 .map(d -> {
                     String key = d.format(dateTimeFormatter);
-                    return DashboardResponse.ChartValue.builder()
+                    return DashboardVO.ChartValue.builder()
                             .date(key)
                             .count(countMap.getOrDefault(key, 0))
                             .build();

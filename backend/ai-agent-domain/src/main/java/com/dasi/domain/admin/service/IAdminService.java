@@ -5,7 +5,7 @@ import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.types.dto.request.admin.list.AgentListRequest;
 import com.dasi.types.dto.request.admin.list.ConfigListRequest;
 import com.dasi.types.dto.request.admin.page.*;
-import com.dasi.types.dto.response.admin.DashboardResponse;
+import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.dto.request.admin.manage.*;
 import com.dasi.types.dto.result.PageResult;
 
@@ -100,5 +100,5 @@ public interface IAdminService {
     List<String> listConfigType();
 
     // Dashboard
-    DashboardResponse dashboard();
+    DashboardVO dashboard();
 }
