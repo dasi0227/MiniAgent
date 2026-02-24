@@ -39,7 +39,8 @@ export const parseAuthPayload = (resp) => {
             role,
             userName: username,
             userRole: role,
-            userAvatar: payload?.userAvatar || '',
+            userAvatar: payload?.userAvatar || payload?.avatarUrl || '',
+            avatarUrl: payload?.avatarUrl || payload?.userAvatar || '',
             userStatus: payload?.userStatus
         }
     };

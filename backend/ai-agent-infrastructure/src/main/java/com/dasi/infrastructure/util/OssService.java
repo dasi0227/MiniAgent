@@ -3,10 +3,10 @@ package com.dasi.infrastructure.util;
 import com.aliyun.oss.OSS;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.oss.IOssService;
+import com.dasi.domain.util.oss.OssProperties;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,11 +19,8 @@ import static com.dasi.types.constant.ExceptionMessage.*;
 @Service
 public class OssService implements IOssService {
 
-    @Value("${oss.bucket}")
-    private String bucketName;
-
-    @Value("${oss.endpoint}")
-    private String endpoint;
+    @Resource
+    private OssProperties ossProperties;
 
     @Resource
     private OSS ossClient;
@@ -37,7 +34,7 @@ public class OssService implements IOssService {
         if (objectName.isEmpty()) {
             return;
         }
-        ossClient.deleteObject(bucketName, objectName);
+        ossClient.deleteObject(ossProperties.getBucket(), objectName);
     }
 
     @Override
@@ -45,9 +42,10 @@ public class OssService implements IOssService {
         String extensionName = getExtensionName(file);
         try {
             String objectName = createObjectName(extensionName);
-            ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(file.getBytes()));
+            ossClient.putObject(ossProperties.getBucket(), objectName, new ByteArrayInputStream(file.getBytes()));
             return objectName;
         } catch (Exception e) {
+            log.error("OSS 上传服务错误：{}", e.getMessage(), e);
             throw new MiniAgentException(AVATAR_UPLOAD_FAIL);
         }
     }
@@ -82,7 +80,7 @@ public class OssService implements IOssService {
         if (objectName.startsWith("http://") || objectName.startsWith("https://")) {
             return objectName;
         }
-        return "https://" + bucketName + "." + endpoint + "/" + objectName;
+        return "https://" + ossProperties.getBucket() + "." + ossProperties.getEndpoint() + "/" + objectName;
     }
 
     private String createObjectName(String extensionName) {

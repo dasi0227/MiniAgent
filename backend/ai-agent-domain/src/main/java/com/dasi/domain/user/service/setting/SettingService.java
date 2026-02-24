@@ -94,7 +94,7 @@ public class SettingService implements ISettingService {
                 .userId(userVO.getId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
-                .userAvatar( ossService.getObjectUrl(userVO.getUserAvatar()))
+                .userAvatar(ossService.getObjectUrl(userVO.getUserAvatar()))
                 .userStatus(userVO.getUserStatus())
                 .build();
     }

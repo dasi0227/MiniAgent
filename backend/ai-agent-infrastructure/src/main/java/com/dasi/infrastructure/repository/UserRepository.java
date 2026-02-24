@@ -77,7 +77,7 @@ public class UserRepository implements IUserRepository {
                 .userAvatar(userAvatar)
                 .build();
         userDao.update(user);
-        return toUserVO(user);
+        return toUserVO(userDao.queryById(id));
     }
 
     private UserVO toUserVO(AiUser user) {

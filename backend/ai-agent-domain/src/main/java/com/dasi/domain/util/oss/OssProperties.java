@@ -10,8 +10,11 @@ import org.springframework.stereotype.Component;
 public class OssProperties {
 
     private String endpoint;
+
     private String bucket;
+
     private String accessKeyId;
+
     private String accessKeySecret;
 
 }

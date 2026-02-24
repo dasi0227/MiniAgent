@@ -1,6 +1,8 @@
 <script setup>
-import { computed, reactive, ref, onMounted, nextTick, watch } from 'vue';
+import { computed, reactive, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 import logoImg from '../assets/logo.jpg';
 import chatIconDark from '../assets/chat-white.svg';
 import chatIconLight from '../assets/chat-black.svg';
@@ -9,6 +11,7 @@ import workIconLight from '../assets/work-black.svg';
 import { useAgentStore, useAuthStore, useChatStore, useSettingsStore } from '../router/pinia';
 import {
     deleteSession,
+    fetchProfile,
     insertSession,
     listSessions,
     updatePassword,
@@ -36,7 +39,12 @@ const settingsStore = useSettingsStore();
 
 const isLogin = computed(() => authStore.isLogin);
 const currentUser = computed(() => authStore.user || { username: '访客', role: 'guest' });
+const currentUserAvatarUrl = computed(() => {
+    const raw = currentUser.value?.avatarUrl || currentUser.value?.userAvatar || '';
+    return typeof raw === 'string' ? raw.trim() : '';
+});
 const avatarChar = computed(() => (currentUser.value.username || '访客').slice(0, 1).toUpperCase());
+const showSidebarAvatarImage = ref(true);
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const sidebarShellClass = computed(() =>
     isDarkTheme.value
@@ -87,6 +95,7 @@ const showNewSessionPicker = ref(false);
 const showProfile = ref(false);
 const showLogoutConfirm = ref(false);
 const profileSaving = ref(false);
+const profileLoading = ref(false);
 const profileError = ref('');
 const profileTab = ref('profile');
 const mcpLoading = ref(false);
@@ -101,6 +110,16 @@ const profileForm = reactive({
     oldPassword: '',
     newPassword: ''
 });
+const profileAvatarError = ref('');
+const profileAvatarFileRef = ref(null);
+const profileAvatarFile = ref(null);
+const profileAvatarPreviewUrl = ref('');
+const profileAvatarPreviewFallback = ref(false);
+const showAvatarCropper = ref(false);
+const avatarCropImageRef = ref(null);
+const avatarCropper = ref(null);
+const avatarCropSourceUrl = ref('');
+const avatarCropPreviewUrl = ref('');
 const mcpForm = reactive({
     id: null,
     mcpId: '',
@@ -148,6 +167,194 @@ const mcpConfigPlaceholder = computed(() =>
         ? '{"command":"npx","args":["-y","@modelcontextprotocol/server-filesystem","/tmp"]}'
         : '{"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'
 );
+const profileAvatarDisplayUrl = computed(() => profileAvatarPreviewUrl.value || currentUserAvatarUrl.value);
+const canShowProfileAvatarImage = computed(() => Boolean(profileAvatarDisplayUrl.value) && !profileAvatarPreviewFallback.value);
+
+const revokeObjectUrl = (url) => {
+    if (url && typeof url === 'string' && url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+    }
+};
+
+const resetAvatarCropper = () => {
+    if (avatarCropper.value) {
+        avatarCropper.value.destroy();
+        avatarCropper.value = null;
+    }
+    revokeObjectUrl(avatarCropSourceUrl.value);
+    avatarCropSourceUrl.value = '';
+    revokeObjectUrl(avatarCropPreviewUrl.value);
+    avatarCropPreviewUrl.value = '';
+    showAvatarCropper.value = false;
+};
+
+const resetProfileAvatarDraft = () => {
+    if (profileAvatarFileRef.value) {
+        profileAvatarFileRef.value.value = '';
+    }
+    profileAvatarFile.value = null;
+    revokeObjectUrl(profileAvatarPreviewUrl.value);
+    profileAvatarPreviewUrl.value = '';
+    profileAvatarPreviewFallback.value = false;
+    profileAvatarError.value = '';
+    resetAvatarCropper();
+};
+
+const makeCircleAvatarBlob = (sourceCanvas) => {
+    if (!sourceCanvas) {
+        return Promise.reject(new Error('头像裁剪失败'));
+    }
+    const size = Math.min(sourceCanvas.width, sourceCanvas.height);
+    const output = document.createElement('canvas');
+    output.width = size;
+    output.height = size;
+    const ctx = output.getContext('2d');
+    if (!ctx) {
+        return Promise.reject(new Error('头像裁剪失败'));
+    }
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(sourceCanvas, 0, 0, size, size);
+    ctx.restore();
+    return new Promise((resolve, reject) => {
+        output.toBlob(
+            (blob) => {
+                if (!blob) {
+                    reject(new Error('头像裁剪失败'));
+                    return;
+                }
+                resolve(blob);
+            },
+            'image/png',
+            0.92
+        );
+    });
+};
+
+const refreshAvatarCropPreview = async () => {
+    if (!avatarCropper.value) return;
+    const canvas = avatarCropper.value.getCroppedCanvas({
+        width: 320,
+        height: 320,
+        fillColor: '#ffffff',
+        imageSmoothingQuality: 'high'
+    });
+    const blob = await makeCircleAvatarBlob(canvas);
+    revokeObjectUrl(avatarCropPreviewUrl.value);
+    avatarCropPreviewUrl.value = URL.createObjectURL(blob);
+};
+
+const initAvatarCropper = async () => {
+    if (!avatarCropImageRef.value || !avatarCropSourceUrl.value) {
+        return;
+    }
+    if (avatarCropper.value) {
+        avatarCropper.value.destroy();
+        avatarCropper.value = null;
+    }
+    avatarCropper.value = new Cropper(avatarCropImageRef.value, {
+        viewMode: 1,
+        dragMode: 'move',
+        aspectRatio: 1,
+        autoCropArea: 1,
+        responsive: true,
+        guides: false,
+        background: false,
+        center: false,
+        movable: true,
+        cropBoxMovable: false,
+        cropBoxResizable: false,
+        zoomOnWheel: true,
+        toggleDragModeOnDblclick: false,
+        ready: async () => {
+            try {
+                await refreshAvatarCropPreview();
+            } catch (_) {
+                avatarCropPreviewUrl.value = '';
+            }
+        },
+        crop: async () => {
+            try {
+                await refreshAvatarCropPreview();
+            } catch (_) {
+                avatarCropPreviewUrl.value = '';
+            }
+        }
+    });
+};
+
+const triggerProfileAvatarUpload = () => {
+    profileAvatarError.value = '';
+    profileAvatarFileRef.value?.click();
+};
+
+const handleProfileAvatarUpload = async (event) => {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    const type = (file.type || '').toLowerCase();
+    const byMime = type === 'image/jpeg' || type === 'image/png';
+    const byName = /\.(jpe?g|png)$/i.test(file.name || '');
+    if (!byMime && !byName) {
+        profileAvatarError.value = '仅支持 JPG / PNG 格式';
+        event.target.value = '';
+        return;
+    }
+    if (file.size > 1 * 1024 * 1024) {
+        profileAvatarError.value = '图片大小不能超过 1MB';
+        event.target.value = '';
+        return;
+    }
+    profileAvatarError.value = '';
+    resetAvatarCropper();
+    avatarCropSourceUrl.value = URL.createObjectURL(file);
+    showAvatarCropper.value = true;
+    await nextTick();
+    await initAvatarCropper();
+};
+
+const applyAvatarCrop = async () => {
+    if (!avatarCropper.value) return;
+    profileAvatarError.value = '';
+    try {
+        const canvas = avatarCropper.value.getCroppedCanvas({
+            width: 320,
+            height: 320,
+            fillColor: '#ffffff',
+            imageSmoothingQuality: 'high'
+        });
+        const blob = await makeCircleAvatarBlob(canvas);
+        const avatarFile = new File([blob], `avatar-${Date.now()}.png`, { type: 'image/png' });
+        profileAvatarFile.value = avatarFile;
+        revokeObjectUrl(profileAvatarPreviewUrl.value);
+        profileAvatarPreviewUrl.value = URL.createObjectURL(blob);
+        profileAvatarPreviewFallback.value = false;
+        resetAvatarCropper();
+    } catch (error) {
+        profileAvatarError.value = normalizeError(error).message || '头像裁剪失败';
+    }
+};
+
+const cancelAvatarCrop = () => {
+    resetAvatarCropper();
+    if (profileAvatarFileRef.value) {
+        profileAvatarFileRef.value.value = '';
+    }
+};
+
+const clearProfileAvatarSelection = () => {
+    if (profileAvatarFileRef.value) {
+        profileAvatarFileRef.value.value = '';
+    }
+    profileAvatarFile.value = null;
+    revokeObjectUrl(profileAvatarPreviewUrl.value);
+    profileAvatarPreviewUrl.value = '';
+    profileAvatarPreviewFallback.value = false;
+    profileAvatarError.value = '';
+};
 
 const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() : '');
 
@@ -231,6 +438,10 @@ onMounted(() => {
     }
 });
 
+onBeforeUnmount(() => {
+    resetProfileAvatarDraft();
+});
+
 watch(
     isLogin,
     (loggedIn) => {
@@ -242,6 +453,22 @@ watch(
         agentStore.setSessions([]);
     },
     { immediate: false }
+);
+
+watch(
+    currentUserAvatarUrl,
+    () => {
+        showSidebarAvatarImage.value = true;
+    },
+    { immediate: true }
+);
+
+watch(
+    profileAvatarDisplayUrl,
+    () => {
+        profileAvatarPreviewFallback.value = false;
+    },
+    { immediate: true }
 );
 
 const handleSelectChat = (chatId) => {
@@ -451,25 +678,30 @@ const openProfile = () => {
         router.push('/login');
         return;
     }
+    resetProfileAvatarDraft();
     profileForm.username = currentUser.value.username || '';
     profileForm.oldPassword = '';
     profileForm.newPassword = '';
     profileError.value = '';
+    profileAvatarError.value = '';
     profileTab.value = 'profile';
     resetMcpForm();
     resetApiForm();
-    loadProfileResources();
     showProfile.value = true;
+    loadProfileResources();
 };
 
 const closeProfile = () => {
     showProfile.value = false;
     profileSaving.value = false;
+    profileLoading.value = false;
     profileError.value = '';
+    profileAvatarError.value = '';
     mcpError.value = '';
     mcpEditing.value = false;
     apiError.value = '';
     apiEditing.value = false;
+    resetProfileAvatarDraft();
 };
 
 const saveProfile = async () => {
@@ -485,16 +717,18 @@ const saveProfile = async () => {
             id: currentUser.value.userId,
             username: profileForm.username,
             oldPassword: profileForm.oldPassword,
-            newPassword: profileForm.newPassword
+            newPassword: profileForm.newPassword,
+            avatar: profileAvatarFile.value
         });
         const { token, user } = parseAuthPayload(resp);
         authStore.setAuth({
             token: token || authStore.token,
             user: user || authStore.user
         });
+        resetProfileAvatarDraft();
         showProfile.value = false;
     } catch (error) {
-        profileError.value = error?.message || '更新失败，请稍后重试';
+        profileError.value = normalizeError(error).message || '更新失败，请稍后重试';
     } finally {
         profileSaving.value = false;
     }
@@ -542,6 +776,25 @@ const resetApiForm = () => {
     apiForm.apiKey = '';
     apiForm.apiCompletionPath = '/v1/chat/completions';
     apiEditing.value = false;
+};
+
+const loadUserProfile = async () => {
+    profileLoading.value = true;
+    try {
+        const resp = await fetchProfile();
+        const { token, user } = parseAuthPayload(resp);
+        if (user) {
+            authStore.setAuth({
+                token: token || authStore.token,
+                user
+            });
+            profileForm.username = user.username || user.userName || currentUser.value.username || '';
+        }
+    } catch (error) {
+        profileError.value = normalizeError(error).message || '获取用户资料失败';
+    } finally {
+        profileLoading.value = false;
+    }
 };
 
 const loadUserApi = async () => {
@@ -689,7 +942,7 @@ const exportApi = async (item) => {
 };
 
 const loadProfileResources = async () => {
-    await Promise.all([loadUserMcp(), loadUserApi()]);
+    await Promise.all([loadUserProfile(), loadUserMcp(), loadUserApi()]);
 };
 </script>
 
@@ -945,9 +1198,21 @@ const loadProfileResources = async () => {
         >
             <div class="flex min-w-0 items-center gap-[10px]">
                 <div
-                    class="grid h-[40px] w-[40px] shrink-0 place-items-center rounded-[12px] border border-[rgba(15,23,42,0.18)] bg-[var(--avatar-bg)] font-bold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] transition-transform duration-200 group-hover:scale-[1.04]"
+                    class="grid h-[40px] w-[40px] shrink-0 place-items-center overflow-hidden border font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] transition-transform duration-200 group-hover:scale-[1.04]"
+                    :class="
+                        currentUserAvatarUrl && showSidebarAvatarImage
+                            ? 'rounded-full border-[rgba(255,255,255,0.35)] bg-transparent'
+                            : 'rounded-full border-[rgba(15,23,42,0.18)] bg-[var(--avatar-bg)] text-[var(--avatar-text)]'
+                    "
                 >
-                    {{ avatarChar }}
+                    <img
+                        v-if="currentUserAvatarUrl && showSidebarAvatarImage"
+                        :src="currentUserAvatarUrl"
+                        alt="User Avatar"
+                        class="h-full w-full rounded-full object-cover"
+                        @error="showSidebarAvatarImage = false"
+                    />
+                    <span v-else>{{ avatarChar }}</span>
                 </div>
                 <div class="min-w-0">
                     <div class="truncate font-bold text-white transition-colors duration-200 group-hover:text-[#9ed7ff]">{{ currentUser.username || '访客' }}</div>
@@ -1127,6 +1392,56 @@ const loadProfileResources = async () => {
                     </div>
 
                     <div v-if="profileTab === 'profile'" class="space-y-[14px]">
+                        <div class="rounded-[12px] border border-[var(--border-color)] bg-[#f8fafc] p-[12px]">
+                            <div class="mb-[10px] text-[13px] font-semibold text-[var(--text-secondary)]">头像设置</div>
+                            <div class="flex flex-wrap items-center gap-[12px]">
+                                <div
+                                    class="grid h-[74px] w-[74px] shrink-0 place-items-center overflow-hidden rounded-full border text-[22px] font-bold text-[var(--avatar-text)]"
+                                    :class="
+                                        canShowProfileAvatarImage
+                                            ? 'border-[rgba(15,23,42,0.12)] bg-transparent'
+                                            : 'border-[var(--border-color)] bg-[var(--avatar-bg)]'
+                                    "
+                                >
+                                    <img
+                                        v-if="canShowProfileAvatarImage"
+                                        :src="profileAvatarDisplayUrl"
+                                        alt="Profile Avatar"
+                                        class="h-full w-full object-cover"
+                                        @error="profileAvatarPreviewFallback = true"
+                                    />
+                                    <span v-else>{{ avatarChar }}</span>
+                                </div>
+                                <div class="flex min-w-0 flex-1 flex-col gap-[8px]">
+                                    <div class="flex flex-wrap gap-[8px]">
+                                        <button
+                                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] text-white transition hover:brightness-95"
+                                            type="button"
+                                            @click="triggerProfileAvatarUpload"
+                                        >
+                                            上传并裁剪
+                                        </button>
+                                        <button
+                                            v-if="profileAvatarFile"
+                                            class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[12px] text-[var(--text-primary)] transition hover:bg-[#eef2f7]"
+                                            type="button"
+                                            @click="clearProfileAvatarSelection"
+                                        >
+                                            取消新头像
+                                        </button>
+                                    </div>
+                                    <div class="text-[12px] text-[var(--text-secondary)]">支持 JPG / PNG，最大 1MB。</div>
+                                </div>
+                            </div>
+                            <input
+                                ref="profileAvatarFileRef"
+                                type="file"
+                                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                class="hidden"
+                                @change="handleProfileAvatarUpload"
+                            />
+                        </div>
+
                         <div>
                             <div class="mb-[6px] text-[13px] text-[var(--text-secondary)]">用户名</div>
                             <input
@@ -1155,8 +1470,10 @@ const loadProfileResources = async () => {
                                 />
                             </div>
                         </div>
+                        <div v-if="profileLoading" class="text-[12px] text-[var(--text-secondary)]">用户资料加载中...</div>
+                        <div class="text-[12px] text-[#f87171]" v-if="profileAvatarError">{{ profileAvatarError }}</div>
                         <div class="text-[12px] text-[#f87171]" v-if="profileError">{{ profileError }}</div>
-                        <div class="flex items-center justify-end gap-[10px] border-t border-[var(--border-color)] pt-[14px]">
+                        <div class="flex items-center justify-end gap-[10px] pt-[14px]">
                             <button
                                 class="rounded-[10px] border border-[var(--border-color)] bg-white px-[14px] py-[10px] text-[14px] font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fc]"
                                 type="button"
@@ -1167,7 +1484,7 @@ const loadProfileResources = async () => {
                             <button
                                 class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
                                 type="button"
-                                :disabled="profileSaving"
+                                :disabled="profileSaving || profileLoading"
                                 @click="saveProfile"
                             >
                                 {{ profileSaving ? '保存中...' : '保存' }}
@@ -1251,5 +1568,79 @@ const loadProfileResources = async () => {
                 </div>
             </div>
         </div>
+
+        <div
+            v-if="showAvatarCropper"
+            class="fixed inset-0 z-[26] grid place-items-center bg-[rgba(0,0,0,0.45)] backdrop-blur-[4px] p-[20px]"
+            @click.self="cancelAvatarCrop"
+        >
+            <div class="w-full max-w-[760px] rounded-[14px] bg-white p-[16px] text-[var(--text-primary)] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="mb-[12px] flex items-center justify-between">
+                    <div class="text-[16px] font-bold">裁剪头像</div>
+                    <button class="text-[20px] text-[var(--text-secondary)]" type="button" @click="cancelAvatarCrop">×</button>
+                </div>
+                <div class="grid gap-[16px] lg:grid-cols-[1fr_220px]">
+                    <div class="profile-avatar-cropper overflow-hidden rounded-[12px] p-[8px]">
+                        <img ref="avatarCropImageRef" :src="avatarCropSourceUrl" alt="Avatar Crop Source" class="block max-h-[420px] w-full object-contain" />
+                    </div>
+                    <div class="space-y-[12px]">
+                        <div class="text-[13px] text-[var(--text-secondary)]">预览</div>
+                        <div class="grid h-[168px] w-[168px] place-items-center overflow-hidden rounded-full border border-[rgba(15,23,42,0.9)]">
+                            <img v-if="avatarCropPreviewUrl" :src="avatarCropPreviewUrl" alt="Avatar Preview" class="h-full w-full object-cover" />
+                            <span v-else class="text-[12px] text-[var(--text-secondary)]">预览</span>
+                        </div>
+                        <div class="flex justify-center gap-[8px] pt-[8px]">
+                            <button
+                                class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[12px] font-semibold text-[var(--text-primary)] transition hover:bg-[#f7f9fc]"
+                                type="button"
+                                @click="cancelAvatarCrop"
+                            >
+                                取消
+                            </button>
+                            <button
+                                class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] font-semibold text-white transition hover:brightness-95"
+                                type="button"
+                                @click="applyAvatarCrop"
+                            >
+                                使用头像
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </aside>
 </template>
+
+<style scoped>
+.profile-avatar-cropper :deep(.cropper-container),
+.profile-avatar-cropper :deep(.cropper-wrap-box),
+.profile-avatar-cropper :deep(.cropper-canvas) {
+    background: transparent !important;
+}
+
+.profile-avatar-cropper :deep(.cropper-bg) {
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+.profile-avatar-cropper :deep(.cropper-modal) {
+    background-color: transparent !important;
+    opacity: 0 !important;
+}
+
+.profile-avatar-cropper :deep(.cropper-dashed),
+.profile-avatar-cropper :deep(.cropper-center) {
+    display: none !important;
+}
+
+.profile-avatar-cropper :deep(.cropper-view-box) {
+    outline: 1px solid rgba(47, 124, 246, 0.45) !important;
+    box-shadow: 0 0 0 1px rgba(47, 124, 246, 0.2) inset !important;
+}
+
+.profile-avatar-cropper :deep(.cropper-line),
+.profile-avatar-cropper :deep(.cropper-point) {
+    background-color: rgba(47, 124, 246, 0.75) !important;
+}
+</style>

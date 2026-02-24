@@ -111,7 +111,8 @@ const normalizeStoredUser = (user) => {
         role,
         userName: username,
         userRole: role,
-        userAvatar: user.userAvatar || '',
+        userAvatar: user.userAvatar || user.avatarUrl || '',
+        avatarUrl: user.avatarUrl || user.userAvatar || '',
         userStatus: user.userStatus
     };
 };
