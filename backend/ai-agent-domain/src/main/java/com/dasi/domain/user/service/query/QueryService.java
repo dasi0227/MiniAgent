@@ -1,10 +1,10 @@
 package com.dasi.domain.user.service.query;
 
 import com.dasi.domain.user.repository.IQueryRepository;
-import com.dasi.domain.user.model.vo.query.ChatRagVO;
-import com.dasi.domain.user.model.vo.query.WorkAgentVO;
-import com.dasi.domain.user.model.vo.query.ChatClientVO;
-import com.dasi.domain.user.model.vo.query.ChatMcpVO;
+import com.dasi.domain.user.model.vo.ChatRagVO;
+import com.dasi.domain.user.model.vo.WorkAgentVO;
+import com.dasi.domain.user.model.vo.ChatClientVO;
+import com.dasi.domain.user.model.vo.ChatMcpVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 

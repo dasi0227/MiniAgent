@@ -1,4 +1,4 @@
-package com.dasi.domain.user.model.vo.query;
+package com.dasi.domain.user.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class WorkAgentVO {
+public class ChatClientVO {
 
-    private String agentId;
+    private String clientId;
 
-    private String agentName;
+    private String modelName;
 
-    private String agentDesc;
+    private String clientDesc;
 
 }

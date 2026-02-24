@@ -1,4 +1,4 @@
-package com.dasi.domain.user.model.vo.query;
+package com.dasi.domain.user.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
