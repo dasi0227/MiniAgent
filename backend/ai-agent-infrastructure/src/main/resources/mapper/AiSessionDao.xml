@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dasi.infrastructure.persistent.dao.IAiSessionDao">
+    <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiSession">
+        <id column="id" property="id"/>
+        <result column="session_id" property="sessionId"/>
+        <result column="session_user" property="sessionUser"/>
+        <result column="session_title" property="sessionTitle"/>
+        <result column="session_type" property="sessionType"/>
+        <result column="created_at" property="createTime"/>
+        <result column="updated_at" property="updateTime"/>
+    </resultMap>
+
+    <select id="queryByUser" resultMap="dataMap">
+        SELECT id,
+               session_id,
+               session_user,
+               session_title,
+               session_type,
+               created_at,
+               updated_at
+        FROM ai_session
+        WHERE session_user = #{sessionUser}
+        ORDER BY updated_at DESC, id DESC
+    </select>
+
+    <select id="queryAll" resultMap="dataMap">
+        SELECT id,
+               session_id,
+               session_user,
+               session_title,
+               session_type,
+               created_at,
+               updated_at
+        FROM ai_session
+        ORDER BY updated_at DESC, id DESC
+    </select>
+
+    <select id="queryById" parameterType="java.lang.Long" resultMap="dataMap">
+        SELECT id,
+               session_id,
+               session_user,
+               session_title,
+               session_type,
+               created_at,
+               updated_at
+        FROM ai_session
+        WHERE id = #{id}
+    </select>
+
+    <select id="queryBySessionId" resultMap="dataMap">
+        SELECT id,
+               session_id,
+               session_user,
+               session_title,
+               session_type,
+               created_at,
+               updated_at
+        FROM ai_session
+        WHERE session_id = #{sessionId}
+    </select>
+
+    <select id="countByUserAndType" resultType="int">
+        SELECT COUNT(1)
+        FROM ai_session
+        WHERE session_user = #{sessionUser}
+          AND session_type = #{sessionType}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(1)
+        FROM ai_session
+    </select>
+
+    <select id="countByType" resultType="int">
+        SELECT COUNT(1)
+        FROM ai_session
+        WHERE session_type = #{sessionType}
+    </select>
+
+    <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiSession" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_session (session_id, session_user, session_title, session_type)
+        VALUES (#{sessionId}, #{sessionUser}, #{sessionTitle}, #{sessionType})
+    </insert>
+
+    <update id="updateTitle">
+        UPDATE ai_session
+        SET session_title = #{sessionTitle}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ai_session
+        WHERE id = #{id}
+    </delete>
+</mapper>
