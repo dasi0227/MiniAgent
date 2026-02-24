@@ -1,15 +1,14 @@
 package com.dasi.trigger.http;
 
 import com.dasi.api.IUserApi;
-import com.dasi.domain.user.model.vo.UserApiVO;
-import com.dasi.domain.user.model.vo.UserMcpVO;
+import com.dasi.domain.user.model.vo.*;
 import com.dasi.domain.user.service.auth.IAuthService;
+import com.dasi.domain.user.service.query.IQueryService;
 import com.dasi.domain.user.service.setting.ISettingService;
 import com.dasi.types.dto.request.user.AuthRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
 import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.dto.request.user.SettingMcpRequest;
-import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.types.dto.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -30,6 +29,33 @@ public class UserController implements IUserApi {
 
     @Resource
     private ISettingService settingService;
+
+    @Resource
+    private IQueryService queryService;
+
+    @PostMapping("/query/chat-client-list")
+    @Override
+    public Result<List<ChatClientVO>> queryChatClientResponseList() {
+        return Result.success(queryService.queryChatClientResponseList());
+    }
+
+    @PostMapping("/query/chat-mcp-list")
+    @Override
+    public Result<List<ChatMcpVO>> queryChatMcpResponseList() {
+        return Result.success(queryService.queryChatMcpResponseList());
+    }
+
+    @PostMapping("/query/chat-rag-list")
+    @Override
+    public Result<List<ChatRagVO>> queryRagTagList() {
+        return Result.success(queryService.queryChatRagList());
+    }
+
+    @PostMapping("/query/agent-list")
+    @Override
+    public Result<List<WorkAgentVO>> queryWorkAgentResponseList() {
+        return Result.success(queryService.queryWorkAgentResponseList());
+    }
 
     @PostMapping("/auth/login")
     @Override

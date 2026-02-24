@@ -8,7 +8,7 @@ public class ExceptionMessage {
 
     public static final String AVATAR_SIZE_NOT_ALLOW = "头像文件大小不允许，只支持 1MB 以下";
 
-    public static final String AVATAR_UPLOAD_FILE = "";
+    public static final String AVATAR_UPLOAD_FAIL = "上传头像失败，请重新尝试";
 
     public static final String AUTH_USER_NOT_EXISTS = "用户不存在";
 

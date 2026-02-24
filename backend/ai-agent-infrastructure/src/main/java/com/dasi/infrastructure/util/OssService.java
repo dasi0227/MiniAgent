@@ -48,7 +48,7 @@ public class OssService implements IOssService {
             ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(file.getBytes()));
             return objectName;
         } catch (Exception e) {
-            throw new MiniAgentException(AVATAR_UPLOAD_FILE);
+            throw new MiniAgentException(AVATAR_UPLOAD_FAIL);
         }
     }
 

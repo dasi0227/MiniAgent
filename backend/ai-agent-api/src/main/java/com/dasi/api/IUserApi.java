@@ -1,8 +1,6 @@
 package com.dasi.api;
 
-import com.dasi.domain.user.model.vo.AuthVO;
-import com.dasi.domain.user.model.vo.UserApiVO;
-import com.dasi.domain.user.model.vo.UserMcpVO;
+import com.dasi.domain.user.model.vo.*;
 import com.dasi.types.dto.request.user.AuthRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
 import com.dasi.types.dto.request.user.SettingApiRequest;
@@ -13,6 +11,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface IUserApi {
+
+    Result<List<ChatClientVO>> queryChatClientResponseList();
+
+    Result<List<ChatMcpVO>> queryChatMcpResponseList();
+
+    Result<List<ChatRagVO>> queryRagTagList();
+
+    Result<List<WorkAgentVO>> queryWorkAgentResponseList();
 
     Result<AuthVO> login(AuthRequest request);
 
