@@ -213,20 +213,21 @@ const moduleDefs = [
         group: 'user',
         title: 'USER 管理',
         statusField: 'userStatus',
-        search: ['usernameKeyWord', 'role'],
-        query: { usernameKeyWord: '', role: '', pageNum: 1, pageSize: 10 },
+        search: ['userNameKeyWord', 'userRole'],
+        query: { userNameKeyWord: '', userRole: '', pageNum: 1, pageSize: 10 },
         formDefaults: () => ({
             id: null,
-            username: '',
+            userName: '',
             password: '',
-            role: 'account',
+            userRole: 'account',
+            userAvatar: '',
             userStatus: 1
         }),
         fields: [
-            { prop: 'username', label: '用户名', required: true },
+            { prop: 'userName', label: '用户名', required: true },
             { prop: 'password', label: '密码', type: 'password', requiredOnCreate: true },
             {
-                prop: 'role',
+                prop: 'userRole',
                 label: '角色',
                 type: 'select',
                 options: [
@@ -234,11 +235,12 @@ const moduleDefs = [
                     { label: 'account', value: 'account' }
                 ]
             },
+            { prop: 'userAvatar', label: '头像地址' },
             { prop: 'userStatus', label: '状态', type: 'switch' }
         ],
         columns: [
-            { prop: 'username', label: '用户名' },
-            { prop: 'role', label: '角色' }
+            { prop: 'userName', label: '用户名' },
+            { prop: 'userRole', label: '角色' }
         ]
     },
     {
@@ -369,9 +371,9 @@ const options = reactive({
 
 const currentModule = computed(() => modulesMap[currentKey.value] || modulesMap['agent']);
 
-const isToggleDisabled = (row) => currentKey.value === 'user' && row?.role === 'admin';
+const isToggleDisabled = (row) => currentKey.value === 'user' && row?.userRole === 'admin';
 const isFormToggleDisabled = (field) =>
-    currentKey.value === 'user' && field?.prop === 'userStatus' && currentForm.role === 'admin';
+    currentKey.value === 'user' && field?.prop === 'userStatus' && currentForm.userRole === 'admin';
 
 const pageCount = computed(() => {
     const st = stateMap[currentKey.value];
@@ -647,16 +649,16 @@ const handleSelectModule = (key) => {
                                     <option v-for="opt in options.clients" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                                 </select>
                             </template>
-                            <template v-else-if="field === 'usernameKeyWord'">
+                            <template v-else-if="field === 'userNameKeyWord'">
                                 <input
-                                    v-model="stateMap[currentKey].query.usernameKeyWord"
+                                    v-model="stateMap[currentKey].query.userNameKeyWord"
                                     class="w-[160px] rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
                                     placeholder="用户名关键字"
                                 />
                             </template>
-                            <template v-else-if="field === 'role'">
+                            <template v-else-if="field === 'userRole'">
                                 <select
-                                    v-model="stateMap[currentKey].query.role"
+                                    v-model="stateMap[currentKey].query.userRole"
                                     class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
                                 >
                                     <option value="">选择角色</option>

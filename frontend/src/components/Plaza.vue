@@ -2,7 +2,16 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../router/pinia';
-import { plazaComment, plazaDetail, plazaFavor, plazaLike, plazaList, repoFork } from '../request/api';
+import {
+    plazaComment,
+    plazaCommentArea,
+    plazaDiscomment,
+    plazaDisfavor,
+    plazaDislike,
+    plazaFavor,
+    plazaLike,
+    plazaList
+} from '../request/api';
 import { normalizeError } from '../request/request';
 import Footer from './Footer.vue';
 
@@ -12,8 +21,8 @@ const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const loading = ref(false);
 const message = ref('');
 const plazaItems = ref([]);
-const detailData = ref({});
-const commentData = ref(null);
+const commentData = ref({ list: [], total: 0, pageNum: 1, pageSize: 20 });
+const currentCommentItem = ref(null);
 const detailOpen = ref(false);
 const commentOpen = ref(false);
 const searchKeyword = ref('');
@@ -33,7 +42,7 @@ const pickData = (resp) => {
     return resp?.data ?? resp?.result ?? resp;
 };
 
-const displayAuthor = (item) => item?.username || '未知用户';
+const displayAuthor = (item) => item?.userName || '未知用户';
 const displayType = (item) => (item?.agentType || 'react').toUpperCase();
 const isCommented = (item) => Boolean(item?.commented);
 
@@ -123,7 +132,7 @@ const filteredItems = computed(() => {
             item?.plazaTitle || '',
             item?.plazaDesc || '',
             item?.agentType || '',
-            item?.username || ''
+            item?.userName || ''
         ]
             .join(' ')
             .toLowerCase();
@@ -141,7 +150,7 @@ const parseTimeValue = (value) => {
 };
 
 const orderedCommentList = computed(() => {
-    const list = [...(commentData.value?.commentList || [])];
+    const list = [...(commentData.value?.list || [])];
     return list.sort((a, b) => {
         const aTime = parseTimeValue(a?.createTime)?.getTime() || 0;
         const bTime = parseTimeValue(b?.createTime)?.getTime() || 0;
@@ -163,7 +172,7 @@ const formatCommentTime = (value) => {
 const loadPlaza = async () => {
     loading.value = true;
     try {
-        const resp = await plazaList({ pageNum: 1, pageSize: 30 });
+        const resp = await plazaList({ pageNum: 1, pageSize: 10, sortOrder: 'desc' });
         const data = pickData(resp) || {};
         plazaItems.value = data.list || [];
     } catch (error) {
@@ -173,32 +182,15 @@ const loadPlaza = async () => {
     }
 };
 
-const syncCardStateByDetail = (plazaItem) => {
-    const plazaId = plazaItem?.plazaId;
-    if (!plazaId) return;
-
+const loadCommentDetail = async (plazaId) => {
+    const resp = await plazaCommentArea({ plazaId, pageNum: 1, pageSize: 20 });
+    const data = pickData(resp) || { list: [], total: 0, pageNum: 1, pageSize: 20 };
+    commentData.value = data;
     const target = plazaItems.value.find((item) => item.plazaId === plazaId);
     if (target) {
-        if (typeof plazaItem.commentCount === 'number') {
-            target.commentCount = plazaItem.commentCount;
-        }
-        if (typeof plazaItem.commented === 'boolean') {
-            target.commented = plazaItem.commented;
-        }
-        if (typeof plazaItem.liked === 'boolean') {
-            target.liked = plazaItem.liked;
-        }
-        if (typeof plazaItem.favored === 'boolean') {
-            target.favored = plazaItem.favored;
-        }
+        target.commentCount = Number(data.total || 0);
+        target.commented = Number(data.total || 0) > 0;
     }
-};
-
-const loadCommentDetail = async (plazaId) => {
-    const resp = await plazaDetail(plazaId);
-    const data = pickData(resp) || { plazaItem: {}, commentList: [] };
-    commentData.value = data;
-    syncCardStateByDetail(data?.plazaItem);
 };
 
 const doLike = async (item) => {
@@ -207,7 +199,11 @@ const doLike = async (item) => {
     }
     const currentLiked = Boolean(item.liked);
     try {
-        await plazaLike({ plazaId: item.plazaId });
+        if (currentLiked) {
+            await plazaDislike({ plazaId: item.plazaId });
+        } else {
+            await plazaLike({ plazaId: item.plazaId });
+        }
         item.likeCount = Math.max(0, (item.likeCount || 0) + (currentLiked ? -1 : 1));
         item.liked = !currentLiked;
     } catch (error) {
@@ -221,7 +217,11 @@ const doFavor = async (item) => {
     }
     const currentFavored = Boolean(item.favored);
     try {
-        await plazaFavor({ plazaId: item.plazaId });
+        if (currentFavored) {
+            await plazaDisfavor({ plazaId: item.plazaId });
+        } else {
+            await plazaFavor({ plazaId: item.plazaId });
+        }
         item.favorCount = Math.max(0, (item.favorCount || 0) + (currentFavored ? -1 : 1));
         item.favored = !currentFavored;
     } catch (error) {
@@ -236,10 +236,8 @@ const openComment = async (item) => {
     commentOpen.value = true;
     commentForm.plazaId = item.plazaId;
     commentForm.commentContent = '';
-    commentData.value = {
-        plazaItem: item,
-        commentList: []
-    };
+    currentCommentItem.value = item;
+    commentData.value = { list: [], total: 0, pageNum: 1, pageSize: 20 };
     try {
         await loadCommentDetail(item.plazaId);
     } catch (error) {
@@ -248,15 +246,12 @@ const openComment = async (item) => {
 };
 
 const doFork = async (plazaId) => {
-    try {
-        await repoFork({ plazaId });
-    } catch (error) {
-        message.value = normalizeError(error).message || 'Fork 失败';
-    }
+    void plazaId;
+    message.value = 'Fork 暂未开放';
 };
 
 const openDetail = (item) => {
-    detailData.value = item || {};
+    void item;
     detailOpen.value = true;
 };
 
@@ -274,6 +269,18 @@ const doComment = async () => {
         commentForm.commentContent = '';
     } catch (error) {
         message.value = normalizeError(error).message || '评论失败';
+    }
+};
+
+const doDeleteComment = async (comment) => {
+    if (!comment?.mine || !comment?.commentId || !commentForm.plazaId) {
+        return;
+    }
+    try {
+        await plazaDiscomment({ plazaId: commentForm.plazaId, commentId: comment.commentId });
+        await loadCommentDetail(commentForm.plazaId);
+    } catch (error) {
+        message.value = normalizeError(error).message || '删除评论失败';
     }
 };
 
@@ -410,10 +417,10 @@ const goRepository = () => {
 
         <Footer />
 
-        <div v-if="detailOpen" class="fixed inset-0 z-[20] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="detailOpen=false">
-            <div class="w-full max-w-[760px] space-y-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">
-                <div class="flex items-center justify-between">
-                    <div class="text-[16px] font-semibold">{{ detailData?.plazaTitle || '详情' }}</div>
+                <div v-if="detailOpen" class="fixed inset-0 z-[20] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="detailOpen=false">
+                    <div class="w-full max-w-[760px] space-y-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">
+                        <div class="flex items-center justify-between">
+                    <div class="text-[16px] font-semibold">详情</div>
                     <button class="text-[20px]" @click="detailOpen=false">×</button>
                 </div>
                 <div class="rounded-[10px] border border-[var(--border-color)] bg-[#f8fafc] px-[12px] py-[18px] text-[14px] text-[var(--text-secondary)]">
@@ -425,26 +432,35 @@ const goRepository = () => {
         <div v-if="commentOpen" class="fixed inset-0 z-[30] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="commentOpen=false">
             <div class="w-full max-w-[980px] space-y-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">
                 <div class="flex items-center justify-between">
-                    <div class="text-[16px] font-semibold">{{ commentData?.plazaItem?.plazaTitle || '评论区' }}</div>
+                    <div class="text-[16px] font-semibold">{{ currentCommentItem?.plazaTitle || '评论区' }}</div>
                     <button class="text-[20px]" @click="commentOpen=false">×</button>
                 </div>
-                <div class="text-[13px] text-[var(--text-secondary)]">{{ commentData?.plazaItem?.plazaDesc }}</div>
+                <div class="text-[13px] text-[var(--text-secondary)]">{{ currentCommentItem?.plazaDesc }}</div>
                 <div class="flex gap-[8px]">
                     <input v-model="commentForm.commentContent" class="flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="写评论..." />
                     <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[13px] text-white" @click="doComment">发送</button>
                 </div>
-                <div class="text-[12px] text-[var(--text-secondary)]">评论 {{ orderedCommentList.length }} 条</div>
+                <div class="text-[12px] text-[var(--text-secondary)]">评论 {{ commentData?.total || orderedCommentList.length }} 条</div>
                 <div class="max-h-[340px] overflow-y-auto rounded-[12px] border border-[var(--border-color)] bg-[#f8fafc]">
                     <div v-for="item in orderedCommentList" :key="item.commentId" class="flex gap-[10px] border-b border-[var(--border-color)] px-[12px] py-[10px] last:border-b-0">
                         <div class="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-white text-[12px] font-semibold text-[#334155]">
-                            {{ (item.username || '?').slice(0, 1).toUpperCase() }}
+                            {{ (item.userName || '?').slice(0, 1).toUpperCase() }}
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-[8px]">
-                                <div class="truncate text-[13px] font-semibold text-[#0f172a]">{{ item.username }}</div>
+                                <div class="truncate text-[13px] font-semibold text-[#0f172a]">{{ item.userName }}</div>
                                 <div class="shrink-0 text-[12px] text-[var(--text-secondary)]">{{ formatCommentTime(item.createTime) }}</div>
                             </div>
                             <div class="mt-[4px] break-words text-[15px] leading-[1.45] text-[#1e293b]">{{ item.commentContent }}</div>
+                            <div class="mt-[6px] flex justify-end">
+                                <button
+                                    v-if="item.mine"
+                                    class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px] text-[var(--text-secondary)]"
+                                    @click="doDeleteComment(item)"
+                                >
+                                    删除
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div v-if="orderedCommentList.length === 0" class="px-[12px] py-[16px] text-[13px] text-[var(--text-secondary)]">暂无评论</div>

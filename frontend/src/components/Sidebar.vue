@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, onMounted, nextTick } from 'vue';
+import { computed, reactive, ref, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import logoImg from '../assets/logo.jpg';
 import chatIconDark from '../assets/chat-white.svg';
@@ -12,13 +12,14 @@ import {
     insertSession,
     listSessions,
     updatePassword,
+    userApiDelete,
+    userApiInsert,
+    userApiList,
+    userApiUpdate,
     updateSession,
     userMcpDelete,
-    userMcpExport,
     userMcpInsert,
     userMcpList,
-    userMcpTest,
-    userMcpToggle,
     userMcpUpdate
 } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
@@ -95,7 +96,6 @@ const mcpEditing = ref(false);
 const apiError = ref('');
 const apiList = ref([]);
 const apiEditing = ref(false);
-const USER_API_STORAGE_KEY = 'dasi_user_api_config_v1';
 const profileForm = reactive({
     username: currentUser.value.username || '',
     oldPassword: '',
@@ -108,18 +108,15 @@ const mcpForm = reactive({
     mcpTransport: 'mcp',
     mcpConfig: '',
     mcpDesc: '',
-    mcpTimeout: 180,
-    mcpChat: 1,
     secretMapText: ''
 });
 const apiForm = reactive({
-    id: null,
     apiId: '',
+    modelName: '',
+    modelType: '',
     apiBaseUrl: '',
     apiKey: '',
-    apiCompletionsPath: '/v1/chat/completions',
-    apiEmbeddingsPath: '/v1/embeddings',
-    apiDesc: ''
+    apiCompletionPath: '/v1/chat/completions'
 });
 const sessionLoading = ref(false);
 const sessionError = ref('');
@@ -229,8 +226,23 @@ const loadSessions = async () => {
 };
 
 onMounted(() => {
-    loadSessions();
+    if (isLogin.value) {
+        loadSessions();
+    }
 });
+
+watch(
+    isLogin,
+    (loggedIn) => {
+        if (loggedIn) {
+            loadSessions();
+            return;
+        }
+        chatStore.setChats([]);
+        agentStore.setSessions([]);
+    },
+    { immediate: false }
+);
 
 const handleSelectChat = (chatId) => {
     if (route.path !== '/chat') {
@@ -446,8 +458,7 @@ const openProfile = () => {
     profileTab.value = 'profile';
     resetMcpForm();
     resetApiForm();
-    loadUserMcp();
-    loadUserApi();
+    loadProfileResources();
     showProfile.value = true;
 };
 
@@ -514,53 +525,45 @@ const toggleTheme = () => {
 };
 
 const resetMcpForm = () => {
-    mcpForm.id = null;
     mcpForm.mcpId = '';
     mcpForm.mcpName = '';
     mcpForm.mcpTransport = 'mcp';
     mcpForm.mcpConfig = '';
     mcpForm.mcpDesc = '';
-    mcpForm.mcpTimeout = 180;
-    mcpForm.mcpChat = 1;
     mcpForm.secretMapText = '';
     mcpEditing.value = false;
 };
 
 const resetApiForm = () => {
-    apiForm.id = null;
     apiForm.apiId = '';
+    apiForm.modelName = '';
+    apiForm.modelType = '';
     apiForm.apiBaseUrl = '';
     apiForm.apiKey = '';
-    apiForm.apiCompletionsPath = '/v1/chat/completions';
-    apiForm.apiEmbeddingsPath = '/v1/embeddings';
-    apiForm.apiDesc = '';
+    apiForm.apiCompletionPath = '/v1/chat/completions';
     apiEditing.value = false;
 };
 
-const loadUserApi = () => {
+const loadUserApi = async () => {
     apiError.value = '';
+    apiEditing.value = false;
     try {
-        const raw = localStorage.getItem(USER_API_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        apiList.value = Array.isArray(parsed) ? parsed : [];
+        const resp = await userApiList('');
+        const list = pickData(resp, '获取 API 失败') || [];
+        apiList.value = Array.isArray(list) ? list : [];
     } catch (error) {
         apiList.value = [];
-        apiError.value = '读取 API 配置失败';
+        apiError.value = normalizeError(error).message || '获取 API 失败';
     }
-};
-
-const persistUserApi = () => {
-    localStorage.setItem(USER_API_STORAGE_KEY, JSON.stringify(apiList.value));
 };
 
 const loadUserMcp = async () => {
     mcpLoading.value = true;
     mcpError.value = '';
     try {
-        const resp = await userMcpList({});
+        const resp = await userMcpList('');
         const list = pickData(resp, '获取 MCP 失败') || [];
-        const normalized = Array.isArray(list) ? list : [];
-        mcpList.value = normalized.filter((item) => item?.editable || `${item?.sourceType || ''}`.toLowerCase() === 'mine');
+        mcpList.value = Array.isArray(list) ? list : [];
     } catch (error) {
         mcpError.value = normalizeError(error).message || '获取 MCP 失败';
     } finally {
@@ -569,16 +572,13 @@ const loadUserMcp = async () => {
 };
 
 const editMcp = (item) => {
-    if (!item || !item.editable) return;
-    mcpForm.id = item.id;
+    if (!item) return;
     mcpForm.mcpId = item.mcpId || '';
     mcpForm.mcpName = item.mcpName || '';
     mcpForm.mcpTransport = mapBackendMcpTypeToTransport(item.mcpType);
     mcpForm.mcpConfig = item.mcpConfig || '';
     mcpForm.mcpDesc = item.mcpDesc || '';
-    mcpForm.mcpTimeout = item.mcpTimeout ?? 180;
-    mcpForm.mcpChat = item.mcpChat ?? 1;
-    mcpForm.secretMapText = '';
+    mcpForm.secretMapText = item.mcpSecret || '';
     mcpEditing.value = true;
 };
 
@@ -588,34 +588,16 @@ const saveMcp = async () => {
         return;
     }
     mcpError.value = '';
-    let secretMap = null;
-    if (mcpForm.secretMapText.trim()) {
-        try {
-            const parsed = JSON.parse(mcpForm.secretMapText);
-            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                secretMap = parsed;
-            } else {
-                mcpError.value = 'secretMap 必须是 JSON 对象';
-                return;
-            }
-        } catch (error) {
-            mcpError.value = 'secretMap 不是合法 JSON';
-            return;
-        }
-    }
     const payload = {
-        id: mcpForm.id,
         mcpId: mcpForm.mcpId,
         mcpName: mcpForm.mcpName,
         mcpType: mapTransportToBackendMcpType(mcpForm.mcpTransport),
         mcpConfig: mcpForm.mcpConfig,
         mcpDesc: mcpForm.mcpDesc,
-        mcpTimeout: Number(mcpForm.mcpTimeout) || 180,
-        mcpChat: Number(mcpForm.mcpChat) || 0,
-        secretMap
+        mcpSecret: mcpForm.secretMapText || '{}'
     };
     try {
-        if (mcpEditing.value && mcpForm.id) {
+        if (mcpEditing.value) {
             await userMcpUpdate(payload);
         } else {
             await userMcpInsert(payload);
@@ -628,10 +610,10 @@ const saveMcp = async () => {
 };
 
 const deleteMcp = async (item) => {
-    if (!item?.editable) return;
+    if (!item?.id) return;
     try {
         await userMcpDelete(item.id);
-        if (mcpForm.id === item.id) {
+        if (mcpForm.mcpId === item.mcpId) {
             resetMcpForm();
         }
         await loadUserMcp();
@@ -640,84 +622,60 @@ const deleteMcp = async (item) => {
     }
 };
 
-const toggleMcp = async (item) => {
-    if (!item?.editable) return;
-    try {
-        const nextStatus = item.mcpChat === 1 ? 0 : 1;
-        await userMcpToggle(item.id, nextStatus);
-        await loadUserMcp();
-    } catch (error) {
-        mcpError.value = normalizeError(error).message || '切换 MCP 失败';
-    }
-};
-
-const testMcp = async (item) => {
-    try {
-        const resp = await userMcpTest({ mcpId: item.mcpId });
-        const result = pickData(resp, 'MCP 测试失败') || {};
-        mcpError.value = result.message || (result.ok ? '连接参数已配置' : '请先完成配置');
-    } catch (error) {
-        mcpError.value = normalizeError(error).message || 'MCP 测试失败';
-    }
-};
-
-const exportMcp = async (item) => {
-    try {
-        const resp = await userMcpExport({ mcpId: item.mcpId });
-        const data = pickData(resp, '导出 MCP 失败') || {};
-        await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-        mcpError.value = '已复制导出 JSON 到剪贴板';
-    } catch (error) {
-        mcpError.value = normalizeError(error).message || '导出 MCP 失败';
-    }
-};
-
 const editApi = (item) => {
     if (!item) return;
-    apiForm.id = item.id;
     apiForm.apiId = item.apiId || '';
+    apiForm.modelName = item.modelName || '';
+    apiForm.modelType = item.modelType || '';
     apiForm.apiBaseUrl = item.apiBaseUrl || '';
     apiForm.apiKey = item.apiKey || '';
-    apiForm.apiCompletionsPath = item.apiCompletionsPath || '/v1/chat/completions';
-    apiForm.apiEmbeddingsPath = item.apiEmbeddingsPath || '/v1/embeddings';
-    apiForm.apiDesc = item.apiDesc || '';
+    apiForm.apiCompletionPath = item.apiCompletionPath || '/v1/chat/completions';
     apiEditing.value = true;
 };
 
 const saveApi = async () => {
-    if (!apiForm.apiId.trim() || !apiForm.apiBaseUrl.trim() || !apiForm.apiKey.trim()) {
+    if (
+        !apiForm.apiId.trim() ||
+        !apiForm.modelName.trim() ||
+        !apiForm.modelType.trim() ||
+        !apiForm.apiBaseUrl.trim() ||
+        !apiForm.apiKey.trim()
+    ) {
         apiError.value = '请完整填写 API 必填字段';
         return;
     }
     apiError.value = '';
     const payload = {
-        id: apiForm.id || `${Date.now()}`,
         apiId: apiForm.apiId.trim(),
+        modelName: apiForm.modelName.trim(),
+        modelType: apiForm.modelType.trim(),
         apiBaseUrl: apiForm.apiBaseUrl.trim(),
         apiKey: apiForm.apiKey.trim(),
-        apiCompletionsPath: apiForm.apiCompletionsPath.trim() || '/v1/chat/completions',
-        apiEmbeddingsPath: apiForm.apiEmbeddingsPath.trim() || '/v1/embeddings',
-        apiDesc: apiForm.apiDesc.trim()
+        apiCompletionPath: apiForm.apiCompletionPath.trim() || '/v1/chat/completions'
     };
-
-    const nextList = [...apiList.value];
-    const targetIndex = nextList.findIndex((item) => `${item.id}` === `${payload.id}`);
-    if (targetIndex >= 0) {
-        nextList[targetIndex] = payload;
-    } else {
-        nextList.unshift(payload);
+    try {
+        if (apiEditing.value) {
+            await userApiUpdate(payload);
+        } else {
+            await userApiInsert(payload);
+        }
+        resetApiForm();
+        await loadUserApi();
+    } catch (error) {
+        apiError.value = normalizeError(error).message || '保存 API 失败';
     }
-    apiList.value = nextList;
-    persistUserApi();
-    resetApiForm();
 };
 
-const deleteApi = (item) => {
+const deleteApi = async (item) => {
     if (!item?.id) return;
-    apiList.value = apiList.value.filter((entry) => `${entry.id}` !== `${item.id}`);
-    persistUserApi();
-    if (`${apiForm.id}` === `${item.id}`) {
-        resetApiForm();
+    try {
+        await userApiDelete(item.id);
+        if (apiForm.apiId === item.apiId) {
+            resetApiForm();
+        }
+        await loadUserApi();
+    } catch (error) {
+        apiError.value = normalizeError(error).message || '删除 API 失败';
     }
 };
 
@@ -728,6 +686,10 @@ const exportApi = async (item) => {
     } catch (error) {
         apiError.value = '导出 API 失败';
     }
+};
+
+const loadProfileResources = async () => {
+    await Promise.all([loadUserMcp(), loadUserApi()]);
 };
 </script>
 
@@ -1221,8 +1183,6 @@ const exportApi = async (item) => {
                                 <option value="mcp">mcp</option>
                                 <option value="stdio">stdio</option>
                             </select>
-                            <input v-model.number="mcpForm.mcpTimeout" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="timeout（秒）" />
-                            <input v-model.number="mcpForm.mcpChat" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="chat开关（1/0）" />
                             <input v-model="mcpForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="描述" />
                         </div>
                         <textarea
@@ -1230,7 +1190,7 @@ const exportApi = async (item) => {
                             class="min-h-[86px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]"
                             :placeholder="`mcpConfig JSON，例如 ${mcpConfigPlaceholder}`"
                         ></textarea>
-                        <textarea v-model="mcpForm.secretMapText" class="min-h-[64px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder='secretMap JSON（可选），例如 {"corpid":"xxx","corpsecret":"yyy","agentid":"1"}'></textarea>
+                        <textarea v-model="mcpForm.secretMapText" class="min-h-[64px] w-full rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder='mcpSecret JSON，例如 {"corpid":"xxx","corpsecret":"yyy","agentid":"1"}'></textarea>
                         <div class="flex gap-[8px]">
                             <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] text-white" @click="saveMcp">{{ mcpEditing ? '更新 MCP' : '新增 MCP' }}</button>
                             <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[12px]" @click="resetMcpForm">重置</button>
@@ -1242,14 +1202,11 @@ const exportApi = async (item) => {
                                 <div class="flex items-center justify-between gap-[10px]">
                                     <div class="min-w-0">
                                         <div class="truncate text-[13px] font-semibold">{{ item.mcpName }} ({{ item.mcpId }})</div>
-                                        <div class="text-[12px] text-[var(--text-secondary)]">{{ getMcpTransportLabel(item.mcpType) }} · chat={{ item.mcpChat }}</div>
+                                        <div class="truncate text-[12px] text-[var(--text-secondary)]">{{ getMcpTransportLabel(item.mcpType) }} · {{ item.mcpDesc || '暂无描述' }}</div>
                                     </div>
                                     <div class="flex shrink-0 gap-[6px]">
-                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="testMcp(item)">测试</button>
-                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="exportMcp(item)">导出</button>
-                                        <button v-if="item.editable" class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="editMcp(item)">编辑</button>
-                                        <button v-if="item.editable" class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="toggleMcp(item)">{{ item.mcpChat === 1 ? '禁用' : '启用' }}</button>
-                                        <button v-if="item.editable" class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="deleteMcp(item)">删除</button>
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="editMcp(item)">编辑</button>
+                                        <button class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px]" @click="deleteMcp(item)">删除</button>
                                     </div>
                                 </div>
                             </div>
@@ -1258,14 +1215,14 @@ const exportApi = async (item) => {
 
                     <div v-else class="space-y-[12px]">
                         <div class="rounded-[10px] border border-[var(--border-color)] bg-[#f8fafc] px-[10px] py-[8px] text-[12px] text-[var(--text-secondary)]">
-                            当前为前端配置页，数据会保存到浏览器本地。
+                            当前为个人 API 配置，数据来自后端接口。
                         </div>
                         <div class="grid grid-cols-2 gap-[10px] max-[680px]:grid-cols-1">
                             <input v-model="apiForm.apiId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="apiId（如 openai）" />
+                            <input v-model="apiForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="modelName（如 qwen-plus）" />
+                            <input v-model="apiForm.modelType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="modelType（如 chat）" />
                             <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="apiBaseUrl（如 https://api.openai.com）" />
-                            <input v-model="apiForm.apiCompletionsPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="/v1/chat/completions" />
-                            <input v-model="apiForm.apiEmbeddingsPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="/v1/embeddings" />
-                            <input v-model="apiForm.apiDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="描述（可选）" />
+                            <input v-model="apiForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="/v1/chat/completions" />
                             <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="apiKey" />
                         </div>
                         <div class="flex gap-[8px]">
@@ -1278,6 +1235,7 @@ const exportApi = async (item) => {
                                 <div class="flex items-center justify-between gap-[10px]">
                                     <div class="min-w-0">
                                         <div class="truncate text-[13px] font-semibold">{{ item.apiId }}</div>
+                                        <div class="truncate text-[12px] text-[var(--text-secondary)]">{{ item.modelName }} · {{ item.modelType }}</div>
                                         <div class="truncate text-[12px] text-[var(--text-secondary)]">{{ item.apiBaseUrl }}</div>
                                     </div>
                                     <div class="flex shrink-0 gap-[6px]">

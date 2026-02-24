@@ -1,8 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { repoList, repoRemove, studioListMine } from '../request/api';
-import { normalizeError } from '../request/request';
 import { useWelcomeLaunchStore } from '../router/pinia';
 import Footer from './Footer.vue';
 
@@ -13,51 +11,13 @@ const message = ref('');
 const repoItems = ref([]);
 const mineAgents = ref([]);
 
-const pickData = (resp) => {
-    if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
-        if (resp.code !== 200) {
-            throw new Error(resp.info || '操作失败');
-        }
-        return resp.data;
-    }
-    return resp?.data ?? resp?.result ?? resp;
-};
-
-const loadRepo = async () => {
-    loading.value = true;
-    try {
-        const resp = await repoList();
-        const list = pickData(resp) || [];
-        repoItems.value = Array.isArray(list) ? list : [];
-    } catch (error) {
-        message.value = normalizeError(error).message || '获取仓库失败';
-    } finally {
-        loading.value = false;
-    }
-};
-
-const loadMine = async () => {
-    try {
-        const resp = await studioListMine();
-        const list = pickData(resp) || [];
-        mineAgents.value = Array.isArray(list) ? list : [];
-    } catch (error) {
-        message.value = normalizeError(error).message || '获取我的 MiniAgent 失败';
-    }
-};
-
-const doRemove = async (agentId) => {
-    try {
-        await repoRemove({ agentId });
-        await loadRepo();
-    } catch (error) {
-        message.value = normalizeError(error).message || '移除失败';
-    }
-};
-
 const addedItems = computed(() =>
     repoItems.value.filter((item) => `${item?.sourceType || ''}`.toLowerCase() !== 'mine')
 );
+
+const doRemove = () => {
+    message.value = 'Repository 相关后端接口暂未开放';
+};
 
 const useAgent = (item) => {
     welcomeLaunchStore.setTask({
@@ -70,7 +30,10 @@ const useAgent = (item) => {
 };
 
 onMounted(async () => {
-    await Promise.all([loadRepo(), loadMine()]);
+    loading.value = false;
+    mineAgents.value = [];
+    repoItems.value = [];
+    message.value = 'Repository 相关后端接口暂未开放';
 });
 </script>
 

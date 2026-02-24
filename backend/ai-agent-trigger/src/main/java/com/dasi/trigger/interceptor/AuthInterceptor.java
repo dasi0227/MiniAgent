@@ -25,8 +25,8 @@ import static com.dasi.domain.admin.model.enumeration.UserRole.ADMIN;
 public class AuthInterceptor implements HandlerInterceptor {
 
     private static final Set<String> WHITE_LIST = Set.of(
-            "/miniagent/api/v1/auth/login",
-            "/miniagent/api/v1/auth/register"
+            "/miniagent/api/v1/user/auth/login",
+            "/miniagent/api/v1/user/auth/register"
     );
 
     @Resource

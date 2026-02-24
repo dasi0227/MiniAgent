@@ -7,7 +7,7 @@ import com.dasi.types.dto.request.plaza.PlazaCommentRequest;
 import com.dasi.types.dto.request.plaza.PlazaPageRequest;
 import com.dasi.types.dto.result.PageResult;
 
-public interface IMiniAgentService {
+public interface IWorkspaceService {
 
     PageResult<PlazaVO> pagePlaza(PlazaPageRequest request);
 

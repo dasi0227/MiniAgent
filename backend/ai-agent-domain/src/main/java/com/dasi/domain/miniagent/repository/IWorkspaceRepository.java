@@ -7,7 +7,7 @@ import com.dasi.types.dto.request.plaza.PlazaCommentRequest;
 import com.dasi.types.dto.request.plaza.PlazaPageRequest;
 import com.dasi.types.dto.result.PageResult;
 
-public interface IMiniAgentRepository {
+public interface IWorkspaceRepository {
 
     PageResult<PlazaVO> pagePlaza(PlazaPageRequest request);
 
@@ -20,6 +20,5 @@ public interface IMiniAgentRepository {
     void plazaComment(PlazaCommentRequest request);
 
     void plazaDiscomment(String plazaId, String commentId);
-
 
 }

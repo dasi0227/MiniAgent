@@ -9,17 +9,18 @@ const CLIENT_ARMORY_PATH = `${AI_BASE_PATH}/armory`;
 const RAG_UPLOAD_PATH = `${AI_BASE_PATH}/rag/file`;
 const RAG_GIT_PATH = `${AI_BASE_PATH}/rag/git`;
 
-const QUERY_BASE_PATH = '/api/v1/query';
+const USER_BASE_PATH = '/api/v1/user';
+const QUERY_BASE_PATH = `${USER_BASE_PATH}/query`;
 const CHAT_CLIENTS_PATH = `${QUERY_BASE_PATH}/chat-client-list`;
 const CHAT_MCP_PATH = `${QUERY_BASE_PATH}/chat-mcp-list`;
 const AGENT_LIST_PATH = `${QUERY_BASE_PATH}/agent-list`;
 const RAG_TAGS_PATH = `${QUERY_BASE_PATH}/chat-rag-list`;
 
-const AUTH_BASE_PATH = '/api/v1/auth';
+const AUTH_BASE_PATH = `${USER_BASE_PATH}/auth`;
 const LOGIN_PATH = `${AUTH_BASE_PATH}/login`;
 const REGISTER_PATH = `${AUTH_BASE_PATH}/register`;
-const PROFILE_PATH = `${AUTH_BASE_PATH}/profile`;
-const PASSWORD_PATH = `${AUTH_BASE_PATH}/password`;
+const PROFILE_QUERY_PATH = `${USER_BASE_PATH}/profile/query`;
+const PROFILE_EDIT_PATH = `${USER_BASE_PATH}/profile/edit`;
 
 const SESSION_BASE_PATH = '/api/v1/session';
 const SESSION_LIST_PATH = `${SESSION_BASE_PATH}/list`;
@@ -41,36 +42,29 @@ const ADMIN_STATUS_PARAM = {
     task: 'taskStatus'
 };
 
-const USER_MCP_BASE_PATH = '/api/v1/user/mcp';
+const USER_MCP_BASE_PATH = `${USER_BASE_PATH}/mcp`;
 const USER_MCP_LIST_PATH = `${USER_MCP_BASE_PATH}/list`;
 const USER_MCP_INSERT_PATH = `${USER_MCP_BASE_PATH}/insert`;
 const USER_MCP_UPDATE_PATH = `${USER_MCP_BASE_PATH}/update`;
 const USER_MCP_DELETE_PATH = `${USER_MCP_BASE_PATH}/delete`;
-const USER_MCP_TOGGLE_PATH = `${USER_MCP_BASE_PATH}/toggle`;
-const USER_MCP_TEST_PATH = `${USER_MCP_BASE_PATH}/test`;
-const USER_MCP_EXPORT_PATH = `${USER_MCP_BASE_PATH}/export`;
 
-const STUDIO_BASE_PATH = '/api/v1/studio';
-const STUDIO_GENERATE_PATH = `${STUDIO_BASE_PATH}/generate`;
-const STUDIO_CREATE_PATH = `${STUDIO_BASE_PATH}/create`;
-const STUDIO_UPDATE_PATH = `${STUDIO_BASE_PATH}/update`;
-const STUDIO_DETAIL_PATH = `${STUDIO_BASE_PATH}/detail`;
-const STUDIO_LIST_MINE_PATH = `${STUDIO_BASE_PATH}/list-mine`;
+const USER_API_BASE_PATH = `${USER_BASE_PATH}/api`;
+const USER_API_LIST_PATH = `${USER_API_BASE_PATH}/list`;
+const USER_API_INSERT_PATH = `${USER_API_BASE_PATH}/insert`;
+const USER_API_UPDATE_PATH = `${USER_API_BASE_PATH}/update`;
+const USER_API_DELETE_PATH = `${USER_API_BASE_PATH}/delete`;
 
-const PLAZA_BASE_PATH = '/api/v1/plaza';
-const PLAZA_LIST_PATH = `${PLAZA_BASE_PATH}/list`;
-const PLAZA_DETAIL_PATH = `${PLAZA_BASE_PATH}/detail`;
-const PLAZA_PUBLISH_PATH = `${PLAZA_BASE_PATH}/publish`;
+const PLAZA_BASE_PATH = '/api/v1/workspace/plaza';
+const PLAZA_PAGE_PATH = `${PLAZA_BASE_PATH}/page`;
 const PLAZA_LIKE_PATH = `${PLAZA_BASE_PATH}/like`;
+const PLAZA_DISLIKE_PATH = `${PLAZA_BASE_PATH}/dislike`;
 const PLAZA_FAVOR_PATH = `${PLAZA_BASE_PATH}/favor`;
+const PLAZA_DISFAVOR_PATH = `${PLAZA_BASE_PATH}/disfavor`;
 const PLAZA_COMMENT_PATH = `${PLAZA_BASE_PATH}/comment`;
-const PLAZA_COMMENT_COUNT_PATH = `${PLAZA_BASE_PATH}/comment/count`;
+const PLAZA_DISCOMMENT_PATH = `${PLAZA_BASE_PATH}/discomment`;
+const PLAZA_COMMENT_AREA_PATH = `${PLAZA_BASE_PATH}/comment-area`;
 
-const REPO_BASE_PATH = '/api/v1/repo';
-const REPO_LIST_PATH = `${REPO_BASE_PATH}/list`;
-const REPO_ADD_PATH = `${REPO_BASE_PATH}/add`;
-const REPO_REMOVE_PATH = `${REPO_BASE_PATH}/remove`;
-const REPO_FORK_PATH = `${REPO_BASE_PATH}/fork`;
+const unsupportedApi = (name) => Promise.reject(new Error(`${name} 暂未开放`));
 
 export const fetchComplete = async ({
     clientId,
@@ -113,7 +107,6 @@ export const fetchStream = async ({
     onDone,
     signal
 }) => {
-    // streamFetch will prepend the configured base (dev/prod) itself.
     const url = CHAT_STREAM_PATH;
     return streamFetch(
         url,
@@ -152,13 +145,13 @@ export const pickContentFromResult = (result) => {
     );
 };
 
-export const queryRagTags = async () => http.get(RAG_TAGS_PATH);
+export const queryRagTags = async () => http.post(RAG_TAGS_PATH);
 
-export const queryChatModels = async (params = {}) => http.get(CHAT_CLIENTS_PATH, { params: trimStrings(params) });
+export const queryChatModels = async () => http.post(CHAT_CLIENTS_PATH);
 
-export const queryChatMcps = async (params = {}) => http.get(CHAT_MCP_PATH, { params: trimStrings(params) });
+export const queryChatMcps = async () => http.post(CHAT_MCP_PATH);
 
-export const queryAgentList = async () => http.get(AGENT_LIST_PATH);
+export const queryAgentList = async () => http.post(AGENT_LIST_PATH);
 
 export const dispatchArmory = async ({ armoryType, armoryId }) => {
     return http.post(
@@ -181,7 +174,6 @@ export const executeAgentStream = async ({
     onDone,
     signal
 }) => {
-    // streamFetch will prepend the configured base (dev/prod) itself.
     const url = AGENT_EXECUTE_PATH;
     return streamFetch(
         url,
@@ -216,17 +208,29 @@ export const uploadRagGit = async ({ repoUrl, username, password }) => {
 
 // Auth
 export const login = async ({ username, password }) =>
-    http.post(LOGIN_PATH, trimStrings({ username, password }));
+    http.post(LOGIN_PATH, trimStrings({ userName: username, password }));
 export const register = async ({ username, password }) =>
-    http.post(REGISTER_PATH, trimStrings({ username, password }));
-export const fetchProfile = async () => http.post(PROFILE_PATH);
-export const updatePassword = async ({ id, username, oldPassword, newPassword }) =>
-    http.post(PASSWORD_PATH, trimStrings({ id, username, oldPassword, newPassword }));
+    http.post(REGISTER_PATH, trimStrings({ userName: username, password }));
+export const fetchProfile = async () => http.post(PROFILE_QUERY_PATH);
+export const updatePassword = async ({ id, username, userName, oldPassword, newPassword, avatar }) => {
+    const profilePayload = trimStrings({
+        id,
+        userName: userName || username,
+        oldPassword,
+        newPassword
+    });
+    const formData = new FormData();
+    formData.append('profile', new Blob([JSON.stringify(profilePayload)], { type: 'application/json' }));
+    if (avatar instanceof File) {
+        formData.append('avatar', avatar);
+    }
+    return http.post(PROFILE_EDIT_PATH, formData);
+};
 
 // -------------------- Session --------------------
-export const listSessions = async () => http.get(SESSION_LIST_PATH);
+export const listSessions = async () => http.post(SESSION_LIST_PATH);
 
-export const listAdminSessions = async () => http.get(SESSION_ADMIN_LIST_PATH);
+export const listAdminSessions = async () => http.post(SESSION_ADMIN_LIST_PATH);
 
 export const insertSession = async ({ sessionTitle, sessionType }) =>
     http.post(SESSION_INSERT_PATH, null, { params: trimStrings({ sessionTitle, sessionType }) });
@@ -238,16 +242,16 @@ export const deleteSession = async ({ id, sessionId }) =>
     http.post(SESSION_DELETE_PATH, null, { params: { id, sessionId } });
 
 export const listChatMessages = async ({ sessionId }) =>
-    http.get(SESSION_CHAT_MESSAGE_PATH, { params: { sessionId } });
+    http.post(SESSION_CHAT_MESSAGE_PATH, null, { params: { sessionId } });
 
 export const listWorkSseMessages = async ({ sessionId }) =>
-    http.get(SESSION_WORK_SSE_MESSAGE_PATH, { params: { sessionId } });
+    http.post(SESSION_WORK_SSE_MESSAGE_PATH, null, { params: { sessionId } });
 
 export const listWorkAnswerMessages = async ({ sessionId }) =>
-    http.get(SESSION_WORK_ANSWER_MESSAGE_PATH, { params: { sessionId } });
+    http.post(SESSION_WORK_ANSWER_MESSAGE_PATH, null, { params: { sessionId } });
 
 // -------------------- Admin --------------------
-export const fetchAdminDashboard = async () => http.get(ADMIN_DASHBOARD_PATH);
+export const fetchAdminDashboard = async () => http.post(ADMIN_DASHBOARD_PATH);
 
 const buildAdminPath = (moduleKey, action) => `${ADMIN_BASE_PATH}/${moduleKey}/${action}`;
 
@@ -268,7 +272,6 @@ export const adminToggle = async (moduleKey, id, status) => {
     return http.post(buildAdminPath(moduleKey, 'toggle'), null, { params: { id, [statusKey]: status } });
 };
 
-// flow 专用
 export const flowClients = async () => http.post(`${ADMIN_BASE_PATH}/flow/client`);
 export const flowAgent = async (agentId) => http.post(`${ADMIN_BASE_PATH}/flow/agent`, null, { params: { agentId } });
 export const flowInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/insert`, trimStrings(payload));
@@ -277,7 +280,6 @@ export const flowDelete = async (id) => http.post(`${ADMIN_BASE_PATH}/flow/delet
 
 export const adminAgentList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/agent/list`, trimStrings(payload));
 
-// config 专用（非分页 Map）
 export const configList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/list`, trimStrings(payload));
 export const configInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/insert`, trimStrings(payload));
 export const configUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/update`, trimStrings(payload));
@@ -285,43 +287,56 @@ export const configDelete = async (id) => http.post(`${ADMIN_BASE_PATH}/config/d
 export const configToggle = async (id, status) =>
     http.post(`${ADMIN_BASE_PATH}/config/toggle`, null, { params: { id, configStatus: status } });
 
-// ---- admin option lists ----
 const ADMIN_LIST_BASE = `${ADMIN_BASE_PATH}/list`;
-export const listClientType = async () => http.get(`${ADMIN_LIST_BASE}/clientType`);
-export const listAgentType = async () => http.get(`${ADMIN_LIST_BASE}/agentType`);
-export const listConfigType = async () => http.get(`${ADMIN_LIST_BASE}/configType`);
-export const listUserRole = async () => http.get(`${ADMIN_LIST_BASE}/userRole`);
-export const listApiId = async () => http.get(`${ADMIN_LIST_BASE}/apiId`);
-export const listModelId = async () => http.get(`${ADMIN_LIST_BASE}/modelId`);
-export const listClientRole = async () => http.get(`${ADMIN_LIST_BASE}/clientRole`);
+export const listClientType = async () => http.post(`${ADMIN_LIST_BASE}/clientType`);
+export const listAgentType = async () => http.post(`${ADMIN_LIST_BASE}/agentType`);
+export const listConfigType = async () => http.post(`${ADMIN_LIST_BASE}/configType`);
+export const listUserRole = async () => http.post(`${ADMIN_LIST_BASE}/userRole`);
+export const listApiId = async () => http.post(`${ADMIN_LIST_BASE}/apiId`);
+export const listModelId = async () => http.post(`${ADMIN_LIST_BASE}/modelId`);
+export const listClientRole = async () => http.post(`${ADMIN_LIST_BASE}/clientRole`);
 
-// -------------------- User MCP --------------------
-export const userMcpList = async (payload = {}) => http.post(USER_MCP_LIST_PATH, trimStrings(payload));
+// -------------------- User API/MCP --------------------
+export const userApiList = async (keyword = '') =>
+    http.post(USER_API_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
+export const userApiInsert = async (payload = {}) => http.post(USER_API_INSERT_PATH, trimStrings(payload));
+export const userApiUpdate = async (payload = {}) => http.post(USER_API_UPDATE_PATH, trimStrings(payload));
+export const userApiDelete = async (id) => http.post(USER_API_DELETE_PATH, null, { params: { id } });
+
+export const userMcpList = async (keyword = '') =>
+    http.post(USER_MCP_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
 export const userMcpInsert = async (payload = {}) => http.post(USER_MCP_INSERT_PATH, trimStrings(payload));
 export const userMcpUpdate = async (payload = {}) => http.post(USER_MCP_UPDATE_PATH, trimStrings(payload));
 export const userMcpDelete = async (id) => http.post(USER_MCP_DELETE_PATH, null, { params: { id } });
-export const userMcpToggle = async (id, mcpChat) => http.post(USER_MCP_TOGGLE_PATH, null, { params: { id, mcpChat } });
-export const userMcpTest = async (payload = {}) => http.post(USER_MCP_TEST_PATH, trimStrings(payload));
-export const userMcpExport = async (payload = {}) => http.post(USER_MCP_EXPORT_PATH, trimStrings(payload));
 
-// -------------------- Studio --------------------
-export const studioGenerate = async (payload = {}) => http.post(STUDIO_GENERATE_PATH, trimStrings(payload));
-export const studioCreate = async (payload = {}) => http.post(STUDIO_CREATE_PATH, trimStrings(payload));
-export const studioUpdate = async (payload = {}) => http.post(STUDIO_UPDATE_PATH, trimStrings(payload));
-export const studioDetail = async (agentId) => http.get(STUDIO_DETAIL_PATH, { params: { agentId } });
-export const studioListMine = async () => http.get(STUDIO_LIST_MINE_PATH);
+// 以下接口后端当前未实现，保留函数供调用方降级处理
+export const userMcpToggle = async () => unsupportedApi('MCP 启停');
+export const userMcpTest = async () => unsupportedApi('MCP 测试');
+export const userMcpExport = async () => unsupportedApi('MCP 导出');
+
+// -------------------- Studio（后端未实现） --------------------
+export const studioGenerate = async () => unsupportedApi('Studio 生成');
+export const studioCreate = async () => unsupportedApi('Studio 创建');
+export const studioUpdate = async () => unsupportedApi('Studio 更新');
+export const studioDetail = async () => unsupportedApi('Studio 详情');
+export const studioListMine = async () => unsupportedApi('Studio 我的列表');
 
 // -------------------- Plaza --------------------
-export const plazaList = async (params = {}) => http.get(PLAZA_LIST_PATH, { params: trimStrings(params) });
-export const plazaDetail = async (plazaId) => http.get(PLAZA_DETAIL_PATH, { params: { plazaId } });
-export const plazaPublish = async (payload = {}) => http.post(PLAZA_PUBLISH_PATH, trimStrings(payload));
-export const plazaLike = async (payload = {}) => http.post(PLAZA_LIKE_PATH, trimStrings(payload));
-export const plazaFavor = async (payload = {}) => http.post(PLAZA_FAVOR_PATH, trimStrings(payload));
+export const plazaList = async (payload = {}) => http.post(PLAZA_PAGE_PATH, trimStrings(payload));
+export const plazaDetail = async () => unsupportedApi('Plaza 详情');
+export const plazaPublish = async () => unsupportedApi('Plaza 发布');
+export const plazaLike = async ({ plazaId }) => http.post(PLAZA_LIKE_PATH, null, { params: { plazaId } });
+export const plazaDislike = async ({ plazaId }) => http.post(PLAZA_DISLIKE_PATH, null, { params: { plazaId } });
+export const plazaFavor = async ({ plazaId }) => http.post(PLAZA_FAVOR_PATH, null, { params: { plazaId } });
+export const plazaDisfavor = async ({ plazaId }) => http.post(PLAZA_DISFAVOR_PATH, null, { params: { plazaId } });
 export const plazaComment = async (payload = {}) => http.post(PLAZA_COMMENT_PATH, trimStrings(payload));
-export const plazaCommentCount = async (payload = {}) => http.post(PLAZA_COMMENT_COUNT_PATH, trimStrings(payload));
+export const plazaDiscomment = async ({ plazaId, commentId }) =>
+    http.post(PLAZA_DISCOMMENT_PATH, null, { params: { plazaId, commentId } });
+export const plazaCommentArea = async (payload = {}) => http.post(PLAZA_COMMENT_AREA_PATH, trimStrings(payload));
+export const plazaCommentCount = async () => unsupportedApi('Plaza 评论计数');
 
-// -------------------- Repository --------------------
-export const repoList = async () => http.get(REPO_LIST_PATH);
-export const repoAdd = async (payload = {}) => http.post(REPO_ADD_PATH, trimStrings(payload));
-export const repoRemove = async (payload = {}) => http.post(REPO_REMOVE_PATH, trimStrings(payload));
-export const repoFork = async (payload = {}) => http.post(REPO_FORK_PATH, trimStrings(payload));
+// -------------------- Repository（后端未实现） --------------------
+export const repoList = async () => unsupportedApi('Repository 列表');
+export const repoAdd = async () => unsupportedApi('Repository 添加');
+export const repoRemove = async () => unsupportedApi('Repository 移除');
+export const repoFork = async () => unsupportedApi('Repository Fork');

@@ -3,7 +3,7 @@ package com.dasi.infrastructure.repository;
 import com.dasi.domain.miniagent.model.enumeration.PlazaActionType;
 import com.dasi.domain.miniagent.model.vo.CommentVO;
 import com.dasi.domain.miniagent.model.vo.PlazaVO;
-import com.dasi.domain.miniagent.repository.IMiniAgentRepository;
+import com.dasi.domain.miniagent.repository.IWorkspaceRepository;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.infrastructure.persistent.dao.IAiPlazaCommentDao;
 import com.dasi.infrastructure.persistent.dao.IAiPlazaDao;
@@ -28,7 +28,7 @@ import java.util.UUID;
 
 @Slf4j
 @Repository
-public class MiniAgentRepository implements IMiniAgentRepository {
+public class WorkspaceRepository implements IWorkspaceRepository {
 
     @Resource
     private UserContext userContext;

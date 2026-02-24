@@ -28,8 +28,8 @@ export const parseAuthPayload = (resp) => {
     const payload = pickResultData(resp);
     const token = requireText(payload?.token, 'token');
     const userId = requireNumber(payload?.userId, 'userId');
-    const username = requireText(payload?.username, 'username');
-    const role = requireText(payload?.role, 'role');
+    const username = requireText(payload?.username || payload?.userName, 'username');
+    const role = requireText(payload?.role || payload?.userRole, 'role');
 
     return {
         token,
@@ -37,6 +37,9 @@ export const parseAuthPayload = (resp) => {
             userId,
             username,
             role,
+            userName: username,
+            userRole: role,
+            userAvatar: payload?.userAvatar || '',
             userStatus: payload?.userStatus
         }
     };

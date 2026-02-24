@@ -10,13 +10,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableTransactionManagement
-public class Application {
+public class MiniAgentApplication {
 
     @Resource
     private IRedisService redisService;
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        SpringApplication.run(MiniAgentApplication.class);
     }
 
     @EventListener(ApplicationReadyEvent.class)

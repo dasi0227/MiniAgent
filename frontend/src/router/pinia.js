@@ -100,8 +100,8 @@ const normalizeStoredUser = (user) => {
         return null;
     }
     const userId = Number(user.userId);
-    const username = typeof user.username === 'string' ? user.username.trim() : '';
-    const role = typeof user.role === 'string' ? user.role.trim() : '';
+    const username = typeof (user.username || user.userName) === 'string' ? String(user.username || user.userName).trim() : '';
+    const role = typeof (user.role || user.userRole) === 'string' ? String(user.role || user.userRole).trim() : '';
     if (!Number.isFinite(userId) || !username || !role) {
         return null;
     }
@@ -109,6 +109,9 @@ const normalizeStoredUser = (user) => {
         userId,
         username,
         role,
+        userName: username,
+        userRole: role,
+        userAvatar: user.userAvatar || '',
         userStatus: user.userStatus
     };
 };
