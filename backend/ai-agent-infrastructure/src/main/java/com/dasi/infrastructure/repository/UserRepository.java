@@ -1,16 +1,20 @@
 package com.dasi.infrastructure.repository;
 
 import com.dasi.domain.user.model.vo.UserApiVO;
+import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.infrastructure.persistent.dao.IAiApiDao;
+import com.dasi.infrastructure.persistent.dao.IAiMcpDao;
 import com.dasi.infrastructure.persistent.dao.IAiModelDao;
 import com.dasi.infrastructure.persistent.dao.IAiUserDao;
 import com.dasi.infrastructure.persistent.po.AiApi;
+import com.dasi.infrastructure.persistent.po.AiMcp;
 import com.dasi.infrastructure.persistent.po.AiModel;
 import com.dasi.infrastructure.persistent.po.AiUser;
 import com.dasi.types.dto.request.user.SettingApiRequest;
+import com.dasi.types.dto.request.user.SettingMcpRequest;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -19,7 +23,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 import static com.dasi.domain.user.model.enumeration.UserRoleType.ACCOUNT;
-import static com.dasi.types.constant.ExceptionMessage.SETTING_API_USER_ILLEGAL;
+import static com.dasi.types.constant.ExceptionMessage.SETTING_USER_ILLEGAL;
 
 @Repository
 public class UserRepository implements IUserRepository {
@@ -32,6 +36,9 @@ public class UserRepository implements IUserRepository {
 
     @Resource
     private IAiModelDao modelDao;
+
+    @Resource
+    private IAiMcpDao mcpDao;
 
     @Resource
     private UserContext userContext;
@@ -123,7 +130,7 @@ public class UserRepository implements IUserRepository {
         String apiId = request.getApiId();
         AiApi aiApi = apiDao.queryByApiId(apiId);
         if (!aiApi.getApiFrom().equals(userId)) {
-            throw new MiniAgentException(SETTING_API_USER_ILLEGAL);
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
         aiApi.setApiBaseUrl(request.getApiBaseUrl());
         aiApi.setApiKey(request.getApiKey());
@@ -133,7 +140,7 @@ public class UserRepository implements IUserRepository {
         String modelId = modelDao.queryModelIdByApiId(request.getApiId()).get(0);
         AiModel aiModel = modelDao.queryByModelId(modelId);
         if (!aiModel.getModelFrom().equals(userId)) {
-            throw new MiniAgentException(SETTING_API_USER_ILLEGAL);
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
         aiModel.setModelName(request.getModelName());
         aiModel.setModelType(request.getModelType());
@@ -147,18 +154,67 @@ public class UserRepository implements IUserRepository {
 
         AiApi aiApi = apiDao.queryById(id);
         if (!aiApi.getApiFrom().equals(userId)) {
-            throw new MiniAgentException(SETTING_API_USER_ILLEGAL);
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
         apiDao.deleteById(id);
 
         String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
         AiModel aiModel = modelDao.queryByModelId(modelId);
         if (!aiModel.getModelFrom().equals(userId)) {
-            throw new MiniAgentException(SETTING_API_USER_ILLEGAL);
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
         modelDao.deleteByModelId(modelId);
     }
 
+    @Override
+    public List<UserMcpVO> mcpList(String keyword) {
+        Long userId = userContext.getUserId();
+        return mcpDao.listUserMcp(keyword, userId);
+    }
 
+    @Override
+    public void mcpInsert(SettingMcpRequest request) {
+        Long userId = userContext.getUserId();
+
+        AiMcp aiMcp = AiMcp.builder()
+                .mcpId(request.getMcpId())
+                .mcpName(request.getMcpName())
+                .mcpType(request.getMcpType())
+                .mcpConfig(request.getMcpConfig())
+                .mcpSecret(request.getMcpSecret())
+                .mcpDesc(request.getMcpDesc())
+                .mcpTimeout(180)
+                .mcpChat(0)
+                .mcpFrom(userId)
+                .build();
+        mcpDao.insert(aiMcp);
+    }
+
+    @Override
+    public void mcpUpdate(SettingMcpRequest request) {
+        Long userId = userContext.getUserId();
+
+        AiMcp aiMcp = mcpDao.queryByMcpId(request.getMcpId());
+        if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
+        }
+        aiMcp.setMcpName(request.getMcpName());
+        aiMcp.setMcpType(request.getMcpType());
+        aiMcp.setMcpConfig(request.getMcpConfig());
+        aiMcp.setMcpSecret(request.getMcpSecret());
+        aiMcp.setMcpDesc(request.getMcpDesc());
+        mcpDao.update(aiMcp);
+    }
+
+    @Override
+    public void mcpDelete(Long id) {
+        Long userId = userContext.getUserId();
+
+        AiMcp aiMcp = mcpDao.queryById(id);
+        if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
+        }
+        mcpDao.delete(id);
+    }
 
 }

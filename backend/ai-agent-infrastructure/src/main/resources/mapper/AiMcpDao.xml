@@ -8,6 +8,7 @@
         <result column="mcp_name" property="mcpName"/>
         <result column="mcp_type" property="mcpType"/>
         <result column="mcp_config" property="mcpConfig"/>
+        <result column="mcp_secret" property="mcpSecret"/>
         <result column="mcp_desc" property="mcpDesc"/>
         <result column="mcp_timeout" property="mcpTimeout"/>
         <result column="mcp_chat" property="mcpChat"/>
@@ -22,6 +23,7 @@
                mcp_name,
                mcp_type,
                mcp_config,
+               mcp_secret,
                mcp_desc,
                mcp_timeout,
                mcp_chat,
@@ -38,6 +40,7 @@
                mcp_name,
                mcp_type,
                mcp_config,
+               mcp_secret,
                mcp_desc,
                mcp_timeout,
                mcp_chat,
@@ -57,6 +60,7 @@
                mcp_name,
                mcp_type,
                mcp_config,
+               mcp_secret,
                mcp_desc,
                mcp_timeout,
                mcp_chat,
@@ -74,6 +78,7 @@
                mcp_name,
                mcp_type,
                mcp_config,
+               mcp_secret,
                mcp_desc,
                mcp_timeout,
                mcp_chat,
@@ -119,6 +124,7 @@
                mcp_name,
                mcp_type,
                mcp_config,
+               mcp_secret,
                mcp_desc,
                mcp_timeout,
                mcp_chat,
@@ -134,6 +140,7 @@
                             mcp_name,
                             mcp_type,
                             mcp_config,
+                            mcp_secret,
                             mcp_desc,
                             mcp_timeout,
                             mcp_chat,
@@ -142,6 +149,7 @@
                 #{mcpName},
                 #{mcpType},
                 #{mcpConfig},
+                #{mcpSecret},
                 #{mcpDesc},
                 #{mcpTimeout},
                 #{mcpChat},
@@ -155,12 +163,34 @@
             <if test="mcpName != null">mcp_name = #{mcpName},</if>
             <if test="mcpType != null">mcp_type = #{mcpType},</if>
             <if test="mcpConfig != null">mcp_config = #{mcpConfig},</if>
+            <if test="mcpSecret != null">mcp_secret = #{mcpSecret},</if>
             <if test="mcpDesc != null">mcp_desc = #{mcpDesc},</if>
             <if test="mcpTimeout != null">mcp_timeout = #{mcpTimeout},</if>
             <if test="mcpChat != null">mcp_chat = #{mcpChat},</if>
         </set>
         WHERE id = #{id}
     </update>
+
+    <select id="listUserMcp" resultType="com.dasi.domain.user.model.vo.UserMcpVO">
+        SELECT id,
+               mcp_id AS mcpId,
+               mcp_name AS mcpName,
+               mcp_type AS mcpType,
+               mcp_desc AS mcpDesc,
+               mcp_config AS mcpConfig,
+               mcp_secret AS mcpSecret
+        FROM ai_mcp
+        WHERE mcp_from = #{userId}
+        <if test="keyword != null and keyword != ''">
+            AND (
+            mcp_id LIKE CONCAT('%', #{keyword}, '%')
+            OR mcp_name LIKE CONCAT('%', #{keyword}, '%')
+            OR mcp_type LIKE CONCAT('%', #{keyword}, '%')
+            OR mcp_desc LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY create_time DESC, id DESC
+    </select>
 
     <delete id="delete">
         DELETE

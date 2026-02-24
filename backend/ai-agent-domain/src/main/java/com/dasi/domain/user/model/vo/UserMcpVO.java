@@ -19,6 +19,10 @@ public class UserMcpVO {
 
     private String mcpType;
 
+    private String mcpDesc;
+
     private String mcpConfig;
+
+    private String mcpSecret;
 
 }

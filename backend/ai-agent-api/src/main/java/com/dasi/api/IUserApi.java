@@ -1,10 +1,12 @@
 package com.dasi.api;
 
+import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.domain.user.model.vo.UserApiVO;
-import com.dasi.types.dto.request.user.SettingApiRequest;
+import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.types.dto.request.user.AuthRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
-import com.dasi.domain.user.model.vo.AuthVO;
+import com.dasi.types.dto.request.user.SettingApiRequest;
+import com.dasi.types.dto.request.user.SettingMcpRequest;
 import com.dasi.types.dto.result.Result;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,4 +30,11 @@ public interface IUserApi {
 
     Result<Void> apiDelete(Long id);
 
+    Result<List<UserMcpVO>> mcpList(String keyword);
+
+    Result<Void> mcpInsert(SettingMcpRequest request);
+
+    Result<Void> mcpUpdate(SettingMcpRequest request);
+
+    Result<Void> mcpDelete(Long id);
 }

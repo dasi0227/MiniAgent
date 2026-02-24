@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @Data
 @Builder
 @AllArgsConstructor
@@ -30,6 +28,6 @@ public class SettingMcpRequest {
     private String mcpDesc;
 
     @NotNull
-    private Map<String, String> mcpSecret;
+    private String mcpSecret;
 
 }

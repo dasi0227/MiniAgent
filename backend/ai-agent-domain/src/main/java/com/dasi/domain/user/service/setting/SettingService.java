@@ -1,6 +1,7 @@
 package com.dasi.domain.user.service.setting;
 
 import com.dasi.domain.user.model.vo.UserApiVO;
+import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
@@ -9,6 +10,7 @@ import com.dasi.domain.util.oss.IOssService;
 import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
 import com.dasi.domain.user.model.vo.AuthVO;
+import com.dasi.types.dto.request.user.SettingMcpRequest;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -118,5 +120,26 @@ public class SettingService implements ISettingService {
     @Transactional(rollbackFor = Exception.class)
     public void apiDelete(Long id) {
         userRepository.apiDelete(id);
+    }
+
+
+    @Override
+    public List<UserMcpVO> mcpList(String keyword) {
+        return userRepository.mcpList(keyword);
+    }
+
+    @Override
+    public void mcpInsert(SettingMcpRequest request) {
+        userRepository.mcpInsert(request);
+    }
+
+    @Override
+    public void mcpUpdate(SettingMcpRequest request) {
+        userRepository.mcpUpdate(request);
+    }
+
+    @Override
+    public void mcpDelete(Long id) {
+        userRepository.mcpDelete(id);
     }
 }

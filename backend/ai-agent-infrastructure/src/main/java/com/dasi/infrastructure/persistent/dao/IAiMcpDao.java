@@ -1,5 +1,6 @@
 package com.dasi.infrastructure.persistent.dao;
 
+import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.infrastructure.persistent.po.AiMcp;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -32,5 +33,7 @@ public interface IAiMcpDao {
     void update(AiMcp aiMcp);
 
     void delete(@Param("id") Long id);
+
+    List<UserMcpVO> listUserMcp(@Param("keyword") String keyword, @Param("userId") Long userId);
 
 }
