@@ -52,7 +52,7 @@ public class QueryRepository implements IQueryRepository {
 
     @Override
     @Cacheable(cacheKey = QUERY_CHAT_CLIENT_KEY, cacheClass = ChatClientVO.class, cacheType = CacheType.LIST)
-    public List<ChatClientVO> queryChatClientResponseList() {
+    public List<ChatClientVO> queryChatClientVOList() {
 
         Long userId = userContext.getUserId();
 
@@ -74,7 +74,7 @@ public class QueryRepository implements IQueryRepository {
 
     @Override
     @Cacheable(cacheKey = QUERY_CHAT_MCP_KEY, cacheClass = ChatMcpVO.class, cacheType = CacheType.LIST)
-    public List<ChatMcpVO> queryChatMcpResponseList() {
+    public List<ChatMcpVO> queryChatMcpVOList() {
 
         Long userId = userContext.getUserId();
 
@@ -94,7 +94,7 @@ public class QueryRepository implements IQueryRepository {
 
     @Override
     @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = WorkAgentVO.class, cacheType = CacheType.LIST)
-    public List<WorkAgentVO> queryWorkAgentResponseList() {
+    public List<WorkAgentVO> queryWorkAgentVOList() {
 
         Long userId = userContext.getUserId();
 
@@ -117,7 +117,7 @@ public class QueryRepository implements IQueryRepository {
 
     @Override
     @Cacheable(cacheKey = QUERY_CHAT_RAG_KEY, cacheClass = ChatRagVO.class, cacheType = CacheType.LIST)
-    public List<ChatRagVO> queryChatRagList() {
+    public List<ChatRagVO> queryRagVOList() {
 
         String tableRef = embeddingSchemaName + "." + embeddingTableName;
         String sql = """

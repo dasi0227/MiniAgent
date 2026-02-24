@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dasi.infrastructure.persistent.dao.IAiPlazaCommentDao">
+
+    <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiPlazaComment">
+        <id column="id" property="id"/>
+        <result column="comment_id" property="commentId"/>
+        <result column="plaza_id" property="plazaId"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="comment_content" property="commentContent"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="listByPlazaId" resultMap="dataMap">
+        SELECT id,
+               comment_id,
+               plaza_id,
+               user_id,
+               user_name,
+               comment_content,
+               create_time,
+               update_time
+        FROM ai_plaza_comment
+        WHERE plaza_id = #{plazaId}
+        ORDER BY create_time DESC, id DESC
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <select id="countByPlazaIdAndUserId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM ai_plaza_comment
+        WHERE plaza_id = #{plazaId}
+          AND user_id = #{userId}
+    </select>
+
+    <select id="countByPlazaId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM ai_plaza_comment
+        WHERE plaza_id = #{plazaId}
+    </select>
+
+    <select id="queryPlazaIdListByUserIdAndPlazaIdList" resultType="java.lang.String">
+        SELECT DISTINCT plaza_id
+        FROM ai_plaza_comment
+        WHERE user_id = #{userId}
+          AND plaza_id IN
+        <foreach collection="plazaIdList" item="plazaId" open="(" separator="," close=")">
+            #{plazaId}
+        </foreach>
+    </select>
+
+    <select id="queryByCommentId" resultMap="dataMap">
+        SELECT id,
+               comment_id,
+               plaza_id,
+               user_id,
+               user_name,
+               comment_content,
+               create_time,
+               update_time
+        FROM ai_plaza_comment
+        WHERE comment_id = #{commentId}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiPlazaComment">
+        INSERT INTO ai_plaza_comment (comment_id,
+                                      plaza_id,
+                                      user_id,
+                                      user_name,
+                                      comment_content)
+        VALUES (#{commentId},
+                #{plazaId},
+                #{userId},
+                #{userName},
+                #{commentContent})
+    </insert>
+
+    <delete id="delete">
+        DELETE
+        FROM ai_plaza_comment
+        WHERE comment_id = #{commentId}
+          AND user_id = #{userId}
+    </delete>
+
+</mapper>

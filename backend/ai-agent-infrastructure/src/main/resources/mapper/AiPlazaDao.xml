@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dasi.infrastructure.persistent.dao.IAiPlazaDao">
+
+    <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiPlaza">
+        <id column="id" property="id"/>
+        <result column="plaza_id" property="plazaId"/>
+        <result column="agent_id" property="agentId"/>
+        <result column="user_id" property="userId"/>
+        <result column="agent_type" property="agentType"/>
+        <result column="user_name" property="userName"/>
+        <result column="plaza_title" property="plazaTitle"/>
+        <result column="plaza_desc" property="plazaDesc"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="favor_count" property="favorCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="page" resultMap="dataMap">
+        SELECT id,
+               plaza_id,
+               agent_id,
+               user_id,
+               agent_type,
+               user_name,
+               plaza_title,
+               plaza_desc,
+               like_count,
+               favor_count,
+               comment_count,
+               create_time,
+               update_time
+        FROM ai_plaza
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                plaza_title LIKE CONCAT('%', #{keyword}, '%')
+                OR plaza_desc LIKE CONCAT('%', #{keyword}, '%')
+                OR user_name LIKE CONCAT('%', #{keyword}, '%')
+                OR agent_id LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        <choose>
+            <when test="sortBy == 'like'">
+                ORDER BY like_count
+                <choose>
+                    <when test="sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>
+                , id DESC
+            </when>
+            <when test="sortBy == 'favor'">
+                ORDER BY favor_count
+                <choose>
+                    <when test="sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>
+                , id DESC
+            </when>
+            <when test="sortBy == 'comment'">
+                ORDER BY comment_count
+                <choose>
+                    <when test="sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>
+                , id DESC
+            </when>
+            <otherwise>
+                ORDER BY create_time
+                <choose>
+                    <when test="sortOrder == 'asc'">ASC</when>
+                    <otherwise>DESC</otherwise>
+                </choose>
+                , id DESC
+            </otherwise>
+        </choose>
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM ai_plaza
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                plaza_title LIKE CONCAT('%', #{keyword}, '%')
+                OR plaza_desc LIKE CONCAT('%', #{keyword}, '%')
+                OR user_name LIKE CONCAT('%', #{keyword}, '%')
+                OR agent_type LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <select id="queryByPlazaId" resultMap="dataMap">
+        SELECT id,
+               plaza_id,
+               agent_id,
+               user_id,
+               agent_type,
+               user_name,
+               plaza_title,
+               plaza_desc,
+               like_count,
+               favor_count,
+               comment_count,
+               create_time,
+               update_time
+        FROM ai_plaza
+        WHERE plaza_id = #{plazaId}
+        LIMIT 1
+    </select>
+
+    <update id="increaseLikeCount">
+        UPDATE ai_plaza
+        SET like_count = GREATEST(0, like_count + #{delta})
+        WHERE plaza_id = #{plazaId}
+    </update>
+
+    <update id="increaseFavorCount">
+        UPDATE ai_plaza
+        SET favor_count = GREATEST(0, favor_count + #{delta})
+        WHERE plaza_id = #{plazaId}
+    </update>
+
+    <update id="increaseCommentCount">
+        UPDATE ai_plaza
+        SET comment_count = GREATEST(0, comment_count + #{delta})
+        WHERE plaza_id = #{plazaId}
+    </update>
+
+</mapper>

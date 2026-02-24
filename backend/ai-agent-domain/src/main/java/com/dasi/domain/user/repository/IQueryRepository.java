@@ -9,12 +9,12 @@ import java.util.List;
 
 public interface IQueryRepository {
 
-    List<ChatClientVO> queryChatClientResponseList();
+    List<ChatClientVO> queryChatClientVOList();
 
-    List<ChatRagVO> queryChatRagList();
+    List<ChatRagVO> queryRagVOList();
 
-    List<ChatMcpVO> queryChatMcpResponseList();
+    List<ChatMcpVO> queryChatMcpVOList();
 
-    List<WorkAgentVO> queryWorkAgentResponseList();
+    List<WorkAgentVO> queryWorkAgentVOList();
 
 }

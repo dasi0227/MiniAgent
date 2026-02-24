@@ -326,7 +326,7 @@ public class AiController implements IAiApi {
         if (clientId == null || clientId.isBlank()) {
             return true;
         }
-        List<ChatClientVO> list = queryService.queryChatClientResponseList();
+        List<ChatClientVO> list = queryService.queryChatClientVOList();
         if (list == null || list.isEmpty()) {
             return true;
         }
@@ -337,7 +337,7 @@ public class AiController implements IAiApi {
         if (agentId == null || agentId.isBlank()) {
             return true;
         }
-        List<WorkAgentVO> list = queryService.queryWorkAgentResponseList();
+        List<WorkAgentVO> list = queryService.queryWorkAgentVOList();
         if (list == null || list.isEmpty()) {
             return true;
         }

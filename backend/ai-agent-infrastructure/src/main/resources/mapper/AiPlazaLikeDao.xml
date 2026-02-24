@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dasi.infrastructure.persistent.dao.IAiPlazaLikeDao">
+
+    <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiPlazaLike">
+        <id column="id" property="id"/>
+        <result column="plaza_id" property="plazaId"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="queryByPlazaIdAndUserId" resultMap="dataMap">
+        SELECT id, plaza_id, user_id, create_time, update_time
+        FROM ai_plaza_like
+        WHERE plaza_id = #{plazaId}
+          AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="queryPlazaIdListByUserIdAndPlazaIdList" resultType="java.lang.String">
+        SELECT plaza_id
+        FROM ai_plaza_like
+        WHERE user_id = #{userId}
+          AND plaza_id IN
+        <foreach collection="plazaIdList" item="plazaId" open="(" separator="," close=")">
+            #{plazaId}
+        </foreach>
+    </select>
+
+    <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiPlazaLike">
+        INSERT IGNORE INTO ai_plaza_like (plaza_id, user_id)
+        VALUES (#{plazaId}, #{userId})
+    </insert>
+
+    <delete id="delete">
+        DELETE
+        FROM ai_plaza_like
+        WHERE plaza_id = #{plazaId}
+          AND user_id = #{userId}
+    </delete>
+
+</mapper>

@@ -17,23 +17,23 @@ public class QueryService implements IQueryService {
     private IQueryRepository queryRepository;
 
     @Override
-    public List<ChatClientVO> queryChatClientResponseList() {
-        return queryRepository.queryChatClientResponseList();
+    public List<ChatClientVO> queryChatClientVOList() {
+        return queryRepository.queryChatClientVOList();
     }
 
     @Override
-    public List<ChatMcpVO> queryChatMcpResponseList() {
-        return queryRepository.queryChatMcpResponseList();
+    public List<ChatMcpVO> queryChatMcpVOList() {
+        return queryRepository.queryChatMcpVOList();
     }
 
     @Override
-    public List<ChatRagVO> queryChatRagList() {
-        return queryRepository.queryChatRagList();
+    public List<ChatRagVO> queryRagVOList() {
+        return queryRepository.queryRagVOList();
     }
 
     @Override
-    public List<WorkAgentVO> queryWorkAgentResponseList() {
-        return queryRepository.queryWorkAgentResponseList();
+    public List<WorkAgentVO> queryWorkAgentVOList() {
+        return queryRepository.queryWorkAgentVOList();
     }
 
 }
