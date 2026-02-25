@@ -20,7 +20,7 @@ public interface IUserRepository {
 
     List<UserApiVO> apiList(String keyword);
 
-    void apiInsert(SettingApiRequest request);
+    void apiInsert(SettingApiRequest request, String apiId, String modelId);
 
     void apiUpdate(SettingApiRequest request);
 
@@ -28,7 +28,7 @@ public interface IUserRepository {
 
     List<UserMcpVO> mcpList(String keyword);
 
-    void mcpInsert(SettingMcpRequest request);
+    void mcpInsert(SettingMcpRequest request, String mcpId);
 
     void mcpUpdate(SettingMcpRequest request);
 

@@ -1,7 +1,7 @@
 package com.dasi.infrastructure.persistent.dao;
 
-import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.infrastructure.persistent.po.AiApi;
+import com.dasi.infrastructure.persistent.po.AiUserApi;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,7 +30,7 @@ public interface IAiApiDao {
 
     List<String> listApiId();
 
-    List<UserApiVO> listUserApi(@Param("keyword") String keyword, @Param("userId") Long userId);
+    List<AiUserApi> listUserApi(@Param("keyword") String keyword, @Param("userId") Long userId);
 
 
 

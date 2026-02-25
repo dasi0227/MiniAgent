@@ -13,13 +13,14 @@ import com.dasi.infrastructure.persistent.po.AiApi;
 import com.dasi.infrastructure.persistent.po.AiMcp;
 import com.dasi.infrastructure.persistent.po.AiModel;
 import com.dasi.infrastructure.persistent.po.AiUser;
+import com.dasi.infrastructure.persistent.po.AiUserApi;
 import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.dto.request.user.SettingMcpRequest;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.dasi.domain.user.model.enumeration.UserRoleType.ACCOUNT;
@@ -97,15 +98,31 @@ public class UserRepository implements IUserRepository {
     @Override
     public List<UserApiVO> apiList(String keyword) {
         Long userId = userContext.getUserId();
-        return apiDao.listUserApi(keyword, userId);
+        List<AiUserApi> userApiList = apiDao.listUserApi(keyword, userId);
+        List<UserApiVO> userApiVOList = new ArrayList<>();
+        if (userApiList == null || userApiList.isEmpty()) {
+            return userApiVOList;
+        }
+        for (AiUserApi userApi : userApiList) {
+            userApiVOList.add(UserApiVO.builder()
+                    .id(userApi.getId())
+                    .apiId(userApi.getApiId())
+                    .modelName(userApi.getModelName())
+                    .modelType(userApi.getModelType())
+                    .apiBaseUrl(userApi.getApiBaseUrl())
+                    .apiKey(userApi.getApiKey())
+                    .apiCompletionPath(userApi.getApiCompletionPath())
+                    .build());
+        }
+        return userApiVOList;
     }
 
     @Override
-    public void apiInsert(SettingApiRequest request) {
+    public void apiInsert(SettingApiRequest request, String apiId, String modelId) {
         Long userId = userContext.getUserId();
 
         AiApi aiApi = AiApi.builder()
-                .apiId(request.getApiId())
+                .apiId(apiId)
                 .apiBaseUrl(request.getApiBaseUrl())
                 .apiCompletionsPath(request.getApiCompletionPath())
                 .apiKey(request.getApiKey())
@@ -114,8 +131,8 @@ public class UserRepository implements IUserRepository {
         apiDao.insert(aiApi);
 
         AiModel aiModel = AiModel.builder()
-                .apiId(request.getApiId())
-                .modelId(userId + "-" + request.getModelName() + "-" + RandomStringUtils.randomAlphanumeric(6))
+                .apiId(apiId)
+                .modelId(modelId)
                 .modelName(request.getModelName())
                 .modelType(request.getModelType())
                 .modelFrom(userId)
@@ -126,10 +143,12 @@ public class UserRepository implements IUserRepository {
     @Override
     public void apiUpdate(SettingApiRequest request) {
         Long userId = userContext.getUserId();
+        if (request.getId() == null) {
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
+        }
 
-        String apiId = request.getApiId();
-        AiApi aiApi = apiDao.queryByApiId(apiId);
-        if (!aiApi.getApiFrom().equals(userId)) {
+        AiApi aiApi = apiDao.queryById(request.getId());
+        if (aiApi == null || !aiApi.getApiFrom().equals(userId)) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
         aiApi.setApiBaseUrl(request.getApiBaseUrl());
@@ -137,7 +156,7 @@ public class UserRepository implements IUserRepository {
         aiApi.setApiCompletionsPath(request.getApiCompletionPath());
         apiDao.update(aiApi);
 
-        String modelId = modelDao.queryModelIdByApiId(request.getApiId()).get(0);
+        String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
         AiModel aiModel = modelDao.queryByModelId(modelId);
         if (!aiModel.getModelFrom().equals(userId)) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
@@ -169,15 +188,31 @@ public class UserRepository implements IUserRepository {
     @Override
     public List<UserMcpVO> mcpList(String keyword) {
         Long userId = userContext.getUserId();
-        return mcpDao.listUserMcp(keyword, userId);
+        List<AiMcp> mcpList = mcpDao.listUserMcp(keyword, userId);
+        List<UserMcpVO> userMcpVOList = new ArrayList<>();
+        if (mcpList == null || mcpList.isEmpty()) {
+            return userMcpVOList;
+        }
+        for (AiMcp aiMcp : mcpList) {
+            userMcpVOList.add(UserMcpVO.builder()
+                    .id(aiMcp.getId())
+                    .mcpId(aiMcp.getMcpId())
+                    .mcpName(aiMcp.getMcpName())
+                    .mcpType(aiMcp.getMcpType())
+                    .mcpDesc(aiMcp.getMcpDesc())
+                    .mcpConfig(aiMcp.getMcpConfig())
+                    .mcpSecret(aiMcp.getMcpSecret())
+                    .build());
+        }
+        return userMcpVOList;
     }
 
     @Override
-    public void mcpInsert(SettingMcpRequest request) {
+    public void mcpInsert(SettingMcpRequest request, String mcpId) {
         Long userId = userContext.getUserId();
 
         AiMcp aiMcp = AiMcp.builder()
-                .mcpId(request.getMcpId())
+                .mcpId(mcpId)
                 .mcpName(request.getMcpName())
                 .mcpType(request.getMcpType())
                 .mcpConfig(request.getMcpConfig())
@@ -193,8 +228,11 @@ public class UserRepository implements IUserRepository {
     @Override
     public void mcpUpdate(SettingMcpRequest request) {
         Long userId = userContext.getUserId();
+        if (request.getId() == null) {
+            throw new MiniAgentException(SETTING_USER_ILLEGAL);
+        }
 
-        AiMcp aiMcp = mcpDao.queryByMcpId(request.getMcpId());
+        AiMcp aiMcp = mcpDao.queryById(request.getId());
         if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }

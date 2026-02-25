@@ -7,6 +7,7 @@ import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.jwt.IJwtUtil;
 import com.dasi.domain.util.oss.IOssUtil;
+import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
 import com.dasi.domain.user.model.vo.AuthVO;
@@ -40,6 +41,9 @@ public class SettingService implements ISettingService {
 
     @Resource
     private IOssUtil ossUtil;
+
+    @Resource
+    private IRandomUtil randomUtil;
 
     @Resource
     private PasswordEncoder passwordEncoder;
@@ -107,7 +111,9 @@ public class SettingService implements ISettingService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void apiInsert(SettingApiRequest request) {
-        userRepository.apiInsert(request);
+        String apiId = "api_" + randomUtil.userRandom();
+        String modelId = "model_" + randomUtil.userRandom();
+        userRepository.apiInsert(request, apiId, modelId);
     }
 
     @Override
@@ -130,7 +136,8 @@ public class SettingService implements ISettingService {
 
     @Override
     public void mcpInsert(SettingMcpRequest request) {
-        userRepository.mcpInsert(request);
+        String mcpId = "mcp_" + randomUtil.userRandom();
+        userRepository.mcpInsert(request, mcpId);
     }
 
     @Override

@@ -117,7 +117,7 @@
         WHERE id = #{id}
     </delete>
 
-    <select id="listUserApi" resultType="com.dasi.domain.user.model.vo.UserApiVO">
+    <select id="listUserApi" resultType="com.dasi.infrastructure.persistent.po.AiUserApi">
         SELECT
         a.id AS id,
         a.api_id AS apiId,

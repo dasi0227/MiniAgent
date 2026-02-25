@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SettingMcpRequest {
 
-    @NotNull
-    private String mcpId;
+    private Long id;
 
     @NotNull
     private String mcpName;

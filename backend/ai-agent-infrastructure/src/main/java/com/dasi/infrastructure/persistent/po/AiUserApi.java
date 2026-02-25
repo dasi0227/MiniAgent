@@ -1,6 +1,5 @@
-package com.dasi.types.dto.request.user;
+package com.dasi.infrastructure.persistent.po;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,25 +7,22 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class SettingApiRequest {
+@AllArgsConstructor
+public class AiUserApi {
 
     private Long id;
 
-    @NotNull
+    private String apiId;
+
     private String modelName;
 
-    @NotNull
     private String modelType;
 
-    @NotNull
     private String apiBaseUrl;
 
-    @NotNull
     private String apiKey;
 
-    @NotNull
     private String apiCompletionPath;
 
 }

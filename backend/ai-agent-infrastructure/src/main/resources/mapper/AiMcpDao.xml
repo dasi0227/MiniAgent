@@ -171,14 +171,19 @@
         WHERE id = #{id}
     </update>
 
-    <select id="listUserMcp" resultType="com.dasi.domain.user.model.vo.UserMcpVO">
+    <select id="listUserMcp" resultMap="dataMap">
         SELECT id,
-               mcp_id AS mcpId,
-               mcp_name AS mcpName,
-               mcp_type AS mcpType,
-               mcp_desc AS mcpDesc,
-               mcp_config AS mcpConfig,
-               mcp_secret AS mcpSecret
+               mcp_id,
+               mcp_name,
+               mcp_type,
+               mcp_config,
+               mcp_secret,
+               mcp_desc,
+               mcp_timeout,
+               mcp_chat,
+               mcp_from,
+               create_time,
+               update_time
         FROM ai_mcp
         WHERE mcp_from = #{userId}
         <if test="keyword != null and keyword != ''">
