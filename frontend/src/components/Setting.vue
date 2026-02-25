@@ -14,10 +14,12 @@ import {
 } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
 import { normalizeError } from '../request/request';
-import { useAuthStore } from '../router/pinia';
+import { useAuthStore, useSettingsStore } from '../router/pinia';
 import Footer from './Footer.vue';
 
 const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
+const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const activeTab = ref('profile');
 
 const pickData = (resp, message = '操作失败') => {
@@ -32,10 +34,6 @@ const pickData = (resp, message = '操作失败') => {
 
 const currentUser = computed(() => authStore.user || { userId: '', username: '访客', role: 'guest' });
 const avatarChar = computed(() => (currentUser.value.username || '访客').slice(0, 1).toUpperCase());
-const userPrefix = computed(() => {
-    const id = currentUser.value?.userId;
-    return Number.isFinite(Number(id)) ? `${id}-` : '';
-});
 
 const DEFAULT_AVATAR_URL_PATTERN = /^https?:\/\/avatars\.githubusercontent\.com\/u\/1(?:[/?]|$)/i;
 const currentUserAvatarUrl = computed(() => {
@@ -69,6 +67,11 @@ const avatarCropPreviewUrl = ref('');
 
 const profileAvatarDisplayUrl = computed(() => profileAvatarPreviewUrl.value || currentUserAvatarUrl.value);
 const canShowProfileAvatarImage = computed(() => Boolean(profileAvatarDisplayUrl.value) && !profileAvatarPreviewFallback.value);
+const profileAvatarFallbackClass = computed(() =>
+    isDarkTheme.value
+        ? 'border-[rgba(148,163,184,0.42)] bg-[linear-gradient(135deg,#1f3f77,#2a5f9f)] text-[#e8f1ff] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
+        : 'border-[rgba(255,255,255,0.42)] bg-[linear-gradient(135deg,#dcecff,#c8deff)] text-[#1f3d77] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)]'
+);
 
 const mcpLoading = ref(false);
 const mcpSaving = ref(false);
@@ -76,7 +79,6 @@ const mcpError = ref('');
 const mcpKeyword = ref('');
 const mcpList = ref([]);
 const mcpForm = reactive({
-    mcpId: '',
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
@@ -88,7 +90,7 @@ const mcpDialogOpen = ref(false);
 const mcpDialogSaving = ref(false);
 const mcpDialogError = ref('');
 const mcpDialogForm = reactive({
-    mcpId: '',
+    id: null,
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
@@ -102,7 +104,6 @@ const apiError = ref('');
 const apiKeyword = ref('');
 const apiList = ref([]);
 const apiForm = reactive({
-    apiId: '',
     modelName: '',
     apiBaseUrl: '',
     apiCompletionPath: '/v1/chat/completions',
@@ -113,7 +114,7 @@ const apiDialogOpen = ref(false);
 const apiDialogSaving = ref(false);
 const apiDialogError = ref('');
 const apiDialogForm = reactive({
-    apiId: '',
+    id: null,
     modelName: '',
     apiBaseUrl: '',
     apiCompletionPath: '/v1/chat/completions',
@@ -306,20 +307,6 @@ const clearProfileAvatarSelection = () => {
     profileAvatarError.value = '';
 };
 
-const ensurePrefix = (value, prefix, fieldLabel) => {
-    const normalized = (value || '').trim();
-    if (!normalized) {
-        throw new Error(`${fieldLabel} 不能为空`);
-    }
-    if (!prefix) {
-        throw new Error('用户信息缺失，请重新登录');
-    }
-    if (!normalized.startsWith(prefix)) {
-        throw new Error(`${fieldLabel} 必须以 ${prefix} 开头`);
-    }
-    return normalized;
-};
-
 const ensureJsonText = (value, fieldLabel) => {
     const normalized = (value || '').trim();
     if (!normalized) {
@@ -334,7 +321,6 @@ const ensureJsonText = (value, fieldLabel) => {
 };
 
 const resetMcpForm = () => {
-    mcpForm.mcpId = userPrefix.value;
     mcpForm.mcpName = '';
     mcpForm.mcpType = '';
     mcpForm.mcpDesc = '';
@@ -343,7 +329,6 @@ const resetMcpForm = () => {
 };
 
 const resetApiForm = () => {
-    apiForm.apiId = userPrefix.value;
     apiForm.modelName = '';
     apiForm.apiBaseUrl = '';
     apiForm.apiCompletionPath = '/v1/chat/completions';
@@ -419,12 +404,11 @@ const submitMcpInsert = async () => {
     mcpSaving.value = true;
     try {
         const payload = {
-            mcpId: ensurePrefix(mcpForm.mcpId, userPrefix.value, 'mcpId'),
             mcpName: (mcpForm.mcpName || '').trim(),
             mcpType: (mcpForm.mcpType || '').trim(),
             mcpDesc: (mcpForm.mcpDesc || '').trim(),
-            mcpConfig: ensureJsonText(mcpForm.mcpConfig, 'mcpConfig'),
-            mcpSecret: ensureJsonText(mcpForm.mcpSecret, 'mcpSecret')
+            mcpConfig: ensureJsonText(mcpForm.mcpConfig, 'MCP 配置'),
+            mcpSecret: ensureJsonText(mcpForm.mcpSecret, 'MCP 密钥配置')
         };
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
@@ -442,7 +426,7 @@ const submitMcpInsert = async () => {
 const openMcpDialog = (item) => {
     if (!item) return;
     mcpDialogError.value = '';
-    mcpDialogForm.mcpId = item.mcpId || '';
+    mcpDialogForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
     mcpDialogForm.mcpName = item.mcpName || '';
     mcpDialogForm.mcpType = item.mcpType || '';
     mcpDialogForm.mcpDesc = item.mcpDesc || '';
@@ -455,13 +439,16 @@ const saveMcpDialog = async () => {
     mcpDialogError.value = '';
     mcpDialogSaving.value = true;
     try {
+        if (!Number.isFinite(Number(mcpDialogForm.id))) {
+            throw new Error('MCP 配置标识缺失，请刷新后重试');
+        }
         const payload = {
-            mcpId: ensurePrefix(mcpDialogForm.mcpId, userPrefix.value, 'mcpId'),
+            id: Number(mcpDialogForm.id),
             mcpName: (mcpDialogForm.mcpName || '').trim(),
             mcpType: (mcpDialogForm.mcpType || '').trim(),
             mcpDesc: (mcpDialogForm.mcpDesc || '').trim(),
-            mcpConfig: ensureJsonText(mcpDialogForm.mcpConfig, 'mcpConfig'),
-            mcpSecret: ensureJsonText(mcpDialogForm.mcpSecret, 'mcpSecret')
+            mcpConfig: ensureJsonText(mcpDialogForm.mcpConfig, 'MCP 配置'),
+            mcpSecret: ensureJsonText(mcpDialogForm.mcpSecret, 'MCP 密钥配置')
         };
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
@@ -490,8 +477,7 @@ const loadApiList = async (keyword = '') => {
     }
 };
 
-const buildApiPayload = (form, prefix) => {
-    const apiId = ensurePrefix(form.apiId, prefix, 'apiId');
+const buildApiPayload = (form, id = null) => {
     const modelName = (form.modelName || '').trim();
     const apiBaseUrl = (form.apiBaseUrl || '').trim();
     const apiCompletionPath = (form.apiCompletionPath || '').trim();
@@ -499,21 +485,24 @@ const buildApiPayload = (form, prefix) => {
     if (!modelName || !apiBaseUrl || !apiCompletionPath || !apiKey) {
         throw new Error('请完整填写 API 必填项');
     }
-    return {
-        apiId,
+    const payload = {
         modelName,
         modelType: 'chat',
         apiBaseUrl,
         apiCompletionPath,
         apiKey
     };
+    if (Number.isFinite(Number(id))) {
+        payload.id = Number(id);
+    }
+    return payload;
 };
 
 const submitApiInsert = async () => {
     apiError.value = '';
     apiSaving.value = true;
     try {
-        const payload = buildApiPayload(apiForm, userPrefix.value);
+        const payload = buildApiPayload(apiForm);
         await userApiInsert(payload);
         resetApiForm();
         await loadApiList(apiKeyword.value);
@@ -527,7 +516,7 @@ const submitApiInsert = async () => {
 const openApiDialog = (item) => {
     if (!item) return;
     apiDialogError.value = '';
-    apiDialogForm.apiId = item.apiId || '';
+    apiDialogForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
     apiDialogForm.modelName = item.modelName || '';
     apiDialogForm.apiBaseUrl = item.apiBaseUrl || '';
     apiDialogForm.apiCompletionPath = item.apiCompletionPath || '/v1/chat/completions';
@@ -539,7 +528,10 @@ const saveApiDialog = async () => {
     apiDialogError.value = '';
     apiDialogSaving.value = true;
     try {
-        const payload = buildApiPayload(apiDialogForm, userPrefix.value);
+        if (!Number.isFinite(Number(apiDialogForm.id))) {
+            throw new Error('API 配置标识缺失，请刷新后重试');
+        }
+        const payload = buildApiPayload(apiDialogForm, apiDialogForm.id);
         await userApiUpdate(payload);
         apiDialogOpen.value = false;
         await loadApiList(apiKeyword.value);
@@ -549,19 +541,6 @@ const saveApiDialog = async () => {
         apiDialogSaving.value = false;
     }
 };
-
-watch(
-    userPrefix,
-    () => {
-        if (!(mcpForm.mcpId || '').trim()) {
-            mcpForm.mcpId = userPrefix.value;
-        }
-        if (!(apiForm.apiId || '').trim()) {
-            apiForm.apiId = userPrefix.value;
-        }
-    },
-    { immediate: true }
-);
 
 watch(
     profileAvatarDisplayUrl,
@@ -586,10 +565,9 @@ onBeforeUnmount(() => {
     <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-white">
         <div class="overflow-y-scroll [scrollbar-gutter:stable] py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
             <div class="mx-auto max-w-[1100px] space-y-[16px]">
-                <h1 class="text-[24px] font-bold text-[var(--text-primary)]">个人中心设置</h1>
-
-                <div class="border-b border-[var(--border-color)]">
-                    <nav class="-mb-px flex items-center gap-[20px]">
+                <div class="flex flex-wrap items-center gap-[28px]">
+                    <h1 class="text-[24px] font-bold text-[var(--text-primary)]">个人中心设置</h1>
+                    <nav class="flex items-center gap-[20px]">
                         <button
                             class="border-b-2 px-[2px] pb-[10px] pt-[2px] text-[14px] font-semibold transition"
                             :class="activeTab === 'profile' ? 'border-[var(--accent-color)] text-[var(--accent-color)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
@@ -613,17 +591,18 @@ onBeforeUnmount(() => {
                         </button>
                     </nav>
                 </div>
+                <div class="h-[1px] w-full bg-[var(--border-color)]"></div>
 
                 <div v-if="activeTab === 'profile'" class="space-y-[14px]">
                     <div>
                         <div class="mb-[10px] text-[13px] font-semibold text-[var(--text-secondary)]">头像设置</div>
                         <div class="flex flex-wrap items-center gap-[12px]">
                             <div
-                                class="grid h-[84px] w-[84px] shrink-0 place-items-center overflow-hidden rounded-full border text-[24px] font-bold text-[var(--avatar-text)]"
+                                class="grid h-[84px] w-[84px] shrink-0 place-items-center overflow-hidden rounded-full border text-[24px] font-bold"
                                 :class="
                                     canShowProfileAvatarImage
                                         ? 'border-[rgba(15,23,42,0.12)] bg-transparent'
-                                        : 'border-[var(--border-color)] bg-[var(--avatar-bg)]'
+                                        : profileAvatarFallbackClass
                                 "
                             >
                                 <img
@@ -712,27 +691,23 @@ onBeforeUnmount(() => {
                     <div class="text-[16px] font-semibold">新增个人 MCP</div>
                     <div class="space-y-[10px]">
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">mcpId</span>
-                            <input v-model="mcpForm.mcpId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" :placeholder="`必须以 ${userPrefix || 'userId-'} 开头`" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">mcpName</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 名称</span>
                             <input v-model="mcpForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 名称" />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">mcpType</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
                             <input v-model="mcpForm.mcpType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 类型（例如 sse / stdio）" />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">mcpDesc</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 描述</span>
                             <input v-model="mcpForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 描述" />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">mcpConfig</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
                             <textarea v-model="mcpForm.mcpConfig" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='请输入 JSON，例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">mcpSecret</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
                             <textarea v-model="mcpForm.mcpSecret" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='请输入 JSON，例如 {"token":"xxx"}'></textarea>
                         </label>
                     </div>
@@ -751,15 +726,28 @@ onBeforeUnmount(() => {
                     <div class="h-[1px] bg-[var(--border-color)]"></div>
 
                     <div class="space-y-[10px]">
-                        <div class="text-[16px] font-semibold">我配置过的 MCP 列表</div>
-                        <div class="flex gap-[8px]">
-                            <input
-                                v-model="mcpKeyword"
-                                class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
-                                placeholder="输入关键字查询 MCP"
-                                @keydown.enter.prevent="loadMcpList(mcpKeyword)"
-                            />
-                            <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[9px] text-[13px]" @click="loadMcpList(mcpKeyword)">查询</button>
+                        <div class="flex flex-wrap items-center justify-between gap-[10px]">
+                            <div class="text-[16px] font-semibold">我配置过的 MCP 列表</div>
+                            <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
+                                <input
+                                    v-model="mcpKeyword"
+                                    class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
+                                    placeholder="输入关键字查询 MCP"
+                                    @keydown.enter.prevent="loadMcpList(mcpKeyword)"
+                                />
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="查询 MCP"
+                                    title="查询 MCP"
+                                    @click="loadMcpList(mcpKeyword)"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <circle cx="11" cy="11" r="7" />
+                                        <path d="m20 20-3.6-3.6" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <div v-if="mcpLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
                         <div v-else-if="mcpList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
@@ -769,8 +757,8 @@ onBeforeUnmount(() => {
                             class="w-full rounded-[10px] border border-[var(--border-color)] p-[12px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             @click="openMcpDialog(item)"
                         >
-                            <div class="text-[14px] font-semibold">{{ item.mcpName || '-' }}</div>
-                            <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">{{ item.mcpDesc || '暂无描述' }}</div>
+                            <div class="text-[14px] font-semibold">MCP 名称：{{ item.mcpName || '-' }}</div>
+                            <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">MCP 描述：{{ item.mcpDesc || '暂无描述' }}</div>
                         </button>
                     </div>
                 </div>
@@ -779,24 +767,20 @@ onBeforeUnmount(() => {
                     <div class="text-[16px] font-semibold">新增个人 API</div>
                     <div class="space-y-[10px]">
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">apiId</span>
-                            <input v-model="apiForm.apiId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" :placeholder="`必须以 ${userPrefix || 'userId-'} 开头`" />
+                            <span class="pt-[10px] text-[var(--text-secondary)]">API 地址</span>
+                            <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 地址，例如 https://api.openai.com" />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">baseUrl</span>
-                            <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API Base URL，例如 https://api.openai.com" />
+                            <span class="pt-[10px] text-[var(--text-secondary)]">补全路径</span>
+                            <input v-model="apiForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入补全路径，例如 /v1/chat/completions" />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">completionUrl</span>
-                            <input v-model="apiForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 Completion URL，例如 /v1/chat/completions" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">modelName</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">模型名称</span>
                             <input v-model="apiForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入模型名称，例如 qwen-plus" />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">apiKey</span>
-                            <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API Key" />
+                            <span class="pt-[10px] text-[var(--text-secondary)]">API 密钥</span>
+                            <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 密钥" />
                         </label>
                     </div>
                     <div class="flex items-center gap-[10px]">
@@ -814,15 +798,28 @@ onBeforeUnmount(() => {
                     <div class="h-[1px] bg-[var(--border-color)]"></div>
 
                     <div class="space-y-[10px]">
-                        <div class="text-[16px] font-semibold">我配置过的个人 API</div>
-                        <div class="flex gap-[8px]">
-                            <input
-                                v-model="apiKeyword"
-                                class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
-                                placeholder="输入关键字查询 API"
-                                @keydown.enter.prevent="loadApiList(apiKeyword)"
-                            />
-                            <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[9px] text-[13px]" @click="loadApiList(apiKeyword)">查询</button>
+                        <div class="flex flex-wrap items-center justify-between gap-[10px]">
+                            <div class="text-[16px] font-semibold">我配置过的个人 API</div>
+                            <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
+                                <input
+                                    v-model="apiKeyword"
+                                    class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
+                                    placeholder="输入关键字查询 API"
+                                    @keydown.enter.prevent="loadApiList(apiKeyword)"
+                                />
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="查询 API"
+                                    title="查询 API"
+                                    @click="loadApiList(apiKeyword)"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <circle cx="11" cy="11" r="7" />
+                                        <path d="m20 20-3.6-3.6" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <div v-if="apiLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
                         <div v-else-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 API 配置</div>
@@ -832,8 +829,8 @@ onBeforeUnmount(() => {
                             class="w-full rounded-[10px] border border-[var(--border-color)] p-[12px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             @click="openApiDialog(item)"
                         >
-                            <div class="text-[14px] font-semibold">{{ item.modelName || item.apiId || '-' }}</div>
-                            <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">{{ item.apiBaseUrl || '-' }}</div>
+                            <div class="text-[14px] font-semibold">模型名称：{{ item.modelName || '-' }}</div>
+                            <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">API 地址：{{ item.apiBaseUrl || '-' }}</div>
                         </button>
                     </div>
                 </div>
@@ -895,27 +892,23 @@ onBeforeUnmount(() => {
                 </div>
                 <div class="space-y-[10px]">
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">mcpId</span>
-                        <input v-model="mcpDialogForm.mcpId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
-                    </label>
-                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">mcpName</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 名称</span>
                         <input v-model="mcpDialogForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">mcpType</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
                         <input v-model="mcpDialogForm.mcpType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">mcpDesc</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 描述</span>
                         <input v-model="mcpDialogForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">mcpConfig</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
                         <textarea v-model="mcpDialogForm.mcpConfig" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"></textarea>
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">mcpSecret</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
                         <textarea v-model="mcpDialogForm.mcpSecret" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"></textarea>
                     </label>
                 </div>
@@ -945,23 +938,19 @@ onBeforeUnmount(() => {
                 </div>
                 <div class="space-y-[10px]">
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">apiId</span>
-                        <input v-model="apiDialogForm.apiId" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
-                    </label>
-                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">baseUrl</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">API 地址</span>
                         <input v-model="apiDialogForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">completionUrl</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">补全路径</span>
                         <input v-model="apiDialogForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">modelName</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">模型名称</span>
                         <input v-model="apiDialogForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">apiKey</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">API 密钥</span>
                         <input v-model="apiDialogForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                 </div>

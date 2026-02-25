@@ -94,7 +94,7 @@ onMounted(async () => {
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Studio</h1>
                     <button
-                        class="rounded-[10px] border border-[var(--accent-color)] bg-white px-[12px] py-[8px] text-[14px] font-semibold text-[var(--accent-color)] transition hover:bg-[var(--accent-color)] hover:text-white"
+                        class="rounded-[10px] border border-[#9ab6d2] bg-[#f2f7ff] px-[12px] py-[8px] text-[14px] font-semibold text-[#6888ad] transition hover:border-[#88a8c7] hover:bg-[#e9f2ff] hover:text-[#57789f]"
                         @click="goRepository"
                     >
                         我的仓库
@@ -105,15 +105,15 @@ onMounted(async () => {
                     <div class="flex min-h-[50px] items-center gap-[12px]">
                         <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">API 选择</div>
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-[8px] overflow-x-auto pb-[4px]">
+                            <div class="no-scrollbar flex items-center gap-[8px] overflow-x-auto pb-[4px]">
                                 <button
                                     v-for="item in apiList"
                                     :key="item.clientId"
                                     class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
                                     :class="
                                         form.apiId === item.clientId
-                                            ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.1)] text-[var(--accent-color)]'
-                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[var(--accent-color)]'
+                                            ? 'border-[#c59a4a] bg-[#fff7e8] text-[#8c6929]'
+                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#c59a4a]'
                                     "
                                     @click="form.apiId = item.clientId"
                                 >
@@ -132,15 +132,15 @@ onMounted(async () => {
                     <div class="flex min-h-[50px] items-center gap-[12px]">
                         <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">MCP 工具</div>
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-[8px] overflow-x-auto pb-[4px]">
+                            <div class="no-scrollbar flex items-center gap-[8px] overflow-x-auto pb-[4px]">
                                 <button
                                     v-for="item in mcpList"
                                     :key="item.mcpId"
                                     class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
                                     :class="
                                         form.mcpIdList.includes(item.mcpId)
-                                            ? 'border-[#16a34a] bg-[#eafcef] text-[#166534]'
-                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#16a34a]'
+                                            ? 'border-[#3e9a68] bg-[#ecf7f0] text-[#2a6a49]'
+                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#3e9a68]'
                                     "
                                     @click="toggleMcp(item.mcpId)"
                                 >
@@ -166,8 +166,8 @@ onMounted(async () => {
                                     class="h-[44px] min-w-[104px] shrink-0 rounded-[10px] border px-[17px] text-[16px] font-semibold transition"
                                     :class="
                                         form.strategy === strategy
-                                            ? 'border-[var(--accent-color)] bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]'
-                                            : 'border-[var(--border-color)] bg-white text-[#334155] hover:bg-[#f8fafc]'
+                                            ? 'border-[#c06a6a] bg-[#fff2f2] text-[#9a4444]'
+                                            : 'border-[var(--border-color)] bg-white text-[#334155] hover:border-[#c06a6a] hover:bg-[#fdf7f7]'
                                     "
                                     @click="form.strategy = strategy"
                                 >
@@ -180,7 +180,7 @@ onMounted(async () => {
                     <div class="space-y-[12px]">
                         <textarea
                             v-model="form.taskPrompt"
-                            class="min-h-[320px] w-full rounded-[16px] border border-[var(--border-color)] bg-white px-[16px] py-[16px] text-[16px] leading-[1.6] outline-none focus:border-[var(--accent-color)] placeholder:text-[16px] placeholder:leading-[1.7] placeholder:text-[#94a3b8]"
+                            class="h-[248px] w-full resize-none rounded-[16px] border border-[var(--border-color)] bg-white px-[16px] py-[16px] text-[16px] leading-[1.6] outline-none focus:border-[var(--accent-color)] placeholder:text-[16px] placeholder:leading-[1.7] placeholder:text-[#94a3b8]"
                             placeholder="描述你希望 MiniAgent 完成的任务目标、输入上下文、执行约束和产出格式。例如：每周一早上 9 点汇总上周投放数据，给出异常原因与优化建议，并输出可直接发送给团队的简报。"
                         ></textarea>
                         <div class="flex justify-center">
@@ -202,3 +202,14 @@ onMounted(async () => {
         <Footer />
     </section>
 </template>
+
+<style scoped>
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+</style>

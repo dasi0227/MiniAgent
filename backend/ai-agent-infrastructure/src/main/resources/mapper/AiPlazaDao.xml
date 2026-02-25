@@ -40,7 +40,7 @@
                 plaza_title LIKE CONCAT('%', #{keyword}, '%')
                 OR plaza_desc LIKE CONCAT('%', #{keyword}, '%')
                 OR user_name LIKE CONCAT('%', #{keyword}, '%')
-                OR agent_id LIKE CONCAT('%', #{keyword}, '%')
+                OR agent_type LIKE CONCAT('%', #{keyword}, '%')
                 )
             </if>
         </where>

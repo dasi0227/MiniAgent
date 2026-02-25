@@ -1192,7 +1192,9 @@ const loadProfileResources = async () => {
                     :class="
                         currentUserAvatarUrl && showSidebarAvatarImage
                             ? 'rounded-full border-[rgba(255,255,255,0.35)] bg-transparent'
-                            : 'rounded-full border-[rgba(15,23,42,0.18)] bg-[var(--avatar-bg)] text-[var(--avatar-text)]'
+                            : isDarkTheme
+                                ? 'rounded-full border-[rgba(148,163,184,0.42)] bg-[linear-gradient(135deg,#1f3f77,#2a5f9f)] text-[#e8f1ff] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
+                                : 'rounded-full border-[rgba(255,255,255,0.42)] bg-[linear-gradient(135deg,#dcecff,#c8deff)] text-[#1f3d77]'
                     "
                 >
                     <img

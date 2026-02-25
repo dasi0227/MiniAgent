@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../router/pinia';
 import {
@@ -21,11 +21,24 @@ const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const loading = ref(false);
 const message = ref('');
 const plazaItems = ref([]);
-const commentData = ref({ list: [], total: 0, pageNum: 1, pageSize: 20 });
+const COMMENT_PAGE_SIZE = 10;
+const COMMENT_CONTENT_LIMIT = 128;
+const commentData = ref({ list: [], total: 0, pageNum: 1, pageSize: COMMENT_PAGE_SIZE });
 const currentCommentItem = ref(null);
 const detailOpen = ref(false);
 const commentOpen = ref(false);
+const searchText = ref('');
 const searchKeyword = ref('');
+const sortField = ref('like');
+const sortOrder = ref('desc');
+const filterPopoverOpen = ref(false);
+let filterPopoverCloseTimer = null;
+
+const sortFieldOptions = [
+    { value: 'like', label: '点赞' },
+    { value: 'favor', label: '收藏' },
+    { value: 'comment', label: '评论' }
+];
 
 const commentForm = reactive({
     plazaId: '',
@@ -124,10 +137,17 @@ const resolveCardTone = (item) => {
     };
 };
 
+const resolveSortValue = (item, field) => {
+    if (field === 'favor') return Number(item?.favorCount) || 0;
+    if (field === 'comment') return Number(item?.commentCount) || 0;
+    return Number(item?.likeCount) || 0;
+};
+
 const filteredItems = computed(() => {
     const keyword = searchKeyword.value.trim().toLowerCase();
-    if (!keyword) return plazaItems.value;
-    return plazaItems.value.filter((item) => {
+    const filtered = !keyword
+        ? [...plazaItems.value]
+        : plazaItems.value.filter((item) => {
         const haystack = [
             item?.plazaTitle || '',
             item?.plazaDesc || '',
@@ -137,6 +157,16 @@ const filteredItems = computed(() => {
             .join(' ')
             .toLowerCase();
         return haystack.includes(keyword);
+    });
+    return filtered.sort((a, b) => {
+        const aValue = resolveSortValue(a, sortField.value);
+        const bValue = resolveSortValue(b, sortField.value);
+        if (aValue === bValue) {
+            const aId = Number(a?.plazaId) || 0;
+            const bId = Number(b?.plazaId) || 0;
+            return bId - aId;
+        }
+        return sortOrder.value === 'asc' ? aValue - bValue : bValue - aValue;
     });
 });
 
@@ -154,8 +184,15 @@ const orderedCommentList = computed(() => {
     return list.sort((a, b) => {
         const aTime = parseTimeValue(a?.createTime)?.getTime() || 0;
         const bTime = parseTimeValue(b?.createTime)?.getTime() || 0;
-        return aTime - bTime;
+        return bTime - aTime;
     });
+});
+
+const commentCurrentPage = computed(() => Math.max(1, Number(commentData.value?.pageNum) || 1));
+const commentPageSize = computed(() => Math.max(1, Number(commentData.value?.pageSize) || COMMENT_PAGE_SIZE));
+const commentPageCount = computed(() => {
+    const total = Math.max(0, Number(commentData.value?.total) || 0);
+    return Math.max(1, Math.ceil(total / commentPageSize.value));
 });
 
 const formatCommentTime = (value) => {
@@ -182,14 +219,21 @@ const loadPlaza = async () => {
     }
 };
 
-const loadCommentDetail = async (plazaId) => {
-    const resp = await plazaCommentArea({ plazaId, pageNum: 1, pageSize: 20 });
-    const data = pickData(resp) || { list: [], total: 0, pageNum: 1, pageSize: 20 };
-    commentData.value = data;
+const loadCommentDetail = async (plazaId, pageNum = 1) => {
+    const safePageNum = Math.max(1, Number(pageNum) || 1);
+    const resp = await plazaCommentArea({ plazaId, pageNum: safePageNum, pageSize: COMMENT_PAGE_SIZE });
+    const data = pickData(resp) || {};
+    commentData.value = {
+        ...data,
+        list: Array.isArray(data.list) ? data.list : [],
+        total: Math.max(0, Number(data.total) || 0),
+        pageNum: Math.max(1, Number(data.pageNum) || safePageNum),
+        pageSize: Math.max(1, Number(data.pageSize) || COMMENT_PAGE_SIZE)
+    };
     const target = plazaItems.value.find((item) => item.plazaId === plazaId);
     if (target) {
-        target.commentCount = Number(data.total || 0);
-        target.commented = Number(data.total || 0) > 0;
+        target.commentCount = Number(commentData.value.total || 0);
+        target.commented = Number(commentData.value.total || 0) > 0;
     }
 };
 
@@ -237,17 +281,16 @@ const openComment = async (item) => {
     commentForm.plazaId = item.plazaId;
     commentForm.commentContent = '';
     currentCommentItem.value = item;
-    commentData.value = { list: [], total: 0, pageNum: 1, pageSize: 20 };
+    commentData.value = { list: [], total: 0, pageNum: 1, pageSize: COMMENT_PAGE_SIZE };
     try {
-        await loadCommentDetail(item.plazaId);
+        await loadCommentDetail(item.plazaId, 1);
     } catch (error) {
         message.value = normalizeError(error).message || '加载评论失败';
     }
 };
 
-const doFork = async (plazaId) => {
-    void plazaId;
-    message.value = 'Fork 暂未开放';
+const doFork = (item) => {
+    openDetail(item);
 };
 
 const openDetail = (item) => {
@@ -256,12 +299,17 @@ const openDetail = (item) => {
 };
 
 const doComment = async () => {
-    if (!commentForm.plazaId || !commentForm.commentContent.trim()) {
+    const content = commentForm.commentContent.trim();
+    if (!commentForm.plazaId || !content) {
+        return;
+    }
+    if (content.length > COMMENT_CONTENT_LIMIT) {
+        message.value = `评论最多 ${COMMENT_CONTENT_LIMIT} 字`;
         return;
     }
     try {
-        await plazaComment(commentForm);
-        await loadCommentDetail(commentForm.plazaId);
+        await plazaComment({ ...commentForm, commentContent: content });
+        await loadCommentDetail(commentForm.plazaId, 1);
         const target = plazaItems.value.find((item) => item.plazaId === commentForm.plazaId);
         if (target) {
             target.commented = true;
@@ -278,14 +326,74 @@ const doDeleteComment = async (comment) => {
     }
     try {
         await plazaDiscomment({ plazaId: commentForm.plazaId, commentId: comment.commentId });
-        await loadCommentDetail(commentForm.plazaId);
+        const nextTotal = Math.max(0, Number(commentData.value.total || 0) - 1);
+        const maxPage = Math.max(1, Math.ceil(nextTotal / commentPageSize.value));
+        await loadCommentDetail(commentForm.plazaId, Math.min(commentCurrentPage.value, maxPage));
     } catch (error) {
         message.value = normalizeError(error).message || '删除评论失败';
     }
 };
 
+const onCommentInput = () => {
+    if (commentForm.commentContent.length > COMMENT_CONTENT_LIMIT) {
+        commentForm.commentContent = commentForm.commentContent.slice(0, COMMENT_CONTENT_LIMIT);
+    }
+};
+
+const changeCommentPage = async (step) => {
+    if (!commentForm.plazaId) {
+        return;
+    }
+    const nextPage = commentCurrentPage.value + step;
+    if (nextPage < 1 || nextPage > commentPageCount.value) {
+        return;
+    }
+    try {
+        await loadCommentDetail(commentForm.plazaId, nextPage);
+    } catch (error) {
+        message.value = normalizeError(error).message || '加载评论失败';
+    }
+};
+
+const applySearch = () => {
+    searchKeyword.value = (searchText.value || '').trim();
+};
+
+const toggleSortOrder = () => {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc';
+};
+
+const selectSortField = (field) => {
+    sortField.value = field;
+    filterPopoverOpen.value = false;
+};
+
+const clearFilterPopoverCloseTimer = () => {
+    if (filterPopoverCloseTimer) {
+        clearTimeout(filterPopoverCloseTimer);
+        filterPopoverCloseTimer = null;
+    }
+};
+
+const openFilterPopover = () => {
+    clearFilterPopoverCloseTimer();
+    filterPopoverOpen.value = true;
+};
+
+const scheduleCloseFilterPopover = () => {
+    clearFilterPopoverCloseTimer();
+    filterPopoverCloseTimer = setTimeout(() => {
+        filterPopoverOpen.value = false;
+        filterPopoverCloseTimer = null;
+    }, 180);
+};
+
 onMounted(async () => {
     await loadPlaza();
+});
+
+onBeforeUnmount(() => {
+    clearFilterPopoverCloseTimer();
 });
 
 const goRepository = () => {
@@ -300,18 +408,89 @@ const goRepository = () => {
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold">MiniAgent Plaza</h1>
                     <button
-                        class="rounded-[10px] border border-[var(--accent-color)] bg-white px-[12px] py-[8px] text-[14px] font-semibold text-[var(--accent-color)] transition hover:bg-[var(--accent-color)] hover:text-white"
+                        class="rounded-[10px] border border-[#9ab6d2] bg-[#f2f7ff] px-[12px] py-[8px] text-[14px] font-semibold text-[#6888ad] transition hover:border-[#88a8c7] hover:bg-[#e9f2ff] hover:text-[#57789f]"
                         @click="goRepository"
                     >
                         我的仓库
                     </button>
                 </div>
 
-                <input
-                    v-model="searchKeyword"
-                    class="w-full rounded-[999px] border border-[var(--border-color)] bg-white px-[16px] py-[10px] text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
-                    placeholder="搜索 MiniAgent（标题 / 描述 / 作者 / 类型）"
-                />
+                <div class="flex w-full max-w-[560px] items-center gap-[8px]">
+                    <input
+                        v-model="searchText"
+                        class="min-w-0 flex-1 rounded-[999px] border border-[var(--border-color)] bg-white px-[14px] py-[9px] text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8]"
+                        placeholder="搜索 MiniAgent（标题 / 描述 / 作者 / 类型）"
+                        @keydown.enter.prevent="applySearch"
+                    />
+                    <button
+                        class="inline-flex h-[36px] w-[36px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[#64748b] transition hover:bg-[#eef2f7] hover:text-[#334155]"
+                        title="搜索"
+                        aria-label="搜索"
+                        @click="applySearch"
+                    >
+                        <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="m20 20-3.6-3.6" />
+                        </svg>
+                    </button>
+                    <button
+                        class="inline-flex h-[36px] w-[36px] items-center justify-center rounded-[10px] border transition"
+                        :class="sortOrder === 'desc' ? 'border-[#94a3b8] bg-[#edf2f7] text-[#334155]' : 'border-[#cbd5e1] bg-white text-[#64748b]'"
+                        :title="sortOrder === 'desc' ? '当前：降序' : '当前：升序'"
+                        :aria-label="sortOrder === 'desc' ? '当前降序，点击切换升序' : '当前升序，点击切换降序'"
+                        @click="toggleSortOrder"
+                    >
+                        <svg v-if="sortOrder === 'desc'" viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M8 7v10" />
+                            <path d="m5 14 3 3 3-3" />
+                            <path d="M13 8h6" />
+                            <path d="M13 12h4" />
+                            <path d="M13 16h2" />
+                        </svg>
+                        <svg v-else viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M8 17V7" />
+                            <path d="m5 10 3-3 3 3" />
+                            <path d="M13 8h2" />
+                            <path d="M13 12h4" />
+                            <path d="M13 16h6" />
+                        </svg>
+                    </button>
+                    <div
+                        class="relative"
+                        @mouseenter="openFilterPopover"
+                        @mouseleave="scheduleCloseFilterPopover"
+                    >
+                        <button
+                            class="inline-flex h-[36px] w-[36px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[#64748b] transition hover:bg-[#eef2f7] hover:text-[#334155]"
+                            title="排序字段"
+                            aria-label="排序字段"
+                        >
+                            <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M4 6h16" />
+                                <path d="M7 12h10" />
+                                <path d="M10 18h4" />
+                            </svg>
+                        </button>
+                        <div
+                            v-if="filterPopoverOpen"
+                            class="absolute left-full top-1/2 z-[12] ml-[8px] -translate-y-1/2 rounded-[10px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_10px_24px_rgba(15,23,42,0.12)]"
+                            @mouseenter="openFilterPopover"
+                            @mouseleave="scheduleCloseFilterPopover"
+                        >
+                            <div class="flex items-center gap-[6px]">
+                                <button
+                                    v-for="option in sortFieldOptions"
+                                    :key="option.value"
+                                    class="inline-flex whitespace-nowrap rounded-[8px] px-[10px] py-[6px] text-[13px] transition"
+                                    :class="sortField === option.value ? 'bg-[#e9f1ff] text-[#2b5fb8] font-semibold' : 'text-[#475569] hover:bg-[#f1f5f9]'"
+                                    @click="selectSortField(option.value)"
+                                >
+                                    {{ option.label }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div v-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
 
@@ -336,11 +515,14 @@ const goRepository = () => {
                             <button class="block w-full pt-[2px] text-left text-[18px] font-bold leading-[1.35] text-[var(--text-primary)]" @click="openDetail(item)">
                                 {{ item.plazaTitle }}
                             </button>
-                            <button class="min-h-[38px] w-full text-left text-[13px] leading-[1.45] text-[var(--text-secondary)]" @click="openDetail(item)">
+                            <button
+                                class="min-h-[38px] w-full overflow-hidden text-left text-[13px] leading-[1.45] text-[var(--text-secondary)] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                                @click="openDetail(item)"
+                            >
                                 {{ item.plazaDesc || '这个 MiniAgent 还没有补充描述，点进详情查看能力与评论。' }}
                             </button>
                             <div class="text-[12px] text-[var(--text-secondary)]">
-                                Author: {{ displayAuthor(item) }}
+                                作者：{{ displayAuthor(item) }}
                             </div>
                             <div class="-mr-[78px] flex items-center justify-between pt-[2px]">
                                 <div class="flex items-center gap-[10px]">
@@ -360,7 +542,7 @@ const goRepository = () => {
                                         @click="doFavor(item)"
                                     >
                                         <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
-                                            <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
+                                            <path d="m12 2.7 2.86 5.79 6.4.93-4.63 4.51 1.09 6.37L12 17.28l-5.72 3 1.09-6.37-4.63-4.51 6.4-.93L12 2.7z"/>
                                         </svg>
                                         <span class="inline-block min-w-[2ch]" style="font-variant-numeric: tabular-nums;">{{ item.favorCount || 0 }}</span>
                                     </button>
@@ -383,7 +565,7 @@ const goRepository = () => {
                                             '--fork-bg': resolveCardTone(item).forkBg,
                                             '--fork-text': resolveCardTone(item).forkText
                                         }"
-                                        @click="doFork(item.plazaId)"
+                                        @click="doFork(item)"
                                     >
                                         <svg
                                             viewBox="0 0 24 24"
@@ -430,18 +612,43 @@ const goRepository = () => {
         </div>
 
         <div v-if="commentOpen" class="fixed inset-0 z-[30] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="commentOpen=false">
-            <div class="w-full max-w-[980px] space-y-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">
+            <div class="flex h-[min(82vh,680px)] w-full max-w-[980px] flex-col gap-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">
                 <div class="flex items-center justify-between">
                     <div class="text-[16px] font-semibold">{{ currentCommentItem?.plazaTitle || '评论区' }}</div>
                     <button class="text-[20px]" @click="commentOpen=false">×</button>
                 </div>
                 <div class="text-[13px] text-[var(--text-secondary)]">{{ currentCommentItem?.plazaDesc }}</div>
                 <div class="flex gap-[8px]">
-                    <input v-model="commentForm.commentContent" class="flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]" placeholder="写评论..." />
+                    <input
+                        v-model="commentForm.commentContent"
+                        maxlength="128"
+                        class="flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[8px] text-[13px]"
+                        placeholder="写评论..."
+                        @input="onCommentInput"
+                    />
                     <button class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[13px] text-white" @click="doComment">发送</button>
                 </div>
-                <div class="text-[12px] text-[var(--text-secondary)]">评论 {{ commentData?.total || orderedCommentList.length }} 条</div>
-                <div class="max-h-[340px] overflow-y-auto rounded-[12px] border border-[var(--border-color)] bg-[#f8fafc]">
+                <div class="flex items-center justify-between gap-[10px] text-[12px] text-[var(--text-secondary)]">
+                    <div>评论共 {{ commentData?.total || 0 }} 条</div>
+                    <div class="flex items-center gap-[8px]">
+                        <span>第 {{ commentCurrentPage }} / {{ commentPageCount }} 页</span>
+                        <button
+                            class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[12px] text-[#334155] transition hover:bg-[#f1f5f9] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                            :disabled="commentCurrentPage <= 1"
+                            @click="changeCommentPage(-1)"
+                        >
+                            上一页
+                        </button>
+                        <button
+                            class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[12px] text-[#334155] transition hover:bg-[#f1f5f9] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                            :disabled="commentCurrentPage >= commentPageCount"
+                            @click="changeCommentPage(1)"
+                        >
+                            下一页
+                        </button>
+                    </div>
+                </div>
+                <div class="min-h-0 flex-1 overflow-y-auto rounded-[12px] border border-[var(--border-color)] bg-[#f8fafc]">
                     <div v-for="item in orderedCommentList" :key="item.commentId" class="flex gap-[10px] border-b border-[var(--border-color)] px-[12px] py-[10px] last:border-b-0">
                         <div class="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-white text-[12px] font-semibold text-[#334155]">
                             {{ (item.userName || '?').slice(0, 1).toUpperCase() }}
@@ -449,18 +656,23 @@ const goRepository = () => {
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-[8px]">
                                 <div class="truncate text-[13px] font-semibold text-[#0f172a]">{{ item.userName }}</div>
-                                <div class="shrink-0 text-[12px] text-[var(--text-secondary)]">{{ formatCommentTime(item.createTime) }}</div>
+                                <div class="inline-flex shrink-0 items-center gap-[4px]">
+                                    <span class="inline-flex h-[22px] w-[22px] items-center justify-center">
+                                        <button
+                                            v-if="item.mine"
+                                            class="inline-flex h-[20px] w-[20px] items-center justify-center rounded-[6px] text-[#94a3b8] transition hover:bg-[#fee2e2] hover:text-[#dc2626]"
+                                            title="删除"
+                                            @click="doDeleteComment(item)"
+                                        >
+                                            <svg viewBox="0 0 24 24" class="h-[14px] w-[14px]" fill="currentColor" aria-hidden="true">
+                                                <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 7h2v8h-2v-8zm4 0h2v8h-2v-8zM7 10h2v8H7v-8zm-1 11h12a2 2 0 0 0 2-2V8H4v11a2 2 0 0 0 2 2z"/>
+                                            </svg>
+                                        </button>
+                                    </span>
+                                    <div class="text-[12px] text-[var(--text-secondary)]">{{ formatCommentTime(item.createTime) }}</div>
+                                </div>
                             </div>
                             <div class="mt-[4px] break-words text-[15px] leading-[1.45] text-[#1e293b]">{{ item.commentContent }}</div>
-                            <div class="mt-[6px] flex justify-end">
-                                <button
-                                    v-if="item.mine"
-                                    class="rounded-[8px] border border-[var(--border-color)] px-[8px] py-[4px] text-[11px] text-[var(--text-secondary)]"
-                                    @click="doDeleteComment(item)"
-                                >
-                                    删除
-                                </button>
-                            </div>
                         </div>
                     </div>
                     <div v-if="orderedCommentList.length === 0" class="px-[12px] py-[16px] text-[13px] text-[var(--text-secondary)]">暂无评论</div>
