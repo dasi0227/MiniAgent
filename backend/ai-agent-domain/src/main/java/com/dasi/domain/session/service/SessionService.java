@@ -5,6 +5,7 @@ import com.dasi.domain.session.model.vo.MessageVO;
 import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.session.repository.ISessionRepository;
 import com.dasi.domain.util.jwt.UserContext;
+import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.types.exception.SessionException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 
 import static com.dasi.domain.session.model.enumeration.MessageType.WORK_ANSWER;
 import static com.dasi.domain.session.model.enumeration.MessageType.WORK_SSE;
@@ -31,6 +31,9 @@ public class SessionService implements ISessionService {
 
     @Resource
     private UserContext userContext;
+
+    @Resource
+    private IRandomUtil randomUtil;
 
     @Override
     public List<SessionVO> listSession() {
@@ -176,7 +179,7 @@ public class SessionService implements ISessionService {
 
     private String generateSessionId(String type) {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        String uuid = randomUtil.uuid().substring(0, 10);
         return "%s_%s_%s".formatted(date, type, uuid);
     }
 

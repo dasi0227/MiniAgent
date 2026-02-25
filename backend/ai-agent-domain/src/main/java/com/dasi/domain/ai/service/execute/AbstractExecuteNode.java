@@ -7,7 +7,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.model.entity.ExecuteResponseEntity;
 import com.dasi.domain.ai.repository.IAiRepository;
-import com.dasi.domain.util.persist.IPersistService;
+import com.dasi.domain.util.persist.IPersistUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -26,7 +26,7 @@ public abstract class AbstractExecuteNode extends AbstractMultiThreadStrategyRou
     protected IAiRepository aiRepository;
 
     @Resource
-    private IPersistService persistService;
+    private IPersistUtil persistUtil;
 
     @Override
     protected void multiThread(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) {
@@ -64,9 +64,9 @@ public abstract class AbstractExecuteNode extends AbstractMultiThreadStrategyRou
 
         try {
             String payload = JSON.toJSONString(executeResponseEntity);
-            persistService.saveWorkSseMessage(sessionId, payload);
+            persistUtil.saveWorkSseMessage(sessionId, payload);
             if (SUMMARIZER_OVERVIEW.getType().equals(sectionType) || REPLIER_OVERVIEW.getType().equals(sectionType)) {
-                persistService.saveWorkAssistantMessage(sessionId, executeResponseEntity.getSectionContent());
+                persistUtil.saveWorkAssistantMessage(sessionId, executeResponseEntity.getSectionContent());
             }
         } catch (Exception e) {
             log.warn("【Agent 执行】保存消息失败：{}", e.getMessage());

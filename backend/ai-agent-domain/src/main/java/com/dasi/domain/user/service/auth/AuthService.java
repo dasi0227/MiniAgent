@@ -2,8 +2,8 @@ package com.dasi.domain.user.service.auth;
 
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
-import com.dasi.domain.util.jwt.IJwtService;
-import com.dasi.domain.util.oss.IOssService;
+import com.dasi.domain.util.jwt.IJwtUtil;
+import com.dasi.domain.util.oss.IOssUtil;
 import com.dasi.types.dto.request.user.AuthRequest;
 import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.types.exception.AuthException;
@@ -20,10 +20,10 @@ public class AuthService implements IAuthService {
     private IUserRepository userRepository;
 
     @Resource
-    private IJwtService jwtService;
+    private IJwtUtil jwtUtil;
 
     @Resource
-    private IOssService ossService;
+    private IOssUtil ossUtil;
 
     @Resource
     private PasswordEncoder passwordEncoder;
@@ -64,13 +64,13 @@ public class AuthService implements IAuthService {
     }
 
     private AuthVO buildAuthResponse(UserVO userVO) {
-        String token = jwtService.generateToken(userVO);
+        String token = jwtUtil.generateToken(userVO);
         return AuthVO.builder()
                 .token(token)
                 .userId(userVO.getId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
-                .userAvatar(ossService.getObjectUrl(userVO.getUserAvatar()))
+                .userAvatar(ossUtil.getObjectUrl(userVO.getUserAvatar()))
                 .userStatus(userVO.getUserStatus())
                 .build();
     }

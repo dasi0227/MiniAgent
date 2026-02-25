@@ -5,6 +5,7 @@ import Welcome from '../components/Welcome.vue';
 import Studio from '../components/Studio.vue';
 import Plaza from '../components/Plaza.vue';
 import Repository from '../components/Repository.vue';
+import Setting from '../components/Setting.vue';
 import Auth from '../components/Auth.vue';
 import AdminAuth from '../components/AdminAuth.vue';
 import AdminTable from '../components/AdminTable.vue';
@@ -50,6 +51,11 @@ const routes = [
         path: '/repository',
         name: 'repository',
         component: Repository
+    },
+    {
+        path: '/setting',
+        name: 'setting',
+        component: Setting
     },
     {
         path: '/login',

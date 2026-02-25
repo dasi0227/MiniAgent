@@ -1,6 +1,6 @@
 package com.dasi.infrastructure.util;
 
-import com.dasi.domain.util.stat.IStatService;
+import com.dasi.domain.util.stat.IStatUtil;
 import com.dasi.infrastructure.persistent.dao.*;
 import com.dasi.infrastructure.persistent.po.AiClient;
 import com.dasi.infrastructure.persistent.po.AiConfig;
@@ -17,7 +17,7 @@ import static com.dasi.types.constant.StatConstant.*;
 
 @Slf4j
 @Service
-public class StatService implements IStatService {
+public class StatUtil implements IStatUtil {
 
     @Resource
     private IAiStatDao aiStatDao;

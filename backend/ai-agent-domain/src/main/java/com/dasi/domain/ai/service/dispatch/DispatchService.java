@@ -8,7 +8,7 @@ import com.dasi.domain.ai.service.armory.ArmoryStrategyFactory;
 import com.dasi.domain.ai.service.armory.IArmoryStrategy;
 import com.dasi.domain.ai.service.execute.ExecuteStrategyFactory;
 import com.dasi.domain.ai.service.execute.IExecuteStrategy;
-import com.dasi.domain.util.redis.IRedisService;
+import com.dasi.domain.util.redis.IRedisUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class DispatchService implements IDispatchService {
     private ThreadPoolExecutor threadPoolExecutor;
 
     @Resource
-    private IRedisService redisService;
+    private IRedisUtil redisUtil;
 
     @Override
     public void dispatchArmoryStrategy(String armoryType, Set<String> armoryIdSet) {
@@ -49,7 +49,7 @@ public class DispatchService implements IDispatchService {
         }
 
         String armoryKey = AI_ARMORY_PREFIX + armoryType;
-        Set<String> cacheSet = redisService.getSet(armoryKey, String.class);
+        Set<String> cacheSet = redisUtil.getSet(armoryKey, String.class);
 
         if (cacheSet != null && !cacheSet.isEmpty()) {
             armoryIdSet.removeAll(cacheSet);
@@ -74,7 +74,7 @@ public class DispatchService implements IDispatchService {
             throw new RuntimeException("装配数据失败：" + armoryType);
         }
 
-        redisService.addSet(armoryKey, armoryIdSet);
+        redisUtil.addSet(armoryKey, armoryIdSet);
     }
 
     @Override

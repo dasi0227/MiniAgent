@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface IRedisService {
+public interface IRedisUtil {
 
     void setValue(String key, Object value);
     void setValue(String key, Object value, long ttlSeconds);

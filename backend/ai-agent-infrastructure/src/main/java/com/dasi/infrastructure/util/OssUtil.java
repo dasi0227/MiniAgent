@@ -2,7 +2,7 @@ package com.dasi.infrastructure.util;
 
 import com.aliyun.oss.OSS;
 import com.dasi.domain.util.jwt.UserContext;
-import com.dasi.domain.util.oss.IOssService;
+import com.dasi.domain.util.oss.IOssUtil;
 import com.dasi.domain.util.oss.OssProperties;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
@@ -17,7 +17,7 @@ import static com.dasi.types.constant.ExceptionMessage.*;
 
 @Slf4j
 @Service
-public class OssService implements IOssService {
+public class OssUtil implements IOssUtil {
 
     @Resource
     private OssProperties ossProperties;

@@ -5,8 +5,8 @@ import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
-import com.dasi.domain.util.jwt.IJwtService;
-import com.dasi.domain.util.oss.IOssService;
+import com.dasi.domain.util.jwt.IJwtUtil;
+import com.dasi.domain.util.oss.IOssUtil;
 import com.dasi.types.dto.request.user.SettingApiRequest;
 import com.dasi.types.dto.request.user.ProfileEditRequest;
 import com.dasi.domain.user.model.vo.AuthVO;
@@ -36,10 +36,10 @@ public class SettingService implements ISettingService {
     private UserContext userContext;
 
     @Resource
-    private IJwtService jwtService;
+    private IJwtUtil jwtUtil;
 
     @Resource
-    private IOssService ossService;
+    private IOssUtil ossUtil;
 
     @Resource
     private PasswordEncoder passwordEncoder;
@@ -77,9 +77,9 @@ public class SettingService implements ISettingService {
         String oldAvatar = userVO.getUserAvatar();
         String newAvatar = oldAvatar;
         if (avatar != null && !avatar.isEmpty()) {
-            newAvatar = ossService.uploadObject(avatar);
+            newAvatar = ossUtil.uploadObject(avatar);
             if (StringUtils.hasText(oldAvatar)) {
-                ossService.deleteObject(oldAvatar);
+                ossUtil.deleteObject(oldAvatar);
             }
         }
 
@@ -88,13 +88,13 @@ public class SettingService implements ISettingService {
     }
 
     private AuthVO buildAuthResponse(UserVO userVO) {
-        String token = jwtService.generateToken(userVO);
+        String token = jwtUtil.generateToken(userVO);
         return AuthVO.builder()
                 .token(token)
                 .userId(userVO.getId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
-                .userAvatar(ossService.getObjectUrl(userVO.getUserAvatar()))
+                .userAvatar(ossUtil.getObjectUrl(userVO.getUserAvatar()))
                 .userStatus(userVO.getUserStatus())
                 .build();
     }

@@ -1,6 +1,6 @@
 package com.dasi.infrastructure.util;
 
-import com.dasi.domain.util.redis.IRedisService;
+import com.dasi.domain.util.redis.IRedisUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
@@ -18,7 +18,7 @@ import java.util.Set;
 
 @Slf4j
 @Service
-public class RedisService implements IRedisService {
+public class RedisUtil implements IRedisUtil {
 
     @Resource
     private RedisTemplate<String, String> redisTemplate;

@@ -1,6 +1,6 @@
 package com.dasi.aop;
 
-import com.dasi.domain.util.redis.IRedisService;
+import com.dasi.domain.util.redis.IRedisUtil;
 import com.dasi.types.annotation.CacheEvict;
 import jakarta.annotation.Resource;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class CacheEvictAspect {
 
     @Resource
-    private IRedisService redisService;
+    private IRedisUtil redisUtil;
 
     @AfterReturning("@annotation(cacheEvict)")
     public void afterReturn(CacheEvict cacheEvict) {
@@ -23,7 +23,7 @@ public class CacheEvictAspect {
         }
 
         for (String keyPrefix : keyPrefixList) {
-            redisService.deleteByPrefix(keyPrefix);
+            redisUtil.deleteByPrefix(keyPrefix);
         }
 
     }

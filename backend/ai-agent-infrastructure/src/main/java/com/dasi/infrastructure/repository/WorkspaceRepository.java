@@ -5,6 +5,7 @@ import com.dasi.domain.miniagent.model.vo.CommentVO;
 import com.dasi.domain.miniagent.model.vo.PlazaVO;
 import com.dasi.domain.miniagent.repository.IWorkspaceRepository;
 import com.dasi.domain.util.jwt.UserContext;
+import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.infrastructure.persistent.dao.IAiPlazaCommentDao;
 import com.dasi.infrastructure.persistent.dao.IAiPlazaDao;
 import com.dasi.infrastructure.persistent.dao.IAiPlazaFavorDao;
@@ -24,7 +25,6 @@ import org.springframework.stereotype.Repository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -44,6 +44,9 @@ public class WorkspaceRepository implements IWorkspaceRepository {
 
     @Resource
     private IAiPlazaCommentDao aiPlazaCommentDao;
+
+    @Resource
+    private IRandomUtil randomUtil;
 
     @Override
     public PageResult<PlazaVO> pagePlaza(PlazaPageRequest request) {
@@ -179,7 +182,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         String plazaId = request.getPlazaId();
         Long userId = userContext.getUserId();
         aiPlazaCommentDao.insert(AiPlazaComment.builder()
-                .commentId(UUID.randomUUID().toString().replace("-", ""))
+                .commentId(randomUtil.userRandom())
                 .plazaId(plazaId)
                 .userId(userId)
                 .userName(userContext.getUserName())

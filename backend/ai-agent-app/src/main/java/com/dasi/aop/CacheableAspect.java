@@ -1,6 +1,6 @@
 package com.dasi.aop;
 
-import com.dasi.domain.util.redis.IRedisService;
+import com.dasi.domain.util.redis.IRedisUtil;
 import com.dasi.types.enumeration.CacheType;
 import com.dasi.types.annotation.Cacheable;
 import jakarta.annotation.Resource;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class CacheableAspect {
 
     @Resource
-    private IRedisService redisService;
+    private IRedisUtil redisUtil;
 
     @Around("@annotation(cacheable)")
     public Object around(ProceedingJoinPoint joinPoint, Cacheable cacheable) throws Throwable {
@@ -50,10 +50,10 @@ public class CacheableAspect {
 
     private Object readCache(String cacheKey, CacheType type, Class<?> clazz) {
         return switch (type) {
-            case VALUE -> redisService.getValue(cacheKey, clazz);
-            case LIST -> redisService.getList(cacheKey, clazz);
-            case SET -> redisService.getSet(cacheKey, clazz);
-            case MAP -> redisService.getMap(cacheKey, clazz);
+            case VALUE -> redisUtil.getValue(cacheKey, clazz);
+            case LIST -> redisUtil.getList(cacheKey, clazz);
+            case SET -> redisUtil.getSet(cacheKey, clazz);
+            case MAP -> redisUtil.getMap(cacheKey, clazz);
         };
     }
 
@@ -65,26 +65,26 @@ public class CacheableAspect {
         switch (cacheType) {
             case VALUE -> {
                 if (cacheTtl > 0) {
-                    redisService.setValue(cacheKey, cacheValue, cacheTtl);
+                    redisUtil.setValue(cacheKey, cacheValue, cacheTtl);
                 } else {
-                    redisService.setValue(cacheKey, cacheValue);
+                    redisUtil.setValue(cacheKey, cacheValue);
                 }
             }
             case LIST -> {
                 if (cacheValue instanceof List<?> list) {
                     if (cacheTtl > 0) {
-                        redisService.setList(cacheKey, list, cacheTtl);
+                        redisUtil.setList(cacheKey, list, cacheTtl);
                     } else {
-                        redisService.setList(cacheKey, list);
+                        redisUtil.setList(cacheKey, list);
                     }
                 }
             }
             case SET -> {
                 if (cacheValue instanceof Set<?> set) {
                     if (cacheTtl > 0) {
-                        redisService.addSet(cacheKey, set, cacheTtl);
+                        redisUtil.addSet(cacheKey, set, cacheTtl);
                     } else {
-                        redisService.addSet(cacheKey, set);
+                        redisUtil.addSet(cacheKey, set);
                     }
                 }
             }
@@ -92,9 +92,9 @@ public class CacheableAspect {
                 if (cacheValue instanceof Map<?, ?> map) {
                     Map<String, ?> value = (Map<String, ?>) map;
                     if (cacheTtl > 0) {
-                        redisService.setMap(cacheKey, value, cacheTtl);
+                        redisUtil.setMap(cacheKey, value, cacheTtl);
                     } else {
-                        redisService.setMap(cacheKey, value);
+                        redisUtil.setMap(cacheKey, value);
                     }
                 }
             }

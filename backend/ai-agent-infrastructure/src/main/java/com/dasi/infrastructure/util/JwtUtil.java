@@ -7,7 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.dasi.domain.util.jwt.JwtProperties;
 import com.dasi.domain.user.model.vo.UserVO;
-import com.dasi.domain.util.jwt.IJwtService;
+import com.dasi.domain.util.jwt.IJwtUtil;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
 import java.util.Date;
 
 @Service
-public class JwtService implements IJwtService {
+public class JwtUtil implements IJwtUtil {
 
     private static final String CLAIM_USER_ID = "userId";
     private static final String CLAIM_USER_NAME = "userName";

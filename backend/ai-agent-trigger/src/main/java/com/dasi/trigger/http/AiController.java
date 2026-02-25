@@ -8,8 +8,8 @@ import com.dasi.domain.ai.service.rag.IRagService;
 import com.dasi.domain.user.service.query.IQueryService;
 import com.dasi.domain.session.model.enumeration.SessionType;
 import com.dasi.domain.session.service.ISessionService;
-import com.dasi.domain.util.persist.IPersistService;
-import com.dasi.domain.util.stat.IStatService;
+import com.dasi.domain.util.persist.IPersistUtil;
+import com.dasi.domain.util.stat.IStatUtil;
 import com.dasi.domain.user.model.vo.ChatClientVO;
 import com.dasi.domain.user.model.vo.WorkAgentVO;
 import com.dasi.types.dto.request.ai.AiChatRequest;
@@ -64,10 +64,10 @@ public class AiController implements IAiApi {
     private ISessionService sessionService;
 
     @Resource
-    private IPersistService persistService;
+    private IPersistUtil persistUtil;
 
     @Resource
-    private IStatService statService;
+    private IStatUtil statUtil;
 
     @Override
     @PostMapping(value = "/work/execute", produces = "text/event-stream")
@@ -119,12 +119,12 @@ public class AiController implements IAiApi {
             return sseEmitter;
         } finally {
             try {
-                persistService.saveWorkUserMessage(sessionId, userMessage);
+                persistUtil.saveWorkUserMessage(sessionId, userMessage);
             } catch (Exception e) {
                 log.warn("【AI 执行】持久化消息失败：sessionId={}, error={}", sessionId, e.getMessage());
             }
             try {
-                statService.recordWorkUsage(agentId);
+                statUtil.recordWorkUsage(agentId);
             } catch (Exception e) {
                 log.warn("【AI 执行】记录统计失败：agentId={}, error={}", agentId, e.getMessage());
             }
@@ -188,19 +188,19 @@ public class AiController implements IAiApi {
             return CHAT_ERROR_RESPONSE;
         } finally {
             try {
-                persistService.saveChatUserMessage(sessionId, userMessage);
+                persistUtil.saveChatUserMessage(sessionId, userMessage);
             } catch (Exception e) {
                 log.warn("【AI 对话】持久化用户消息失败：sessionId={}, error={}", sessionId, e.getMessage());
             }
             if (StringUtils.hasText(response) && !CHAT_ERROR_RESPONSE.equals(response)) {
                 try {
-                    persistService.saveChatAssistantMessage(sessionId, response);
+                    persistUtil.saveChatAssistantMessage(sessionId, response);
                 } catch (Exception e) {
                     log.warn("【AI 对话】持久化助手消息失败：sessionId={}, error={}", sessionId, e.getMessage());
                 }
             }
             try {
-                statService.recordChatUsage(clientId, mcpIdList);
+                statUtil.recordChatUsage(clientId, mcpIdList);
             } catch (Exception e) {
                 log.warn("【AI 对话】记录统计失败：clientId={}, error={}", clientId, e.getMessage());
             }
@@ -259,7 +259,7 @@ public class AiController implements IAiApi {
                             return;
                         }
                         try {
-                            persistService.saveChatAssistantMessage(sessionId, answerBuffer.toString());
+                            persistUtil.saveChatAssistantMessage(sessionId, answerBuffer.toString());
                         } catch (Exception e) {
                             log.warn("【AI 对话】持久化消息失败：{}", e.getMessage());
                         }
@@ -271,12 +271,12 @@ public class AiController implements IAiApi {
             return Flux.just(CHAT_ERROR_RESPONSE);
         } finally {
             try {
-                persistService.saveChatUserMessage(sessionId, userMessage);
+                persistUtil.saveChatUserMessage(sessionId, userMessage);
             } catch (Exception e) {
                 log.warn("【AI 对话】持久化用户消息失败：sessionId={}, error={}", sessionId, e.getMessage());
             }
             try {
-                statService.recordChatUsage(clientId, mcpIdList);
+                statUtil.recordChatUsage(clientId, mcpIdList);
             } catch (Exception e) {
                 log.warn("【AI 对话】记录统计失败：clientId={}, error={}", clientId, e.getMessage());
             }

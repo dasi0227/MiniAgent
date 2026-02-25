@@ -2,7 +2,7 @@ package com.dasi.domain.util.stat;
 
 import java.util.List;
 
-public interface IStatService {
+public interface IStatUtil {
 
     void recordChatUsage(String clientId, List<String> mcpIdList);
 

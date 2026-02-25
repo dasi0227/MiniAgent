@@ -1,6 +1,6 @@
 package com.dasi;
 
-import com.dasi.domain.util.redis.IRedisService;
+import com.dasi.domain.util.redis.IRedisUtil;
 import jakarta.annotation.Resource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class MiniAgentApplication {
 
     @Resource
-    private IRedisService redisService;
+    private IRedisUtil redisUtil;
 
     public static void main(String[] args) {
         SpringApplication.run(MiniAgentApplication.class);
@@ -21,7 +21,7 @@ public class MiniAgentApplication {
 
     @EventListener(ApplicationReadyEvent.class)
     public void flushRedisDbOnStartup() {
-        redisService.clear();
+        redisUtil.clear();
     }
 
 }

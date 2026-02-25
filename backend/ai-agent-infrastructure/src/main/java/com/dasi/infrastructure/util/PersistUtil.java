@@ -1,7 +1,7 @@
 package com.dasi.infrastructure.util;
 
 import com.dasi.domain.session.model.enumeration.MessageType;
-import com.dasi.domain.util.persist.IPersistService;
+import com.dasi.domain.util.persist.IPersistUtil;
 import com.dasi.infrastructure.persistent.dao.IAiMessageDao;
 import com.dasi.infrastructure.persistent.dao.IAiSessionDao;
 import com.dasi.infrastructure.persistent.po.AiMessage;
@@ -21,7 +21,7 @@ import static com.dasi.types.constant.ChatConstant.WORK_USER_LIMIT;
 
 @Slf4j
 @Service
-public class PersistService implements IPersistService {
+public class PersistUtil implements IPersistUtil {
 
     @Resource
     private IAiMessageDao messageDao;

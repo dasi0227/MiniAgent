@@ -3,7 +3,7 @@ package com.dasi.trigger.interceptor;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.user.model.vo.UserVO;
-import com.dasi.domain.util.jwt.IJwtService;
+import com.dasi.domain.util.jwt.IJwtUtil;
 import com.dasi.types.dto.result.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
@@ -30,7 +30,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     );
 
     @Resource
-    private IJwtService jwtService;
+    private IJwtUtil jwtUtil;
 
     @Resource
     private UserContext userContext;
@@ -58,7 +58,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         UserVO userVO;
 
         try {
-            userVO = jwtService.parseToken(token);
+            userVO = jwtUtil.parseToken(token);
         } catch (JWTVerificationException e) {
             log.warn("Token 校验失败：{}", e.getMessage());
             return unauthorized(response, "登录状态无效，请重新登录");
