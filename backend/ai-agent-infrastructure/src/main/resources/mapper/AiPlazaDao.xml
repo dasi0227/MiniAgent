@@ -7,10 +7,10 @@
         <id column="id" property="id"/>
         <result column="plaza_id" property="plazaId"/>
         <result column="template_id" property="templateId"/>
-        <result column="agent_id" property="agentId"/>
         <result column="user_id" property="userId"/>
-        <result column="agent_type" property="agentType"/>
         <result column="user_name" property="userName"/>
+        <result column="agent_name" property="agentName"/>
+        <result column="agent_type" property="agentType"/>
         <result column="plaza_title" property="plazaTitle"/>
         <result column="plaza_desc" property="plazaDesc"/>
         <result column="like_count" property="likeCount"/>
@@ -21,63 +21,65 @@
     </resultMap>
 
     <select id="page" resultMap="dataMap">
-        SELECT id,
-               plaza_id,
-               template_id,
-               agent_id,
-               user_id,
-               agent_type,
-               user_name,
-               plaza_title,
-               plaza_desc,
-               like_count,
-               favor_count,
-               comment_count,
-               create_time,
-               update_time
-        FROM ai_plaza
+        SELECT p.id,
+               p.plaza_id,
+               p.template_id,
+               p.user_id,
+               u.user_name,
+               p.agent_name,
+               p.agent_type,
+               p.plaza_title,
+               p.plaza_desc,
+               p.like_count,
+               p.favor_count,
+               p.comment_count,
+               p.create_time,
+               p.update_time
+        FROM ai_plaza p
+                 LEFT JOIN ai_user u ON p.user_id = u.id
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (
-                plaza_title LIKE CONCAT('%', #{keyword}, '%')
-                OR plaza_desc LIKE CONCAT('%', #{keyword}, '%')
-                OR user_name LIKE CONCAT('%', #{keyword}, '%')
-                OR agent_type LIKE CONCAT('%', #{keyword}, '%')
+                p.plaza_title LIKE CONCAT('%', #{keyword}, '%')
+                OR p.plaza_desc LIKE CONCAT('%', #{keyword}, '%')
+                OR p.agent_name LIKE CONCAT('%', #{keyword}, '%')
+                OR u.user_name LIKE CONCAT('%', #{keyword}, '%')
+                OR p.agent_type LIKE CONCAT('%', #{keyword}, '%')
                 )
             </if>
         </where>
         <choose>
             <when test="sortBy == 'like'">
-                ORDER BY like_count
+                ORDER BY p.like_count
                 <choose>
                     <when test="sortOrder == 'asc'">ASC</when>
                     <otherwise>DESC</otherwise>
                 </choose>
-                , id DESC
+                , p.id DESC
             </when>
             <when test="sortBy == 'favor'">
-                ORDER BY favor_count
+                ORDER BY p.favor_count
                 <choose>
                     <when test="sortOrder == 'asc'">ASC</when>
                     <otherwise>DESC</otherwise>
                 </choose>
-                , id DESC
+                , p.id DESC
             </when>
             <when test="sortBy == 'comment'">
-                ORDER BY comment_count
+                ORDER BY p.comment_count
                 <choose>
                     <when test="sortOrder == 'asc'">ASC</when>
                     <otherwise>DESC</otherwise>
                 </choose>
-                , id DESC
+                , p.id DESC
             </when>
             <otherwise>
-                ORDER BY create_time
+                ORDER BY p.create_time
                 <choose>
                     <when test="sortOrder == 'asc'">ASC</when>
                     <otherwise>DESC</otherwise>
                 </choose>
-                , id DESC
+                , p.id DESC
             </otherwise>
         </choose>
         <if test="offset != null and size != null">
@@ -87,46 +89,48 @@
 
     <select id="count" resultType="java.lang.Integer">
         SELECT COUNT(1)
-        FROM ai_plaza
+        FROM ai_plaza p
+                 LEFT JOIN ai_user u ON p.user_id = u.id
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (
-                plaza_title LIKE CONCAT('%', #{keyword}, '%')
-                OR plaza_desc LIKE CONCAT('%', #{keyword}, '%')
-                OR user_name LIKE CONCAT('%', #{keyword}, '%')
-                OR agent_type LIKE CONCAT('%', #{keyword}, '%')
+                p.plaza_title LIKE CONCAT('%', #{keyword}, '%')
+                OR p.plaza_desc LIKE CONCAT('%', #{keyword}, '%')
+                OR p.agent_name LIKE CONCAT('%', #{keyword}, '%')
+                OR u.user_name LIKE CONCAT('%', #{keyword}, '%')
+                OR p.agent_type LIKE CONCAT('%', #{keyword}, '%')
                 )
             </if>
         </where>
     </select>
 
     <select id="queryByPlazaId" resultMap="dataMap">
-        SELECT id,
-               plaza_id,
-               template_id,
-               agent_id,
-               user_id,
-               agent_type,
-               user_name,
-               plaza_title,
-               plaza_desc,
-               like_count,
-               favor_count,
-               comment_count,
-               create_time,
-               update_time
-        FROM ai_plaza
-        WHERE plaza_id = #{plazaId}
+        SELECT p.id,
+               p.plaza_id,
+               p.template_id,
+               p.user_id,
+               u.user_name,
+               p.agent_name,
+               p.agent_type,
+               p.plaza_title,
+               p.plaza_desc,
+               p.like_count,
+               p.favor_count,
+               p.comment_count,
+               p.create_time,
+               p.update_time
+        FROM ai_plaza p
+                 LEFT JOIN ai_user u ON p.user_id = u.id
+        WHERE p.plaza_id = #{plazaId}
         LIMIT 1
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiPlaza">
         INSERT INTO ai_plaza (plaza_id,
                               template_id,
-                              agent_id,
                               user_id,
+                              agent_name,
                               agent_type,
-                              user_name,
                               plaza_title,
                               plaza_desc,
                               like_count,
@@ -134,10 +138,9 @@
                               comment_count)
         VALUES (#{plazaId},
                 #{templateId},
-                #{agentId},
                 #{userId},
+                #{agentName},
                 #{agentType},
-                #{userName},
                 #{plazaTitle},
                 #{plazaDesc},
                 #{likeCount},
@@ -150,10 +153,9 @@
         <set>
             <if test="plazaId != null">plaza_id = #{plazaId},</if>
             <if test="templateId != null">template_id = #{templateId},</if>
-            <if test="agentId != null">agent_id = #{agentId},</if>
             <if test="userId != null">user_id = #{userId},</if>
+            <if test="agentName != null">agent_name = #{agentName},</if>
             <if test="agentType != null">agent_type = #{agentType},</if>
-            <if test="userName != null">user_name = #{userName},</if>
             <if test="plazaTitle != null">plaza_title = #{plazaTitle},</if>
             <if test="plazaDesc != null">plaza_desc = #{plazaDesc},</if>
             <if test="likeCount != null">like_count = #{likeCount},</if>

@@ -16,10 +16,10 @@ public class AiPlaza {
     private Long id;
     private String plazaId;
     private String templateId;
-    private String agentId;
     private Long userId;
-    private String agentType;
     private String userName;
+    private String agentName;
+    private String agentType;
     private String plazaTitle;
     private String plazaDesc;
     private Integer likeCount;

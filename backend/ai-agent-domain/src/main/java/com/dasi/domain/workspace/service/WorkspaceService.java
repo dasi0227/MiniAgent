@@ -1,13 +1,12 @@
 package com.dasi.domain.workspace.service;
 
-import com.dasi.domain.workspace.model.vo.CommentVO;
-import com.dasi.domain.workspace.model.vo.PlazaVO;
-import com.dasi.domain.workspace.model.vo.TemplateDetailVO;
-import com.dasi.domain.workspace.repository.IWorkspaceRepository;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
-import com.dasi.domain.workspace.model.dto.TemplateDetailDTO;
+import com.dasi.domain.workspace.model.vo.CommentVO;
+import com.dasi.domain.workspace.model.vo.PlazaVO;
+import com.dasi.domain.workspace.model.vo.TemplateVO;
+import com.dasi.domain.workspace.repository.IWorkspaceRepository;
 import com.dasi.types.result.PageResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -56,14 +55,14 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    public void templatePublish(String agentId) {
+    public void agentPublish(String agentId) {
         // workspace template 链路尚在建设中，先保持接口可用。
     }
 
     @Override
-    public TemplateDetailVO templateDetail(TemplateDetailDTO dto) {
+    public TemplateVO agentTemplate(String templateId) {
         // workspace template 链路尚在建设中，先返回空结构。
-        return TemplateDetailVO.builder().build();
+        return TemplateVO.builder().build();
     }
 
 }

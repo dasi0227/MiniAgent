@@ -12,7 +12,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TemplateDetailVO {
+public class TemplateVO {
 
     // template 信息
     private String templateId;

@@ -15,7 +15,7 @@ public class PlazaVO {
 
     private String plazaId;
     private String templateId;
-    private String agentId;
+    private String agentName;
     private String agentType;
     private String userName;
     private String plazaTitle;
