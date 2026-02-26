@@ -5,6 +5,7 @@ import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
+import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.domain.workspace.repository.IWorkspaceRepository;
 import com.dasi.types.result.PageResult;
@@ -12,6 +13,8 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -55,14 +58,31 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void plazaDelete(String plazaId) {
+        workspaceRepository.plazaDelete(plazaId);
+    }
+
+    @Override
+    public Map<String, RepoVO> repoList() {
+        return workspaceRepository.repoList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void agentPublish(String agentId) {
-        // workspace template 链路尚在建设中，先保持接口可用。
+        workspaceRepository.agentPublish(agentId);
     }
 
     @Override
     public TemplateVO agentTemplate(String templateId) {
-        // workspace template 链路尚在建设中，先返回空结构。
-        return TemplateVO.builder().build();
+        return workspaceRepository.agentTemplate(templateId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void agentDelete(String agentId) {
+        workspaceRepository.agentDelete(agentId);
     }
 
 }

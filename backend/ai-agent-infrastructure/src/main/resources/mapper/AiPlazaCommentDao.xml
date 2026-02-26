@@ -88,4 +88,10 @@
           AND user_id = #{userId}
     </delete>
 
+    <delete id="deleteByPlazaId">
+        DELETE
+        FROM ai_plaza_comment
+        WHERE plaza_id = #{plazaId}
+    </delete>
+
 </mapper>

@@ -19,9 +19,17 @@ public interface IAiPlazaDao {
 
     AiPlaza queryByPlazaId(@Param("plazaId") String plazaId);
 
+    AiPlaza queryByTemplateId(@Param("templateId") String templateId);
+
+    List<AiPlaza> listByTemplateId(@Param("templateId") String templateId);
+
     void insert(AiPlaza aiPlaza);
 
     void update(AiPlaza aiPlaza);
+
+    Integer deleteByPlazaId(@Param("plazaId") String plazaId);
+
+    Integer deleteByTemplateId(@Param("templateId") String templateId);
 
     Integer increaseLikeCount(@Param("plazaId") String plazaId, @Param("delta") Integer delta);
 

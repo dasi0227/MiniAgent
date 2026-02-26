@@ -38,6 +38,8 @@ public interface IAiClientDao {
 
     void delete(@Param("id") Long id);
 
+    Integer deleteByClientId(@Param("clientId") String clientId);
+
     void toggle(AiClient aiClient);
 
     List<String> queryClientIdByModelId(@Param("modelId") String modelId);

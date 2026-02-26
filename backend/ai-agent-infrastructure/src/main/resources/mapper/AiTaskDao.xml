@@ -144,4 +144,10 @@
         FROM ai_task
         WHERE id = #{id}
     </delete>
+
+    <delete id="deleteByAgentId">
+        DELETE
+        FROM ai_task
+        WHERE agent_id = #{agentId}
+    </delete>
 </mapper>

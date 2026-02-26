@@ -17,4 +17,6 @@ public interface IAiPlazaFavorDao {
 
     Integer delete(@Param("plazaId") String plazaId, @Param("userId") Long userId);
 
+    Integer deleteByPlazaId(@Param("plazaId") String plazaId);
+
 }

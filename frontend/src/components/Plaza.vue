@@ -144,21 +144,16 @@ const resolveSortValue = (item, field) => {
 };
 
 const filteredItems = computed(() => {
-    const keyword = searchKeyword.value.trim().toLowerCase();
-    const filtered = !keyword
-        ? [...plazaItems.value]
-        : plazaItems.value.filter((item) => {
-        const haystack = [
-            item?.plazaTitle || '',
-            item?.plazaDesc || '',
-            item?.agentType || '',
-            item?.userName || ''
-        ]
-            .join(' ')
-            .toLowerCase();
-        return haystack.includes(keyword);
-    });
-    return filtered.sort((a, b) => {
+    const list = Array.isArray(plazaItems.value) ? [...plazaItems.value] : [];
+    if (!list.length) {
+        return [];
+    }
+    const hasStableOrder =
+        searchKeyword.value.trim() !== '' || ['like', 'favor', 'comment'].includes(sortField.value);
+    if (hasStableOrder) {
+        return list;
+    }
+    return list.sort((a, b) => {
         const aValue = resolveSortValue(a, sortField.value);
         const bValue = resolveSortValue(b, sortField.value);
         if (aValue === bValue) {
@@ -208,8 +203,15 @@ const formatCommentTime = (value) => {
 
 const loadPlaza = async () => {
     loading.value = true;
+    message.value = '';
     try {
-        const resp = await plazaList({ pageNum: 1, pageSize: 10, sortOrder: 'desc' });
+        const resp = await plazaList({
+            keyword: searchKeyword.value,
+            sortBy: sortField.value,
+            sortOrder: sortOrder.value,
+            pageNum: 1,
+            pageSize: 10
+        });
         const data = pickData(resp) || {};
         plazaItems.value = data.list || [];
     } catch (error) {
@@ -357,15 +359,18 @@ const changeCommentPage = async (step) => {
 
 const applySearch = () => {
     searchKeyword.value = (searchText.value || '').trim();
+    void loadPlaza();
 };
 
 const toggleSortOrder = () => {
     sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc';
+    void loadPlaza();
 };
 
 const selectSortField = (field) => {
     sortField.value = field;
     filterPopoverOpen.value = false;
+    void loadPlaza();
 };
 
 const clearFilterPopoverCloseTimer = () => {

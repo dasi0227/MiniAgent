@@ -26,4 +26,6 @@ public interface IAiFlowDao {
     void update(AiFlow aiFlow);
 
     void delete(@Param("id") Long id);
+
+    Integer deleteByAgentId(@Param("agentId") String agentId);
 }

@@ -122,7 +122,6 @@ const avatarCropSourceUrl = ref('');
 const avatarCropPreviewUrl = ref('');
 const mcpForm = reactive({
     id: null,
-    mcpId: '',
     mcpName: '',
     mcpTransport: 'mcp',
     mcpConfig: '',
@@ -130,7 +129,7 @@ const mcpForm = reactive({
     secretMapText: ''
 });
 const apiForm = reactive({
-    apiId: '',
+    id: null,
     modelName: '',
     modelType: '',
     apiBaseUrl: '',
@@ -749,7 +748,7 @@ const toggleTheme = () => {
 };
 
 const resetMcpForm = () => {
-    mcpForm.mcpId = '';
+    mcpForm.id = null;
     mcpForm.mcpName = '';
     mcpForm.mcpTransport = 'mcp';
     mcpForm.mcpConfig = '';
@@ -759,7 +758,7 @@ const resetMcpForm = () => {
 };
 
 const resetApiForm = () => {
-    apiForm.apiId = '';
+    apiForm.id = null;
     apiForm.modelName = '';
     apiForm.modelType = '';
     apiForm.apiBaseUrl = '';
@@ -816,29 +815,31 @@ const loadUserMcp = async () => {
 
 const editMcp = (item) => {
     if (!item) return;
-    mcpForm.mcpId = item.mcpId || '';
+    mcpForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
     mcpForm.mcpName = item.mcpName || '';
     mcpForm.mcpTransport = mapBackendMcpTypeToTransport(item.mcpType);
-    mcpForm.mcpConfig = item.mcpConfig || '';
+    mcpForm.mcpConfig = item.mcpParam || item.mcpConfig || '';
     mcpForm.mcpDesc = item.mcpDesc || '';
     mcpForm.secretMapText = item.mcpSecret || '';
     mcpEditing.value = true;
 };
 
 const saveMcp = async () => {
-    if (!mcpForm.mcpId.trim() || !mcpForm.mcpName.trim() || !mcpForm.mcpTransport.trim() || !mcpForm.mcpConfig.trim()) {
+    if (!mcpForm.mcpName.trim() || !mcpForm.mcpTransport.trim() || !mcpForm.mcpConfig.trim()) {
         mcpError.value = '请完整填写 MCP 必填字段';
         return;
     }
     mcpError.value = '';
     const payload = {
-        mcpId: mcpForm.mcpId,
         mcpName: mcpForm.mcpName,
         mcpType: mapTransportToBackendMcpType(mcpForm.mcpTransport),
-        mcpConfig: mcpForm.mcpConfig,
+        mcpParam: mcpForm.mcpConfig,
         mcpDesc: mcpForm.mcpDesc,
         mcpSecret: mcpForm.secretMapText || '{}'
     };
+    if (mcpEditing.value && Number.isFinite(Number(mcpForm.id))) {
+        payload.id = Number(mcpForm.id);
+    }
     try {
         if (mcpEditing.value) {
             await userMcpUpdate(payload);
@@ -856,7 +857,7 @@ const deleteMcp = async (item) => {
     if (!item?.id) return;
     try {
         await userMcpDelete(item.id);
-        if (mcpForm.mcpId === item.mcpId) {
+        if (mcpForm.id === item.id) {
             resetMcpForm();
         }
         await loadUserMcp();
@@ -867,7 +868,7 @@ const deleteMcp = async (item) => {
 
 const editApi = (item) => {
     if (!item) return;
-    apiForm.apiId = item.apiId || '';
+    apiForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
     apiForm.modelName = item.modelName || '';
     apiForm.modelType = item.modelType || '';
     apiForm.apiBaseUrl = item.apiBaseUrl || '';
@@ -878,7 +879,6 @@ const editApi = (item) => {
 
 const saveApi = async () => {
     if (
-        !apiForm.apiId.trim() ||
         !apiForm.modelName.trim() ||
         !apiForm.modelType.trim() ||
         !apiForm.apiBaseUrl.trim() ||
@@ -889,13 +889,15 @@ const saveApi = async () => {
     }
     apiError.value = '';
     const payload = {
-        apiId: apiForm.apiId.trim(),
         modelName: apiForm.modelName.trim(),
         modelType: apiForm.modelType.trim(),
         apiBaseUrl: apiForm.apiBaseUrl.trim(),
         apiKey: apiForm.apiKey.trim(),
         apiCompletionPath: apiForm.apiCompletionPath.trim() || '/v1/chat/completions'
     };
+    if (apiEditing.value && Number.isFinite(Number(apiForm.id))) {
+        payload.id = Number(apiForm.id);
+    }
     try {
         if (apiEditing.value) {
             await userApiUpdate(payload);
@@ -913,7 +915,7 @@ const deleteApi = async (item) => {
     if (!item?.id) return;
     try {
         await userApiDelete(item.id);
-        if (apiForm.apiId === item.apiId) {
+        if (apiForm.id === item.id) {
             resetApiForm();
         }
         await loadUserApi();

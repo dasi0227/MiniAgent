@@ -194,4 +194,10 @@
         FROM ai_client
         WHERE id = #{id}
     </delete>
+
+    <delete id="deleteByClientId">
+        DELETE
+        FROM ai_client
+        WHERE client_id = #{clientId}
+    </delete>
 </mapper>

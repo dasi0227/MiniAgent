@@ -5,8 +5,11 @@ import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
+import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.types.result.PageResult;
+
+import java.util.Map;
 
 public interface IWorkspaceService {
 
@@ -22,9 +25,14 @@ public interface IWorkspaceService {
 
     void plazaDiscomment(String plazaId, String commentId);
 
+    void plazaDelete(String plazaId);
+
+    Map<String, RepoVO> repoList();
+
     void agentPublish(String agentId);
 
     TemplateVO agentTemplate(String templateId);
 
+    void agentDelete(String agentId);
 
 }

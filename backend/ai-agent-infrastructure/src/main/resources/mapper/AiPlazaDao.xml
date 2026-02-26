@@ -125,6 +125,49 @@
         LIMIT 1
     </select>
 
+    <select id="queryByTemplateId" resultMap="dataMap">
+        SELECT p.id,
+               p.plaza_id,
+               p.template_id,
+               p.user_id,
+               u.user_name,
+               p.agent_name,
+               p.agent_type,
+               p.plaza_title,
+               p.plaza_desc,
+               p.like_count,
+               p.favor_count,
+               p.comment_count,
+               p.create_time,
+               p.update_time
+        FROM ai_plaza p
+                 LEFT JOIN ai_user u ON p.user_id = u.id
+        WHERE p.template_id = #{templateId}
+        ORDER BY p.id DESC
+        LIMIT 1
+    </select>
+
+    <select id="listByTemplateId" resultMap="dataMap">
+        SELECT p.id,
+               p.plaza_id,
+               p.template_id,
+               p.user_id,
+               u.user_name,
+               p.agent_name,
+               p.agent_type,
+               p.plaza_title,
+               p.plaza_desc,
+               p.like_count,
+               p.favor_count,
+               p.comment_count,
+               p.create_time,
+               p.update_time
+        FROM ai_plaza p
+                 LEFT JOIN ai_user u ON p.user_id = u.id
+        WHERE p.template_id = #{templateId}
+        ORDER BY p.id DESC
+    </select>
+
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiPlaza">
         INSERT INTO ai_plaza (plaza_id,
                               template_id,
@@ -182,5 +225,17 @@
         SET comment_count = GREATEST(0, comment_count + #{delta})
         WHERE plaza_id = #{plazaId}
     </update>
+
+    <delete id="deleteByPlazaId">
+        DELETE
+        FROM ai_plaza
+        WHERE plaza_id = #{plazaId}
+    </delete>
+
+    <delete id="deleteByTemplateId">
+        DELETE
+        FROM ai_plaza
+        WHERE template_id = #{templateId}
+    </delete>
 
 </mapper>

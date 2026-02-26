@@ -41,4 +41,10 @@
           AND user_id = #{userId}
     </delete>
 
+    <delete id="deleteByPlazaId">
+        DELETE
+        FROM ai_plaza_favor
+        WHERE plaza_id = #{plazaId}
+    </delete>
+
 </mapper>

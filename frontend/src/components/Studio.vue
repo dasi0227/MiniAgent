@@ -15,7 +15,7 @@ const form = reactive({
     taskPrompt: '',
     strategy: 'react',
     mcpIdList: [],
-    apiId: ''
+    clientId: ''
 });
 
 const pickData = (resp) => {
@@ -32,8 +32,8 @@ const loadModels = async () => {
     const resp = await queryChatModels();
     const list = pickData(resp) || [];
     apiList.value = Array.isArray(list) ? list : [];
-    if (!form.apiId && apiList.value.length > 0) {
-        form.apiId = apiList.value[0].clientId || '';
+    if (!form.clientId && apiList.value.length > 0) {
+        form.clientId = apiList.value[0].clientId || '';
     }
 };
 
@@ -111,11 +111,11 @@ onMounted(async () => {
                                     :key="item.clientId"
                                     class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
                                     :class="
-                                        form.apiId === item.clientId
+                                        form.clientId === item.clientId
                                             ? 'border-[#c59a4a] bg-[#fff7e8] text-[#8c6929]'
                                             : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#c59a4a]'
                                     "
-                                    @click="form.apiId = item.clientId"
+                                    @click="form.clientId = item.clientId"
                                 >
                                     {{ item.modelName || item.clientId }}
                                 </button>

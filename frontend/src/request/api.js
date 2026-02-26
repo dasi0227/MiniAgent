@@ -54,7 +54,8 @@ const USER_API_INSERT_PATH = `${USER_API_BASE_PATH}/insert`;
 const USER_API_UPDATE_PATH = `${USER_API_BASE_PATH}/update`;
 const USER_API_DELETE_PATH = `${USER_API_BASE_PATH}/delete`;
 
-const PLAZA_BASE_PATH = '/api/v1/workspace/plaza';
+const WORKSPACE_BASE_PATH = '/api/v1/workspace';
+const PLAZA_BASE_PATH = `${WORKSPACE_BASE_PATH}/plaza`;
 const PLAZA_PAGE_PATH = `${PLAZA_BASE_PATH}/page`;
 const PLAZA_LIKE_PATH = `${PLAZA_BASE_PATH}/like`;
 const PLAZA_DISLIKE_PATH = `${PLAZA_BASE_PATH}/dislike`;
@@ -63,8 +64,156 @@ const PLAZA_DISFAVOR_PATH = `${PLAZA_BASE_PATH}/disfavor`;
 const PLAZA_COMMENT_PATH = `${PLAZA_BASE_PATH}/comment`;
 const PLAZA_DISCOMMENT_PATH = `${PLAZA_BASE_PATH}/discomment`;
 const PLAZA_COMMENT_AREA_PATH = `${PLAZA_BASE_PATH}/comment-area`;
+const PLAZA_DELETE_PATH = `${PLAZA_BASE_PATH}/delete`;
+const REPO_LIST_PATH = `${WORKSPACE_BASE_PATH}/repo/list`;
+const WORKSPACE_AGENT_PUBLISH_PATH = `${WORKSPACE_BASE_PATH}/agent/publish`;
+const WORKSPACE_AGENT_TEMPLATE_PATH = `${WORKSPACE_BASE_PATH}/agent/template`;
+const WORKSPACE_AGENT_DELETE_PATH = `${WORKSPACE_BASE_PATH}/agent/delete`;
 
 const unsupportedApi = (name) => Promise.reject(new Error(`${name} 暂未开放`));
+
+const isResultEnvelope = (resp) =>
+    resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code');
+
+const mapResultData = (resp, mapper) => {
+    if (!resp || typeof mapper !== 'function') {
+        return resp;
+    }
+    if (isResultEnvelope(resp)) {
+        return {
+            ...resp,
+            data: mapper(resp.data)
+        };
+    }
+    return mapper(resp);
+};
+
+const normalizeAdminPayload = (moduleKey, payload = {}) => {
+    const normalized = trimStrings(payload);
+    if (!normalized || typeof normalized !== 'object') {
+        return normalized;
+    }
+    if (moduleKey === 'mcp') {
+        if (!normalized.mcpParam && normalized.mcpConfig) {
+            normalized.mcpParam = normalized.mcpConfig;
+        }
+        delete normalized.mcpConfig;
+    }
+    if (moduleKey === 'prompt') {
+        if (!normalized.systenPrompt && normalized.promptContent) {
+            normalized.systenPrompt = normalized.promptContent;
+        }
+        delete normalized.promptContent;
+    }
+    return normalized;
+};
+
+const normalizeAdminItem = (moduleKey, item = {}) => {
+    if (!item || typeof item !== 'object') {
+        return item;
+    }
+    if (moduleKey === 'mcp') {
+        return {
+            ...item,
+            mcpConfig: item.mcpConfig || item.mcpParam || ''
+        };
+    }
+    if (moduleKey === 'prompt') {
+        return {
+            ...item,
+            promptContent: item.promptContent || item.systenPrompt || ''
+        };
+    }
+    return item;
+};
+
+const normalizeAdminPageResponse = (moduleKey, resp) =>
+    mapResultData(resp, (data) => {
+        if (!data || typeof data !== 'object' || !Array.isArray(data.list)) {
+            return data;
+        }
+        return {
+            ...data,
+            list: data.list.map((item) => normalizeAdminItem(moduleKey, item))
+        };
+    });
+
+const normalizeFlowPayload = (payload = {}) => {
+    const normalized = trimStrings(payload);
+    if (!normalized || typeof normalized !== 'object') {
+        return normalized;
+    }
+    if (!normalized.userPrompt && normalized.flowPrompt) {
+        normalized.userPrompt = normalized.flowPrompt;
+    }
+    delete normalized.flowPrompt;
+    return normalized;
+};
+
+const normalizeFlowResponse = (resp) =>
+    mapResultData(resp, (data) => {
+        const list = Array.isArray(data) ? data : [];
+        return list.map((item) => ({
+            ...(item || {}),
+            flowPrompt: item?.flowPrompt || item?.userPrompt || ''
+        }));
+    });
+
+const normalizeUserMcpPayload = (payload = {}) => {
+    const normalized = trimStrings(payload);
+    if (!normalized || typeof normalized !== 'object') {
+        return normalized;
+    }
+    if (!normalized.mcpParam && normalized.mcpConfig) {
+        normalized.mcpParam = normalized.mcpConfig;
+    }
+    delete normalized.mcpConfig;
+    delete normalized.mcpId;
+    return normalized;
+};
+
+const normalizeUserMcpResponse = (resp) =>
+    mapResultData(resp, (data) => {
+        const list = Array.isArray(data) ? data : [];
+        return list.map((item) => {
+            const mcpParam = item?.mcpParam || item?.mcpConfig || '';
+            return {
+                ...(item || {}),
+                mcpParam,
+                mcpConfig: mcpParam
+            };
+        });
+    });
+
+const normalizeUserApiPayload = (payload = {}) => {
+    const normalized = trimStrings(payload);
+    if (!normalized || typeof normalized !== 'object') {
+        return normalized;
+    }
+    delete normalized.apiId;
+    if (!normalized.modelType) {
+        normalized.modelType = 'chat';
+    }
+    return normalized;
+};
+
+const normalizePlazaQueryPayload = (payload = {}) => {
+    const normalized = trimStrings(payload);
+    if (!normalized || typeof normalized !== 'object') {
+        return normalized;
+    }
+    if (!normalized.sortBy && normalized.sortField) {
+        normalized.sortBy = normalized.sortField;
+    }
+    if (!normalized.pageNum) {
+        normalized.pageNum = 1;
+    }
+    if (!normalized.pageSize) {
+        normalized.pageSize = 10;
+    }
+    delete normalized.sortField;
+    return normalized;
+};
 
 export const fetchComplete = async ({
     clientId,
@@ -256,13 +405,13 @@ export const fetchAdminDashboard = async () => http.post(ADMIN_DASHBOARD_PATH);
 const buildAdminPath = (moduleKey, action) => `${ADMIN_BASE_PATH}/${moduleKey}/${action}`;
 
 export const adminPage = async (moduleKey, payload = {}) =>
-    http.post(buildAdminPath(moduleKey, 'page'), trimStrings(payload));
+    normalizeAdminPageResponse(moduleKey, await http.post(buildAdminPath(moduleKey, 'page'), normalizeAdminPayload(moduleKey, payload)));
 
 export const adminInsert = async (moduleKey, payload = {}) =>
-    http.post(buildAdminPath(moduleKey, 'insert'), trimStrings(payload));
+    http.post(buildAdminPath(moduleKey, 'insert'), normalizeAdminPayload(moduleKey, payload));
 
 export const adminUpdate = async (moduleKey, payload = {}) =>
-    http.post(buildAdminPath(moduleKey, 'update'), trimStrings(payload));
+    http.post(buildAdminPath(moduleKey, 'update'), normalizeAdminPayload(moduleKey, payload));
 
 export const adminDelete = async (moduleKey, id) =>
     http.post(buildAdminPath(moduleKey, 'delete'), null, { params: { id } });
@@ -273,9 +422,10 @@ export const adminToggle = async (moduleKey, id, status) => {
 };
 
 export const flowClients = async () => http.post(`${ADMIN_BASE_PATH}/flow/client`);
-export const flowAgent = async (agentId) => http.post(`${ADMIN_BASE_PATH}/flow/agent`, null, { params: { agentId } });
-export const flowInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/insert`, trimStrings(payload));
-export const flowUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/update`, trimStrings(payload));
+export const flowAgent = async (agentId) =>
+    normalizeFlowResponse(await http.post(`${ADMIN_BASE_PATH}/flow/agent`, null, { params: { agentId } }));
+export const flowInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/insert`, normalizeFlowPayload(payload));
+export const flowUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/update`, normalizeFlowPayload(payload));
 export const flowDelete = async (id) => http.post(`${ADMIN_BASE_PATH}/flow/delete`, null, { params: { id } });
 
 export const adminAgentList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/agent/list`, trimStrings(payload));
@@ -299,14 +449,14 @@ export const listClientRole = async () => http.post(`${ADMIN_LIST_BASE}/clientRo
 // -------------------- User API/MCP --------------------
 export const userApiList = async (keyword = '') =>
     http.post(USER_API_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
-export const userApiInsert = async (payload = {}) => http.post(USER_API_INSERT_PATH, trimStrings(payload));
-export const userApiUpdate = async (payload = {}) => http.post(USER_API_UPDATE_PATH, trimStrings(payload));
+export const userApiInsert = async (payload = {}) => http.post(USER_API_INSERT_PATH, normalizeUserApiPayload(payload));
+export const userApiUpdate = async (payload = {}) => http.post(USER_API_UPDATE_PATH, normalizeUserApiPayload(payload));
 export const userApiDelete = async (id) => http.post(USER_API_DELETE_PATH, null, { params: { id } });
 
 export const userMcpList = async (keyword = '') =>
-    http.post(USER_MCP_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
-export const userMcpInsert = async (payload = {}) => http.post(USER_MCP_INSERT_PATH, trimStrings(payload));
-export const userMcpUpdate = async (payload = {}) => http.post(USER_MCP_UPDATE_PATH, trimStrings(payload));
+    normalizeUserMcpResponse(await http.post(USER_MCP_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } }));
+export const userMcpInsert = async (payload = {}) => http.post(USER_MCP_INSERT_PATH, normalizeUserMcpPayload(payload));
+export const userMcpUpdate = async (payload = {}) => http.post(USER_MCP_UPDATE_PATH, normalizeUserMcpPayload(payload));
 export const userMcpDelete = async (id) => http.post(USER_MCP_DELETE_PATH, null, { params: { id } });
 
 // 以下接口后端当前未实现，保留函数供调用方降级处理
@@ -322,9 +472,11 @@ export const studioDetail = async () => unsupportedApi('Studio 详情');
 export const studioListMine = async () => unsupportedApi('Studio 我的列表');
 
 // -------------------- Plaza --------------------
-export const plazaList = async (payload = {}) => http.post(PLAZA_PAGE_PATH, trimStrings(payload));
-export const plazaDetail = async () => unsupportedApi('Plaza 详情');
-export const plazaPublish = async () => unsupportedApi('Plaza 发布');
+export const plazaList = async (payload = {}) => http.post(PLAZA_PAGE_PATH, normalizePlazaQueryPayload(payload));
+export const plazaDetail = async ({ templateId }) =>
+    http.post(WORKSPACE_AGENT_TEMPLATE_PATH, null, { params: { templateId } });
+export const plazaPublish = async ({ agentId }) =>
+    http.post(WORKSPACE_AGENT_PUBLISH_PATH, null, { params: { agentId } });
 export const plazaLike = async ({ plazaId }) => http.post(PLAZA_LIKE_PATH, null, { params: { plazaId } });
 export const plazaDislike = async ({ plazaId }) => http.post(PLAZA_DISLIKE_PATH, null, { params: { plazaId } });
 export const plazaFavor = async ({ plazaId }) => http.post(PLAZA_FAVOR_PATH, null, { params: { plazaId } });
@@ -333,10 +485,12 @@ export const plazaComment = async (payload = {}) => http.post(PLAZA_COMMENT_PATH
 export const plazaDiscomment = async ({ plazaId, commentId }) =>
     http.post(PLAZA_DISCOMMENT_PATH, null, { params: { plazaId, commentId } });
 export const plazaCommentArea = async (payload = {}) => http.post(PLAZA_COMMENT_AREA_PATH, trimStrings(payload));
+export const plazaDelete = async ({ plazaId }) => http.post(PLAZA_DELETE_PATH, null, { params: { plazaId } });
 export const plazaCommentCount = async () => unsupportedApi('Plaza 评论计数');
 
-// -------------------- Repository（后端未实现） --------------------
-export const repoList = async () => unsupportedApi('Repository 列表');
+// -------------------- Repository --------------------
+export const repoList = async () => http.post(REPO_LIST_PATH);
 export const repoAdd = async () => unsupportedApi('Repository 添加');
-export const repoRemove = async () => unsupportedApi('Repository 移除');
+export const repoRemove = async ({ agentId }) =>
+    http.post(WORKSPACE_AGENT_DELETE_PATH, null, { params: { agentId } });
 export const repoFork = async () => unsupportedApi('Repository Fork');

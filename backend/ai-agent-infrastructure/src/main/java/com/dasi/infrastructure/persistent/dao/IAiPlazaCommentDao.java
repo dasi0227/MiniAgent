@@ -25,4 +25,6 @@ public interface IAiPlazaCommentDao {
 
     Integer delete(@Param("commentId") String commentId, @Param("userId") Long userId);
 
+    Integer deleteByPlazaId(@Param("plazaId") String plazaId);
+
 }

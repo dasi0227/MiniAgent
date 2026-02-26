@@ -46,9 +46,9 @@ public class TemplateVO {
     public static class McpInfo {
         private String mcpName;
         private String mcpType;
-        private String mcpParam;
+        private Object mcpParamTemplate;
         private String mcpDesc;
-        private List<String> mcpSecret;
+        private List<String> requiredSecrets;
     }
 
     // client 信息：key 是 client_role，value 是对应的 system_prompt

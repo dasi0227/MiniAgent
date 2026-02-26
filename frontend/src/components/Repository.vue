@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { repoList } from '../request/api';
+import { normalizeError } from '../request/request';
 import { useWelcomeLaunchStore } from '../router/pinia';
 import Footer from './Footer.vue';
 
@@ -16,10 +18,14 @@ const addedItems = computed(() =>
 );
 
 const doRemove = () => {
-    message.value = 'Repository 相关后端接口暂未开放';
+    message.value = '当前后端未提供仓库移除接口';
 };
 
 const useAgent = (item) => {
+    if (!item?.agentId) {
+        message.value = '该条目没有可直接使用的 MiniAgent';
+        return;
+    }
     welcomeLaunchStore.setTask({
         type: 'work',
         prompt: '请根据当前任务执行。',
@@ -30,10 +36,26 @@ const useAgent = (item) => {
 };
 
 onMounted(async () => {
-    loading.value = false;
-    mineAgents.value = [];
-    repoItems.value = [];
-    message.value = 'Repository 相关后端接口暂未开放';
+    loading.value = true;
+    message.value = '';
+    try {
+        const resp = await repoList();
+        const payload = resp?.data ?? resp?.result ?? resp;
+        const selfList = Array.isArray(payload?.self?.list) ? payload.self.list : [];
+        const favorList = Array.isArray(payload?.favor?.list) ? payload.favor.list : [];
+        const forkList = Array.isArray(payload?.fork?.list) ? payload.fork.list : [];
+        mineAgents.value = selfList.map((item) => ({ ...(item || {}), sourceType: 'self' }));
+        repoItems.value = [
+            ...forkList.map((item) => ({ ...(item || {}), sourceType: 'fork' })),
+            ...favorList.map((item) => ({ ...(item || {}), sourceType: 'favor' }))
+        ];
+    } catch (error) {
+        mineAgents.value = [];
+        repoItems.value = [];
+        message.value = normalizeError(error).message || '获取仓库失败';
+    } finally {
+        loading.value = false;
+    }
 });
 </script>
 

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dasi.infrastructure.persistent.dao.IAiTemplateDao">
+
+    <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiTemplate">
+        <id column="id" property="id"/>
+        <result column="template_id" property="templateId"/>
+        <result column="user_id" property="userId"/>
+        <result column="agent_id" property="agentId"/>
+        <result column="agent_name" property="agentName"/>
+        <result column="agent_type" property="agentType"/>
+        <result column="agent_desc" property="agentDesc"/>
+        <result column="api_url" property="apiUrl"/>
+        <result column="model_name" property="modelName"/>
+        <result column="model_type" property="modelType"/>
+        <result column="snapshot" property="snapshot"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="queryByTemplateId" resultMap="dataMap">
+        SELECT id,
+               template_id,
+               user_id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               api_url,
+               model_name,
+               model_type,
+               snapshot,
+               create_time,
+               update_time
+        FROM ai_template
+        WHERE template_id = #{templateId}
+        LIMIT 1
+    </select>
+
+    <select id="queryByAgentIdAndUserId" resultMap="dataMap">
+        SELECT id,
+               template_id,
+               user_id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               api_url,
+               model_name,
+               model_type,
+               snapshot,
+               create_time,
+               update_time
+        FROM ai_template
+        WHERE agent_id = #{agentId}
+          AND user_id = #{userId}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="listByAgentIdAndUserId" resultMap="dataMap">
+        SELECT id,
+               template_id,
+               user_id,
+               agent_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               api_url,
+               model_name,
+               model_type,
+               snapshot,
+               create_time,
+               update_time
+        FROM ai_template
+        WHERE agent_id = #{agentId}
+          AND user_id = #{userId}
+        ORDER BY id DESC
+    </select>
+
+    <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiTemplate">
+        INSERT INTO ai_template (template_id,
+                                 user_id,
+                                 agent_id,
+                                 agent_name,
+                                 agent_type,
+                                 agent_desc,
+                                 api_url,
+                                 model_name,
+                                 model_type,
+                                 snapshot)
+        VALUES (#{templateId},
+                #{userId},
+                #{agentId},
+                #{agentName},
+                #{agentType},
+                #{agentDesc},
+                #{apiUrl},
+                #{modelName},
+                #{modelType},
+                #{snapshot})
+    </insert>
+
+    <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiTemplate">
+        UPDATE ai_template
+        <set>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="agentId != null">agent_id = #{agentId},</if>
+            <if test="agentName != null">agent_name = #{agentName},</if>
+            <if test="agentType != null">agent_type = #{agentType},</if>
+            <if test="agentDesc != null">agent_desc = #{agentDesc},</if>
+            <if test="apiUrl != null">api_url = #{apiUrl},</if>
+            <if test="modelName != null">model_name = #{modelName},</if>
+            <if test="modelType != null">model_type = #{modelType},</if>
+            <if test="snapshot != null">snapshot = #{snapshot},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByAgentIdAndUserId">
+        DELETE
+        FROM ai_template
+        WHERE agent_id = #{agentId}
+          AND user_id = #{userId}
+    </delete>
+
+</mapper>

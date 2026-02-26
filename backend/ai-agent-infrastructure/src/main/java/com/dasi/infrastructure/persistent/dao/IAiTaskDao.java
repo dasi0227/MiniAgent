@@ -33,6 +33,8 @@ public interface IAiTaskDao {
 
     void delete(@Param("id") Long id);
 
+    Integer deleteByAgentId(@Param("agentId") String agentId);
+
     void toggle(AiTask aiTask);
 
 }

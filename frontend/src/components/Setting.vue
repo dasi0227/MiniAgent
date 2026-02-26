@@ -82,7 +82,7 @@ const mcpForm = reactive({
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
-    mcpConfig: '{}',
+    mcpParam: '{}',
     mcpSecret: '{}'
 });
 
@@ -94,7 +94,7 @@ const mcpDialogForm = reactive({
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
-    mcpConfig: '{}',
+    mcpParam: '{}',
     mcpSecret: '{}'
 });
 
@@ -324,7 +324,7 @@ const resetMcpForm = () => {
     mcpForm.mcpName = '';
     mcpForm.mcpType = '';
     mcpForm.mcpDesc = '';
-    mcpForm.mcpConfig = '{}';
+    mcpForm.mcpParam = '{}';
     mcpForm.mcpSecret = '{}';
 };
 
@@ -407,7 +407,7 @@ const submitMcpInsert = async () => {
             mcpName: (mcpForm.mcpName || '').trim(),
             mcpType: (mcpForm.mcpType || '').trim(),
             mcpDesc: (mcpForm.mcpDesc || '').trim(),
-            mcpConfig: ensureJsonText(mcpForm.mcpConfig, 'MCP 配置'),
+            mcpParam: ensureJsonText(mcpForm.mcpParam, 'MCP 配置'),
             mcpSecret: ensureJsonText(mcpForm.mcpSecret, 'MCP 密钥配置')
         };
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
@@ -430,7 +430,7 @@ const openMcpDialog = (item) => {
     mcpDialogForm.mcpName = item.mcpName || '';
     mcpDialogForm.mcpType = item.mcpType || '';
     mcpDialogForm.mcpDesc = item.mcpDesc || '';
-    mcpDialogForm.mcpConfig = item.mcpConfig || '{}';
+    mcpDialogForm.mcpParam = item.mcpParam || '{}';
     mcpDialogForm.mcpSecret = item.mcpSecret || '{}';
     mcpDialogOpen.value = true;
 };
@@ -447,7 +447,7 @@ const saveMcpDialog = async () => {
             mcpName: (mcpDialogForm.mcpName || '').trim(),
             mcpType: (mcpDialogForm.mcpType || '').trim(),
             mcpDesc: (mcpDialogForm.mcpDesc || '').trim(),
-            mcpConfig: ensureJsonText(mcpDialogForm.mcpConfig, 'MCP 配置'),
+            mcpParam: ensureJsonText(mcpDialogForm.mcpParam, 'MCP 配置'),
             mcpSecret: ensureJsonText(mcpDialogForm.mcpSecret, 'MCP 密钥配置')
         };
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
@@ -704,7 +704,7 @@ onBeforeUnmount(() => {
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
-                            <textarea v-model="mcpForm.mcpConfig" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='请输入 JSON，例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
+                            <textarea v-model="mcpForm.mcpParam" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='请输入 JSON，例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
@@ -905,7 +905,7 @@ onBeforeUnmount(() => {
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
-                        <textarea v-model="mcpDialogForm.mcpConfig" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"></textarea>
+                        <textarea v-model="mcpDialogForm.mcpParam" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"></textarea>
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
