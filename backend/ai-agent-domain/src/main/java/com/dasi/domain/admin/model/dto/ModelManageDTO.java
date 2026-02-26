@@ -1,0 +1,29 @@
+package com.dasi.domain.admin.model.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class ModelManageDTO {
+
+    private Long id;
+
+    @NotBlank
+    private String modelId;
+
+    @NotBlank
+    private String apiId;
+
+    @NotBlank
+    private String modelName;
+
+    @NotBlank
+    private String modelType;
+
+}

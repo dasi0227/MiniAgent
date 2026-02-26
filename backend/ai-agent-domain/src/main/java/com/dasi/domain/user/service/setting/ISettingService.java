@@ -3,9 +3,9 @@ package com.dasi.domain.user.service.setting;
 import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
-import com.dasi.types.dto.request.user.ProfileEditRequest;
-import com.dasi.types.dto.request.user.SettingApiRequest;
-import com.dasi.types.dto.request.user.SettingMcpRequest;
+import com.dasi.domain.user.model.dto.ProfileEditDTO;
+import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingMcpDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -14,21 +14,21 @@ public interface ISettingService {
 
     AuthVO profileQuery();
 
-    AuthVO profileEdit(ProfileEditRequest request, MultipartFile avatar);
+    AuthVO profileEdit(ProfileEditDTO request, MultipartFile avatar);
 
     List<UserApiVO> apiList(String keyword);
 
-    void apiInsert(SettingApiRequest request);
+    void apiInsert(SettingApiDTO request);
 
-    void apiUpdate(SettingApiRequest request);
+    void apiUpdate(SettingApiDTO request);
 
     void apiDelete(Long id);
 
     List<UserMcpVO> mcpList(String keyword);
 
-    void mcpInsert(SettingMcpRequest request);
+    void mcpInsert(SettingMcpDTO request);
 
-    void mcpUpdate(SettingMcpRequest request);
+    void mcpUpdate(SettingMcpDTO request);
 
     void mcpDelete(Long id);
 

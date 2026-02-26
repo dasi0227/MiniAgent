@@ -5,11 +5,11 @@ import com.dasi.domain.user.model.vo.*;
 import com.dasi.domain.user.service.auth.IAuthService;
 import com.dasi.domain.user.service.query.IQueryService;
 import com.dasi.domain.user.service.setting.ISettingService;
-import com.dasi.types.dto.request.user.AuthRequest;
-import com.dasi.types.dto.request.user.ProfileEditRequest;
-import com.dasi.types.dto.request.user.SettingApiRequest;
-import com.dasi.types.dto.request.user.SettingMcpRequest;
-import com.dasi.types.dto.result.Result;
+import com.dasi.domain.user.model.dto.AuthDTO;
+import com.dasi.domain.user.model.dto.ProfileEditDTO;
+import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.types.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -59,13 +59,13 @@ public class UserController implements IUserApi {
 
     @PostMapping("/auth/login")
     @Override
-    public Result<AuthVO> login(@Valid @RequestBody AuthRequest request) {
+    public Result<AuthVO> login(@Valid @RequestBody AuthDTO request) {
         return Result.success(authService.login(request));
     }
 
     @PostMapping("/auth/register")
     @Override
-    public Result<AuthVO> register(@Valid @RequestBody AuthRequest request) {
+    public Result<AuthVO> register(@Valid @RequestBody AuthDTO request) {
         return Result.success(authService.register(request));
     }
 
@@ -77,7 +77,7 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/profile/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Override
-    public Result<AuthVO> profileEdit(@Valid @RequestPart("profile") ProfileEditRequest request,
+    public Result<AuthVO> profileEdit(@Valid @RequestPart("profile") ProfileEditDTO request,
                                       @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
         return Result.success(settingService.profileEdit(request, avatar));
     }
@@ -90,14 +90,14 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/api/insert")
     @Override
-    public Result<Void> apiInsert(@Valid @RequestBody SettingApiRequest request) {
+    public Result<Void> apiInsert(@Valid @RequestBody SettingApiDTO request) {
         settingService.apiInsert(request);
         return Result.success();
     }
 
     @PostMapping(value = "/api/update")
     @Override
-    public Result<Void> apiUpdate(@Valid @RequestBody SettingApiRequest request) {
+    public Result<Void> apiUpdate(@Valid @RequestBody SettingApiDTO request) {
         settingService.apiUpdate(request);
         return Result.success();
     }
@@ -117,14 +117,14 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/mcp/insert")
     @Override
-    public Result<Void> mcpInsert(@Valid @RequestBody SettingMcpRequest request) {
+    public Result<Void> mcpInsert(@Valid @RequestBody SettingMcpDTO request) {
         settingService.mcpInsert(request);
         return Result.success();
     }
 
     @PostMapping(value = "/mcp/update")
     @Override
-    public Result<Void> mcpUpdate(@Valid @RequestBody SettingMcpRequest request) {
+    public Result<Void> mcpUpdate(@Valid @RequestBody SettingMcpDTO request) {
         settingService.mcpUpdate(request);
         return Result.success();
     }

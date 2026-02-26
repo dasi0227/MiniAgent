@@ -3,8 +3,8 @@ package com.dasi.domain.user.repository;
 import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserVO;
-import com.dasi.types.dto.request.user.SettingApiRequest;
-import com.dasi.types.dto.request.user.SettingMcpRequest;
+import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingMcpDTO;
 
 import java.util.List;
 
@@ -20,17 +20,17 @@ public interface IUserRepository {
 
     List<UserApiVO> apiList(String keyword);
 
-    void apiInsert(SettingApiRequest request, String apiId, String modelId);
+    void apiInsert(SettingApiDTO request, String apiId, String modelId);
 
-    void apiUpdate(SettingApiRequest request);
+    void apiUpdate(SettingApiDTO request);
 
     void apiDelete(Long id);
 
     List<UserMcpVO> mcpList(String keyword);
 
-    void mcpInsert(SettingMcpRequest request, String mcpId);
+    void mcpInsert(SettingMcpDTO request, String mcpId);
 
-    void mcpUpdate(SettingMcpRequest request);
+    void mcpUpdate(SettingMcpDTO request);
 
     void mcpDelete(Long id);
 

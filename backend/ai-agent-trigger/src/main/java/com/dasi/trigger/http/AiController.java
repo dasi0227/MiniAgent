@@ -1,6 +1,7 @@
 package com.dasi.trigger.http;
 
 import com.dasi.api.IAiApi;
+import com.dasi.domain.ai.model.dto.AiChatDTO;
 import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.service.augment.IAugmentService;
 import com.dasi.domain.ai.service.dispatch.IDispatchService;
@@ -12,11 +13,10 @@ import com.dasi.domain.util.persist.IPersistUtil;
 import com.dasi.domain.util.stat.IStatUtil;
 import com.dasi.domain.user.model.vo.ChatClientVO;
 import com.dasi.domain.user.model.vo.WorkAgentVO;
-import com.dasi.types.dto.request.ai.AiChatRequest;
-import com.dasi.types.dto.request.ai.AiArmoryRequest;
-import com.dasi.types.dto.request.ai.AiWorkRequest;
-import com.dasi.types.dto.request.ai.AiUploadRequest;
-import com.dasi.types.dto.result.Result;
+import com.dasi.domain.ai.model.dto.AiArmoryDTO;
+import com.dasi.domain.ai.model.dto.AiWorkDTO;
+import com.dasi.domain.ai.model.dto.AiUploadDTO;
+import com.dasi.types.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -71,12 +71,12 @@ public class AiController implements IAiApi {
 
     @Override
     @PostMapping(value = "/work/execute", produces = "text/event-stream")
-    public SseEmitter execute(@Valid @RequestBody AiWorkRequest aiWorkRequest) {
+    public SseEmitter execute(@Valid @RequestBody AiWorkDTO aiWorkDTO) {
 
-        String sessionId = aiWorkRequest.getSessionId();
-        String userMessage = aiWorkRequest.getUserMessage();
+        String sessionId = aiWorkDTO.getSessionId();
+        String userMessage = aiWorkDTO.getUserMessage();
         SseEmitter sseEmitter = new SseEmitter(0L);
-        String agentId = aiWorkRequest.getAiAgentId();
+        String agentId = aiWorkDTO.getAiAgentId();
 
         try {
             if (isInactiveWorkAgent(agentId)) {
@@ -110,9 +110,9 @@ public class AiController implements IAiApi {
             ExecuteRequestEntity executeRequestEntity = ExecuteRequestEntity.builder()
                     .agentId(agentId)
                     .userMessage(userMessage)
-                    .sessionId(aiWorkRequest.getSessionId())
-                    .maxRound(aiWorkRequest.getMaxRound())
-                    .maxRetry(aiWorkRequest.getMaxRetry())
+                    .sessionId(aiWorkDTO.getSessionId())
+                    .maxRound(aiWorkDTO.getMaxRound())
+                    .maxRetry(aiWorkDTO.getMaxRetry())
                     .build();
 
             dispatchService.dispatchExecuteStrategy(executeRequestEntity, sseEmitter);
@@ -134,28 +134,28 @@ public class AiController implements IAiApi {
 
     @PostMapping("/chat/complete")
     @Override
-    public String complete(@Valid @RequestBody AiChatRequest aiChatRequest) {
+    public String complete(@Valid @RequestBody AiChatDTO aiChatDTO) {
 
-        String clientId = aiChatRequest.getClientId();
+        String clientId = aiChatDTO.getClientId();
         if (isInactiveChatClient(clientId)) {
             log.warn("【AI 对话】client 未启用或不存在：clientId={}", clientId);
             return CHAT_ERROR_RESPONSE;
         }
 
-        String userMessage = aiChatRequest.getUserMessage();
-        String ragTag = aiChatRequest.getRagTag();
-        String sessionId = aiChatRequest.getSessionId();
+        String userMessage = aiChatDTO.getUserMessage();
+        String ragTag = aiChatDTO.getRagTag();
+        String sessionId = aiChatDTO.getSessionId();
         String invalidSessionReason = sessionService.validateSessionAccess(sessionId, SessionType.CHAT.getType());
         if (StringUtils.hasText(invalidSessionReason)) {
             log.warn("【AI 对话】会话校验失败：sessionId={}, expectedType={}, error={}", sessionId, SessionType.CHAT.getType(), invalidSessionReason);
             return invalidSessionReason;
         }
-        List<String> mcpIdList = aiChatRequest.getMcpIdList();
-        Double temperature = aiChatRequest.getTemperature();
-        Double presencePenalty = aiChatRequest.getPresencePenalty();
-        Integer maxCompletionTokens = aiChatRequest.getMaxCompletionTokens();
+        List<String> mcpIdList = aiChatDTO.getMcpIdList();
+        Double temperature = aiChatDTO.getTemperature();
+        Double presencePenalty = aiChatDTO.getPresencePenalty();
+        Integer maxCompletionTokens = aiChatDTO.getMaxCompletionTokens();
 
-        log.info("【AI 对话】完整对话开始：aiChatRequest={}", aiChatRequest);
+        log.info("【AI 对话】完整对话开始：aiChatDTO={}", aiChatDTO);
         String response = null;
 
         try {
@@ -209,28 +209,28 @@ public class AiController implements IAiApi {
 
     @PostMapping("/chat/stream")
     @Override
-    public Flux<String> stream(@Valid @RequestBody AiChatRequest aiChatRequest) {
+    public Flux<String> stream(@Valid @RequestBody AiChatDTO aiChatDTO) {
 
-        String clientId = aiChatRequest.getClientId();
+        String clientId = aiChatDTO.getClientId();
         if (isInactiveChatClient(clientId)) {
             log.warn("【AI 对话】client 未启用或不存在：clientId={}", clientId);
             return Flux.just(CHAT_ERROR_RESPONSE);
         }
 
-        String userMessage = aiChatRequest.getUserMessage();
-        String ragTag = aiChatRequest.getRagTag();
-        String sessionId = aiChatRequest.getSessionId();
+        String userMessage = aiChatDTO.getUserMessage();
+        String ragTag = aiChatDTO.getRagTag();
+        String sessionId = aiChatDTO.getSessionId();
         String invalidSessionReason = sessionService.validateSessionAccess(sessionId, SessionType.CHAT.getType());
         if (StringUtils.hasText(invalidSessionReason)) {
             log.warn("【AI 对话】会话校验失败：sessionId={}, expectedType={}, error={}", sessionId, SessionType.CHAT.getType(), invalidSessionReason);
             return Flux.just(invalidSessionReason);
         }
-        List<String> mcpIdList = aiChatRequest.getMcpIdList();
-        Double temperature = aiChatRequest.getTemperature();
-        Double presencePenalty = aiChatRequest.getPresencePenalty();
-        Integer maxCompletionTokens = aiChatRequest.getMaxCompletionTokens();
+        List<String> mcpIdList = aiChatDTO.getMcpIdList();
+        Double temperature = aiChatDTO.getTemperature();
+        Double presencePenalty = aiChatDTO.getPresencePenalty();
+        Integer maxCompletionTokens = aiChatDTO.getMaxCompletionTokens();
 
-        log.info("【AI 对话】流式对话开始：aiChatRequest={}", aiChatRequest);
+        log.info("【AI 对话】流式对话开始：aiChatDTO={}", aiChatDTO);
 
         try {
             ChatClient chatClient = applicationContext.getBean(CLIENT.getBeanName(clientId), ChatClient.class);
@@ -286,10 +286,10 @@ public class AiController implements IAiApi {
 
     @Override
     @PostMapping(value = "/armory")
-    public Result<Void> armory(@Valid @RequestBody AiArmoryRequest aiArmoryRequest) {
+    public Result<Void> armory(@Valid @RequestBody AiArmoryDTO aiArmoryDTO) {
 
-        String armoryType = aiArmoryRequest.getArmoryType();
-        String armoryId = aiArmoryRequest.getArmoryId();
+        String armoryType = aiArmoryDTO.getArmoryType();
+        String armoryId = aiArmoryDTO.getArmoryId();
 
         Set<String> armoryIdSet = new HashSet<>(Set.of(armoryId));
         dispatchService.dispatchArmoryStrategy(armoryType, armoryIdSet);
@@ -312,12 +312,12 @@ public class AiController implements IAiApi {
 
     @PostMapping("/rag/git")
     @Override
-    public Result<Void> uploadGitRepo(@RequestBody AiUploadRequest aiUploadRequest) {
+    public Result<Void> uploadGitRepo(@RequestBody AiUploadDTO aiUploadDTO) {
         try {
-            ragService.uploadGitRepo(aiUploadRequest);
+            ragService.uploadGitRepo(aiUploadDTO);
             return Result.success();
         } catch (Exception e) {
-            log.error("【上传知识库】Git 上传失败：repoUrl={}, error={}", aiUploadRequest.getRepoUrl(), e.getMessage(), e);
+            log.error("【上传知识库】Git 上传失败：repoUrl={}, error={}", aiUploadDTO.getRepoUrl(), e.getMessage(), e);
             return Result.error(e.getMessage());
         }
     }

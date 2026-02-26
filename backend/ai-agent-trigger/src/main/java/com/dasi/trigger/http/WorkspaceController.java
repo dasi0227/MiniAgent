@@ -1,13 +1,13 @@
 package com.dasi.trigger.http;
 
-import com.dasi.domain.miniagent.model.vo.CommentVO;
-import com.dasi.domain.miniagent.model.vo.PlazaVO;
-import com.dasi.domain.miniagent.service.IWorkspaceService;
-import com.dasi.types.dto.request.plaza.PlazaCommentAreaRequest;
-import com.dasi.types.dto.request.plaza.PlazaCommentRequest;
-import com.dasi.types.dto.request.plaza.PlazaPageRequest;
-import com.dasi.types.dto.result.PageResult;
-import com.dasi.types.dto.result.Result;
+import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
+import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
+import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
+import com.dasi.domain.workspace.model.vo.CommentVO;
+import com.dasi.domain.workspace.model.vo.PlazaVO;
+import com.dasi.domain.workspace.service.IWorkspaceService;
+import com.dasi.types.result.PageResult;
+import com.dasi.types.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -23,7 +23,7 @@ public class WorkspaceController {
     private IWorkspaceService workspaceService;
 
     @PostMapping("/plaza/page")
-    public Result<PageResult<PlazaVO>> plazaPage(@Valid @RequestBody PlazaPageRequest request) {
+    public Result<PageResult<PlazaVO>> plazaPage(@Valid @RequestBody PlazaPageDTO request) {
         return Result.success(workspaceService.pagePlaza(request));
     }
 
@@ -40,7 +40,7 @@ public class WorkspaceController {
     }
 
     @PostMapping("/plaza/comment")
-    public Result<Void> plazaComment(@Valid @RequestBody PlazaCommentRequest request) {
+    public Result<Void> plazaComment(@Valid @RequestBody PlazaCommentDTO request) {
         workspaceService.plazaComment(request);
         return Result.success();
     }
@@ -53,7 +53,7 @@ public class WorkspaceController {
     }
 
     @PostMapping("/plaza/comment-area")
-    public Result<PageResult<CommentVO>> plazaCommentArea(@Valid @RequestBody PlazaCommentAreaRequest request) {
+    public Result<PageResult<CommentVO>> plazaCommentArea(@Valid @RequestBody PlazaCommentAreaDTO request) {
         return Result.success(workspaceService.plazaCommentArea(request));
     }
 
@@ -68,5 +68,10 @@ public class WorkspaceController {
         workspaceService.plazaFavor(plazaId, false);
         return Result.success();
     }
+
+//    @PostMapping("/agent/detail")
+//    public Result<AgentDetailVO> agentDetail(@NotBlank @RequestParam String agentId) {
+//        return Result.success(workspaceService.agentDetail(agentId));
+//    }
 
 }

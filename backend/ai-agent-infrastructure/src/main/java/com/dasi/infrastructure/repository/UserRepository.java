@@ -14,8 +14,8 @@ import com.dasi.infrastructure.persistent.po.AiMcp;
 import com.dasi.infrastructure.persistent.po.AiModel;
 import com.dasi.infrastructure.persistent.po.AiUser;
 import com.dasi.infrastructure.persistent.po.AiUserApi;
-import com.dasi.types.dto.request.user.SettingApiRequest;
-import com.dasi.types.dto.request.user.SettingMcpRequest;
+import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingMcpDTO;
 import com.dasi.types.exception.MiniAgentException;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
@@ -118,7 +118,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void apiInsert(SettingApiRequest request, String apiId, String modelId) {
+    public void apiInsert(SettingApiDTO request, String apiId, String modelId) {
         Long userId = userContext.getUserId();
 
         AiApi aiApi = AiApi.builder()
@@ -141,7 +141,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void apiUpdate(SettingApiRequest request) {
+    public void apiUpdate(SettingApiDTO request) {
         Long userId = userContext.getUserId();
         if (request.getId() == null) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
@@ -208,7 +208,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void mcpInsert(SettingMcpRequest request, String mcpId) {
+    public void mcpInsert(SettingMcpDTO request, String mcpId) {
         Long userId = userContext.getUserId();
 
         AiMcp aiMcp = AiMcp.builder()
@@ -226,7 +226,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void mcpUpdate(SettingMcpRequest request) {
+    public void mcpUpdate(SettingMcpDTO request) {
         Long userId = userContext.getUserId();
         if (request.getId() == null) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);

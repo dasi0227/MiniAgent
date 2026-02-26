@@ -4,7 +4,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.util.jwt.IJwtUtil;
-import com.dasi.types.dto.result.Result;
+import com.dasi.types.result.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;

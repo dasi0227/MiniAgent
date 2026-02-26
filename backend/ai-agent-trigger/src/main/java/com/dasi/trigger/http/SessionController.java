@@ -4,7 +4,7 @@ import com.dasi.api.ISessionApi;
 import com.dasi.domain.session.model.vo.MessageVO;
 import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.session.service.ISessionService;
-import com.dasi.types.dto.result.Result;
+import com.dasi.types.result.Result;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

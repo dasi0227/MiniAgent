@@ -1,11 +1,11 @@
 package com.dasi.api;
 
 import com.dasi.domain.user.model.vo.*;
-import com.dasi.types.dto.request.user.AuthRequest;
-import com.dasi.types.dto.request.user.ProfileEditRequest;
-import com.dasi.types.dto.request.user.SettingApiRequest;
-import com.dasi.types.dto.request.user.SettingMcpRequest;
-import com.dasi.types.dto.result.Result;
+import com.dasi.domain.user.model.dto.AuthDTO;
+import com.dasi.domain.user.model.dto.ProfileEditDTO;
+import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.types.result.Result;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -20,27 +20,27 @@ public interface IUserApi {
 
     Result<List<WorkAgentVO>> queryWorkAgentVOList();
 
-    Result<AuthVO> login(AuthRequest request);
+    Result<AuthVO> login(AuthDTO request);
 
-    Result<AuthVO> register(AuthRequest request);
+    Result<AuthVO> register(AuthDTO request);
 
     Result<AuthVO> profileQuery();
 
-    Result<AuthVO> profileEdit(ProfileEditRequest request, MultipartFile avatar);
+    Result<AuthVO> profileEdit(ProfileEditDTO request, MultipartFile avatar);
 
     Result<List<UserApiVO>> apiList(String keyword);
 
-    Result<Void> apiInsert(SettingApiRequest request);
+    Result<Void> apiInsert(SettingApiDTO request);
 
-    Result<Void> apiUpdate(SettingApiRequest request);
+    Result<Void> apiUpdate(SettingApiDTO request);
 
     Result<Void> apiDelete(Long id);
 
     Result<List<UserMcpVO>> mcpList(String keyword);
 
-    Result<Void> mcpInsert(SettingMcpRequest request);
+    Result<Void> mcpInsert(SettingMcpDTO request);
 
-    Result<Void> mcpUpdate(SettingMcpRequest request);
+    Result<Void> mcpUpdate(SettingMcpDTO request);
 
     Result<Void> mcpDelete(Long id);
 }

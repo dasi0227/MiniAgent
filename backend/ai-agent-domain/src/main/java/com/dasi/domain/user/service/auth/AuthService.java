@@ -4,7 +4,7 @@ import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.IJwtUtil;
 import com.dasi.domain.util.oss.IOssUtil;
-import com.dasi.types.dto.request.user.AuthRequest;
+import com.dasi.domain.user.model.dto.AuthDTO;
 import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
@@ -29,7 +29,7 @@ public class AuthService implements IAuthService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AuthVO login(AuthRequest request) {
+    public AuthVO login(AuthDTO request) {
 
         String userName = request.getUserName();
         String password = request.getPassword();
@@ -49,7 +49,7 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public AuthVO register(AuthRequest request) {
+    public AuthVO register(AuthDTO request) {
 
         String userName = request.getUserName();
         String password = request.getPassword();

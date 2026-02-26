@@ -1,14 +1,11 @@
 package com.dasi.api;
 
+import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.vo.*;
 import com.dasi.domain.session.model.vo.SessionVO;
-import com.dasi.types.dto.request.admin.list.AgentListRequest;
-import com.dasi.types.dto.request.admin.list.ConfigListRequest;
-import com.dasi.types.dto.request.admin.manage.*;
-import com.dasi.types.dto.request.admin.page.*;
 import com.dasi.domain.admin.model.vo.DashboardVO;
-import com.dasi.types.dto.result.PageResult;
-import com.dasi.types.dto.result.Result;
+import com.dasi.types.result.PageResult;
+import com.dasi.types.result.Result;
 
 import java.util.List;
 import java.util.Map;
@@ -17,83 +14,83 @@ public interface IAdminApi {
 
     Result<DashboardVO> dashboard();
 
-    Result<PageResult<ApiVO>> apiPage(ApiPageRequest request);
+    Result<PageResult<ApiVO>> apiPage(ApiPageDTO request);
 
-    Result<Void> apiInsert(ApiManageRequest request);
+    Result<Void> apiInsert(ApiManageDTO request);
 
-    Result<Void> apiUpdate(ApiManageRequest request);
+    Result<Void> apiUpdate(ApiManageDTO request);
 
     Result<Void> apiDelete(Long id);
 
-    Result<PageResult<ModelVO>> modelPage(ModelPageRequest request);
+    Result<PageResult<ModelVO>> modelPage(ModelPageDTO request);
 
-    Result<Void> modelInsert(ModelManageRequest request);
+    Result<Void> modelInsert(ModelManageDTO request);
 
-    Result<Void> modelUpdate(ModelManageRequest request);
+    Result<Void> modelUpdate(ModelManageDTO request);
 
     Result<Void> modelDelete(Long id);
 
-    Result<PageResult<McpVO>> mcpPage(McpPageRequest request);
+    Result<PageResult<McpVO>> mcpPage(McpPageDTO request);
 
-    Result<Void> mcpInsert(McpManageRequest request);
+    Result<Void> mcpInsert(McpManageDTO request);
 
-    Result<Void> mcpUpdate(McpManageRequest request);
+    Result<Void> mcpUpdate(McpManageDTO request);
 
     Result<Void> mcpDelete(Long id);
 
-    Result<PageResult<AdvisorVO>> advisorPage(AdvisorPageRequest request);
+    Result<PageResult<AdvisorVO>> advisorPage(AdvisorPageDTO request);
 
-    Result<Void> advisorInsert(AdvisorManageRequest request);
+    Result<Void> advisorInsert(AdvisorManageDTO request);
 
-    Result<Void> advisorUpdate(AdvisorManageRequest request);
+    Result<Void> advisorUpdate(AdvisorManageDTO request);
 
     Result<Void> advisorDelete(Long id);
 
-    Result<PageResult<PromptVO>> promptPage(PromptPageRequest request);
+    Result<PageResult<PromptVO>> promptPage(PromptPageDTO request);
 
-    Result<Void> promptInsert(PromptManageRequest request);
+    Result<Void> promptInsert(PromptManageDTO request);
 
-    Result<Void> promptUpdate(PromptManageRequest request);
+    Result<Void> promptUpdate(PromptManageDTO request);
 
     Result<Void> promptDelete(Long id);
 
-    Result<PageResult<ClientVO>> clientPage(ClientPageRequest request);
+    Result<PageResult<ClientVO>> clientPage(ClientPageDTO request);
 
-    Result<Void> clientInsert(ClientManageRequest request);
+    Result<Void> clientInsert(ClientManageDTO request);
 
-    Result<Void> clientUpdate(ClientManageRequest request);
+    Result<Void> clientUpdate(ClientManageDTO request);
 
     Result<Void> clientDelete(Long id);
 
     Result<Void> clientToggle(Long id, Integer clientStatus);
 
-    Result<PageResult<AgentVO>> agentPage(AgentPageRequest request);
+    Result<PageResult<AgentVO>> agentPage(AgentPageDTO request);
 
-    Result<List<AgentVO>> agentList(AgentListRequest request);
+    Result<List<AgentVO>> agentList(AgentListDTO request);
 
-    Result<Void> agentInsert(AgentManageRequest request);
+    Result<Void> agentInsert(AgentManageDTO request);
 
-    Result<Void> agentUpdate(AgentManageRequest request);
+    Result<Void> agentUpdate(AgentManageDTO request);
 
     Result<Void> agentDelete(Long id);
 
     Result<Void> agentToggle(Long id, Integer agentStatus);
 
-    Result<PageResult<UserVO>> userPage(UserPageRequest request);
+    Result<PageResult<UserVO>> userPage(UserPageDTO request);
 
-    Result<Void> userInsert(UserManageRequest request);
+    Result<Void> userInsert(UserManageDTO request);
 
-    Result<Void> userUpdate(UserManageRequest request);
+    Result<Void> userUpdate(UserManageDTO request);
 
     Result<Void> userDelete(Long id);
 
     Result<Void> userToggle(Long id, Integer userStatus);
 
-    Result<Map<String, List<ConfigVO>>> configList(ConfigListRequest request);
+    Result<Map<String, List<ConfigVO>>> configList(ConfigListDTO request);
 
-    Result<Void> configInsert(ConfigManageRequest request);
+    Result<Void> configInsert(ConfigManageDTO request);
 
-    Result<Void> configUpdate(ConfigManageRequest request);
+    Result<Void> configUpdate(ConfigManageDTO request);
 
     Result<Void> configDelete(Long id);
 
@@ -103,17 +100,17 @@ public interface IAdminApi {
 
     Result<List<FlowVO>> flowAgent(String agentId);
 
-    Result<Void> flowInsert(FlowManageRequest request);
+    Result<Void> flowInsert(FlowManageDTO request);
 
-    Result<Void> flowUpdate(FlowManageRequest request);
+    Result<Void> flowUpdate(FlowManageDTO request);
 
     Result<Void> flowDelete(Long id);
 
-    Result<PageResult<TaskVO>> taskPage(TaskPageRequest request);
+    Result<PageResult<TaskVO>> taskPage(TaskPageDTO request);
 
-    Result<Void> taskInsert(TaskManageRequest request);
+    Result<Void> taskInsert(TaskManageDTO request);
 
-    Result<Void> taskUpdate(TaskManageRequest request);
+    Result<Void> taskUpdate(TaskManageDTO request);
 
     Result<Void> taskDelete(Long id);
 

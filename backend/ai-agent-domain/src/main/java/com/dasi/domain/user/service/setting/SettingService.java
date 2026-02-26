@@ -8,10 +8,10 @@ import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.jwt.IJwtUtil;
 import com.dasi.domain.util.oss.IOssUtil;
 import com.dasi.domain.util.random.IRandomUtil;
-import com.dasi.types.dto.request.user.SettingApiRequest;
-import com.dasi.types.dto.request.user.ProfileEditRequest;
+import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.ProfileEditDTO;
 import com.dasi.domain.user.model.vo.AuthVO;
-import com.dasi.types.dto.request.user.SettingMcpRequest;
+import com.dasi.domain.user.model.dto.SettingMcpDTO;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class SettingService implements ISettingService {
     }
 
     @Override
-    public AuthVO profileEdit(ProfileEditRequest request, MultipartFile avatar) {
+    public AuthVO profileEdit(ProfileEditDTO request, MultipartFile avatar) {
         String userName = request.getUserName();
         String oldPassword = request.getOldPassword();
         String newPassword = request.getNewPassword();
@@ -110,7 +110,7 @@ public class SettingService implements ISettingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiInsert(SettingApiRequest request) {
+    public void apiInsert(SettingApiDTO request) {
         String apiId = "api_" + randomUtil.userRandom();
         String modelId = "model_" + randomUtil.userRandom();
         userRepository.apiInsert(request, apiId, modelId);
@@ -118,7 +118,7 @@ public class SettingService implements ISettingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiUpdate(SettingApiRequest request) {
+    public void apiUpdate(SettingApiDTO request) {
         userRepository.apiUpdate(request);
     }
 
@@ -135,13 +135,13 @@ public class SettingService implements ISettingService {
     }
 
     @Override
-    public void mcpInsert(SettingMcpRequest request) {
+    public void mcpInsert(SettingMcpDTO request) {
         String mcpId = "mcp_" + randomUtil.userRandom();
         userRepository.mcpInsert(request, mcpId);
     }
 
     @Override
-    public void mcpUpdate(SettingMcpRequest request) {
+    public void mcpUpdate(SettingMcpDTO request) {
         userRepository.mcpUpdate(request);
     }
 

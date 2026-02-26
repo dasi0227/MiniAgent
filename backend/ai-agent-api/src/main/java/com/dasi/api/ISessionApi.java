@@ -2,7 +2,7 @@ package com.dasi.api;
 
 import com.dasi.domain.session.model.vo.MessageVO;
 import com.dasi.domain.session.model.vo.SessionVO;
-import com.dasi.types.dto.result.Result;
+import com.dasi.types.result.Result;
 
 import java.util.List;
 

@@ -1,11 +1,8 @@
 package com.dasi.domain.admin.repository;
 
+import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.vo.*;
 import com.dasi.domain.session.model.vo.SessionVO;
-import com.dasi.types.dto.request.admin.list.AgentListRequest;
-import com.dasi.types.dto.request.admin.list.ConfigListRequest;
-import com.dasi.types.dto.request.admin.manage.*;
-import com.dasi.types.dto.request.admin.page.*;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 
 import java.util.List;
@@ -17,87 +14,87 @@ public interface IAdminRepository {
     DashboardVO.GraphInfo dashboardChart();
 
     // Api
-    List<ApiVO> apiPage(ApiPageRequest apiPageRequest);
-    Integer apiCount(ApiPageRequest apiPageRequest);
+    List<ApiVO> apiPage(ApiPageDTO apiPageDTO);
+    Integer apiCount(ApiPageDTO apiPageDTO);
     ApiVO apiQuery(Long id);
     ApiVO apiQuery(String apiId);
-    void apiInsert(ApiManageRequest apiManageRequest);
-    void apiUpdate(ApiManageRequest apiManageRequest);
+    void apiInsert(ApiManageDTO apiManageDTO);
+    void apiUpdate(ApiManageDTO apiManageDTO);
     void apiDelete(Long id);
 
     // Model
-    List<ModelVO> modelPage(ModelPageRequest request);
-    Integer modelCount(ModelPageRequest request);
+    List<ModelVO> modelPage(ModelPageDTO request);
+    Integer modelCount(ModelPageDTO request);
     ModelVO modelQuery(Long id);
     ModelVO modelQuery(String modelId);
-    void modelInsert(ModelManageRequest request);
-    void modelUpdate(ModelManageRequest request);
+    void modelInsert(ModelManageDTO request);
+    void modelUpdate(ModelManageDTO request);
     void modelDelete(Long id);
 
     // Mcp
-    List<McpVO> mcpPage(McpPageRequest request);
-    Integer mcpCount(McpPageRequest request);
+    List<McpVO> mcpPage(McpPageDTO request);
+    Integer mcpCount(McpPageDTO request);
     McpVO mcpQuery(Long id);
     McpVO mcpQuery(String mcpId);
-    void mcpInsert(McpManageRequest request);
-    void mcpUpdate(McpManageRequest request);
+    void mcpInsert(McpManageDTO request);
+    void mcpUpdate(McpManageDTO request);
     void mcpDelete(Long id);
 
     // Advisor
-    List<AdvisorVO> advisorPage(AdvisorPageRequest request);
-    Integer advisorCount(AdvisorPageRequest request);
+    List<AdvisorVO> advisorPage(AdvisorPageDTO request);
+    Integer advisorCount(AdvisorPageDTO request);
     AdvisorVO advisorQuery(Long id);
     AdvisorVO advisorQuery(String advisorId);
-    void advisorInsert(AdvisorManageRequest request);
-    void advisorUpdate(AdvisorManageRequest request);
+    void advisorInsert(AdvisorManageDTO request);
+    void advisorUpdate(AdvisorManageDTO request);
     void advisorDelete(Long id);
 
     // Prompt
-    List<PromptVO> promptPage(PromptPageRequest request);
-    Integer promptCount(PromptPageRequest request);
+    List<PromptVO> promptPage(PromptPageDTO request);
+    Integer promptCount(PromptPageDTO request);
     PromptVO promptQuery(Long id);
     PromptVO promptQuery(String promptId);
-    void promptInsert(PromptManageRequest request);
-    void promptUpdate(PromptManageRequest request);
+    void promptInsert(PromptManageDTO request);
+    void promptUpdate(PromptManageDTO request);
     void promptDelete(Long id);
 
     // Client
-    List<ClientVO> clientPage(ClientPageRequest request);
-    Integer clientCount(ClientPageRequest request);
+    List<ClientVO> clientPage(ClientPageDTO request);
+    Integer clientCount(ClientPageDTO request);
     ClientVO clientQuery(Long id);
     ClientVO clientQuery(String clientId);
-    void clientInsert(ClientManageRequest request);
-    void clientUpdate(ClientManageRequest request);
+    void clientInsert(ClientManageDTO request);
+    void clientUpdate(ClientManageDTO request);
     void clientDelete(Long id);
     void clientToggle(Long id, Integer status);
 
     // Agent
-    List<AgentVO> agentPage(AgentPageRequest request);
-    List<AgentVO> agentList(AgentListRequest request);
-    Integer agentCount(AgentPageRequest request);
+    List<AgentVO> agentPage(AgentPageDTO request);
+    List<AgentVO> agentList(AgentListDTO request);
+    Integer agentCount(AgentPageDTO request);
     AgentVO agentQuery(Long id);
     AgentVO agentQuery(String agentId);
-    void agentInsert(AgentManageRequest request);
-    void agentUpdate(AgentManageRequest request);
+    void agentInsert(AgentManageDTO request);
+    void agentUpdate(AgentManageDTO request);
     void agentDelete(Long id);
     void agentToggle(Long id, Integer status);
 
     // User
-    List<UserVO> userPage(UserPageRequest request);
-    Integer userCount(UserPageRequest request);
+    List<UserVO> userPage(UserPageDTO request);
+    Integer userCount(UserPageDTO request);
     UserVO userQuery(Long id);
     UserVO userQuery(String userName);
-    void userInsert(UserManageRequest request);
-    void userUpdate(UserManageRequest request);
+    void userInsert(UserManageDTO request);
+    void userUpdate(UserManageDTO request);
     void userDelete(Long id);
     void userToggle(Long id, Integer status);
 
     // Config
-    List<ConfigVO> configList(ConfigListRequest request);
-    ConfigVO configQuery(ConfigManageRequest request);
+    List<ConfigVO> configList(ConfigListDTO request);
+    ConfigVO configQuery(ConfigManageDTO request);
     ConfigVO configQuery(Long id);
-    void configInsert(ConfigManageRequest request);
-    void configUpdate(ConfigManageRequest request);
+    void configInsert(ConfigManageDTO request);
+    void configUpdate(ConfigManageDTO request);
     void configDelete(Long id);
     void configToggle(Long id, Integer status);
 
@@ -106,17 +103,17 @@ public interface IAdminRepository {
     List<FlowVO> flowAgent(String agentId);
     FlowVO flowQuery(String agentId, String clientId);
     FlowVO flowQuery(Long id);
-    void flowInsert(FlowManageRequest request);
-    void flowUpdate(FlowManageRequest request);
+    void flowInsert(FlowManageDTO request);
+    void flowUpdate(FlowManageDTO request);
     void flowDelete(Long id);
 
     // Task
-    List<TaskVO> taskPage(TaskPageRequest request);
-    Integer taskCount(TaskPageRequest request);
+    List<TaskVO> taskPage(TaskPageDTO request);
+    Integer taskCount(TaskPageDTO request);
     TaskVO taskQuery(Long id);
     TaskVO taskQuery(String taskId);
-    void taskInsert(TaskManageRequest request);
-    void taskUpdate(TaskManageRequest request);
+    void taskInsert(TaskManageDTO request);
+    void taskUpdate(TaskManageDTO request);
     void taskDelete(Long id);
     void taskToggle(Long id, Integer status);
 

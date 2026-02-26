@@ -1,7 +1,7 @@
 package com.dasi.domain.ai.service.rag;
 
 import com.dasi.types.annotation.CacheEvict;
-import com.dasi.types.dto.request.ai.AiUploadRequest;
+import com.dasi.domain.ai.model.dto.AiUploadDTO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -66,11 +66,11 @@ public class RagService implements IRagService {
 
     @Override
     @CacheEvict(keyPrefix = { QUERY_CHAT_RAG_KEY })
-    public void uploadGitRepo(AiUploadRequest aiUploadRequest) {
+    public void uploadGitRepo(AiUploadDTO aiUploadDTO) {
 
-        String repoUrl = aiUploadRequest.getRepoUrl();
-        String username = aiUploadRequest.getUsername();
-        String password = aiUploadRequest.getPassword();
+        String repoUrl = aiUploadDTO.getRepoUrl();
+        String username = aiUploadDTO.getUsername();
+        String password = aiUploadDTO.getPassword();
 
         try {
             String[] parts = repoUrl.split("/");

@@ -1,9 +1,9 @@
 package com.dasi.infrastructure.repository;
 
-import com.dasi.domain.miniagent.model.enumeration.PlazaActionType;
-import com.dasi.domain.miniagent.model.vo.CommentVO;
-import com.dasi.domain.miniagent.model.vo.PlazaVO;
-import com.dasi.domain.miniagent.repository.IWorkspaceRepository;
+import com.dasi.domain.workspace.model.enumeration.PlazaActionType;
+import com.dasi.domain.workspace.model.vo.CommentVO;
+import com.dasi.domain.workspace.model.vo.PlazaVO;
+import com.dasi.domain.workspace.repository.IWorkspaceRepository;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.infrastructure.persistent.dao.IAiPlazaCommentDao;
@@ -14,10 +14,10 @@ import com.dasi.infrastructure.persistent.po.AiPlaza;
 import com.dasi.infrastructure.persistent.po.AiPlazaComment;
 import com.dasi.infrastructure.persistent.po.AiPlazaFavor;
 import com.dasi.infrastructure.persistent.po.AiPlazaLike;
-import com.dasi.types.dto.request.plaza.PlazaCommentAreaRequest;
-import com.dasi.types.dto.request.plaza.PlazaCommentRequest;
-import com.dasi.types.dto.request.plaza.PlazaPageRequest;
-import com.dasi.types.dto.result.PageResult;
+import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
+import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
+import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
+import com.dasi.types.result.PageResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -49,7 +49,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     private IRandomUtil randomUtil;
 
     @Override
-    public PageResult<PlazaVO> pagePlaza(PlazaPageRequest request) {
+    public PageResult<PlazaVO> pagePlaza(PlazaPageDTO request) {
 
         int pageNum = request.getPageNum();
         int pageSize = request.getPageSize();
@@ -105,7 +105,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaRequest request) {
+    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO request) {
         Long userId = userContext.getUserId();
         int pageNum = request.getPageNum();
         int pageSize = request.getPageSize();
@@ -178,7 +178,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    public void plazaComment(PlazaCommentRequest request) {
+    public void plazaComment(PlazaCommentDTO request) {
         String plazaId = request.getPlazaId();
         Long userId = userContext.getUserId();
         aiPlazaCommentDao.insert(AiPlazaComment.builder()

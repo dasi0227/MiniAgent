@@ -1,6 +1,6 @@
 package com.dasi.trigger.handler;
 
-import com.dasi.types.dto.result.Result;
+import com.dasi.types.result.Result;
 import com.dasi.types.exception.DependencyConflictException;
 import com.dasi.types.exception.SessionException;
 import lombok.extern.slf4j.Slf4j;
