@@ -118,14 +118,14 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void apiInsert(SettingApiDTO request, String apiId, String modelId) {
+    public void apiInsert(SettingApiDTO dto, String apiId, String modelId) {
         Long userId = userContext.getUserId();
 
         AiApi aiApi = AiApi.builder()
                 .apiId(apiId)
-                .apiBaseUrl(request.getApiBaseUrl())
-                .apiCompletionsPath(request.getApiCompletionPath())
-                .apiKey(request.getApiKey())
+                .apiBaseUrl(dto.getApiBaseUrl())
+                .apiCompletionsPath(dto.getApiCompletionPath())
+                .apiKey(dto.getApiKey())
                 .apiFrom(userId)
                 .build();
         apiDao.insert(aiApi);
@@ -133,27 +133,27 @@ public class UserRepository implements IUserRepository {
         AiModel aiModel = AiModel.builder()
                 .apiId(apiId)
                 .modelId(modelId)
-                .modelName(request.getModelName())
-                .modelType(request.getModelType())
+                .modelName(dto.getModelName())
+                .modelType(dto.getModelType())
                 .modelFrom(userId)
                 .build();
         modelDao.insert(aiModel);
     }
 
     @Override
-    public void apiUpdate(SettingApiDTO request) {
+    public void apiUpdate(SettingApiDTO dto) {
         Long userId = userContext.getUserId();
-        if (request.getId() == null) {
+        if (dto.getId() == null) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
 
-        AiApi aiApi = apiDao.queryById(request.getId());
+        AiApi aiApi = apiDao.queryById(dto.getId());
         if (aiApi == null || !aiApi.getApiFrom().equals(userId)) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
-        aiApi.setApiBaseUrl(request.getApiBaseUrl());
-        aiApi.setApiKey(request.getApiKey());
-        aiApi.setApiCompletionsPath(request.getApiCompletionPath());
+        aiApi.setApiBaseUrl(dto.getApiBaseUrl());
+        aiApi.setApiKey(dto.getApiKey());
+        aiApi.setApiCompletionsPath(dto.getApiCompletionPath());
         apiDao.update(aiApi);
 
         String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
@@ -161,8 +161,8 @@ public class UserRepository implements IUserRepository {
         if (!aiModel.getModelFrom().equals(userId)) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
-        aiModel.setModelName(request.getModelName());
-        aiModel.setModelType(request.getModelType());
+        aiModel.setModelName(dto.getModelName());
+        aiModel.setModelType(dto.getModelType());
         aiModel.setModelFrom(userId);
         modelDao.update(aiModel);
     }
@@ -208,16 +208,16 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void mcpInsert(SettingMcpDTO request, String mcpId) {
+    public void mcpInsert(SettingMcpDTO dto, String mcpId) {
         Long userId = userContext.getUserId();
 
         AiMcp aiMcp = AiMcp.builder()
                 .mcpId(mcpId)
-                .mcpName(request.getMcpName())
-                .mcpType(request.getMcpType())
-                .mcpConfig(request.getMcpConfig())
-                .mcpSecret(request.getMcpSecret())
-                .mcpDesc(request.getMcpDesc())
+                .mcpName(dto.getMcpName())
+                .mcpType(dto.getMcpType())
+                .mcpConfig(dto.getMcpConfig())
+                .mcpSecret(dto.getMcpSecret())
+                .mcpDesc(dto.getMcpDesc())
                 .mcpTimeout(180)
                 .mcpChat(0)
                 .mcpFrom(userId)
@@ -226,21 +226,21 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void mcpUpdate(SettingMcpDTO request) {
+    public void mcpUpdate(SettingMcpDTO dto) {
         Long userId = userContext.getUserId();
-        if (request.getId() == null) {
+        if (dto.getId() == null) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
 
-        AiMcp aiMcp = mcpDao.queryById(request.getId());
+        AiMcp aiMcp = mcpDao.queryById(dto.getId());
         if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
             throw new MiniAgentException(SETTING_USER_ILLEGAL);
         }
-        aiMcp.setMcpName(request.getMcpName());
-        aiMcp.setMcpType(request.getMcpType());
-        aiMcp.setMcpConfig(request.getMcpConfig());
-        aiMcp.setMcpSecret(request.getMcpSecret());
-        aiMcp.setMcpDesc(request.getMcpDesc());
+        aiMcp.setMcpName(dto.getMcpName());
+        aiMcp.setMcpType(dto.getMcpType());
+        aiMcp.setMcpConfig(dto.getMcpConfig());
+        aiMcp.setMcpSecret(dto.getMcpSecret());
+        aiMcp.setMcpDesc(dto.getMcpDesc());
         mcpDao.update(aiMcp);
     }
 

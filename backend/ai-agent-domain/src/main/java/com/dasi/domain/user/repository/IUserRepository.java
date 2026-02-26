@@ -20,17 +20,17 @@ public interface IUserRepository {
 
     List<UserApiVO> apiList(String keyword);
 
-    void apiInsert(SettingApiDTO request, String apiId, String modelId);
+    void apiInsert(SettingApiDTO dto, String apiId, String modelId);
 
-    void apiUpdate(SettingApiDTO request);
+    void apiUpdate(SettingApiDTO dto);
 
     void apiDelete(Long id);
 
     List<UserMcpVO> mcpList(String keyword);
 
-    void mcpInsert(SettingMcpDTO request, String mcpId);
+    void mcpInsert(SettingMcpDTO dto, String mcpId);
 
-    void mcpUpdate(SettingMcpDTO request);
+    void mcpUpdate(SettingMcpDTO dto);
 
     void mcpDelete(Long id);
 

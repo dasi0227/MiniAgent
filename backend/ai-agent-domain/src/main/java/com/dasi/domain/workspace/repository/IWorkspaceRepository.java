@@ -9,15 +9,15 @@ import com.dasi.types.result.PageResult;
 
 public interface IWorkspaceRepository {
 
-    PageResult<PlazaVO> pagePlaza(PlazaPageDTO request);
+    PageResult<PlazaVO> pagePlaza(PlazaPageDTO dto);
 
-    PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO request);
+    PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO dto);
 
     void plazaLike(String plazaId, boolean liked);
 
     void plazaFavor(String plazaId, boolean favored);
 
-    void plazaComment(PlazaCommentDTO request);
+    void plazaComment(PlazaCommentDTO dto);
 
     void plazaDiscomment(String plazaId, String commentId);
 

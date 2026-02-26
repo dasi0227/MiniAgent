@@ -5,8 +5,8 @@ import com.dasi.domain.user.model.vo.AuthVO;
 
 public interface IAuthService {
 
-    AuthVO login(AuthDTO request);
+    AuthVO login(AuthDTO dto);
 
-    AuthVO register(AuthDTO request);
+    AuthVO register(AuthDTO dto);
 
 }

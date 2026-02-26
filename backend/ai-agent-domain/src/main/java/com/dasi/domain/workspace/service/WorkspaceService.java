@@ -20,13 +20,13 @@ public class WorkspaceService implements IWorkspaceService {
     private IWorkspaceRepository workspaceRepository;
 
     @Override
-    public PageResult<PlazaVO> pagePlaza(PlazaPageDTO request) {
-        return workspaceRepository.pagePlaza(request);
+    public PageResult<PlazaVO> pagePlaza(PlazaPageDTO dto) {
+        return workspaceRepository.pagePlaza(dto);
     }
 
     @Override
-    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO request) {
-        return workspaceRepository.plazaCommentArea(request);
+    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO dto) {
+        return workspaceRepository.plazaCommentArea(dto);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class WorkspaceService implements IWorkspaceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void plazaComment(PlazaCommentDTO request) {
-        workspaceRepository.plazaComment(request);
+    public void plazaComment(PlazaCommentDTO dto) {
+        workspaceRepository.plazaComment(dto);
     }
 
     @Override

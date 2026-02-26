@@ -1,8 +1,10 @@
 package com.dasi.trigger.http;
 
+import com.dasi.domain.workspace.model.dto.AgentDetailDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
+import com.dasi.domain.workspace.model.vo.AgentDetailVO;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.service.IWorkspaceService;
@@ -23,8 +25,8 @@ public class WorkspaceController {
     private IWorkspaceService workspaceService;
 
     @PostMapping("/plaza/page")
-    public Result<PageResult<PlazaVO>> plazaPage(@Valid @RequestBody PlazaPageDTO request) {
-        return Result.success(workspaceService.pagePlaza(request));
+    public Result<PageResult<PlazaVO>> plazaPage(@Valid @RequestBody PlazaPageDTO dto) {
+        return Result.success(workspaceService.pagePlaza(dto));
     }
 
     @PostMapping("/plaza/like")
@@ -40,8 +42,8 @@ public class WorkspaceController {
     }
 
     @PostMapping("/plaza/comment")
-    public Result<Void> plazaComment(@Valid @RequestBody PlazaCommentDTO request) {
-        workspaceService.plazaComment(request);
+    public Result<Void> plazaComment(@Valid @RequestBody PlazaCommentDTO dto) {
+        workspaceService.plazaComment(dto);
         return Result.success();
     }
 
@@ -53,8 +55,8 @@ public class WorkspaceController {
     }
 
     @PostMapping("/plaza/comment-area")
-    public Result<PageResult<CommentVO>> plazaCommentArea(@Valid @RequestBody PlazaCommentAreaDTO request) {
-        return Result.success(workspaceService.plazaCommentArea(request));
+    public Result<PageResult<CommentVO>> plazaCommentArea(@Valid @RequestBody PlazaCommentAreaDTO dto) {
+        return Result.success(workspaceService.plazaCommentArea(dto));
     }
 
     @PostMapping("/plaza/favor")
@@ -69,9 +71,9 @@ public class WorkspaceController {
         return Result.success();
     }
 
-//    @PostMapping("/agent/detail")
-//    public Result<AgentDetailVO> agentDetail(@NotBlank @RequestParam String agentId) {
-//        return Result.success(workspaceService.agentDetail(agentId));
-//    }
+    @PostMapping("/agent/detail")
+    public Result<AgentDetailVO> agentDetail(@NotBlank @RequestParam AgentDetailDTO dto) {
+        return Result.success(workspaceService.agentDetail(dto));
+    }
 
 }

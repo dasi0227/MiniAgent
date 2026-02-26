@@ -14,21 +14,21 @@ public interface ISettingService {
 
     AuthVO profileQuery();
 
-    AuthVO profileEdit(ProfileEditDTO request, MultipartFile avatar);
+    AuthVO profileEdit(ProfileEditDTO dto, MultipartFile avatar);
 
     List<UserApiVO> apiList(String keyword);
 
-    void apiInsert(SettingApiDTO request);
+    void apiInsert(SettingApiDTO dto);
 
-    void apiUpdate(SettingApiDTO request);
+    void apiUpdate(SettingApiDTO dto);
 
     void apiDelete(Long id);
 
     List<UserMcpVO> mcpList(String keyword);
 
-    void mcpInsert(SettingMcpDTO request);
+    void mcpInsert(SettingMcpDTO dto);
 
-    void mcpUpdate(SettingMcpDTO request);
+    void mcpUpdate(SettingMcpDTO dto);
 
     void mcpDelete(Long id);
 

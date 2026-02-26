@@ -33,19 +33,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- API --------------------
     @PostMapping("/api/page")
-    public Result<PageResult<ApiVO>> apiPage(@Valid @RequestBody ApiPageDTO request) {
-        return Result.success(adminService.apiPage(request));
+    public Result<PageResult<ApiVO>> apiPage(@Valid @RequestBody ApiPageDTO dto) {
+        return Result.success(adminService.apiPage(dto));
     }
 
     @PostMapping("/api/insert")
-    public Result<Void> apiInsert(@Valid @RequestBody ApiManageDTO request) {
-        adminService.apiInsert(request);
+    public Result<Void> apiInsert(@Valid @RequestBody ApiManageDTO dto) {
+        adminService.apiInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/api/update")
-    public Result<Void> apiUpdate(@Valid @RequestBody ApiManageDTO request) {
-        adminService.apiUpdate(request);
+    public Result<Void> apiUpdate(@Valid @RequestBody ApiManageDTO dto) {
+        adminService.apiUpdate(dto);
         return Result.success();
     }
 
@@ -57,19 +57,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Model --------------------
     @PostMapping("/model/page")
-    public Result<PageResult<ModelVO>> modelPage(@Valid @RequestBody ModelPageDTO request) {
-        return Result.success(adminService.modelPage(request));
+    public Result<PageResult<ModelVO>> modelPage(@Valid @RequestBody ModelPageDTO dto) {
+        return Result.success(adminService.modelPage(dto));
     }
 
     @PostMapping("/model/insert")
-    public Result<Void> modelInsert(@Valid @RequestBody ModelManageDTO request) {
-        adminService.modelInsert(request);
+    public Result<Void> modelInsert(@Valid @RequestBody ModelManageDTO dto) {
+        adminService.modelInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/model/update")
-    public Result<Void> modelUpdate(@Valid @RequestBody ModelManageDTO request) {
-        adminService.modelUpdate(request);
+    public Result<Void> modelUpdate(@Valid @RequestBody ModelManageDTO dto) {
+        adminService.modelUpdate(dto);
         return Result.success();
     }
 
@@ -81,19 +81,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- MCP --------------------
     @PostMapping("/mcp/page")
-    public Result<PageResult<McpVO>> mcpPage(@Valid @RequestBody McpPageDTO request) {
-        return Result.success(adminService.mcpPage(request));
+    public Result<PageResult<McpVO>> mcpPage(@Valid @RequestBody McpPageDTO dto) {
+        return Result.success(adminService.mcpPage(dto));
     }
 
     @PostMapping("/mcp/insert")
-    public Result<Void> mcpInsert(@Valid @RequestBody McpManageDTO request) {
-        adminService.mcpInsert(request);
+    public Result<Void> mcpInsert(@Valid @RequestBody McpManageDTO dto) {
+        adminService.mcpInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/mcp/update")
-    public Result<Void> mcpUpdate(@Valid @RequestBody McpManageDTO request) {
-        adminService.mcpUpdate(request);
+    public Result<Void> mcpUpdate(@Valid @RequestBody McpManageDTO dto) {
+        adminService.mcpUpdate(dto);
         return Result.success();
     }
 
@@ -105,19 +105,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Advisor --------------------
     @PostMapping("/advisor/page")
-    public Result<PageResult<AdvisorVO>> advisorPage(@Valid @RequestBody AdvisorPageDTO request) {
-        return Result.success(adminService.advisorPage(request));
+    public Result<PageResult<AdvisorVO>> advisorPage(@Valid @RequestBody AdvisorPageDTO dto) {
+        return Result.success(adminService.advisorPage(dto));
     }
 
     @PostMapping("/advisor/insert")
-    public Result<Void> advisorInsert(@Valid @RequestBody AdvisorManageDTO request) {
-        adminService.advisorInsert(request);
+    public Result<Void> advisorInsert(@Valid @RequestBody AdvisorManageDTO dto) {
+        adminService.advisorInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/advisor/update")
-    public Result<Void> advisorUpdate(@Valid @RequestBody AdvisorManageDTO request) {
-        adminService.advisorUpdate(request);
+    public Result<Void> advisorUpdate(@Valid @RequestBody AdvisorManageDTO dto) {
+        adminService.advisorUpdate(dto);
         return Result.success();
     }
 
@@ -129,19 +129,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Prompt --------------------
     @PostMapping("/prompt/page")
-    public Result<PageResult<PromptVO>> promptPage(@Valid @RequestBody PromptPageDTO request) {
-        return Result.success(adminService.promptPage(request));
+    public Result<PageResult<PromptVO>> promptPage(@Valid @RequestBody PromptPageDTO dto) {
+        return Result.success(adminService.promptPage(dto));
     }
 
     @PostMapping("/prompt/insert")
-    public Result<Void> promptInsert(@Valid @RequestBody PromptManageDTO request) {
-        adminService.promptInsert(request);
+    public Result<Void> promptInsert(@Valid @RequestBody PromptManageDTO dto) {
+        adminService.promptInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/prompt/update")
-    public Result<Void> promptUpdate(@Valid @RequestBody PromptManageDTO request) {
-        adminService.promptUpdate(request);
+    public Result<Void> promptUpdate(@Valid @RequestBody PromptManageDTO dto) {
+        adminService.promptUpdate(dto);
         return Result.success();
     }
 
@@ -153,19 +153,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Client --------------------
     @PostMapping("/client/page")
-    public Result<PageResult<ClientVO>> clientPage(@Valid @RequestBody ClientPageDTO request) {
-        return Result.success(adminService.clientPage(request));
+    public Result<PageResult<ClientVO>> clientPage(@Valid @RequestBody ClientPageDTO dto) {
+        return Result.success(adminService.clientPage(dto));
     }
 
     @PostMapping("/client/insert")
-    public Result<Void> clientInsert(@Valid @RequestBody ClientManageDTO request) {
-        adminService.clientInsert(request);
+    public Result<Void> clientInsert(@Valid @RequestBody ClientManageDTO dto) {
+        adminService.clientInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/client/update")
-    public Result<Void> clientUpdate(@Valid @RequestBody ClientManageDTO request) {
-        adminService.clientUpdate(request);
+    public Result<Void> clientUpdate(@Valid @RequestBody ClientManageDTO dto) {
+        adminService.clientUpdate(dto);
         return Result.success();
     }
 
@@ -183,24 +183,24 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Agent --------------------
     @PostMapping("/agent/page")
-    public Result<PageResult<AgentVO>> agentPage(@Valid @RequestBody AgentPageDTO request) {
-        return Result.success(adminService.agentPage(request));
+    public Result<PageResult<AgentVO>> agentPage(@Valid @RequestBody AgentPageDTO dto) {
+        return Result.success(adminService.agentPage(dto));
     }
 
     @PostMapping("/agent/list")
-    public Result<List<AgentVO>> agentList(@Valid @RequestBody AgentListDTO request) {
-        return Result.success(adminService.agentList(request));
+    public Result<List<AgentVO>> agentList(@Valid @RequestBody AgentListDTO dto) {
+        return Result.success(adminService.agentList(dto));
     }
 
     @PostMapping("/agent/insert")
-    public Result<Void> agentInsert(@Valid @RequestBody AgentManageDTO request) {
-        adminService.agentInsert(request);
+    public Result<Void> agentInsert(@Valid @RequestBody AgentManageDTO dto) {
+        adminService.agentInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/agent/update")
-    public Result<Void> agentUpdate(@Valid @RequestBody AgentManageDTO request) {
-        adminService.agentUpdate(request);
+    public Result<Void> agentUpdate(@Valid @RequestBody AgentManageDTO dto) {
+        adminService.agentUpdate(dto);
         return Result.success();
     }
 
@@ -218,19 +218,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- User --------------------
     @PostMapping("/user/page")
-    public Result<PageResult<UserVO>> userPage(@Valid @RequestBody UserPageDTO request) {
-        return Result.success(adminService.userPage(request));
+    public Result<PageResult<UserVO>> userPage(@Valid @RequestBody UserPageDTO dto) {
+        return Result.success(adminService.userPage(dto));
     }
 
     @PostMapping("/user/insert")
-    public Result<Void> userInsert(@Valid @RequestBody UserManageDTO request) {
-        adminService.userInsert(request);
+    public Result<Void> userInsert(@Valid @RequestBody UserManageDTO dto) {
+        adminService.userInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/user/update")
-    public Result<Void> userUpdate(@Valid @RequestBody UserManageDTO request) {
-        adminService.userUpdate(request);
+    public Result<Void> userUpdate(@Valid @RequestBody UserManageDTO dto) {
+        adminService.userUpdate(dto);
         return Result.success();
     }
 
@@ -248,19 +248,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Config --------------------
     @PostMapping("/config/list")
-    public Result<Map<String, List<ConfigVO>>> configList(@Valid @RequestBody ConfigListDTO request) {
-        return Result.success(adminService.configList(request));
+    public Result<Map<String, List<ConfigVO>>> configList(@Valid @RequestBody ConfigListDTO dto) {
+        return Result.success(adminService.configList(dto));
     }
 
     @PostMapping("/config/insert")
-    public Result<Void> configInsert(@Valid @RequestBody ConfigManageDTO request) {
-        adminService.configInsert(request);
+    public Result<Void> configInsert(@Valid @RequestBody ConfigManageDTO dto) {
+        adminService.configInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/config/update")
-    public Result<Void> configUpdate(@Valid @RequestBody ConfigManageDTO request) {
-        adminService.configUpdate(request);
+    public Result<Void> configUpdate(@Valid @RequestBody ConfigManageDTO dto) {
+        adminService.configUpdate(dto);
         return Result.success();
     }
 
@@ -288,14 +288,14 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/flow/insert")
-    public Result<Void> flowInsert(@Valid @RequestBody FlowManageDTO request) {
-        adminService.flowInsert(request);
+    public Result<Void> flowInsert(@Valid @RequestBody FlowManageDTO dto) {
+        adminService.flowInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/flow/update")
-    public Result<Void> flowUpdate(@Valid @RequestBody FlowManageDTO request) {
-        adminService.flowUpdate(request);
+    public Result<Void> flowUpdate(@Valid @RequestBody FlowManageDTO dto) {
+        adminService.flowUpdate(dto);
         return Result.success();
     }
 
@@ -307,19 +307,19 @@ public class AdminController implements IAdminApi {
 
     // -------------------- Task --------------------
     @PostMapping("/task/page")
-    public Result<PageResult<TaskVO>> taskPage(@Valid @RequestBody TaskPageDTO request) {
-        return Result.success(adminService.taskPage(request));
+    public Result<PageResult<TaskVO>> taskPage(@Valid @RequestBody TaskPageDTO dto) {
+        return Result.success(adminService.taskPage(dto));
     }
 
     @PostMapping("/task/insert")
-    public Result<Void> taskInsert(@Valid @RequestBody TaskManageDTO request) {
-        adminService.taskInsert(request);
+    public Result<Void> taskInsert(@Valid @RequestBody TaskManageDTO dto) {
+        adminService.taskInsert(dto);
         return Result.success();
     }
 
     @PostMapping("/task/update")
-    public Result<Void> taskUpdate(@Valid @RequestBody TaskManageDTO request) {
-        adminService.taskUpdate(request);
+    public Result<Void> taskUpdate(@Valid @RequestBody TaskManageDTO dto) {
+        adminService.taskUpdate(dto);
         return Result.success();
     }
 

@@ -49,21 +49,21 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     private IRandomUtil randomUtil;
 
     @Override
-    public PageResult<PlazaVO> pagePlaza(PlazaPageDTO request) {
+    public PageResult<PlazaVO> pagePlaza(PlazaPageDTO dto) {
 
-        int pageNum = request.getPageNum();
-        int pageSize = request.getPageSize();
+        int pageNum = dto.getPageNum();
+        int pageSize = dto.getPageSize();
         int offset = (pageNum - 1) * pageSize;
 
         List<AiPlaza> aiPlazaList = aiPlazaDao.page(
-                request.getKeyword(),
-                request.getSortBy(),
-                request.getSortOrder(),
+                dto.getKeyword(),
+                dto.getSortBy(),
+                dto.getSortOrder(),
                 offset,
                 pageSize
         );
 
-        Integer total = aiPlazaDao.count(request.getKeyword());
+        Integer total = aiPlazaDao.count(dto.getKeyword());
         if (total == null) {
             total = 0;
         }
@@ -105,12 +105,12 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO request) {
+    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO dto) {
         Long userId = userContext.getUserId();
-        int pageNum = request.getPageNum();
-        int pageSize = request.getPageSize();
+        int pageNum = dto.getPageNum();
+        int pageSize = dto.getPageSize();
         int offset = (pageNum - 1) * pageSize;
-        String plazaId = request.getPlazaId();
+        String plazaId = dto.getPlazaId();
 
         List<AiPlazaComment> aiPlazaCommentList = aiPlazaCommentDao.listByPlazaId(plazaId, offset, pageSize);
         List<CommentVO> commentVOList = List.of();
@@ -178,15 +178,15 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    public void plazaComment(PlazaCommentDTO request) {
-        String plazaId = request.getPlazaId();
+    public void plazaComment(PlazaCommentDTO dto) {
+        String plazaId = dto.getPlazaId();
         Long userId = userContext.getUserId();
         aiPlazaCommentDao.insert(AiPlazaComment.builder()
                 .commentId(randomUtil.userRandom())
                 .plazaId(plazaId)
                 .userId(userId)
                 .userName(userContext.getUserName())
-                .commentContent(request.getCommentContent())
+                .commentContent(dto.getCommentContent())
                 .build());
         aiPlazaDao.increaseCommentCount(plazaId, 1);
     }

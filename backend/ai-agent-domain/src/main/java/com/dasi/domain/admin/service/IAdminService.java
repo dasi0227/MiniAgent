@@ -12,75 +12,75 @@ import java.util.Map;
 public interface IAdminService {
 
     // Api
-    PageResult<ApiVO> apiPage(ApiPageDTO request);
-    void apiInsert(ApiManageDTO request);
-    void apiUpdate(ApiManageDTO request);
+    PageResult<ApiVO> apiPage(ApiPageDTO dto);
+    void apiInsert(ApiManageDTO dto);
+    void apiUpdate(ApiManageDTO dto);
     void apiDelete(Long id);
 
     // Model
-    PageResult<ModelVO> modelPage(ModelPageDTO request);
-    void modelInsert(ModelManageDTO request);
-    void modelUpdate(ModelManageDTO request);
+    PageResult<ModelVO> modelPage(ModelPageDTO dto);
+    void modelInsert(ModelManageDTO dto);
+    void modelUpdate(ModelManageDTO dto);
     void modelDelete(Long id);
 
     // Mcp
-    PageResult<McpVO> mcpPage(McpPageDTO request);
-    void mcpInsert(McpManageDTO request);
-    void mcpUpdate(McpManageDTO request);
+    PageResult<McpVO> mcpPage(McpPageDTO dto);
+    void mcpInsert(McpManageDTO dto);
+    void mcpUpdate(McpManageDTO dto);
     void mcpDelete(Long id);
 
     // Advisor
-    PageResult<AdvisorVO> advisorPage(AdvisorPageDTO request);
-    void advisorInsert(AdvisorManageDTO request);
-    void advisorUpdate(AdvisorManageDTO request);
+    PageResult<AdvisorVO> advisorPage(AdvisorPageDTO dto);
+    void advisorInsert(AdvisorManageDTO dto);
+    void advisorUpdate(AdvisorManageDTO dto);
     void advisorDelete(Long id);
 
     // Prompt
-    PageResult<PromptVO> promptPage(PromptPageDTO request);
-    void promptInsert(PromptManageDTO request);
-    void promptUpdate(PromptManageDTO request);
+    PageResult<PromptVO> promptPage(PromptPageDTO dto);
+    void promptInsert(PromptManageDTO dto);
+    void promptUpdate(PromptManageDTO dto);
     void promptDelete(Long id);
 
     // Client
-    PageResult<ClientVO> clientPage(ClientPageDTO request);
-    void clientInsert(ClientManageDTO request);
-    void clientUpdate(ClientManageDTO request);
+    PageResult<ClientVO> clientPage(ClientPageDTO dto);
+    void clientInsert(ClientManageDTO dto);
+    void clientUpdate(ClientManageDTO dto);
     void clientDelete(Long id);
     void clientToggle(Long id, Integer status);
 
     // Agent
-    PageResult<AgentVO> agentPage(AgentPageDTO request);
-    List<AgentVO> agentList(AgentListDTO request);
-    void agentInsert(AgentManageDTO request);
-    void agentUpdate(AgentManageDTO request);
+    PageResult<AgentVO> agentPage(AgentPageDTO dto);
+    List<AgentVO> agentList(AgentListDTO dto);
+    void agentInsert(AgentManageDTO dto);
+    void agentUpdate(AgentManageDTO dto);
     void agentDelete(Long id);
     void agentToggle(Long id, Integer status);
 
     // User
-    PageResult<UserVO> userPage(UserPageDTO request);
-    void userInsert(UserManageDTO request);
-    void userUpdate(UserManageDTO request);
+    PageResult<UserVO> userPage(UserPageDTO dto);
+    void userInsert(UserManageDTO dto);
+    void userUpdate(UserManageDTO dto);
     void userDelete(Long id);
     void userToggle(Long id, Integer status);
 
     // Config
-    Map<String, List<ConfigVO>> configList(ConfigListDTO request);
-    void configInsert(ConfigManageDTO request);
-    void configUpdate(ConfigManageDTO request);
+    Map<String, List<ConfigVO>> configList(ConfigListDTO dto);
+    void configInsert(ConfigManageDTO dto);
+    void configUpdate(ConfigManageDTO dto);
     void configDelete(Long id);
     void configToggle(Long id, Integer configStatus);
 
     // Flow
     List<ClientDetailVO> flowClient();
     List<FlowVO> flowAgent(String agentId);
-    void flowInsert(FlowManageDTO request);
-    void flowUpdate(FlowManageDTO request);
+    void flowInsert(FlowManageDTO dto);
+    void flowUpdate(FlowManageDTO dto);
     void flowDelete(Long id);
 
     // Task
-    PageResult<TaskVO> taskPage(TaskPageDTO request);
-    void taskInsert(TaskManageDTO request);
-    void taskUpdate(TaskManageDTO request);
+    PageResult<TaskVO> taskPage(TaskPageDTO dto);
+    void taskInsert(TaskManageDTO dto);
+    void taskUpdate(TaskManageDTO dto);
     void taskDelete(Long id);
     void taskToggle(Long id, Integer status);
 

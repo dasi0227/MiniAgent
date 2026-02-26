@@ -20,27 +20,27 @@ public interface IUserApi {
 
     Result<List<WorkAgentVO>> queryWorkAgentVOList();
 
-    Result<AuthVO> login(AuthDTO request);
+    Result<AuthVO> login(AuthDTO dto);
 
-    Result<AuthVO> register(AuthDTO request);
+    Result<AuthVO> register(AuthDTO dto);
 
     Result<AuthVO> profileQuery();
 
-    Result<AuthVO> profileEdit(ProfileEditDTO request, MultipartFile avatar);
+    Result<AuthVO> profileEdit(ProfileEditDTO dto, MultipartFile avatar);
 
     Result<List<UserApiVO>> apiList(String keyword);
 
-    Result<Void> apiInsert(SettingApiDTO request);
+    Result<Void> apiInsert(SettingApiDTO dto);
 
-    Result<Void> apiUpdate(SettingApiDTO request);
+    Result<Void> apiUpdate(SettingApiDTO dto);
 
     Result<Void> apiDelete(Long id);
 
     Result<List<UserMcpVO>> mcpList(String keyword);
 
-    Result<Void> mcpInsert(SettingMcpDTO request);
+    Result<Void> mcpInsert(SettingMcpDTO dto);
 
-    Result<Void> mcpUpdate(SettingMcpDTO request);
+    Result<Void> mcpUpdate(SettingMcpDTO dto);
 
     Result<Void> mcpDelete(Long id);
 }

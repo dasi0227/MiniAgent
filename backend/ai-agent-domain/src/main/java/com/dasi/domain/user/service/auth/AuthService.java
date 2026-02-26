@@ -29,10 +29,10 @@ public class AuthService implements IAuthService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AuthVO login(AuthDTO request) {
+    public AuthVO login(AuthDTO dto) {
 
-        String userName = request.getUserName();
-        String password = request.getPassword();
+        String userName = dto.getUserName();
+        String password = dto.getPassword();
 
         UserVO userVO = userRepository.queryUserByUserName(userName);
         if (userVO == null) {
@@ -49,10 +49,10 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public AuthVO register(AuthDTO request) {
+    public AuthVO register(AuthDTO dto) {
 
-        String userName = request.getUserName();
-        String password = request.getPassword();
+        String userName = dto.getUserName();
+        String password = dto.getPassword();
 
         if (userRepository.queryUserByUserName(userName) != null) {
             throw new AuthException(AUTH_USER_ALREADY_EXISTS);

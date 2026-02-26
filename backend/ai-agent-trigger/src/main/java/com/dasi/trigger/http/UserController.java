@@ -59,14 +59,14 @@ public class UserController implements IUserApi {
 
     @PostMapping("/auth/login")
     @Override
-    public Result<AuthVO> login(@Valid @RequestBody AuthDTO request) {
-        return Result.success(authService.login(request));
+    public Result<AuthVO> login(@Valid @RequestBody AuthDTO dto) {
+        return Result.success(authService.login(dto));
     }
 
     @PostMapping("/auth/register")
     @Override
-    public Result<AuthVO> register(@Valid @RequestBody AuthDTO request) {
-        return Result.success(authService.register(request));
+    public Result<AuthVO> register(@Valid @RequestBody AuthDTO dto) {
+        return Result.success(authService.register(dto));
     }
 
     @PostMapping("/profile/query")
@@ -77,9 +77,9 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/profile/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Override
-    public Result<AuthVO> profileEdit(@Valid @RequestPart("profile") ProfileEditDTO request,
+    public Result<AuthVO> profileEdit(@Valid @RequestPart("profile") ProfileEditDTO dto,
                                       @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
-        return Result.success(settingService.profileEdit(request, avatar));
+        return Result.success(settingService.profileEdit(dto, avatar));
     }
 
     @PostMapping(value = "/api/list")
@@ -90,15 +90,15 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/api/insert")
     @Override
-    public Result<Void> apiInsert(@Valid @RequestBody SettingApiDTO request) {
-        settingService.apiInsert(request);
+    public Result<Void> apiInsert(@Valid @RequestBody SettingApiDTO dto) {
+        settingService.apiInsert(dto);
         return Result.success();
     }
 
     @PostMapping(value = "/api/update")
     @Override
-    public Result<Void> apiUpdate(@Valid @RequestBody SettingApiDTO request) {
-        settingService.apiUpdate(request);
+    public Result<Void> apiUpdate(@Valid @RequestBody SettingApiDTO dto) {
+        settingService.apiUpdate(dto);
         return Result.success();
     }
 
@@ -117,15 +117,15 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/mcp/insert")
     @Override
-    public Result<Void> mcpInsert(@Valid @RequestBody SettingMcpDTO request) {
-        settingService.mcpInsert(request);
+    public Result<Void> mcpInsert(@Valid @RequestBody SettingMcpDTO dto) {
+        settingService.mcpInsert(dto);
         return Result.success();
     }
 
     @PostMapping(value = "/mcp/update")
     @Override
-    public Result<Void> mcpUpdate(@Valid @RequestBody SettingMcpDTO request) {
-        settingService.mcpUpdate(request);
+    public Result<Void> mcpUpdate(@Valid @RequestBody SettingMcpDTO dto) {
+        settingService.mcpUpdate(dto);
         return Result.success();
     }
 

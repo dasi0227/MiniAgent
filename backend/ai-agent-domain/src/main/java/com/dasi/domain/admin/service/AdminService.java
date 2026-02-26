@@ -43,34 +43,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- API --------------------
     @Override
-    public PageResult<ApiVO> apiPage(ApiPageDTO request) {
-        List<ApiVO> apiVOList = adminRepository.apiPage(request);
-        Integer total = adminRepository.apiCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<ApiVO> apiPage(ApiPageDTO dto) {
+        List<ApiVO> apiVOList = adminRepository.apiPage(dto);
+        Integer total = adminRepository.apiCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<ApiVO>builder()
                 .list(apiVOList)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void apiInsert(ApiManageDTO request) {
-        if (adminRepository.apiQuery(request.getApiId()) != null) {
+    public void apiInsert(ApiManageDTO dto) {
+        if (adminRepository.apiQuery(dto.getApiId()) != null) {
             throw new AdminException("API 已存在，请修改后重新添加");
         }
-        adminRepository.apiInsert(request);
+        adminRepository.apiInsert(dto);
     }
 
     @Override
-    public void apiUpdate(ApiManageDTO request) {
-        if (adminRepository.apiQuery(request.getId()) == null) {
+    public void apiUpdate(ApiManageDTO dto) {
+        if (adminRepository.apiQuery(dto.getId()) == null) {
             throw new AdminException("API 不存在，请确认后重新更改");
         }
-        adminRepository.apiUpdate(request);
+        adminRepository.apiUpdate(dto);
     }
 
     @Override
@@ -85,34 +85,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- Model --------------------
     @Override
-    public PageResult<ModelVO> modelPage(ModelPageDTO request) {
-        List<ModelVO> list = adminRepository.modelPage(request);
-        Integer total = adminRepository.modelCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<ModelVO> modelPage(ModelPageDTO dto) {
+        List<ModelVO> list = adminRepository.modelPage(dto);
+        Integer total = adminRepository.modelCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<ModelVO>builder()
                 .list(list)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void modelInsert(ModelManageDTO request) {
-        if (adminRepository.modelQuery(request.getModelId()) != null) {
+    public void modelInsert(ModelManageDTO dto) {
+        if (adminRepository.modelQuery(dto.getModelId()) != null) {
             throw new AdminException("MODEL 已存在，请修改后重新添加");
         }
-        adminRepository.modelInsert(request);
+        adminRepository.modelInsert(dto);
     }
 
     @Override
-    public void modelUpdate(ModelManageDTO request) {
-        if (adminRepository.modelQuery(request.getId()) == null) {
+    public void modelUpdate(ModelManageDTO dto) {
+        if (adminRepository.modelQuery(dto.getId()) == null) {
             throw new AdminException("MODEL 不存在，请确认后重新更改");
         }
-        adminRepository.modelUpdate(request);
+        adminRepository.modelUpdate(dto);
     }
 
     @Override
@@ -127,34 +127,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- MCP --------------------
     @Override
-    public PageResult<McpVO> mcpPage(McpPageDTO request) {
-        List<McpVO> list = adminRepository.mcpPage(request);
-        Integer total = adminRepository.mcpCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<McpVO> mcpPage(McpPageDTO dto) {
+        List<McpVO> list = adminRepository.mcpPage(dto);
+        Integer total = adminRepository.mcpCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<McpVO>builder()
                 .list(list)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void mcpInsert(McpManageDTO request) {
-        if (adminRepository.mcpQuery(request.getMcpId()) != null) {
+    public void mcpInsert(McpManageDTO dto) {
+        if (adminRepository.mcpQuery(dto.getMcpId()) != null) {
             throw new AdminException("MCP 已存在，请修改后重新添加");
         }
-        adminRepository.mcpInsert(request);
+        adminRepository.mcpInsert(dto);
     }
 
     @Override
-    public void mcpUpdate(McpManageDTO request) {
-        if (adminRepository.mcpQuery(request.getId()) == null) {
+    public void mcpUpdate(McpManageDTO dto) {
+        if (adminRepository.mcpQuery(dto.getId()) == null) {
             throw new AdminException("MCP 不存在，请确认后重新更改");
         }
-        adminRepository.mcpUpdate(request);
+        adminRepository.mcpUpdate(dto);
     }
 
     @Override
@@ -169,34 +169,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- Advisor --------------------
     @Override
-    public PageResult<AdvisorVO> advisorPage(AdvisorPageDTO request) {
-        List<AdvisorVO> list = adminRepository.advisorPage(request);
-        Integer total = adminRepository.advisorCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<AdvisorVO> advisorPage(AdvisorPageDTO dto) {
+        List<AdvisorVO> list = adminRepository.advisorPage(dto);
+        Integer total = adminRepository.advisorCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<AdvisorVO>builder()
                 .list(list)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void advisorInsert(AdvisorManageDTO request) {
-        if (adminRepository.advisorQuery(request.getAdvisorId()) != null) {
+    public void advisorInsert(AdvisorManageDTO dto) {
+        if (adminRepository.advisorQuery(dto.getAdvisorId()) != null) {
             throw new AdminException("ADVISOR 已存在，请修改后重新添加");
         }
-        adminRepository.advisorInsert(request);
+        adminRepository.advisorInsert(dto);
     }
 
     @Override
-    public void advisorUpdate(AdvisorManageDTO request) {
-        if (adminRepository.advisorQuery(request.getId()) == null) {
+    public void advisorUpdate(AdvisorManageDTO dto) {
+        if (adminRepository.advisorQuery(dto.getId()) == null) {
             throw new AdminException("ADVISOR 不存在，请确认后重新更改");
         }
-        adminRepository.advisorUpdate(request);
+        adminRepository.advisorUpdate(dto);
     }
 
     @Override
@@ -211,34 +211,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- Prompt --------------------
     @Override
-    public PageResult<PromptVO> promptPage(PromptPageDTO request) {
-        List<PromptVO> list = adminRepository.promptPage(request);
-        Integer total = adminRepository.promptCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<PromptVO> promptPage(PromptPageDTO dto) {
+        List<PromptVO> list = adminRepository.promptPage(dto);
+        Integer total = adminRepository.promptCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<PromptVO>builder()
                 .list(list)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void promptInsert(PromptManageDTO request) {
-        if (adminRepository.promptQuery(request.getPromptId()) != null) {
+    public void promptInsert(PromptManageDTO dto) {
+        if (adminRepository.promptQuery(dto.getPromptId()) != null) {
             throw new AdminException("PROMPT 已存在，请修改后重新添加");
         }
-        adminRepository.promptInsert(request);
+        adminRepository.promptInsert(dto);
     }
 
     @Override
-    public void promptUpdate(PromptManageDTO request) {
-        if (adminRepository.promptQuery(request.getId()) == null) {
+    public void promptUpdate(PromptManageDTO dto) {
+        if (adminRepository.promptQuery(dto.getId()) == null) {
             throw new AdminException("PROMPT 不存在，请确认后重新更改");
         }
-        adminRepository.promptUpdate(request);
+        adminRepository.promptUpdate(dto);
     }
 
     @Override
@@ -253,34 +253,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- Client --------------------
     @Override
-    public PageResult<ClientVO> clientPage(ClientPageDTO request) {
-        List<ClientVO> list = adminRepository.clientPage(request);
-        Integer total = adminRepository.clientCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<ClientVO> clientPage(ClientPageDTO dto) {
+        List<ClientVO> list = adminRepository.clientPage(dto);
+        Integer total = adminRepository.clientCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<ClientVO>builder()
                 .list(list)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void clientInsert(ClientManageDTO request) {
-        if (adminRepository.clientQuery(request.getClientId()) != null) {
+    public void clientInsert(ClientManageDTO dto) {
+        if (adminRepository.clientQuery(dto.getClientId()) != null) {
             throw new AdminException("CLIENT 已存在，请修改后重新添加");
         }
-        adminRepository.clientInsert(request);
+        adminRepository.clientInsert(dto);
     }
 
     @Override
-    public void clientUpdate(ClientManageDTO request) {
-        if (adminRepository.clientQuery(request.getId()) == null) {
+    public void clientUpdate(ClientManageDTO dto) {
+        if (adminRepository.clientQuery(dto.getId()) == null) {
             throw new AdminException("CLIENT 不存在，请确认后重新更改");
         }
-        adminRepository.clientUpdate(request);
+        adminRepository.clientUpdate(dto);
     }
 
     @Override
@@ -307,39 +307,39 @@ public class AdminService implements IAdminService {
 
     // -------------------- Agent --------------------
     @Override
-    public PageResult<AgentVO> agentPage(AgentPageDTO request) {
-        List<AgentVO> voList = adminRepository.agentPage(request);
-        Integer total = adminRepository.agentCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<AgentVO> agentPage(AgentPageDTO dto) {
+        List<AgentVO> voList = adminRepository.agentPage(dto);
+        Integer total = adminRepository.agentCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<AgentVO>builder()
                 .list(voList)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public List<AgentVO> agentList(AgentListDTO request) {
-        return adminRepository.agentList(request);
+    public List<AgentVO> agentList(AgentListDTO dto) {
+        return adminRepository.agentList(dto);
     }
 
     @Override
-    public void agentInsert(AgentManageDTO request) {
-        if (adminRepository.agentQuery(request.getAgentId()) != null) {
+    public void agentInsert(AgentManageDTO dto) {
+        if (adminRepository.agentQuery(dto.getAgentId()) != null) {
             throw new AdminException("AGENT 已存在，请修改后重新添加");
         }
-        adminRepository.agentInsert(request);
+        adminRepository.agentInsert(dto);
     }
 
     @Override
-    public void agentUpdate(AgentManageDTO request) {
-        if (adminRepository.agentQuery(request.getId()) == null) {
+    public void agentUpdate(AgentManageDTO dto) {
+        if (adminRepository.agentQuery(dto.getId()) == null) {
             throw new AdminException("AGENT 不存在，请确认后重新更改");
         }
-        adminRepository.agentUpdate(request);
+        adminRepository.agentUpdate(dto);
     }
 
     @Override
@@ -362,36 +362,36 @@ public class AdminService implements IAdminService {
 
     // -------------------- User --------------------
     @Override
-    public PageResult<UserVO> userPage(UserPageDTO request) {
-        List<UserVO> voList = adminRepository.userPage(request);
-        Integer total = adminRepository.userCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<UserVO> userPage(UserPageDTO dto) {
+        List<UserVO> voList = adminRepository.userPage(dto);
+        Integer total = adminRepository.userCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<UserVO>builder()
                 .list(voList)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void userInsert(UserManageDTO request) {
-        if (adminRepository.userQuery(request.getUserName()) != null) {
+    public void userInsert(UserManageDTO dto) {
+        if (adminRepository.userQuery(dto.getUserName()) != null) {
             throw new AdminException("USER 已存在，请修改后重新添加");
         }
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
-        adminRepository.userInsert(request);
+        dto.setPassword(passwordEncoder.encode(dto.getPassword()));
+        adminRepository.userInsert(dto);
     }
 
     @Override
-    public void userUpdate(UserManageDTO request) {
-        if (adminRepository.userQuery(request.getId()) == null) {
+    public void userUpdate(UserManageDTO dto) {
+        if (adminRepository.userQuery(dto.getId()) == null) {
             throw new AdminException("USER 不存在，请修改后重新更改");
         }
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
-        adminRepository.userUpdate(request);
+        dto.setPassword(passwordEncoder.encode(dto.getPassword()));
+        adminRepository.userUpdate(dto);
     }
 
     @Override
@@ -412,8 +412,8 @@ public class AdminService implements IAdminService {
 
     // -------------------- Config --------------------
     @Override
-    public Map<String, List<ConfigVO>> configList(ConfigListDTO request) {
-        List<ConfigVO> configVOList = adminRepository.configList(request);
+    public Map<String, List<ConfigVO>> configList(ConfigListDTO dto) {
+        List<ConfigVO> configVOList = adminRepository.configList(dto);
         return configVOList.stream()
                 .collect(Collectors.groupingBy(
                         ConfigVO::getClientId,
@@ -423,19 +423,19 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    public void configInsert(ConfigManageDTO request) {
-        if (adminRepository.configQuery(request) != null) {
+    public void configInsert(ConfigManageDTO dto) {
+        if (adminRepository.configQuery(dto) != null) {
             throw new AdminException("CONFIG 已存在，请修改后重新添加");
         }
-        adminRepository.configInsert(request);
+        adminRepository.configInsert(dto);
     }
 
     @Override
-    public void configUpdate(ConfigManageDTO request) {
-        if (adminRepository.configQuery(request.getId()) == null) {
+    public void configUpdate(ConfigManageDTO dto) {
+        if (adminRepository.configQuery(dto.getId()) == null) {
             throw new AdminException("CONFIG 不存在，请修改后重新更改");
         }
-        adminRepository.configUpdate(request);
+        adminRepository.configUpdate(dto);
     }
 
     @Override
@@ -473,19 +473,19 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    public void flowInsert(FlowManageDTO request) {
-        if (adminRepository.flowQuery(request.getAgentId(), request.getClientId()) != null) {
+    public void flowInsert(FlowManageDTO dto) {
+        if (adminRepository.flowQuery(dto.getAgentId(), dto.getClientId()) != null) {
             throw new AdminException("FLOW 已存在，请修改后重新添加");
         }
-        adminRepository.flowInsert(request);
+        adminRepository.flowInsert(dto);
     }
 
     @Override
-    public void flowUpdate(FlowManageDTO request) {
-        if (adminRepository.flowQuery(request.getId()) == null) {
+    public void flowUpdate(FlowManageDTO dto) {
+        if (adminRepository.flowQuery(dto.getId()) == null) {
             throw new AdminException("FLOW 不存在，请修改后重新更改");
         }
-        adminRepository.flowUpdate(request);
+        adminRepository.flowUpdate(dto);
     }
 
     @Override
@@ -498,34 +498,34 @@ public class AdminService implements IAdminService {
 
     // -------------------- Task --------------------
     @Override
-    public PageResult<TaskVO> taskPage(TaskPageDTO request) {
-        List<TaskVO> list = adminRepository.taskPage(request);
-        Integer total = adminRepository.taskCount(request);
-        Integer size = request.getPageSize();
+    public PageResult<TaskVO> taskPage(TaskPageDTO dto) {
+        List<TaskVO> list = adminRepository.taskPage(dto);
+        Integer total = adminRepository.taskCount(dto);
+        Integer size = dto.getPageSize();
         Integer pageSum = (total + size - 1) / size;
         return PageResult.<TaskVO>builder()
                 .list(list)
                 .total(total)
                 .pageSum(pageSum)
-                .pageNum(request.getPageNum())
+                .pageNum(dto.getPageNum())
                 .pageSize(size)
                 .build();
     }
 
     @Override
-    public void taskInsert(TaskManageDTO request) {
-        if (adminRepository.taskQuery(request.getTaskId()) != null) {
+    public void taskInsert(TaskManageDTO dto) {
+        if (adminRepository.taskQuery(dto.getTaskId()) != null) {
             throw new AdminException("TASK 已存在，请修改后重新添加");
         }
-        adminRepository.taskInsert(request);
+        adminRepository.taskInsert(dto);
     }
 
     @Override
-    public void taskUpdate(TaskManageDTO request) {
-        if (adminRepository.taskQuery(request.getId()) == null) {
+    public void taskUpdate(TaskManageDTO dto) {
+        if (adminRepository.taskQuery(dto.getId()) == null) {
             throw new AdminException("TASK 不存在，请确认后重新更改");
         }
-        adminRepository.taskUpdate(request);
+        adminRepository.taskUpdate(dto);
     }
 
     @Override

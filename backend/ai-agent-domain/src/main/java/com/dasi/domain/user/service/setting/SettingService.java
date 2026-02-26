@@ -55,10 +55,10 @@ public class SettingService implements ISettingService {
     }
 
     @Override
-    public AuthVO profileEdit(ProfileEditDTO request, MultipartFile avatar) {
-        String userName = request.getUserName();
-        String oldPassword = request.getOldPassword();
-        String newPassword = request.getNewPassword();
+    public AuthVO profileEdit(ProfileEditDTO dto, MultipartFile avatar) {
+        String userName = dto.getUserName();
+        String oldPassword = dto.getOldPassword();
+        String newPassword = dto.getNewPassword();
 
         boolean hasOld = StringUtils.hasText(oldPassword);
         boolean hasNew = StringUtils.hasText(newPassword);
@@ -110,16 +110,16 @@ public class SettingService implements ISettingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiInsert(SettingApiDTO request) {
+    public void apiInsert(SettingApiDTO dto) {
         String apiId = "api_" + randomUtil.userRandom();
         String modelId = "model_" + randomUtil.userRandom();
-        userRepository.apiInsert(request, apiId, modelId);
+        userRepository.apiInsert(dto, apiId, modelId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiUpdate(SettingApiDTO request) {
-        userRepository.apiUpdate(request);
+    public void apiUpdate(SettingApiDTO dto) {
+        userRepository.apiUpdate(dto);
     }
 
     @Override
@@ -135,14 +135,14 @@ public class SettingService implements ISettingService {
     }
 
     @Override
-    public void mcpInsert(SettingMcpDTO request) {
+    public void mcpInsert(SettingMcpDTO dto) {
         String mcpId = "mcp_" + randomUtil.userRandom();
-        userRepository.mcpInsert(request, mcpId);
+        userRepository.mcpInsert(dto, mcpId);
     }
 
     @Override
-    public void mcpUpdate(SettingMcpDTO request) {
-        userRepository.mcpUpdate(request);
+    public void mcpUpdate(SettingMcpDTO dto) {
+        userRepository.mcpUpdate(dto);
     }
 
     @Override

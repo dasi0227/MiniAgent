@@ -224,13 +224,13 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Model --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_MODEL_PREFIX, cacheClass = ModelVO.class, cacheType = CacheType.LIST)
-    public List<ModelVO> modelPage(ModelPageDTO request) {
+    public List<ModelVO> modelPage(ModelPageDTO dto) {
 
-        String idKeyword = request.getIdKeyword();
-        String nameKeyword = request.getNameKeyword();
-        String apiId = request.getApiId();
-        Integer pageNum = request.getPageNum();
-        Integer pageSize = request.getPageSize();
+        String idKeyword = dto.getIdKeyword();
+        String nameKeyword = dto.getNameKeyword();
+        String apiId = dto.getApiId();
+        Integer pageNum = dto.getPageNum();
+        Integer pageSize = dto.getPageSize();
         Integer offset = (pageNum - 1) * pageSize;
 
         List<AiModel> poList = aiModelDao.page(idKeyword, nameKeyword, apiId, offset, pageSize);
@@ -243,8 +243,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_MODEL_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer modelCount(ModelPageDTO request) {
-        return aiModelDao.count(request.getIdKeyword(), request.getNameKeyword());
+    public Integer modelCount(ModelPageDTO dto) {
+        return aiModelDao.count(dto.getIdKeyword(), dto.getNameKeyword());
     }
 
     @Override
@@ -262,14 +262,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void modelInsert(ModelManageDTO request) {
-        aiModelDao.insert(toModelPo(request));
+    public void modelInsert(ModelManageDTO dto) {
+        aiModelDao.insert(toModelPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void modelUpdate(ModelManageDTO request) {
-        aiModelDao.update(toModelPo(request));
+    public void modelUpdate(ModelManageDTO dto) {
+        aiModelDao.update(toModelPo(dto));
     }
 
     @Override
@@ -281,9 +281,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- MCP --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_MCP_PREFIX, cacheClass = McpVO.class, cacheType = CacheType.LIST)
-    public List<McpVO> mcpPage(McpPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiMcp> poList = aiMcpDao.page(request.getIdKeyword(), request.getNameKeyword(), offset, request.getPageSize());
+    public List<McpVO> mcpPage(McpPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiMcp> poList = aiMcpDao.page(dto.getIdKeyword(), dto.getNameKeyword(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -292,8 +292,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_MCP_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer mcpCount(McpPageDTO request) {
-        return aiMcpDao.count(request.getIdKeyword(), request.getNameKeyword());
+    public Integer mcpCount(McpPageDTO dto) {
+        return aiMcpDao.count(dto.getIdKeyword(), dto.getNameKeyword());
     }
 
     @Override
@@ -310,14 +310,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void mcpInsert(McpManageDTO request) {
-        aiMcpDao.insert(toMcpPo(request));
+    public void mcpInsert(McpManageDTO dto) {
+        aiMcpDao.insert(toMcpPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void mcpUpdate(McpManageDTO request) {
-        aiMcpDao.update(toMcpPo(request));
+    public void mcpUpdate(McpManageDTO dto) {
+        aiMcpDao.update(toMcpPo(dto));
     }
 
     @Override
@@ -329,9 +329,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Advisor --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_ADVISOR_PREFIX, cacheClass = AdvisorVO.class, cacheType = CacheType.LIST)
-    public List<AdvisorVO> advisorPage(AdvisorPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiAdvisor> poList = aiAdvisorDao.page(request.getIdKeyword(), request.getNameKeyword(), offset, request.getPageSize());
+    public List<AdvisorVO> advisorPage(AdvisorPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiAdvisor> poList = aiAdvisorDao.page(dto.getIdKeyword(), dto.getNameKeyword(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -340,8 +340,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_ADVISOR_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer advisorCount(AdvisorPageDTO request) {
-        return aiAdvisorDao.count(request.getIdKeyword(), request.getNameKeyword());
+    public Integer advisorCount(AdvisorPageDTO dto) {
+        return aiAdvisorDao.count(dto.getIdKeyword(), dto.getNameKeyword());
     }
 
     @Override
@@ -358,14 +358,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void advisorInsert(AdvisorManageDTO request) {
-        aiAdvisorDao.insert(toAdvisorPo(request));
+    public void advisorInsert(AdvisorManageDTO dto) {
+        aiAdvisorDao.insert(toAdvisorPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void advisorUpdate(AdvisorManageDTO request) {
-        aiAdvisorDao.update(toAdvisorPo(request));
+    public void advisorUpdate(AdvisorManageDTO dto) {
+        aiAdvisorDao.update(toAdvisorPo(dto));
     }
 
     @Override
@@ -377,9 +377,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Prompt --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_PROMPT_PREFIX, cacheClass = PromptVO.class, cacheType = CacheType.LIST)
-    public List<PromptVO> promptPage(PromptPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiPrompt> poList = aiPromptDao.page(request.getIdKeyword(), request.getNameKeyword(), offset, request.getPageSize());
+    public List<PromptVO> promptPage(PromptPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiPrompt> poList = aiPromptDao.page(dto.getIdKeyword(), dto.getNameKeyword(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -388,8 +388,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_PROMPT_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer promptCount(PromptPageDTO request) {
-        return aiPromptDao.count(request.getIdKeyword(), request.getNameKeyword());
+    public Integer promptCount(PromptPageDTO dto) {
+        return aiPromptDao.count(dto.getIdKeyword(), dto.getNameKeyword());
     }
 
     @Override
@@ -406,14 +406,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void promptInsert(PromptManageDTO request) {
-        aiPromptDao.insert(toPromptPo(request));
+    public void promptInsert(PromptManageDTO dto) {
+        aiPromptDao.insert(toPromptPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void promptUpdate(PromptManageDTO request) {
-        aiPromptDao.update(toPromptPo(request));
+    public void promptUpdate(PromptManageDTO dto) {
+        aiPromptDao.update(toPromptPo(dto));
     }
 
     @Override
@@ -425,9 +425,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Client --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_CLIENT_PREFIX, cacheClass = ClientVO.class, cacheType = CacheType.LIST)
-    public List<ClientVO> clientPage(ClientPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiClient> poList = aiClientDao.page(request.getIdKeyword(), request.getNameKeyword(), request.getModelId(), request.getClientType(), request.getClientRole(), offset, request.getPageSize());
+    public List<ClientVO> clientPage(ClientPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiClient> poList = aiClientDao.page(dto.getIdKeyword(), dto.getNameKeyword(), dto.getModelId(), dto.getClientType(), dto.getClientRole(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -436,8 +436,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_CLIENT_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer clientCount(ClientPageDTO request) {
-        return aiClientDao.count(request.getIdKeyword(), request.getNameKeyword(), request.getModelId(), request.getClientType(), request.getClientRole());
+    public Integer clientCount(ClientPageDTO dto) {
+        return aiClientDao.count(dto.getIdKeyword(), dto.getNameKeyword(), dto.getModelId(), dto.getClientType(), dto.getClientRole());
     }
 
     @Override
@@ -454,14 +454,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void clientInsert(ClientManageDTO request) {
-        aiClientDao.insert(toClientPo(request));
+    public void clientInsert(ClientManageDTO dto) {
+        aiClientDao.insert(toClientPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void clientUpdate(ClientManageDTO request) {
-        aiClientDao.update(toClientPo(request));
+    public void clientUpdate(ClientManageDTO dto) {
+        aiClientDao.update(toClientPo(dto));
     }
 
     @Override
@@ -483,9 +483,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Agent --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = AgentVO.class, cacheType = CacheType.LIST)
-    public List<AgentVO> agentPage(AgentPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiAgent> poList = aiAgentDao.page(request.getIdKeyword(), request.getNameKeyword(), request.getAgentType(), offset, request.getPageSize());
+    public List<AgentVO> agentPage(AgentPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiAgent> poList = aiAgentDao.page(dto.getIdKeyword(), dto.getNameKeyword(), dto.getAgentType(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -494,15 +494,15 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = AgentVO.class, cacheType = CacheType.LIST)
-    public List<AgentVO> agentList(AgentListDTO request) {
-        List<AiAgent> poList = aiAgentDao.list(request.getIdKeyword(), request.getNameKeyword(), request.getAgentType());
+    public List<AgentVO> agentList(AgentListDTO dto) {
+        List<AiAgent> poList = aiAgentDao.list(dto.getIdKeyword(), dto.getNameKeyword(), dto.getAgentType());
         return poList.stream().map(this::toAgentVO).toList();
     }
 
     @Override
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer agentCount(AgentPageDTO request) {
-        return aiAgentDao.count(request.getIdKeyword(), request.getNameKeyword(), request.getAgentType());
+    public Integer agentCount(AgentPageDTO dto) {
+        return aiAgentDao.count(dto.getIdKeyword(), dto.getNameKeyword(), dto.getAgentType());
     }
 
     @Override
@@ -519,14 +519,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void agentInsert(AgentManageDTO request) {
-        aiAgentDao.insert(toAgentPo(request));
+    public void agentInsert(AgentManageDTO dto) {
+        aiAgentDao.insert(toAgentPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void agentUpdate(AgentManageDTO request) {
-        aiAgentDao.update(toAgentPo(request));
+    public void agentUpdate(AgentManageDTO dto) {
+        aiAgentDao.update(toAgentPo(dto));
     }
 
     @Override
@@ -548,9 +548,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- AiUser --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.LIST)
-    public List<UserVO> userPage(UserPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiUser> poList = userDao.page(request.getUserNameKeyWord(), request.getUserRole(), offset, request.getPageSize());
+    public List<UserVO> userPage(UserPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiUser> poList = userDao.page(dto.getUserNameKeyWord(), dto.getUserRole(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -559,8 +559,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
-    public Integer userCount(UserPageDTO request) {
-        Long count = userDao.count(request.getUserNameKeyWord(), request.getUserRole());
+    public Integer userCount(UserPageDTO dto) {
+        Long count = userDao.count(dto.getUserNameKeyWord(), dto.getUserRole());
         return count == null ? 0 : count.intValue();
     }
 
@@ -578,14 +578,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void userInsert(UserManageDTO request) {
-        userDao.insert(toUserPo(request));
+    public void userInsert(UserManageDTO dto) {
+        userDao.insert(toUserPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void userUpdate(UserManageDTO request) {
-        userDao.update(toUserPo(request));
+    public void userUpdate(UserManageDTO dto) {
+        userDao.update(toUserPo(dto));
     }
 
     @Override
@@ -603,15 +603,15 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Config --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_CONFIG_PREFIX, cacheType = CacheType.LIST, cacheClass = ConfigVO.class)
-    public List<ConfigVO> configList(ConfigListDTO request) {
-        List<AiConfig> poList = aiConfigDao.list(request.getIdKeyword(), request.getValueKeyword(), request.getConfigType());
+    public List<ConfigVO> configList(ConfigListDTO dto) {
+        List<AiConfig> poList = aiConfigDao.list(dto.getIdKeyword(), dto.getValueKeyword(), dto.getConfigType());
         return poList.stream().map(this::toConfigVO).toList();
     }
 
     @Override
     @Cacheable(cachePrefix = ADMIN_CONFIG_PREFIX, cacheType = CacheType.VALUE, cacheClass = ConfigVO.class)
-    public ConfigVO configQuery(ConfigManageDTO request) {
-        return toConfigVO(aiConfigDao.queryByUniqueKey(request.getClientId(), request.getConfigType(), request.getConfigValue()));
+    public ConfigVO configQuery(ConfigManageDTO dto) {
+        return toConfigVO(aiConfigDao.queryByUniqueKey(dto.getClientId(), dto.getConfigType(), dto.getConfigValue()));
     }
 
     @Override
@@ -622,14 +622,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void configInsert(ConfigManageDTO request) {
-        aiConfigDao.insert(toConfigPO(request));
+    public void configInsert(ConfigManageDTO dto) {
+        aiConfigDao.insert(toConfigPO(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void configUpdate(ConfigManageDTO request) {
-        aiConfigDao.update(toConfigPO(request));
+    public void configUpdate(ConfigManageDTO dto) {
+        aiConfigDao.update(toConfigPO(dto));
     }
 
     @Override
@@ -731,14 +731,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void flowInsert(FlowManageDTO request) {
-        aiFlowDao.insert(toFlowPO(request));
+    public void flowInsert(FlowManageDTO dto) {
+        aiFlowDao.insert(toFlowPO(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void flowUpdate(FlowManageDTO request) {
-        aiFlowDao.update(toFlowPO(request));
+    public void flowUpdate(FlowManageDTO dto) {
+        aiFlowDao.update(toFlowPO(dto));
     }
 
     @Override
@@ -750,9 +750,9 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- Task --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_TASK_PREFIX, cacheType = CacheType.LIST, cacheClass = TaskVO.class)
-    public List<TaskVO> taskPage(TaskPageDTO request) {
-        Integer offset = (request.getPageNum() - 1) * request.getPageSize();
-        List<AiTask> poList = aiTaskDao.page(request.getIdKeyword(), request.getAgentId(), offset, request.getPageSize());
+    public List<TaskVO> taskPage(TaskPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiTask> poList = aiTaskDao.page(dto.getIdKeyword(), dto.getAgentId(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -761,8 +761,8 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_TASK_PREFIX, cacheType = CacheType.VALUE, cacheClass = Integer.class)
-    public Integer taskCount(TaskPageDTO request) {
-        return aiTaskDao.count(request.getIdKeyword(), request.getAgentId());
+    public Integer taskCount(TaskPageDTO dto) {
+        return aiTaskDao.count(dto.getIdKeyword(), dto.getAgentId());
     }
 
     @Override
@@ -779,14 +779,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void taskInsert(TaskManageDTO request) {
-        aiTaskDao.insert(toTaskPO(request));
+    public void taskInsert(TaskManageDTO dto) {
+        aiTaskDao.insert(toTaskPO(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void taskUpdate(TaskManageDTO request) {
-        aiTaskDao.update(toTaskPO(request));
+    public void taskUpdate(TaskManageDTO dto) {
+        aiTaskDao.update(toTaskPO(dto));
     }
 
     @Override
@@ -877,25 +877,25 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiApi toApiPO(ApiManageDTO request) {
+    private AiApi toApiPO(ApiManageDTO dto) {
         return AiApi.builder()
-                .id(request.getId())
-                .apiId(request.getApiId())
-                .apiBaseUrl(request.getApiBaseUrl())
-                .apiKey(request.getApiKey())
-                .apiCompletionsPath(request.getApiCompletionsPath())
-                .apiEmbeddingsPath(request.getApiEmbeddingsPath())
+                .id(dto.getId())
+                .apiId(dto.getApiId())
+                .apiBaseUrl(dto.getApiBaseUrl())
+                .apiKey(dto.getApiKey())
+                .apiCompletionsPath(dto.getApiCompletionsPath())
+                .apiEmbeddingsPath(dto.getApiEmbeddingsPath())
                 .apiFrom(0L)
                 .build();
     }
 
-    private AiModel toModelPo(ModelManageDTO request) {
+    private AiModel toModelPo(ModelManageDTO dto) {
         return AiModel.builder()
-                .id(request.getId())
-                .modelId(request.getModelId())
-                .apiId(request.getApiId())
-                .modelName(request.getModelName())
-                .modelType(request.getModelType())
+                .id(dto.getId())
+                .modelId(dto.getModelId())
+                .apiId(dto.getApiId())
+                .modelName(dto.getModelName())
+                .modelType(dto.getModelType())
                 .modelFrom(0L)
                 .build();
     }
@@ -931,16 +931,16 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiMcp toMcpPo(McpManageDTO request) {
+    private AiMcp toMcpPo(McpManageDTO dto) {
         return AiMcp.builder()
-                .id(request.getId())
-                .mcpId(request.getMcpId())
-                .mcpName(request.getMcpName())
-                .mcpType(request.getMcpType())
-                .mcpConfig(request.getMcpConfig())
-                .mcpDesc(request.getMcpDesc())
-                .mcpTimeout(request.getMcpTimeout())
-                .mcpChat(request.getMcpChat())
+                .id(dto.getId())
+                .mcpId(dto.getMcpId())
+                .mcpName(dto.getMcpName())
+                .mcpType(dto.getMcpType())
+                .mcpConfig(dto.getMcpConfig())
+                .mcpDesc(dto.getMcpDesc())
+                .mcpTimeout(dto.getMcpTimeout())
+                .mcpChat(dto.getMcpChat())
                 .mcpFrom(0L)
                 .build();
     }
@@ -961,15 +961,15 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiAdvisor toAdvisorPo(AdvisorManageDTO request) {
+    private AiAdvisor toAdvisorPo(AdvisorManageDTO dto) {
         return AiAdvisor.builder()
-                .id(request.getId())
-                .advisorId(request.getAdvisorId())
-                .advisorName(request.getAdvisorName())
-                .advisorType(request.getAdvisorType())
-                .advisorDesc(request.getAdvisorDesc())
-                .advisorOrder(request.getAdvisorOrder())
-                .advisorParam(request.getAdvisorParam())
+                .id(dto.getId())
+                .advisorId(dto.getAdvisorId())
+                .advisorName(dto.getAdvisorName())
+                .advisorType(dto.getAdvisorType())
+                .advisorDesc(dto.getAdvisorDesc())
+                .advisorOrder(dto.getAdvisorOrder())
+                .advisorParam(dto.getAdvisorParam())
                 .build();
     }
 
@@ -987,13 +987,13 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiPrompt toPromptPo(PromptManageDTO request) {
+    private AiPrompt toPromptPo(PromptManageDTO dto) {
         return AiPrompt.builder()
-                .id(request.getId())
-                .promptId(request.getPromptId())
-                .promptName(request.getPromptName())
-                .promptContent(request.getPromptContent())
-                .promptDesc(request.getPromptDesc())
+                .id(dto.getId())
+                .promptId(dto.getPromptId())
+                .promptName(dto.getPromptName())
+                .promptContent(dto.getPromptContent())
+                .promptDesc(dto.getPromptDesc())
                 .build();
     }
 
@@ -1015,17 +1015,17 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiClient toClientPo(ClientManageDTO request) {
+    private AiClient toClientPo(ClientManageDTO dto) {
         return AiClient.builder()
-                .id(request.getId())
-                .clientId(request.getClientId())
-                .clientType(request.getClientType())
-                .clientRole(request.getClientRole())
-                .modelId(request.getModelId())
-                .modelName(request.getModelName())
-                .clientName(request.getClientName())
-                .clientDesc(request.getClientDesc())
-                .clientStatus(request.getClientStatus())
+                .id(dto.getId())
+                .clientId(dto.getClientId())
+                .clientType(dto.getClientType())
+                .clientRole(dto.getClientRole())
+                .modelId(dto.getModelId())
+                .modelName(dto.getModelName())
+                .clientName(dto.getClientName())
+                .clientDesc(dto.getClientDesc())
+                .clientStatus(dto.getClientStatus())
                 .clientFrom(0L)
                 .build();
     }
@@ -1045,14 +1045,14 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiAgent toAgentPo(AgentManageDTO request) {
+    private AiAgent toAgentPo(AgentManageDTO dto) {
         return AiAgent.builder()
-                .id(request.getId())
-                .agentId(request.getAgentId())
-                .agentName(request.getAgentName())
-                .agentType(request.getAgentType())
-                .agentDesc(request.getAgentDesc())
-                .agentStatus(request.getAgentStatus())
+                .id(dto.getId())
+                .agentId(dto.getAgentId())
+                .agentName(dto.getAgentName())
+                .agentType(dto.getAgentType())
+                .agentDesc(dto.getAgentDesc())
+                .agentStatus(dto.getAgentStatus())
                 .agentFrom(0L)
                 .build();
     }
@@ -1071,25 +1071,25 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiUser toUserPo(UserManageDTO request) {
+    private AiUser toUserPo(UserManageDTO dto) {
         return AiUser.builder()
-                .id(request.getId())
-                .userName(request.getUserName())
-                .password(request.getPassword())
-                .userRole(request.getUserRole())
-                .userAvatar(request.getUserAvatar())
-                .userStatus(request.getUserStatus())
+                .id(dto.getId())
+                .userName(dto.getUserName())
+                .password(dto.getPassword())
+                .userRole(dto.getUserRole())
+                .userAvatar(dto.getUserAvatar())
+                .userStatus(dto.getUserStatus())
                 .build();
     }
 
-    private AiConfig toConfigPO(ConfigManageDTO request) {
+    private AiConfig toConfigPO(ConfigManageDTO dto) {
         return AiConfig.builder()
-                .id(request.getId())
-                .clientId(request.getClientId())
-                .configType(request.getConfigType())
-                .configValue(request.getConfigValue())
-                .configParam(request.getConfigParam())
-                .configStatus(request.getConfigStatus())
+                .id(dto.getId())
+                .clientId(dto.getClientId())
+                .configType(dto.getConfigType())
+                .configValue(dto.getConfigValue())
+                .configParam(dto.getConfigParam())
+                .configStatus(dto.getConfigStatus())
                 .build();
     }
 
@@ -1123,14 +1123,14 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiFlow toFlowPO(FlowManageDTO request) {
+    private AiFlow toFlowPO(FlowManageDTO dto) {
         return AiFlow.builder()
-                .id(request.getId())
-                .agentId(request.getAgentId())
-                .clientId(request.getClientId())
-                .clientRole(request.getClientRole())
-                .flowPrompt(request.getFlowPrompt())
-                .flowSeq(request.getFlowSeq())
+                .id(dto.getId())
+                .agentId(dto.getAgentId())
+                .clientId(dto.getClientId())
+                .clientRole(dto.getClientRole())
+                .flowPrompt(dto.getFlowPrompt())
+                .flowSeq(dto.getFlowSeq())
                 .build();
     }
 
@@ -1150,15 +1150,15 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private AiTask toTaskPO(TaskManageDTO request) {
+    private AiTask toTaskPO(TaskManageDTO dto) {
         return AiTask.builder()
-                .id(request.getId())
-                .taskId(request.getTaskId())
-                .agentId(request.getAgentId())
-                .taskCron(request.getTaskCron())
-                .taskDesc(request.getTaskDesc())
-                .taskParam(request.getTaskParam())
-                .taskStatus(request.getTaskStatus())
+                .id(dto.getId())
+                .taskId(dto.getTaskId())
+                .agentId(dto.getAgentId())
+                .taskCron(dto.getTaskCron())
+                .taskDesc(dto.getTaskDesc())
+                .taskParam(dto.getTaskParam())
+                .taskStatus(dto.getTaskStatus())
                 .build();
     }
 
