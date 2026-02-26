@@ -38,8 +38,8 @@ public class ExecuteReplierNode extends AbstractExecuteNode {
             ChatClient replierClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String replierPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String replierPrompt = userPrompt.formatted(
                     executeContext.getUserMessage(),
                     executionHistory
             );

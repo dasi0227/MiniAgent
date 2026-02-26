@@ -173,7 +173,6 @@ public class AiRepository implements IAiRepository {
                         .advisorId(aiAdvisor.getAdvisorId())
                         .advisorName(aiAdvisor.getAdvisorName())
                         .advisorType(aiAdvisor.getAdvisorType())
-                        .advisorOrder(aiAdvisor.getAdvisorOrder())
                         .chatMemory(chatMemory)
                         .ragAnswer(ragAnswer)
                         .build();
@@ -213,8 +212,7 @@ public class AiRepository implements IAiRepository {
                 AiPromptVO aiPromptVO = AiPromptVO.builder()
                         .promptId(aiPrompt.getPromptId())
                         .promptName(aiPrompt.getPromptName())
-                        .promptContent(aiPrompt.getPromptContent())
-                        .promptDesc(aiPrompt.getPromptDesc())
+                        .systenPrompt(aiPrompt.getSystenPrompt())
                         .build();
 
                 aiPromptVOMap.put(promptId, aiPromptVO);
@@ -252,7 +250,7 @@ public class AiRepository implements IAiRepository {
                         .mcpId(aiMcp.getMcpId())
                         .mcpName(aiMcp.getMcpName())
                         .mcpType(aiMcp.getMcpType())
-                        .mcpConfig(aiMcp.getMcpConfig())
+                        .mcpParam(aiMcp.getMcpParam())
                         .mcpTimeout(aiMcp.getMcpTimeout())
                         .build();
 
@@ -260,11 +258,11 @@ public class AiRepository implements IAiRepository {
                     switch (AiMcpType.fromString(aiMcp.getMcpType())) {
                         case SSE -> {
                             ObjectMapper objectMapper = new ObjectMapper();
-                            AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpConfig(), AiMcpVO.SseConfig.class);
+                            AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpParam(), AiMcpVO.SseConfig.class);
                             aiMcpVO.setSseConfig(sseConfig);
                         }
                         case STDIO -> {
-                            Map<String, AiMcpVO.StdioConfig.Stdio> stdio = JSON.parseObject(aiMcp.getMcpConfig(), new TypeReference<>() {
+                            Map<String, AiMcpVO.StdioConfig.Stdio> stdio = JSON.parseObject(aiMcp.getMcpParam(), new TypeReference<>() {
                             });
                             AiMcpVO.StdioConfig stdioConfig = new AiMcpVO.StdioConfig();
                             stdioConfig.setStdio(stdio);
@@ -309,7 +307,6 @@ public class AiRepository implements IAiRepository {
                     .clientName(aiClient.getClientName())
                     .clientType(aiClient.getClientType())
                     .clientRole(aiClient.getClientRole())
-                    .clientDesc(aiClient.getClientDesc())
                     .modelId(aiClient.getModelId())
                     .modelName(aiClient.getModelName())
                     .promptIdList(promptIdList)
@@ -358,7 +355,7 @@ public class AiRepository implements IAiRepository {
                     .agentId(aiFlow.getAgentId())
                     .clientId(aiFlow.getClientId())
                     .clientRole(aiFlow.getClientRole())
-                    .flowPrompt(aiFlow.getFlowPrompt())
+                    .userPrompt(aiFlow.getUserPrompt())
                     .flowSeq(aiFlow.getFlowSeq())
                     .build();
 
@@ -413,7 +410,7 @@ public class AiRepository implements IAiRepository {
                     .mcpId(aiMcp.getMcpId())
                     .mcpName(aiMcp.getMcpName())
                     .mcpType(aiMcp.getMcpType())
-                    .mcpConfig(aiMcp.getMcpConfig())
+                    .mcpParam(aiMcp.getMcpParam())
                     .mcpTimeout(aiMcp.getMcpTimeout())
                     .build();
 
@@ -421,11 +418,11 @@ public class AiRepository implements IAiRepository {
                 switch (AiMcpType.fromString(aiMcp.getMcpType())) {
                     case SSE -> {
                         ObjectMapper objectMapper = new ObjectMapper();
-                        AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpConfig(), AiMcpVO.SseConfig.class);
+                        AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpParam(), AiMcpVO.SseConfig.class);
                         aiMcpVO.setSseConfig(sseConfig);
                     }
                     case STDIO -> {
-                        Map<String, AiMcpVO.StdioConfig.Stdio> stdio = JSON.parseObject(aiMcp.getMcpConfig(), new TypeReference<>() {
+                        Map<String, AiMcpVO.StdioConfig.Stdio> stdio = JSON.parseObject(aiMcp.getMcpParam(), new TypeReference<>() {
                         });
                         AiMcpVO.StdioConfig stdioConfig = new AiMcpVO.StdioConfig();
                         stdioConfig.setStdio(stdio);

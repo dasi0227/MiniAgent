@@ -18,9 +18,6 @@ public class AiPromptVO {
     private String promptName;
 
     /** 提示词内容 */
-    private String promptContent;
-
-    /** 提示词描述 */
-    private String promptDesc;
+    private String systenPrompt;
 
 }

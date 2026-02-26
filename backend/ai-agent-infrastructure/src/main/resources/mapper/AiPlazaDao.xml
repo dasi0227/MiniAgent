@@ -6,6 +6,7 @@
     <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiPlaza">
         <id column="id" property="id"/>
         <result column="plaza_id" property="plazaId"/>
+        <result column="template_id" property="templateId"/>
         <result column="agent_id" property="agentId"/>
         <result column="user_id" property="userId"/>
         <result column="agent_type" property="agentType"/>
@@ -22,6 +23,7 @@
     <select id="page" resultMap="dataMap">
         SELECT id,
                plaza_id,
+               template_id,
                agent_id,
                user_id,
                agent_type,
@@ -101,6 +103,7 @@
     <select id="queryByPlazaId" resultMap="dataMap">
         SELECT id,
                plaza_id,
+               template_id,
                agent_id,
                user_id,
                agent_type,
@@ -116,6 +119,49 @@
         WHERE plaza_id = #{plazaId}
         LIMIT 1
     </select>
+
+    <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiPlaza">
+        INSERT INTO ai_plaza (plaza_id,
+                              template_id,
+                              agent_id,
+                              user_id,
+                              agent_type,
+                              user_name,
+                              plaza_title,
+                              plaza_desc,
+                              like_count,
+                              favor_count,
+                              comment_count)
+        VALUES (#{plazaId},
+                #{templateId},
+                #{agentId},
+                #{userId},
+                #{agentType},
+                #{userName},
+                #{plazaTitle},
+                #{plazaDesc},
+                #{likeCount},
+                #{favorCount},
+                #{commentCount})
+    </insert>
+
+    <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiPlaza">
+        UPDATE ai_plaza
+        <set>
+            <if test="plazaId != null">plaza_id = #{plazaId},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="agentId != null">agent_id = #{agentId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="agentType != null">agent_type = #{agentType},</if>
+            <if test="userName != null">user_name = #{userName},</if>
+            <if test="plazaTitle != null">plaza_title = #{plazaTitle},</if>
+            <if test="plazaDesc != null">plaza_desc = #{plazaDesc},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="favorCount != null">favor_count = #{favorCount},</if>
+            <if test="commentCount != null">comment_count = #{commentCount},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
 
     <update id="increaseLikeCount">
         UPDATE ai_plaza

@@ -96,10 +96,10 @@ public class ArmoryConfig implements ApplicationListener<ApplicationReadyEvent> 
 
                 // 更新 Prompt
                 String systemPromptContent = StreamUtils.copyToString(systemPromptFile.getInputStream(), StandardCharsets.UTF_8);
-                promptDao.loadPromptContent(promptId, systemPromptContent);
+                promptDao.loadSystenPrompt(promptId, systemPromptContent);
 
                 String userPromptContent = StreamUtils.copyToString(userPromptFile.getInputStream(), StandardCharsets.UTF_8);
-                flowDao.loadFlowPrompt(clientId, userPromptContent);
+                flowDao.loadUserPrompt(clientId, userPromptContent);
 
                 log.info("【初始化配置】加载 Prompt：clientId={}", clientId);
 

@@ -21,7 +21,7 @@ public class AiFlowVO {
     private String clientRole;
 
     /** 工作流提示词 */
-    private String flowPrompt;
+    private String userPrompt;
 
     /** 工作流顺序 */
     private Integer flowSeq;

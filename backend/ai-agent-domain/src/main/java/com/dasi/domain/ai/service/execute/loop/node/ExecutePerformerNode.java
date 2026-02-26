@@ -42,8 +42,8 @@ public class ExecutePerformerNode extends AbstractExecuteNode {
             ChatClient performerClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String performerPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String performerPrompt = userPrompt.formatted(
                     executeContext.getUserMessage(),
                     analyzerResponse
             );

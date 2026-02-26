@@ -21,8 +21,6 @@ public class PromptManageDTO {
     private String promptName;
 
     @NotBlank
-    private String promptContent;
-
-    private String promptDesc;
+    private String systenPrompt;
 
 }

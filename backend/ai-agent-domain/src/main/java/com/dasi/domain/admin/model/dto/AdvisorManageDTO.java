@@ -23,10 +23,6 @@ public class AdvisorManageDTO {
     @NotBlank
     private String advisorType;
 
-    private String advisorDesc;
-
-    private Integer advisorOrder;
-
     private String advisorParam;
 
 }

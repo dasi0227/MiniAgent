@@ -16,7 +16,7 @@ public class McpVO {
     private String mcpId;
     private String mcpName;
     private String mcpType;
-    private String mcpConfig;
+    private String mcpParam;
     private String mcpDesc;
     private Integer mcpTimeout;
     private Integer mcpChat;

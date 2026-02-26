@@ -7,7 +7,7 @@
         <result column="mcp_id" property="mcpId"/>
         <result column="mcp_name" property="mcpName"/>
         <result column="mcp_type" property="mcpType"/>
-        <result column="mcp_config" property="mcpConfig"/>
+        <result column="mcp_param" property="mcpParam"/>
         <result column="mcp_secret" property="mcpSecret"/>
         <result column="mcp_desc" property="mcpDesc"/>
         <result column="mcp_timeout" property="mcpTimeout"/>
@@ -22,7 +22,7 @@
                mcp_id,
                mcp_name,
                mcp_type,
-               mcp_config,
+               mcp_param,
                mcp_secret,
                mcp_desc,
                mcp_timeout,
@@ -39,7 +39,7 @@
                mcp_id,
                mcp_name,
                mcp_type,
-               mcp_config,
+               mcp_param,
                mcp_secret,
                mcp_desc,
                mcp_timeout,
@@ -59,7 +59,7 @@
                mcp_id,
                mcp_name,
                mcp_type,
-               mcp_config,
+               mcp_param,
                mcp_secret,
                mcp_desc,
                mcp_timeout,
@@ -77,7 +77,7 @@
                mcp_id,
                mcp_name,
                mcp_type,
-               mcp_config,
+               mcp_param,
                mcp_secret,
                mcp_desc,
                mcp_timeout,
@@ -123,7 +123,7 @@
                mcp_id,
                mcp_name,
                mcp_type,
-               mcp_config,
+               mcp_param,
                mcp_secret,
                mcp_desc,
                mcp_timeout,
@@ -139,7 +139,7 @@
         INSERT INTO ai_mcp (mcp_id,
                             mcp_name,
                             mcp_type,
-                            mcp_config,
+                            mcp_param,
                             mcp_secret,
                             mcp_desc,
                             mcp_timeout,
@@ -148,7 +148,7 @@
         VALUES (#{mcpId},
                 #{mcpName},
                 #{mcpType},
-                #{mcpConfig},
+                #{mcpParam},
                 #{mcpSecret},
                 #{mcpDesc},
                 #{mcpTimeout},
@@ -162,7 +162,7 @@
             <if test="mcpId != null">mcp_id = #{mcpId},</if>
             <if test="mcpName != null">mcp_name = #{mcpName},</if>
             <if test="mcpType != null">mcp_type = #{mcpType},</if>
-            <if test="mcpConfig != null">mcp_config = #{mcpConfig},</if>
+            <if test="mcpParam != null">mcp_param = #{mcpParam},</if>
             <if test="mcpSecret != null">mcp_secret = #{mcpSecret},</if>
             <if test="mcpDesc != null">mcp_desc = #{mcpDesc},</if>
             <if test="mcpTimeout != null">mcp_timeout = #{mcpTimeout},</if>
@@ -176,7 +176,7 @@
                mcp_id,
                mcp_name,
                mcp_type,
-               mcp_config,
+               mcp_param,
                mcp_secret,
                mcp_desc,
                mcp_timeout,

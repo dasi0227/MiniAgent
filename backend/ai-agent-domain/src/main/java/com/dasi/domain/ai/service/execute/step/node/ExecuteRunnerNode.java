@@ -62,10 +62,10 @@ public class ExecuteRunnerNode extends AbstractExecuteNode {
 
                     try {
                         // 获取提示词
-                        String flowPrompt = aiFlowVO.getFlowPrompt();
+                        String userPrompt = aiFlowVO.getUserPrompt();
                         String taskContent = plannerList.get(step);
 
-                        String runnerPrompt = flowPrompt.formatted(
+                        String runnerPrompt = userPrompt.formatted(
                                 executeContext.getUserMessage(),
                                 inspectorResponse,
                                 taskContent

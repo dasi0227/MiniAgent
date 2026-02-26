@@ -15,6 +15,4 @@ public class ChatClientVO {
 
     private String modelName;
 
-    private String clientDesc;
-
 }

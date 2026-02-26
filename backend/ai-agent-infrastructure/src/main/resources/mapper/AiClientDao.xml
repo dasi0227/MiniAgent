@@ -10,7 +10,6 @@
         <result column="model_id" property="modelId"/>
         <result column="model_name" property="modelName"/>
         <result column="client_name" property="clientName"/>
-        <result column="client_desc" property="clientDesc"/>
         <result column="client_status" property="clientStatus"/>
         <result column="client_from" property="clientFrom"/>
         <result column="create_time" property="createTime"/>
@@ -25,7 +24,6 @@
                model_id,
                model_name,
                client_name,
-               client_desc,
                client_status,
                client_from,
                create_time,
@@ -42,7 +40,6 @@
                model_id,
                model_name,
                client_name,
-               client_desc,
                client_status,
                client_from,
                create_time,
@@ -60,7 +57,6 @@
                model_id,
                model_name,
                client_name,
-               client_desc,
                client_status,
                client_from,
                create_time,
@@ -77,7 +73,6 @@
                model_id,
                model_name,
                client_name,
-               client_desc,
                client_status,
                client_from,
                create_time,
@@ -141,7 +136,6 @@
                model_id,
                model_name,
                client_name,
-               client_desc,
                client_status,
                client_from,
                create_time,
@@ -163,7 +157,6 @@
                                model_id,
                                model_name,
                                client_name,
-                               client_desc,
                                client_status,
                                client_from)
         VALUES (#{clientId},
@@ -172,7 +165,6 @@
                 #{modelId},
                 #{modelName},
                 #{clientName},
-                #{clientDesc},
                 #{clientStatus},
                 #{clientFrom})
     </insert>
@@ -186,7 +178,6 @@
             <if test="modelId != null">model_id = #{modelId},</if>
             <if test="modelName != null">model_name = #{modelName},</if>
             <if test="clientName != null">client_name = #{clientName},</if>
-            <if test="clientDesc != null">client_desc = #{clientDesc},</if>
             <if test="clientStatus != null">client_status = #{clientStatus},</if>
         </set>
         WHERE id = #{id}

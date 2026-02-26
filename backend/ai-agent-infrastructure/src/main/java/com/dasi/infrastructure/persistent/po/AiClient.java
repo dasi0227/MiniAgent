@@ -33,9 +33,6 @@ public class AiClient {
     /** 客户端名称 */
     private String clientName;
 
-    /** 客户端描述 */
-    private String clientDesc;
-
     /** 状态：0-禁用，1-启用 */
     private Integer clientStatus;
 

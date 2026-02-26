@@ -44,8 +44,8 @@ public class ArmoryClientNode extends AbstractArmoryNode {
             if (promptIdList != null && !promptIdList.isEmpty() && aiPromptVOMap != null) {
                 for (String promptId : promptIdList) {
                     AiPromptVO aiPromptVO = aiPromptVOMap.get(promptId);
-                    if (aiPromptVO != null && aiPromptVO.getPromptContent() != null) {
-                        system.append(aiPromptVO.getPromptContent());
+                    if (aiPromptVO != null && aiPromptVO.getSystenPrompt() != null) {
+                        system.append(aiPromptVO.getSystenPrompt());
                     }
                 }
             }

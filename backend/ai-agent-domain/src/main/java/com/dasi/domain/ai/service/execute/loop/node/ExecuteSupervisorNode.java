@@ -48,8 +48,8 @@ public class ExecuteSupervisorNode extends AbstractExecuteNode {
             ChatClient supervisorClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String supervisorPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String supervisorPrompt = userPrompt.formatted(
                     executeContext.getUserMessage(),
                     analyzerResponse,
                     performerResponse

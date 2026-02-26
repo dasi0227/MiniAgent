@@ -19,7 +19,6 @@ public class ClientVO {
     private String modelId;
     private String modelName;
     private String clientName;
-    private String clientDesc;
     private Integer clientStatus;
     private LocalDateTime updateTime;
 }

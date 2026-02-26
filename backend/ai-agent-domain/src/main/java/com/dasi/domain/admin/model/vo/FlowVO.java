@@ -16,7 +16,7 @@ public class FlowVO {
     private String agentId;
     private String clientId;
     private String clientRole;
-    private String flowPrompt;
+    private String userPrompt;
     private Integer flowSeq;
     private LocalDateTime updateTime;
 }

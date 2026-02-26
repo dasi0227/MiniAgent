@@ -43,8 +43,8 @@ public class ExecuteAnalyzerNode extends AbstractExecuteNode {
             ChatClient analyzerClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String analyzerPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String analyzerPrompt = userPrompt.formatted(
                     executeContext.getRound(),
                     executeContext.getMaxRound(),
                     executeContext.getUserMessage(),

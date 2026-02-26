@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class PlazaVO {
 
     private String plazaId;
+    private String templateId;
     private String agentId;
     private String agentType;
     private String userName;

@@ -34,11 +34,6 @@ public class AiClientVO {
     private String clientRole;
 
     /**
-     * 客户端描述
-     */
-    private String clientDesc;
-
-    /**
      * 模型 id
      */
     private String modelId;

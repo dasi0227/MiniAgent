@@ -21,7 +21,7 @@ public class SettingMcpDTO {
     private String mcpType;
 
     @NotNull
-    private String mcpConfig;
+    private String mcpParam;
 
     @NotNull
     private String mcpDesc;

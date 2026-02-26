@@ -15,7 +15,6 @@ public class PromptVO {
     private Long id;
     private String promptId;
     private String promptName;
-    private String promptContent;
-    private String promptDesc;
+    private String systenPrompt;
     private LocalDateTime updateTime;
 }

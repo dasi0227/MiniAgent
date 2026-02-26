@@ -923,7 +923,7 @@ public class AdminRepository implements IAdminRepository {
                 .mcpId(po.getMcpId())
                 .mcpName(po.getMcpName())
                 .mcpType(po.getMcpType())
-                .mcpConfig(po.getMcpConfig())
+                .mcpParam(po.getMcpParam())
                 .mcpDesc(po.getMcpDesc())
                 .mcpTimeout(po.getMcpTimeout())
                 .mcpChat(po.getMcpChat())
@@ -937,7 +937,7 @@ public class AdminRepository implements IAdminRepository {
                 .mcpId(dto.getMcpId())
                 .mcpName(dto.getMcpName())
                 .mcpType(dto.getMcpType())
-                .mcpConfig(dto.getMcpConfig())
+                .mcpParam(dto.getMcpParam())
                 .mcpDesc(dto.getMcpDesc())
                 .mcpTimeout(dto.getMcpTimeout())
                 .mcpChat(dto.getMcpChat())
@@ -954,8 +954,6 @@ public class AdminRepository implements IAdminRepository {
                 .advisorId(po.getAdvisorId())
                 .advisorName(po.getAdvisorName())
                 .advisorType(po.getAdvisorType())
-                .advisorDesc(po.getAdvisorDesc())
-                .advisorOrder(po.getAdvisorOrder())
                 .advisorParam(po.getAdvisorParam())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -967,8 +965,6 @@ public class AdminRepository implements IAdminRepository {
                 .advisorId(dto.getAdvisorId())
                 .advisorName(dto.getAdvisorName())
                 .advisorType(dto.getAdvisorType())
-                .advisorDesc(dto.getAdvisorDesc())
-                .advisorOrder(dto.getAdvisorOrder())
                 .advisorParam(dto.getAdvisorParam())
                 .build();
     }
@@ -981,8 +977,7 @@ public class AdminRepository implements IAdminRepository {
                 .id(po.getId())
                 .promptId(po.getPromptId())
                 .promptName(po.getPromptName())
-                .promptContent(po.getPromptContent())
-                .promptDesc(po.getPromptDesc())
+                .systenPrompt(po.getSystenPrompt())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -992,8 +987,7 @@ public class AdminRepository implements IAdminRepository {
                 .id(dto.getId())
                 .promptId(dto.getPromptId())
                 .promptName(dto.getPromptName())
-                .promptContent(dto.getPromptContent())
-                .promptDesc(dto.getPromptDesc())
+                .systenPrompt(dto.getSystenPrompt())
                 .build();
     }
 
@@ -1009,7 +1003,6 @@ public class AdminRepository implements IAdminRepository {
                 .modelId(po.getModelId())
                 .modelName(po.getModelName())
                 .clientName(po.getClientName())
-                .clientDesc(po.getClientDesc())
                 .clientStatus(po.getClientStatus())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1024,7 +1017,6 @@ public class AdminRepository implements IAdminRepository {
                 .modelId(dto.getModelId())
                 .modelName(dto.getModelName())
                 .clientName(dto.getClientName())
-                .clientDesc(dto.getClientDesc())
                 .clientStatus(dto.getClientStatus())
                 .clientFrom(0L)
                 .build();
@@ -1117,7 +1109,7 @@ public class AdminRepository implements IAdminRepository {
                 .agentId(po.getAgentId())
                 .clientId(po.getClientId())
                 .clientRole(po.getClientRole())
-                .flowPrompt(po.getFlowPrompt())
+                .userPrompt(po.getUserPrompt())
                 .flowSeq(po.getFlowSeq())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1129,7 +1121,7 @@ public class AdminRepository implements IAdminRepository {
                 .agentId(dto.getAgentId())
                 .clientId(dto.getClientId())
                 .clientRole(dto.getClientRole())
-                .flowPrompt(dto.getFlowPrompt())
+                .userPrompt(dto.getUserPrompt())
                 .flowSeq(dto.getFlowSeq())
                 .build();
     }

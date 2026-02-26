@@ -20,9 +20,6 @@ public class AiAdvisorVO {
     /** 顾问类型 */
     private String advisorType;
 
-    /** 顾问顺序号 */
-    private Integer advisorOrder;
-
     /** 对话记忆 */
     private ChatMemory chatMemory;
 

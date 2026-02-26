@@ -38,8 +38,8 @@ public class ExecuteSummarizerNode extends AbstractExecuteNode {
             ChatClient summarizerClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String summarizerPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String summarizerPrompt = userPrompt.formatted(
                     executeContext.getUserMessage(),
                     executionHistory
             );

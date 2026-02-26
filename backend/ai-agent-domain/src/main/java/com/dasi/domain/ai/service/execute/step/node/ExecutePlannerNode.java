@@ -44,8 +44,8 @@ public class ExecutePlannerNode extends AbstractExecuteNode {
             ChatClient plannerClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String plannerPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String plannerPrompt = userPrompt.formatted(
                     executeContext.getUserMessage(),
                     inspectorResponse
             );

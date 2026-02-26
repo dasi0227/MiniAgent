@@ -25,12 +25,6 @@ public class AiAdvisor {
     /** 顾问类型 */
     private String advisorType;
 
-    /** 顾问顺序号 */
-    private Integer advisorOrder;
-
-    /** 顾问描述 */
-    private String advisorDesc;
-
     /** 顾问参数配置 */
     private String advisorParam;
 

@@ -25,7 +25,7 @@ public class McpManageDTO {
     private String mcpType;
 
     @NotNull
-    private String mcpConfig;
+    private String mcpParam;
 
     private String mcpDesc;
 

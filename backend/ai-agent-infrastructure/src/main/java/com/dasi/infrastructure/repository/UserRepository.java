@@ -200,7 +200,7 @@ public class UserRepository implements IUserRepository {
                     .mcpName(aiMcp.getMcpName())
                     .mcpType(aiMcp.getMcpType())
                     .mcpDesc(aiMcp.getMcpDesc())
-                    .mcpConfig(aiMcp.getMcpConfig())
+                    .mcpParam(aiMcp.getMcpParam())
                     .mcpSecret(aiMcp.getMcpSecret())
                     .build());
         }
@@ -215,7 +215,7 @@ public class UserRepository implements IUserRepository {
                 .mcpId(mcpId)
                 .mcpName(dto.getMcpName())
                 .mcpType(dto.getMcpType())
-                .mcpConfig(dto.getMcpConfig())
+                .mcpParam(dto.getMcpParam())
                 .mcpSecret(dto.getMcpSecret())
                 .mcpDesc(dto.getMcpDesc())
                 .mcpTimeout(180)
@@ -238,7 +238,7 @@ public class UserRepository implements IUserRepository {
         }
         aiMcp.setMcpName(dto.getMcpName());
         aiMcp.setMcpType(dto.getMcpType());
-        aiMcp.setMcpConfig(dto.getMcpConfig());
+        aiMcp.setMcpParam(dto.getMcpParam());
         aiMcp.setMcpSecret(dto.getMcpSecret());
         aiMcp.setMcpDesc(dto.getMcpDesc());
         mcpDao.update(aiMcp);

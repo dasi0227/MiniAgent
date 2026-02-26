@@ -26,7 +26,7 @@ public class FlowManageDTO {
     private String clientRole;
 
     @NotBlank
-    private String flowPrompt;
+    private String userPrompt;
 
     @NotNull
     @Min(1)

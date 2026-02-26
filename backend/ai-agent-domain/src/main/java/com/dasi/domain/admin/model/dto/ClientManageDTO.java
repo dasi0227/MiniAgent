@@ -31,8 +31,6 @@ public class ClientManageDTO {
     @NotBlank
     private String clientName;
 
-    private String clientDesc;
-
     @Builder.Default
     private Integer clientStatus = 1;
 }

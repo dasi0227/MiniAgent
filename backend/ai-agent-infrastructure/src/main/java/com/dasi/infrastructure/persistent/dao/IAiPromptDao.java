@@ -11,7 +11,7 @@ public interface IAiPromptDao {
 
     AiPrompt queryByPromptId(@Param("promptId") String promptId);
 
-    void loadPromptContent(String promptId, String promptContent);
+    void loadSystenPrompt(String promptId, String systenPrompt);
 
     List<AiPrompt> page(@Param("idKeyword") String idKeyword,
                         @Param("nameKeyword") String nameKeyword,

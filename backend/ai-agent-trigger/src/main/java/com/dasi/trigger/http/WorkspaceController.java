@@ -1,10 +1,10 @@
 package com.dasi.trigger.http;
 
-import com.dasi.domain.workspace.model.dto.AgentDetailDTO;
+import com.dasi.domain.workspace.model.dto.TemplateDetailDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
-import com.dasi.domain.workspace.model.vo.AgentDetailVO;
+import com.dasi.domain.workspace.model.vo.TemplateDetailVO;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.service.IWorkspaceService;
@@ -71,9 +71,15 @@ public class WorkspaceController {
         return Result.success();
     }
 
-    @PostMapping("/agent/detail")
-    public Result<AgentDetailVO> agentDetail(@NotBlank @RequestParam AgentDetailDTO dto) {
-        return Result.success(workspaceService.agentDetail(dto));
+    @PostMapping("/template/publish")
+    public Result<Void> templatePublish(@NotBlank @RequestParam String agentId) {
+        workspaceService.templatePublish(agentId);
+        return Result.success();
+    }
+
+    @PostMapping("/template/detail")
+    public Result<TemplateDetailVO> templateDetail(@Valid @RequestBody TemplateDetailDTO dto) {
+        return Result.success(workspaceService.templateDetail(dto));
     }
 
 }

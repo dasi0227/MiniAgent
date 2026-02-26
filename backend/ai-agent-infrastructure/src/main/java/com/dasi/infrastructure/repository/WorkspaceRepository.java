@@ -79,6 +79,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
 
             plazaVOList = aiPlazaList.stream().map(aiPlaza -> PlazaVO.builder()
                     .plazaId(aiPlaza.getPlazaId())
+                    .templateId(aiPlaza.getTemplateId())
                     .agentId(aiPlaza.getAgentId())
                     .agentType(aiPlaza.getAgentType())
                     .userName(aiPlaza.getUserName())

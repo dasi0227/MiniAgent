@@ -27,7 +27,7 @@ public class AiMcp {
     private String mcpType;
 
     /** 工具路径 */
-    private String mcpConfig;
+    private String mcpParam;
 
     /** 工具密钥 */
     private String mcpSecret;

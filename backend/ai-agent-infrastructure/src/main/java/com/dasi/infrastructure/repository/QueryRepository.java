@@ -66,7 +66,6 @@ public class QueryRepository implements IQueryRepository {
                 .map(aiClient -> ChatClientVO.builder()
                         .clientId(aiClient.getClientId())
                         .modelName(aiClient.getModelName())
-                        .clientDesc(aiClient.getClientDesc())
                         .build())
                 .toList();
     }

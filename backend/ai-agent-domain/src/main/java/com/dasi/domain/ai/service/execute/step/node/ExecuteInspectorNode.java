@@ -38,8 +38,8 @@ public class ExecuteInspectorNode extends AbstractExecuteNode {
             ChatClient inspectorClient = getBean(clientBeanName);
 
             // 获取提示词
-            String flowPrompt = aiFlowVO.getFlowPrompt();
-            String inspectorPrompt = flowPrompt.formatted(
+            String userPrompt = aiFlowVO.getUserPrompt();
+            String inspectorPrompt = userPrompt.formatted(
                     executeContext.getUserMessage()
             );
 

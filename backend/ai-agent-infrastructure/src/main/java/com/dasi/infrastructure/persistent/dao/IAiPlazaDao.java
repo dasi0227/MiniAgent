@@ -19,6 +19,10 @@ public interface IAiPlazaDao {
 
     AiPlaza queryByPlazaId(@Param("plazaId") String plazaId);
 
+    void insert(AiPlaza aiPlaza);
+
+    void update(AiPlaza aiPlaza);
+
     Integer increaseLikeCount(@Param("plazaId") String plazaId, @Param("delta") Integer delta);
 
     Integer increaseFavorCount(@Param("plazaId") String plazaId, @Param("delta") Integer delta);
