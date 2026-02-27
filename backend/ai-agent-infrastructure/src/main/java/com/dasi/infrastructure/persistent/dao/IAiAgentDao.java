@@ -37,5 +37,7 @@ public interface IAiAgentDao {
 
     void delete(@Param("id") Long id);
 
+    void deleteByAgentId(@Param("agentId") String agentId);
+
     void toggle(AiAgent aiAgent);
 }

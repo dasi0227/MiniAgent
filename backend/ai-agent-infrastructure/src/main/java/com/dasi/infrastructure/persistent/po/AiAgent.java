@@ -28,6 +28,9 @@ public class AiAgent {
     /** 智能体描述 */
     private String agentDesc;
 
+    /** 模型 id */
+    private String modelId;
+
     /** 状态：0-禁用，1-启用 */
     private Integer agentStatus;
 

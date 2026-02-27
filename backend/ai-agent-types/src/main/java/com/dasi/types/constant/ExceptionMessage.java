@@ -22,9 +22,13 @@ public class ExceptionMessage {
 
     public static final String AUTH_PASSWORD_FAIL = "旧密码和新密码不符合规则";
 
-    public static final String SETTING_USER_ILLEGAL = "用户行为不合法";
+    public static final String LACK_PARAM = "缺少参数";
 
-    public static final String AVATAR_UPLOAD_2 = "";
+    public static final String ILLEGAL_USER = "用户行为不合法";
+
+    public static final String ILLEGAL_DATA = "数据不合法";
+
+
     public static final String AVATAR_UPLOAD_3 = "";
     public static final String AVATAR_UPLOAD_4 = "";
     public static final String AVATAR_UPLOAD_5 = "";

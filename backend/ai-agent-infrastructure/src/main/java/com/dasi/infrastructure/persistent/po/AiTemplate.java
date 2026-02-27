@@ -20,7 +20,8 @@ public class AiTemplate {
     private String agentName;
     private String agentType;
     private String agentDesc;
-    private String apiUrl;
+    private String apiBaseUrl;
+    private String apiCompletionUrl;
     private String modelName;
     private String modelType;
     private String snapshot;

@@ -17,6 +17,7 @@ public class AgentVO {
     private String agentName;
     private String agentType;
     private String agentDesc;
+    private String modelId;
     private Integer agentStatus;
     private LocalDateTime updateTime;
 }

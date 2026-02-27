@@ -33,11 +33,11 @@ public class TemplateVO {
     private String agentDesc;
 
     // model 信息
-    private String apiUrl;
+    private String apiBaseUrl;
+    private String apiCompletionUrl;
     private String modelName;
     private String modelType;
 
-    // mcp 信息
     List<McpInfo> mcpInfoList;
     @Data
     @Builder
@@ -51,10 +51,8 @@ public class TemplateVO {
         private List<String> requiredSecrets;
     }
 
-    // client 信息：key 是 client_role，value 是对应的 system_prompt
     private Map<String, String> systemPrompt;
 
-    // flow 信息：按照 flow_seq 的排列信息
     private List<String> userPrompt;
 
 }

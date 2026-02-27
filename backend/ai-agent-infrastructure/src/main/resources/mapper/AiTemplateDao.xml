@@ -11,7 +11,8 @@
         <result column="agent_name" property="agentName"/>
         <result column="agent_type" property="agentType"/>
         <result column="agent_desc" property="agentDesc"/>
-        <result column="api_url" property="apiUrl"/>
+        <result column="api_base_url" property="apiBaseUrl"/>
+        <result column="api_completion_url" property="apiCompletionUrl"/>
         <result column="model_name" property="modelName"/>
         <result column="model_type" property="modelType"/>
         <result column="snapshot" property="snapshot"/>
@@ -27,7 +28,8 @@
                agent_name,
                agent_type,
                agent_desc,
-               api_url,
+               api_base_url,
+               api_completion_url,
                model_name,
                model_type,
                snapshot,
@@ -46,7 +48,8 @@
                agent_name,
                agent_type,
                agent_desc,
-               api_url,
+               api_base_url,
+               api_completion_url,
                model_name,
                model_type,
                snapshot,
@@ -67,7 +70,8 @@
                agent_name,
                agent_type,
                agent_desc,
-               api_url,
+               api_base_url,
+               api_completion_url,
                model_name,
                model_type,
                snapshot,
@@ -86,7 +90,8 @@
                                  agent_name,
                                  agent_type,
                                  agent_desc,
-                                 api_url,
+                                 api_base_url,
+                                 api_completion_url,
                                  model_name,
                                  model_type,
                                  snapshot)
@@ -96,7 +101,8 @@
                 #{agentName},
                 #{agentType},
                 #{agentDesc},
-                #{apiUrl},
+                #{apiBaseUrl},
+                #{apiCompletionUrl},
                 #{modelName},
                 #{modelType},
                 #{snapshot})
@@ -111,7 +117,8 @@
             <if test="agentName != null">agent_name = #{agentName},</if>
             <if test="agentType != null">agent_type = #{agentType},</if>
             <if test="agentDesc != null">agent_desc = #{agentDesc},</if>
-            <if test="apiUrl != null">api_url = #{apiUrl},</if>
+            <if test="apiBaseUrl != null">api_base_url = #{apiBaseUrl},</if>
+            <if test="apiCompletionUrl != null">api_completion_url = #{apiCompletionUrl},</if>
             <if test="modelName != null">model_name = #{modelName},</if>
             <if test="modelType != null">model_type = #{modelType},</if>
             <if test="snapshot != null">snapshot = #{snapshot},</if>

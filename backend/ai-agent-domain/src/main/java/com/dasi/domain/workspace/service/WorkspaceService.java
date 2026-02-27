@@ -1,5 +1,6 @@
 package com.dasi.domain.workspace.service;
 
+import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -64,14 +66,14 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    public Map<String, RepoVO> repoList() {
-        return workspaceRepository.repoList();
+    public Map<String, List<RepoVO>> repoMap() {
+        return workspaceRepository.repoMap();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void agentPublish(String agentId) {
-        workspaceRepository.agentPublish(agentId);
+    public void agentPublish(AgentPublishDTO dto) {
+        workspaceRepository.agentPublish(dto);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.dasi.trigger.http;
 
+import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
@@ -16,6 +17,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -73,33 +75,28 @@ public class WorkspaceController {
         return Result.success();
     }
 
-    // 联动删除：点赞、收藏、评论
     @PostMapping("/plaza/delete")
     public Result<Void> plazaDelete(@NotBlank @RequestParam String plazaId) {
         workspaceService.plazaDelete(plazaId);
         return Result.success();
     }
 
-    // 按照 self，fork，favor 划分
-    @PostMapping("/repo/list")
-    public Result<Map<String, RepoVO>> repoList() {
-        return Result.success(workspaceService.repoList());
+    @PostMapping("/repo/map")
+    public Result<Map<String, List<RepoVO>>> repoMap() {
+        return Result.success(workspaceService.repoMap());
     }
 
-    // 发布
     @PostMapping("/agent/publish")
-    public Result<Void> agentPublish(@NotBlank @RequestParam String agentId) {
-        workspaceService.agentPublish(agentId);
+    public Result<Void> agentPublish(@Valid @RequestBody AgentPublishDTO dto) {
+        workspaceService.agentPublish(dto);
         return Result.success();
     }
 
-    // 获取 template 数据
     @PostMapping("/agent/template")
     public Result<TemplateVO> agentTemplate(@NotBlank @RequestParam String templateId) {
         return Result.success(workspaceService.agentTemplate(templateId));
     }
 
-    // 删除 agent 相关的所有数据，包括 config、flow、client、repo 等所有内容
     @PostMapping("/agent/delete")
     public Result<Void> agentDelete(@NotBlank @RequestParam String agentId) {
         workspaceService.agentDelete(agentId);

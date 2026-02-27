@@ -8,6 +8,7 @@
         <result column="agent_name" property="agentName"/>
         <result column="agent_type" property="agentType"/>
         <result column="agent_desc" property="agentDesc"/>
+        <result column="model_id" property="modelId"/>
         <result column="agent_status" property="agentStatus"/>
         <result column="agent_from" property="agentFrom"/>
         <result column="create_time" property="createTime"/>
@@ -20,6 +21,7 @@
                agent_name,
                agent_type,
                agent_desc,
+               model_id,
                agent_status,
                agent_from,
                create_time,
@@ -34,6 +36,7 @@
                agent_name,
                agent_type,
                agent_desc,
+               model_id,
                agent_status,
                agent_from,
                create_time,
@@ -48,6 +51,7 @@
                agent_name,
                agent_type,
                agent_desc,
+               model_id,
                agent_status,
                agent_from,
                create_time,
@@ -76,6 +80,7 @@
         agent_name,
         agent_type,
         agent_desc,
+        model_id,
         agent_status,
         agent_from,
         create_time,
@@ -122,6 +127,7 @@
                agent_name,
                agent_type,
                agent_desc,
+               model_id,
                agent_status,
                agent_from,
                create_time,
@@ -135,12 +141,14 @@
                               agent_name,
                               agent_type,
                               agent_desc,
+                              model_id,
                               agent_status,
                               agent_from)
         VALUES (#{agentId},
                 #{agentName},
                 #{agentType},
                 #{agentDesc},
+                #{modelId},
                 #{agentStatus},
                 #{agentFrom})
     </insert>
@@ -152,6 +160,7 @@
             <if test="agentName != null">agent_name = #{agentName},</if>
             <if test="agentType != null">agent_type = #{agentType},</if>
             <if test="agentDesc != null">agent_desc = #{agentDesc},</if>
+            <if test="modelId != null">model_id = #{modelId},</if>
             <if test="agentStatus != null">agent_status = #{agentStatus},</if>
         </set>
         WHERE id = #{id}
@@ -167,5 +176,11 @@
         DELETE
         FROM ai_agent
         WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByAgentId">
+        DELETE
+        FROM ai_agent
+        WHERE agent_id = #{agentId}
     </delete>
 </mapper>

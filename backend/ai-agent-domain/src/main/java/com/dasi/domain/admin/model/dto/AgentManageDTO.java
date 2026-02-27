@@ -25,6 +25,8 @@ public class AgentManageDTO {
 
     private String agentDesc;
 
+    private String modelId;
+
     @Builder.Default
     private Integer agentStatus = 1;
 }

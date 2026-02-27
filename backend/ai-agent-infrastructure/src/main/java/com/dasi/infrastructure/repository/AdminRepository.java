@@ -1032,6 +1032,7 @@ public class AdminRepository implements IAdminRepository {
                 .agentName(po.getAgentName())
                 .agentType(po.getAgentType())
                 .agentDesc(po.getAgentDesc())
+                .modelId(po.getModelId())
                 .agentStatus(po.getAgentStatus())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1044,6 +1045,7 @@ public class AdminRepository implements IAdminRepository {
                 .agentName(dto.getAgentName())
                 .agentType(dto.getAgentType())
                 .agentDesc(dto.getAgentDesc())
+                .modelId(dto.getModelId())
                 .agentStatus(dto.getAgentStatus())
                 .agentFrom(0L)
                 .build();
