@@ -5,6 +5,7 @@ import com.dasi.domain.user.model.dto.AuthDTO;
 import com.dasi.domain.user.model.dto.ProfileEditDTO;
 import com.dasi.domain.user.model.dto.SettingApiDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.result.Result;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,4 +44,14 @@ public interface IUserApi {
     Result<Void> mcpUpdate(SettingMcpDTO dto);
 
     Result<Void> mcpDelete(String mcpId);
+
+    Result<List<UserTaskVO>> taskList();
+
+    Result<Void> taskInsert(SettingTaskDTO dto);
+
+    Result<Void> taskUpdate(SettingTaskDTO dto);
+
+    Result<Void> taskDelete(String taskId);
+
+    Result<Void> taskToggle(String taskId, Integer taskStatus);
 }

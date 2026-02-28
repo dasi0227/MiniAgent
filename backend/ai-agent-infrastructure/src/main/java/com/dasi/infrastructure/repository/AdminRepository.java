@@ -1170,6 +1170,7 @@ public class AdminRepository implements IAdminRepository {
                 .taskDesc(dto.getTaskDesc())
                 .taskParam(dto.getTaskParam())
                 .taskStatus(dto.getTaskStatus())
+                .taskFrom(0L)
                 .build();
     }
 

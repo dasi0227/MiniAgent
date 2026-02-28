@@ -25,6 +25,10 @@ public interface IAiTaskDao {
 
     AiTask queryByTaskId(@Param("taskId") String taskId);
 
+    List<AiTask> queryByTaskFrom(@Param("taskFrom") Long taskFrom);
+
+    AiTask queryByTaskIdAndFrom(@Param("taskId") String taskId, @Param("taskFrom") Long taskFrom);
+
     void insert(AiTask aiTask);
 
     void update(AiTask aiTask);

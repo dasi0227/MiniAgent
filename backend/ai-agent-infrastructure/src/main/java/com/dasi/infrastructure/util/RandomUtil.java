@@ -69,6 +69,11 @@ public class RandomUtil implements IRandomUtil {
     }
 
     @Override
+    public String randomTaskId() {
+        return "task_" + userRandom();
+    }
+
+    @Override
     public String uuid() {
         return UUID.randomUUID().toString().replace("-", "");
     }

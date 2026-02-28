@@ -9,6 +9,7 @@ import com.dasi.domain.user.model.dto.AuthDTO;
 import com.dasi.domain.user.model.dto.ProfileEditDTO;
 import com.dasi.domain.user.model.dto.SettingApiDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -133,6 +134,40 @@ public class UserController implements IUserApi {
     @Override
     public Result<Void> mcpDelete(@RequestParam String mcpId) {
         settingService.mcpDelete(mcpId);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/task/list")
+    @Override
+    public Result<List<UserTaskVO>> taskList() {
+        return Result.success(settingService.taskList());
+    }
+
+    @PostMapping(value = "/task/insert")
+    @Override
+    public Result<Void> taskInsert(@Valid @RequestBody SettingTaskDTO dto) {
+        settingService.taskInsert(dto);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/task/update")
+    @Override
+    public Result<Void> taskUpdate(@Valid @RequestBody SettingTaskDTO dto) {
+        settingService.taskUpdate(dto);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/task/delete")
+    @Override
+    public Result<Void> taskDelete(@RequestParam String taskId) {
+        settingService.taskDelete(taskId);
+        return Result.success();
+    }
+
+    @PostMapping(value = "/task/toggle")
+    @Override
+    public Result<Void> taskToggle(@RequestParam String taskId, @RequestParam Integer taskStatus) {
+        settingService.taskToggle(taskId, taskStatus);
         return Result.success();
     }
 

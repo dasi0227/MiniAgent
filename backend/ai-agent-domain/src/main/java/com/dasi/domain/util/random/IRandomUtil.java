@@ -22,6 +22,8 @@ public interface IRandomUtil {
 
     String randomCommentId();
 
+    String randomTaskId();
+
     String uuid();
 
 }

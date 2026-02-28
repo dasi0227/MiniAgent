@@ -3,9 +3,11 @@ package com.dasi.domain.user.service.setting;
 import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
+import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.dto.ProfileEditDTO;
 import com.dasi.domain.user.model.dto.SettingApiDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -31,5 +33,15 @@ public interface ISettingService {
     void mcpUpdate(SettingMcpDTO dto);
 
     void mcpDelete(String mcpId);
+
+    List<UserTaskVO> taskList();
+
+    void taskInsert(SettingTaskDTO dto);
+
+    void taskUpdate(SettingTaskDTO dto);
+
+    void taskDelete(String taskId);
+
+    void taskToggle(String taskId, Integer taskStatus);
 
 }

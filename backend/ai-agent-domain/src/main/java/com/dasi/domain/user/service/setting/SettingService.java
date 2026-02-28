@@ -2,6 +2,7 @@ package com.dasi.domain.user.service.setting;
 
 import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
+import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
@@ -12,6 +13,7 @@ import com.dasi.domain.user.model.dto.SettingApiDTO;
 import com.dasi.domain.user.model.dto.ProfileEditDTO;
 import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.exception.AuthException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -147,5 +149,31 @@ public class SettingService implements ISettingService {
     @Override
     public void mcpDelete(String mcpId) {
         userRepository.mcpDelete(mcpId);
+    }
+
+    @Override
+    public List<UserTaskVO> taskList() {
+        return userRepository.taskList();
+    }
+
+    @Override
+    public void taskInsert(SettingTaskDTO dto) {
+        String taskId = randomUtil.randomTaskId();
+        userRepository.taskInsert(dto, taskId);
+    }
+
+    @Override
+    public void taskUpdate(SettingTaskDTO dto) {
+        userRepository.taskUpdate(dto);
+    }
+
+    @Override
+    public void taskDelete(String taskId) {
+        userRepository.taskDelete(taskId);
+    }
+
+    @Override
+    public void taskToggle(String taskId, Integer taskStatus) {
+        userRepository.taskToggle(taskId, taskStatus);
     }
 }

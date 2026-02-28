@@ -5,13 +5,19 @@ import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 import {
     fetchProfile,
+    queryAgentList,
     updatePassword,
     userApiInsert,
     userApiList,
     userApiUpdate,
     userMcpInsert,
     userMcpList,
-    userMcpUpdate
+    userMcpUpdate,
+    userTaskDelete,
+    userTaskInsert,
+    userTaskList,
+    userTaskToggle,
+    userTaskUpdate
 } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
 import { normalizeError } from '../request/request';
@@ -122,6 +128,24 @@ const apiDialogForm = reactive({
     apiCompletionPath: '/v1/chat/completions',
     apiKey: ''
 });
+
+const taskLoading = ref(false);
+const taskSaving = ref(false);
+const taskError = ref('');
+const taskKeyword = ref('');
+const taskList = ref([]);
+const taskAgents = ref([]);
+const taskEditing = ref(false);
+const taskForm = reactive({
+    taskId: '',
+    agentId: '',
+    taskCron: '',
+    taskDesc: '',
+    taskParam: '{"maxRetry":2,"maxRound":2,"userMessage":""}',
+    taskStatus: 1
+});
+const taskDeleteTarget = ref(null);
+const taskDeleteConfirmOpen = ref(false);
 
 const revokeObjectUrl = (url) => {
     if (url && typeof url === 'string' && url.startsWith('blob:')) {
@@ -543,6 +567,181 @@ const saveApiDialog = async () => {
     }
 };
 
+const resetTaskForm = () => {
+    taskEditing.value = false;
+    taskForm.taskId = '';
+    taskForm.agentId = '';
+    taskForm.taskCron = '';
+    taskForm.taskDesc = '';
+    taskForm.taskParam = '{"maxRetry":2,"maxRound":2,"userMessage":""}';
+    taskForm.taskStatus = 1;
+};
+
+const loadTaskAgents = async () => {
+    try {
+        const resp = await queryAgentList();
+        const list = pickData(resp, '获取 MiniAgent 列表失败') || [];
+        taskAgents.value = (Array.isArray(list) ? list : [])
+            .map((item) => {
+                const agentId = item?.agentId || '';
+                if (!agentId) return null;
+                return {
+                    agentId,
+                    agentName: item?.agentName || item?.name || agentId,
+                    agentDesc: item?.agentDesc || item?.desc || ''
+                };
+            })
+            .filter(Boolean);
+    } catch (error) {
+        taskError.value = normalizeError(error).message || '获取 MiniAgent 列表失败';
+        taskAgents.value = [];
+    }
+};
+
+const loadTaskList = async () => {
+    taskLoading.value = true;
+    taskError.value = '';
+    try {
+        const resp = await userTaskList();
+        const list = pickData(resp, '获取 Task 失败') || [];
+        taskList.value = Array.isArray(list) ? list : [];
+    } catch (error) {
+        taskError.value = normalizeError(error).message || '获取 Task 失败';
+    } finally {
+        taskLoading.value = false;
+    }
+};
+
+const taskAgentLabelMap = computed(() => {
+    const map = new Map();
+    taskAgents.value.forEach((item) => map.set(item.agentId, item.agentName || item.agentId));
+    return map;
+});
+
+const filteredTaskList = computed(() => {
+    const keyword = taskKeyword.value.trim().toLowerCase();
+    if (!keyword) return taskList.value;
+    return taskList.value.filter((item) => {
+        const fields = [
+            item?.taskId,
+            item?.taskDesc,
+            item?.taskCron,
+            item?.agentId,
+            taskAgentLabelMap.value.get(item?.agentId || '')
+        ];
+        return fields.some((field) => String(field || '').toLowerCase().includes(keyword));
+    });
+});
+
+const formatTaskTime = (value) => {
+    if (!value) return '暂无时间';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const getTaskStatusLabel = (status) => (Number(status) === 1 ? '启用中' : '已禁用');
+
+const buildTaskPayload = (form) => {
+    const agentId = (form.agentId || '').trim();
+    const taskCron = (form.taskCron || '').trim();
+    const taskDesc = (form.taskDesc || '').trim();
+    const taskParam = ensureJsonText(form.taskParam, 'Task 参数');
+    if (!agentId || !taskCron) {
+        throw new Error('请完整填写 Task 必填项');
+    }
+    const payload = {
+        agentId,
+        taskCron,
+        taskDesc: taskDesc || '暂无',
+        taskParam,
+        taskStatus: Number(form.taskStatus) === 0 ? 0 : 1
+    };
+    if (taskEditing.value && form.taskId.trim()) {
+        payload.taskId = form.taskId.trim();
+    }
+    return payload;
+};
+
+const editTask = (item) => {
+    if (!item) return;
+    taskEditing.value = true;
+    taskError.value = '';
+    taskForm.taskId = (item.taskId || '').trim();
+    taskForm.agentId = (item.agentId || '').trim();
+    taskForm.taskCron = item.taskCron || '';
+    taskForm.taskDesc = item.taskDesc || '';
+    taskForm.taskParam = item.taskParam || '{"maxRetry":2,"maxRound":2,"userMessage":""}';
+    taskForm.taskStatus = Number(item.taskStatus) === 0 ? 0 : 1;
+};
+
+const submitTask = async () => {
+    taskError.value = '';
+    taskSaving.value = true;
+    try {
+        const payload = buildTaskPayload(taskForm);
+        if (taskEditing.value) {
+            if (!payload.taskId) {
+                throw new Error('Task 标识缺失，请刷新后重试');
+            }
+            await userTaskUpdate(payload);
+        } else {
+            await userTaskInsert(payload);
+        }
+        resetTaskForm();
+        await loadTaskList();
+    } catch (error) {
+        taskError.value = normalizeError(error).message || (taskEditing.value ? '更新 Task 失败' : '新增 Task 失败');
+    } finally {
+        taskSaving.value = false;
+    }
+};
+
+const confirmDeleteTask = (item) => {
+    taskDeleteTarget.value = item || null;
+    taskDeleteConfirmOpen.value = Boolean(item?.taskId);
+};
+
+const doDeleteTask = async () => {
+    if (!taskDeleteTarget.value?.taskId) return;
+    taskError.value = '';
+    taskSaving.value = true;
+    try {
+        await userTaskDelete(taskDeleteTarget.value.taskId);
+        if (taskForm.taskId && taskForm.taskId === taskDeleteTarget.value.taskId) {
+            resetTaskForm();
+        }
+        taskDeleteConfirmOpen.value = false;
+        taskDeleteTarget.value = null;
+        await loadTaskList();
+    } catch (error) {
+        taskError.value = normalizeError(error).message || '删除 Task 失败';
+    } finally {
+        taskSaving.value = false;
+    }
+};
+
+const toggleTaskStatus = async (item) => {
+    if (!item?.taskId) return;
+    taskError.value = '';
+    try {
+        const nextStatus = Number(item.taskStatus) === 1 ? 0 : 1;
+        await userTaskToggle(item.taskId, nextStatus);
+        if (taskForm.taskId && taskForm.taskId === item.taskId) {
+            taskForm.taskStatus = nextStatus;
+        }
+        await loadTaskList();
+    } catch (error) {
+        taskError.value = normalizeError(error).message || '切换 Task 状态失败';
+    }
+};
+
 const goRepository = () => {
     router.push('/repository');
 };
@@ -558,7 +757,8 @@ watch(
 onMounted(async () => {
     resetMcpForm();
     resetApiForm();
-    await Promise.all([loadUserProfile(), loadMcpList(), loadApiList()]);
+    resetTaskForm();
+    await Promise.all([loadUserProfile(), loadMcpList(), loadApiList(), loadTaskList(), loadTaskAgents()]);
 });
 
 onBeforeUnmount(() => {
@@ -594,6 +794,13 @@ onBeforeUnmount(() => {
                                 @click="activeTab = 'api'"
                             >
                                 API
+                            </button>
+                            <button
+                                class="border-b-2 px-[2px] pb-[10px] pt-[2px] text-[14px] font-semibold transition"
+                                :class="activeTab === 'task' ? 'border-[var(--accent-color)] text-[var(--accent-color)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+                                @click="activeTab = 'task'"
+                            >
+                                Task
                             </button>
                         </nav>
                     </div>
@@ -773,7 +980,7 @@ onBeforeUnmount(() => {
                     <div v-if="mcpError" class="text-[12px] text-[#ef4444]">{{ mcpError }}</div>
                 </div>
 
-                <div v-else class="space-y-[14px]">
+                <div v-else-if="activeTab === 'api'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
                         <div class="flex flex-wrap items-center justify-between gap-[10px]">
                             <div class="text-[16px] font-semibold">我配置过的个人 API</div>
@@ -840,6 +1047,135 @@ onBeforeUnmount(() => {
                         <button class="rounded-[10px] border border-[var(--border-color)] px-[14px] py-[8px] text-[13px]" @click="resetApiForm">重置</button>
                     </div>
                     <div v-if="apiError" class="text-[12px] text-[#ef4444]">{{ apiError }}</div>
+                </div>
+
+                <div v-else class="space-y-[14px]">
+                    <div class="space-y-[10px]">
+                        <div class="flex flex-wrap items-center justify-between gap-[10px]">
+                            <div class="text-[16px] font-semibold">我配置过的 Task 列表</div>
+                            <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
+                                <input
+                                    v-model="taskKeyword"
+                                    class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
+                                    placeholder="输入关键字查询 Task"
+                                />
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="刷新 Task"
+                                    title="刷新 Task"
+                                    @click="loadTaskList"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                                        <path d="M21 3v6h-6" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div v-if="taskLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
+                        <div v-else-if="filteredTaskList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 Task 配置</div>
+                        <div v-else class="space-y-[8px]">
+                            <div
+                                v-for="item in filteredTaskList"
+                                :key="item.taskId"
+                                class="rounded-[10px] border border-[var(--border-color)] p-[12px] transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                            >
+                                <div class="flex flex-wrap items-start justify-between gap-[10px]">
+                                    <button class="min-w-0 flex-1 text-left" @click="editTask(item)">
+                                        <div class="flex flex-wrap items-center gap-[8px]">
+                                            <div class="text-[14px] font-semibold">Task 描述：{{ item.taskDesc || '暂无描述' }}</div>
+                                            <span
+                                                class="rounded-full px-[8px] py-[2px] text-[11px] font-semibold"
+                                                :class="Number(item.taskStatus) === 1 ? 'bg-[rgba(16,185,129,0.12)] text-[#047857]' : 'bg-[rgba(148,163,184,0.18)] text-[#475569]'"
+                                            >
+                                                {{ getTaskStatusLabel(item.taskStatus) }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">
+                                            MiniAgent：{{ taskAgentLabelMap.get(item.agentId) || item.agentId || '-' }}
+                                        </div>
+                                        <div class="mt-[2px] text-[12px] text-[var(--text-secondary)]">
+                                            Cron：{{ item.taskCron || '-' }}
+                                        </div>
+                                        <div class="mt-[2px] text-[12px] text-[var(--text-secondary)]">
+                                            更新时间：{{ formatTaskTime(item.updateTime) }}
+                                        </div>
+                                    </button>
+                                    <div class="flex items-center gap-[8px]">
+                                        <button
+                                            class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[7px] text-[12px] font-semibold text-[var(--text-primary)] transition hover:bg-[#eef2f7]"
+                                            @click="toggleTaskStatus(item)"
+                                        >
+                                            {{ Number(item.taskStatus) === 1 ? '禁用' : '启用' }}
+                                        </button>
+                                        <button
+                                            class="rounded-[10px] border border-[rgba(248,113,113,0.28)] px-[10px] py-[7px] text-[12px] font-semibold text-[#dc2626] transition hover:bg-[rgba(254,242,242,0.9)]"
+                                            @click="confirmDeleteTask(item)"
+                                        >
+                                            删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-[6px] text-[16px] font-semibold">{{ taskEditing ? '编辑 Task' : '新增 Task' }}</div>
+                    <div class="space-y-[10px]">
+                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                            <span class="pt-[10px] text-[var(--text-secondary)]">MiniAgent</span>
+                            <select v-model="taskForm.agentId" class="rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px]">
+                                <option value="">请选择 MiniAgent</option>
+                                <option v-for="item in taskAgents" :key="item.agentId" :value="item.agentId">
+                                    {{ item.agentName }}
+                                </option>
+                            </select>
+                        </label>
+                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                            <span class="pt-[10px] text-[var(--text-secondary)]">执行周期</span>
+                            <input
+                                v-model="taskForm.taskCron"
+                                class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
+                                placeholder="请输入 Cron 表达式，例如 0 0/30 * * * ?"
+                            />
+                        </label>
+                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                            <span class="pt-[10px] text-[var(--text-secondary)]">任务描述</span>
+                            <input
+                                v-model="taskForm.taskDesc"
+                                class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
+                                placeholder="请输入任务描述，便于后续识别"
+                            />
+                        </label>
+                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                            <span class="pt-[10px] text-[var(--text-secondary)]">任务参数</span>
+                            <textarea
+                                v-model="taskForm.taskParam"
+                                class="min-h-[108px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
+                                placeholder='请输入 JSON，例如 {"maxRetry":2,"maxRound":2,"userMessage":"请汇总今天的关键数据"}'
+                            ></textarea>
+                        </label>
+                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                            <span class="pt-[10px] text-[var(--text-secondary)]">状态</span>
+                            <select v-model="taskForm.taskStatus" class="rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px]">
+                                <option :value="1">启用</option>
+                                <option :value="0">禁用</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-[10px]">
+                        <button
+                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:brightness-95 disabled:opacity-70"
+                            :disabled="taskSaving"
+                            @click="submitTask"
+                        >
+                            {{ taskSaving ? '保存中...' : taskEditing ? '保存 Task' : '新增 Task' }}
+                        </button>
+                        <button class="rounded-[10px] border border-[var(--border-color)] px-[14px] py-[8px] text-[13px]" @click="resetTaskForm">
+                            {{ taskEditing ? '取消编辑' : '重置' }}
+                        </button>
+                    </div>
+                    <div v-if="taskError" class="text-[12px] text-[#ef4444]">{{ taskError }}</div>
                 </div>
             </div>
         </div>
@@ -970,6 +1306,29 @@ onBeforeUnmount(() => {
                         @click="saveApiDialog"
                     >
                         {{ apiDialogSaving ? '保存中...' : '保存' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="taskDeleteConfirmOpen"
+            class="fixed inset-0 z-[41] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
+            @click.self="taskDeleteConfirmOpen = false"
+        >
+            <div class="w-full max-w-[420px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="text-[16px] font-semibold text-[var(--text-primary)]">删除 Task</div>
+                <div class="mt-[10px] text-[13px] leading-[1.7] text-[var(--text-secondary)]">
+                    确认删除该 Task 吗？删除后将无法恢复。
+                </div>
+                <div class="mt-[14px] flex justify-end gap-[8px]">
+                    <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[13px]" @click="taskDeleteConfirmOpen = false">取消</button>
+                    <button
+                        class="rounded-[10px] border border-[rgba(248,113,113,0.28)] bg-[rgba(254,242,242,0.92)] px-[12px] py-[8px] text-[13px] font-semibold text-[#dc2626] disabled:opacity-70"
+                        :disabled="taskSaving"
+                        @click="doDeleteTask"
+                    >
+                        {{ taskSaving ? '删除中...' : '确认删除' }}
                     </button>
                 </div>
             </div>

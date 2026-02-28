@@ -2,9 +2,11 @@ package com.dasi.domain.user.repository;
 
 import com.dasi.domain.user.model.vo.UserApiVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
+import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.model.dto.SettingApiDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
+import com.dasi.domain.user.model.dto.SettingTaskDTO;
 
 import java.util.List;
 
@@ -33,5 +35,15 @@ public interface IUserRepository {
     void mcpUpdate(SettingMcpDTO dto);
 
     void mcpDelete(String mcpId);
+
+    List<UserTaskVO> taskList();
+
+    void taskInsert(SettingTaskDTO dto, String taskId);
+
+    void taskUpdate(SettingTaskDTO dto);
+
+    void taskDelete(String taskId);
+
+    void taskToggle(String taskId, Integer taskStatus);
 
 }

@@ -10,6 +10,7 @@
         <result column="task_desc" property="taskDesc"/>
         <result column="task_param" property="taskParam"/>
         <result column="task_status" property="taskStatus"/>
+        <result column="task_from" property="taskFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -22,6 +23,7 @@
                task_desc,
                task_param,
                task_status,
+               task_from,
                create_time,
                update_time
         FROM ai_task
@@ -36,6 +38,7 @@
                task_desc,
                task_param,
                task_status,
+               task_from,
                create_time,
                update_time
         FROM ai_task
@@ -79,10 +82,43 @@
                task_desc,
                task_param,
                task_status,
+               task_from,
                create_time,
                update_time
         FROM ai_task
         WHERE task_id = #{taskId}
+    </select>
+
+    <select id="queryByTaskFrom" resultMap="dataMap">
+        SELECT id,
+               task_id,
+               agent_id,
+               task_cron,
+               task_desc,
+               task_param,
+               task_status,
+               task_from,
+               create_time,
+               update_time
+        FROM ai_task
+        WHERE task_from = #{taskFrom}
+        ORDER BY update_time DESC, id DESC
+    </select>
+
+    <select id="queryByTaskIdAndFrom" resultMap="dataMap">
+        SELECT id,
+               task_id,
+               agent_id,
+               task_cron,
+               task_desc,
+               task_param,
+               task_status,
+               task_from,
+               create_time,
+               update_time
+        FROM ai_task
+        WHERE task_id = #{taskId}
+          AND task_from = #{taskFrom}
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiTask">
@@ -91,13 +127,15 @@
                              task_cron,
                              task_desc,
                              task_param,
-                             task_status)
+                             task_status,
+                             task_from)
         VALUES (#{taskId},
                 #{agentId},
                 #{taskCron},
                 #{taskDesc},
                 #{taskParam},
-                #{taskStatus})
+                #{taskStatus},
+                #{taskFrom})
     </insert>
 
     <update id="update" parameterType="com.dasi.infrastructure.persistent.po.AiTask">
@@ -109,6 +147,7 @@
             <if test="taskDesc != null">task_desc = #{taskDesc},</if>
             <if test="taskParam != null">task_param = #{taskParam},</if>
             <if test="taskStatus != null">task_status = #{taskStatus},</if>
+            <if test="taskFrom != null">task_from = #{taskFrom},</if>
         </set>
         WHERE id = #{id}
     </update>

@@ -64,6 +64,13 @@ const USER_API_INSERT_PATH = `${USER_API_BASE_PATH}/insert`;
 const USER_API_UPDATE_PATH = `${USER_API_BASE_PATH}/update`;
 const USER_API_DELETE_PATH = `${USER_API_BASE_PATH}/delete`;
 
+const USER_TASK_BASE_PATH = `${USER_BASE_PATH}/task`;
+const USER_TASK_LIST_PATH = `${USER_TASK_BASE_PATH}/list`;
+const USER_TASK_INSERT_PATH = `${USER_TASK_BASE_PATH}/insert`;
+const USER_TASK_UPDATE_PATH = `${USER_TASK_BASE_PATH}/update`;
+const USER_TASK_DELETE_PATH = `${USER_TASK_BASE_PATH}/delete`;
+const USER_TASK_TOGGLE_PATH = `${USER_TASK_BASE_PATH}/toggle`;
+
 const WORKSPACE_BASE_PATH = '/api/v1/workspace';
 const PLAZA_BASE_PATH = `${WORKSPACE_BASE_PATH}/plaza`;
 const PLAZA_PAGE_PATH = `${PLAZA_BASE_PATH}/page`;
@@ -232,6 +239,17 @@ const normalizeUserApiPayload = (payload = {}) => {
     }
     if (!normalized.modelType) {
         normalized.modelType = 'chat';
+    }
+    return normalized;
+};
+
+const normalizeUserTaskPayload = (payload = {}) => {
+    const normalized = trimStrings(payload);
+    if (!normalized || typeof normalized !== 'object') {
+        return normalized;
+    }
+    if (normalized.taskStatus === '' || normalized.taskStatus === null || normalized.taskStatus === undefined) {
+        normalized.taskStatus = 1;
     }
     return normalized;
 };
@@ -504,6 +522,13 @@ export const userMcpList = async (keyword = '') =>
 export const userMcpInsert = async (payload = {}) => http.post(USER_MCP_INSERT_PATH, normalizeUserMcpPayload(payload));
 export const userMcpUpdate = async (payload = {}) => http.post(USER_MCP_UPDATE_PATH, normalizeUserMcpPayload(payload));
 export const userMcpDelete = async (mcpId) => http.post(USER_MCP_DELETE_PATH, null, { params: { mcpId } });
+
+export const userTaskList = async () => http.post(USER_TASK_LIST_PATH);
+export const userTaskInsert = async (payload = {}) => http.post(USER_TASK_INSERT_PATH, normalizeUserTaskPayload(payload));
+export const userTaskUpdate = async (payload = {}) => http.post(USER_TASK_UPDATE_PATH, normalizeUserTaskPayload(payload));
+export const userTaskDelete = async (taskId) => http.post(USER_TASK_DELETE_PATH, null, { params: { taskId } });
+export const userTaskToggle = async (taskId, taskStatus) =>
+    http.post(USER_TASK_TOGGLE_PATH, null, { params: { taskId, taskStatus } });
 
 // 以下接口后端当前未实现，保留函数供调用方降级处理
 export const userMcpToggle = async () => unsupportedApi('MCP 启停');
