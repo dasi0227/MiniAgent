@@ -1,13 +1,18 @@
 package com.dasi.infrastructure.repository;
 
+import com.alibaba.fastjson2.JSON;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.domain.util.snapshot.ISnapshotUtil;
 import com.dasi.domain.util.snapshot.SnapshotView;
+import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
 import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
+import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
+import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
+import com.dasi.domain.workspace.model.enumeration.ConfigType;
 import com.dasi.domain.workspace.model.enumeration.RepoType;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
@@ -69,6 +74,9 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     private IAiTaskDao aiTaskDao;
 
     @Resource
+    private IAiPromptDao aiPromptDao;
+
+    @Resource
     private IAiUserDao aiUserDao;
 
     @Resource
@@ -76,6 +84,9 @@ public class WorkspaceRepository implements IWorkspaceRepository {
 
     @Resource
     private IAiApiDao aiApiDao;
+
+    @Resource
+    private IAiMcpDao aiMcpDao;
 
     @Resource
     private IRandomUtil randomUtil;
@@ -190,17 +201,35 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     @Override
     public void plazaFavor(String plazaId, boolean favored) {
         Long userId = userContext.getUserId();
+        AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
+        String templateId = aiPlaza.getTemplateId();
+
         if (favored) {
-            Integer affected = aiPlazaFavorDao.insert(AiPlazaFavor.builder().plazaId(plazaId).userId(userId).build());
+            AiPlazaFavor aiPlazaFavor = AiPlazaFavor.builder()
+                    .plazaId(plazaId)
+                    .userId(userId)
+                    .build();
+            Integer affected = aiPlazaFavorDao.insert(aiPlazaFavor);
             if (affected != null && affected > 0) {
                 aiPlazaDao.increaseFavorCount(plazaId, 1);
             }
-            return;
-        }
 
-        Integer affected = aiPlazaFavorDao.delete(plazaId, userId);
-        if (affected != null && affected > 0) {
-            aiPlazaDao.increaseFavorCount(plazaId, -1);
+            AiRepo aiRepo = aiRepoDao.queryByUserIdAndTemplateIdAndRepoType(userId, templateId, RepoType.FAVOR.getType());
+            if (aiRepo == null) {
+                aiRepo = AiRepo.builder()
+                        .repoId(randomUtil.randomRepoId())
+                        .userId(userId)
+                        .templateId(templateId)
+                        .repoType(RepoType.FAVOR.getType())
+                        .build();
+                aiRepoDao.insert(aiRepo);
+            }
+        } else {
+            Integer affected = aiPlazaFavorDao.delete(plazaId, userId);
+            if (affected != null && affected > 0) {
+                aiPlazaDao.increaseFavorCount(plazaId, -1);
+            }
+            aiRepoDao.deleteByUserIdAndTemplateIdAndRepoType(userId, templateId, RepoType.FAVOR.getType());
         }
     }
 
@@ -208,13 +237,14 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     public void plazaComment(PlazaCommentDTO dto) {
         String plazaId = dto.getPlazaId();
         Long userId = userContext.getUserId();
-        aiPlazaCommentDao.insert(AiPlazaComment.builder()
-                .commentId(randomUtil.userRandom())
+        AiPlazaComment aiPlazaComment = AiPlazaComment.builder()
+                .commentId(randomUtil.randomCommentId())
                 .plazaId(plazaId)
                 .userId(userId)
                 .userName(userContext.getUserName())
                 .commentContent(dto.getCommentContent())
-                .build());
+                .build();
+        aiPlazaCommentDao.insert(aiPlazaComment);
         aiPlazaDao.increaseCommentCount(plazaId, 1);
     }
 
@@ -349,7 +379,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         AiTemplate aiTemplate = aiTemplateDao.queryByAgentIdAndUserId(agentId, userId);
         if (aiTemplate == null) {
             aiTemplate = AiTemplate.builder()
-                    .templateId(randomUtil.userRandom())
+                    .templateId(randomUtil.randomTemplateId())
                     .userId(userId)
                     .agentId(aiAgent.getAgentId())
                     .agentName(aiAgent.getAgentName())
@@ -380,7 +410,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         AiPlaza aiPlaza = aiPlazaDao.queryByTemplateId(aiTemplate.getTemplateId());
         if (aiPlaza == null) {
             aiPlaza = AiPlaza.builder()
-                    .plazaId(randomUtil.userRandom())
+                    .plazaId(randomUtil.randomPlazaId())
                     .templateId(aiTemplate.getTemplateId())
                     .userId(userId)
                     .agentName(aiAgent.getAgentName())
@@ -406,7 +436,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         AiRepo aiRepo = aiRepoDao.queryByUserIdAndAgentIdAndRepoType(userId, aiAgent.getAgentId(), RepoType.SELF.getType());
         if (aiRepo == null) {
             aiRepoDao.insert(AiRepo.builder()
-                    .repoId(randomUtil.userRandom())
+                    .repoId(randomUtil.randomRepoId())
                     .userId(userId)
                     .agentId(aiAgent.getAgentId())
                     .templateId(aiTemplate.getTemplateId())
@@ -448,6 +478,198 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .systemPrompt(snapshotView.getSystemPrompt())
                 .userPrompt(snapshotView.getUserPrompt())
                 .build();
+    }
+
+    @Override
+    public void agentFork(String templateId) {
+        Long userId = userContext.getUserId();
+        AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
+        if (aiTemplate == null) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        AiRepo existedFork = aiRepoDao.queryByUserIdAndTemplateIdAndRepoType(userId, templateId, RepoType.FORK.getType());
+        if (existedFork != null) {
+            return;
+        }
+
+        SnapshotView snapshotView = snapshotUtil.parseSnapshot(aiTemplate.getSnapshot());
+        Map<String, String> systemPromptMap = snapshotView.getSystemPrompt();
+        if (systemPromptMap == null || systemPromptMap.isEmpty()) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        String apiId = randomUtil.randomApiId();
+        aiApiDao.insert(AiApi.builder()
+                .apiId(apiId)
+                .apiBaseUrl(aiTemplate.getApiBaseUrl())
+                .apiKey("")
+                .apiCompletionsPath(aiTemplate.getApiCompletionUrl())
+                .apiEmbeddingsPath(null)
+                .apiFrom(userId)
+                .build());
+
+        String modelId = randomUtil.randomModelId();
+        aiModelDao.insert(AiModel.builder()
+                .modelId(modelId)
+                .apiId(apiId)
+                .modelName(aiTemplate.getModelName())
+                .modelType(aiTemplate.getModelType())
+                .modelFrom(userId)
+                .build());
+
+        List<String> mcpIdList = new ArrayList<>();
+        List<TemplateVO.McpInfo> mcpInfoList = snapshotView.getMcpInfoList();
+        for (TemplateVO.McpInfo mcpInfo : mcpInfoList) {
+                String mcpId = randomUtil.randomMcpId();
+            LinkedHashMap<String, String> secretMap = new LinkedHashMap<>();
+            for (String secretKey : mcpInfo.getRequiredSecrets()) {
+                if (StringUtils.hasText(secretKey)) {
+                    secretMap.put(secretKey, "");
+                }
+            }
+            String mcpSecret = JSON.toJSONString(secretMap);
+
+            aiMcpDao.insert(AiMcp.builder()
+                    .mcpId(mcpId)
+                    .mcpName(mcpInfo.getMcpName())
+                    .mcpType(mcpInfo.getMcpType())
+                    .mcpParam(JSON.toJSONString(mcpInfo.getMcpParamTemplate()))
+                    .mcpSecret(mcpSecret)
+                    .mcpTimeout(180)
+                    .mcpChat(0)
+                    .mcpFrom(userId)
+                    .mcpDesc(mcpInfo.getMcpDesc())
+                    .build());
+            mcpIdList.add(mcpId);
+        }
+
+        String agentId = randomUtil.randomAgentId();
+        aiAgentDao.insert(AiAgent.builder()
+                .agentId(agentId)
+                .agentName(aiTemplate.getAgentName())
+                .agentType(aiTemplate.getAgentType())
+                .agentDesc(aiTemplate.getAgentDesc())
+                .modelId(modelId)
+                .agentStatus(1)
+                .agentFrom(userId)
+                .build());
+
+        List<String> userPromptList = snapshotView.getUserPrompt();
+        List<Map.Entry<String, String>> systemPromptEntryList = new ArrayList<>(systemPromptMap.entrySet());
+        for (int i = 0; i < systemPromptEntryList.size(); i++) {
+            Map.Entry<String, String> systemPromptEntry = systemPromptEntryList.get(i);
+            String clientRole = systemPromptEntry.getKey();
+            String clientId = randomUtil.randomClientId();
+            String promptId = randomUtil.randomPromptId();
+
+            aiClientDao.insert(AiClient.builder()
+                    .clientId(clientId)
+                    .clientType("work")
+                    .clientRole(clientRole)
+                    .modelId(modelId)
+                    .modelName(aiTemplate.getModelName())
+                    .clientName(aiTemplate.getAgentName() + "-" + clientRole)
+                    .clientStatus(1)
+                    .clientFrom(userId)
+                    .build());
+
+            aiPromptDao.insert(AiPrompt.builder()
+                    .promptId(promptId)
+                    .promptName(clientRole + "_prompt")
+                    .systenPrompt(systemPromptEntry.getValue() == null ? "" : systemPromptEntry.getValue())
+                    .build());
+
+            aiConfigDao.insert(AiConfig.builder()
+                    .clientId(clientId)
+                    .configType(ConfigType.PROMPT.getType())
+                    .configValue(promptId)
+                    .configStatus(1)
+                    .build());
+
+            for (String mcpId : mcpIdList) {
+                aiConfigDao.insert(AiConfig.builder()
+                        .clientId(clientId)
+                        .configType(ConfigType.MCP.getType())
+                        .configValue(mcpId)
+                        .configStatus(1)
+                        .build());
+            }
+
+            String userPrompt = userPromptList.get(i);
+            aiFlowDao.insert(AiFlow.builder()
+                    .agentId(agentId)
+                    .clientId(clientId)
+                    .clientRole(clientRole)
+                    .userPrompt(userPrompt)
+                    .flowSeq(i + 1)
+                    .build());
+        }
+
+        aiRepoDao.insert(AiRepo.builder()
+                .repoId(randomUtil.randomRepoId())
+                .userId(userId)
+                .agentId(agentId)
+                .templateId(templateId)
+                .repoType(RepoType.FORK.getType())
+                .build());
+    }
+
+    @Override
+    public void agentBaseUpdate(AgentBaseUpdateDTO dto) {
+        AiAgent aiAgent = requireOwnedAgent(dto.getAgentId());
+        aiAgentDao.update(AiAgent.builder()
+                .id(aiAgent.getId())
+                .agentName(dto.getAgentName())
+                .agentDesc(dto.getAgentDesc())
+                .build());
+    }
+
+    @Override
+    public void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto) {
+        requireOwnedAgent(dto.getAgentId());
+        AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
+        if (aiFlow == null) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        aiFlowDao.update(AiFlow.builder()
+                .id(aiFlow.getId())
+                .userPrompt(dto.getUserPrompt())
+                .build());
+    }
+
+    @Override
+    public void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto) {
+        requireOwnedAgent(dto.getAgentId());
+        AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
+        if (aiFlow == null) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        List<AiConfig> promptConfigList = aiConfigDao.queryByClientIdAndConfigType(aiFlow.getClientId(), ConfigType.PROMPT.getType());
+        if (promptConfigList == null || promptConfigList.isEmpty()) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        AiPrompt aiPrompt = aiPromptDao.queryByPromptId(promptConfigList.get(0).getConfigValue());
+        if (aiPrompt == null) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        aiPromptDao.update(AiPrompt.builder()
+                .id(aiPrompt.getId())
+                .systenPrompt(dto.getSystemPrompt())
+                .build());
+    }
+
+    private AiAgent requireOwnedAgent(String agentId) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
+        if (aiAgent == null || !userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
+        }
+        return aiAgent;
     }
 
 }

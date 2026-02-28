@@ -99,16 +99,8 @@ public class SnapshotUtil implements ISnapshotUtil {
 
     @Override
     public SnapshotView parseSnapshot(String snapshotRaw) {
-        if (!StringUtils.hasText(snapshotRaw)) {
-            return SnapshotView.empty();
-        }
-
         try {
             JSONObject snapshot = JSON.parseObject(snapshotRaw);
-            if (snapshot == null) {
-                return SnapshotView.empty();
-            }
-
             return new SnapshotView(
                     parseSnapshotMcpList(snapshot.getJSONArray("mcps")),
                     parseSnapshotSystemPrompt(snapshot.getJSONArray("systemPrompts")),

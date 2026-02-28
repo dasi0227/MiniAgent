@@ -1,9 +1,6 @@
 package com.dasi.trigger.http;
 
-import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
-import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
-import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
-import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
+import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
@@ -22,7 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/workspace")
+@RequestMapping({"/workspace", "/workplace"})
 public class WorkspaceController {
 
     @Resource
@@ -100,6 +97,30 @@ public class WorkspaceController {
     @PostMapping("/agent/delete")
     public Result<Void> agentDelete(@NotBlank @RequestParam String agentId) {
         workspaceService.agentDelete(agentId);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/fork")
+    public Result<Void> agentFork(@NotBlank @RequestParam String templateId) {
+        workspaceService.agentFork(templateId);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/update/base")
+    public Result<Void> agentBaseUpdate(@Valid @RequestBody AgentBaseUpdateDTO dto) {
+        workspaceService.agentBaseUpdate(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/update/userprompt")
+    public Result<Void> agentUserPromptUpdate(@Valid @RequestBody AgentUserPromptUpdateDTO dto) {
+        workspaceService.agentUserPromptUpdate(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/update/systemprompt")
+    public Result<Void> agentSystemPromptUpdate(@Valid @RequestBody AgentSystemPromptUpdateDTO dto) {
+        workspaceService.agentSystemPromptUpdate(dto);
         return Result.success();
     }
 

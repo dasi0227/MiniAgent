@@ -27,4 +27,8 @@ public interface IAiRepoDao {
 
     Integer deleteByTemplateId(@Param("templateId") String templateId);
 
+    Integer deleteByUserIdAndTemplateIdAndRepoType(@Param("userId") Long userId,
+                                                    @Param("templateId") String templateId,
+                                                    @Param("repoType") String repoType);
+
 }

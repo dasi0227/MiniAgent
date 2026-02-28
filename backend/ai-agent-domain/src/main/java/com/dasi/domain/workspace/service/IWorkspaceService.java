@@ -3,7 +3,10 @@ package com.dasi.domain.workspace.service;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
+import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
 import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
+import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
+import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
@@ -32,6 +35,14 @@ public interface IWorkspaceService {
     Map<String, List<RepoVO>> repoMap();
 
     void agentPublish(AgentPublishDTO dto);
+
+    void agentFork(String templateId);
+
+    void agentBaseUpdate(AgentBaseUpdateDTO dto);
+
+    void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto);
+
+    void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto);
 
     TemplateVO agentTemplate(String templateId);
 

@@ -111,8 +111,8 @@ public class SettingService implements ISettingService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void apiInsert(SettingApiDTO dto) {
-        String apiId = "api_" + randomUtil.userRandom();
-        String modelId = "model_" + randomUtil.userRandom();
+        String apiId = randomUtil.randomApiId();
+        String modelId = randomUtil.randomModelId();
         userRepository.apiInsert(dto, apiId, modelId);
     }
 
@@ -136,7 +136,7 @@ public class SettingService implements ISettingService {
 
     @Override
     public void mcpInsert(SettingMcpDTO dto) {
-        String mcpId = "mcp_" + randomUtil.userRandom();
+        String mcpId = randomUtil.randomMcpId();
         userRepository.mcpInsert(dto, mcpId);
     }
 

@@ -97,4 +97,12 @@
         WHERE template_id = #{templateId}
     </delete>
 
+    <delete id="deleteByUserIdAndTemplateIdAndRepoType">
+        DELETE
+        FROM ai_repo
+        WHERE user_id = #{userId}
+          AND template_id = #{templateId}
+          AND repo_type = #{repoType}
+    </delete>
+
 </mapper>
