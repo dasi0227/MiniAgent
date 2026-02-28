@@ -565,3 +565,5 @@ export const repoAdd = async () => unsupportedApi('Repository 添加');
 export const repoRemove = async () => unsupportedApi('Repository 移除');
 export const repoFork = async ({ templateId }) =>
     http.post(WORKSPACE_AGENT_FORK_PATH, null, { params: { templateId } });
+export const repoDeleteMineAgent = async ({ agentId }) =>
+    http.post(WORKSPACE_AGENT_DELETE_PATH, null, { params: { agentId } });

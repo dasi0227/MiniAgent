@@ -146,6 +146,14 @@ const taskForm = reactive({
 });
 const taskDeleteTarget = ref(null);
 const taskDeleteConfirmOpen = ref(false);
+const taskAgentDropdownOpen = ref(false);
+const taskStatusDropdownOpen = ref(false);
+const taskAgentDropdownRef = ref(null);
+const taskStatusDropdownRef = ref(null);
+const taskStatusOptions = [
+    { value: 1, label: '启用' },
+    { value: 0, label: '禁用' }
+];
 
 const revokeObjectUrl = (url) => {
     if (url && typeof url === 'string' && url.startsWith('blob:')) {
@@ -575,6 +583,8 @@ const resetTaskForm = () => {
     taskForm.taskDesc = '';
     taskForm.taskParam = '{"maxRetry":2,"maxRound":2,"userMessage":""}';
     taskForm.taskStatus = 1;
+    taskAgentDropdownOpen.value = false;
+    taskStatusDropdownOpen.value = false;
 };
 
 const loadTaskAgents = async () => {
@@ -617,6 +627,46 @@ const taskAgentLabelMap = computed(() => {
     taskAgents.value.forEach((item) => map.set(item.agentId, item.agentName || item.agentId));
     return map;
 });
+
+const selectedTaskAgentLabel = computed(() => taskAgentLabelMap.value.get(taskForm.agentId) || '请选择 MiniAgent');
+const selectedTaskStatusLabel = computed(() => taskStatusOptions.find((item) => item.value === Number(taskForm.taskStatus))?.label || '启用');
+
+const formatApiDisplayUrl = (item) => {
+    const baseUrl = String(item?.apiBaseUrl || '').trim();
+    const completionPath = String(item?.apiCompletionPath || '').trim();
+    if (baseUrl && completionPath) return `${baseUrl}${completionPath}`;
+    return baseUrl || completionPath || '-';
+};
+
+const formatMcpTypeLabel = (value) => {
+    const text = String(value || '').trim();
+    return text ? text.toUpperCase() : 'UNKNOWN';
+};
+
+const closeTaskDropdowns = () => {
+    taskAgentDropdownOpen.value = false;
+    taskStatusDropdownOpen.value = false;
+};
+
+const toggleTaskDropdown = (key) => {
+    if (key === 'agent') {
+        taskAgentDropdownOpen.value = !taskAgentDropdownOpen.value;
+        taskStatusDropdownOpen.value = false;
+        return;
+    }
+    taskStatusDropdownOpen.value = !taskStatusDropdownOpen.value;
+    taskAgentDropdownOpen.value = false;
+};
+
+const selectTaskAgent = (agentId) => {
+    taskForm.agentId = agentId;
+    taskAgentDropdownOpen.value = false;
+};
+
+const selectTaskStatus = (status) => {
+    taskForm.taskStatus = Number(status) === 0 ? 0 : 1;
+    taskStatusDropdownOpen.value = false;
+};
 
 const filteredTaskList = computed(() => {
     const keyword = taskKeyword.value.trim().toLowerCase();
@@ -679,6 +729,7 @@ const editTask = (item) => {
     taskForm.taskDesc = item.taskDesc || '';
     taskForm.taskParam = item.taskParam || '{"maxRetry":2,"maxRound":2,"userMessage":""}';
     taskForm.taskStatus = Number(item.taskStatus) === 0 ? 0 : 1;
+    closeTaskDropdowns();
 };
 
 const submitTask = async () => {
@@ -742,6 +793,25 @@ const toggleTaskStatus = async (item) => {
     }
 };
 
+const handleTaskDropdownOutside = (event) => {
+    const target = event?.target;
+    if (
+        taskAgentDropdownRef.value &&
+        !taskAgentDropdownRef.value.contains(target) &&
+        taskStatusDropdownRef.value &&
+        !taskStatusDropdownRef.value.contains(target)
+    ) {
+        closeTaskDropdowns();
+        return;
+    }
+    if (taskAgentDropdownRef.value && !taskAgentDropdownRef.value.contains(target)) {
+        taskAgentDropdownOpen.value = false;
+    }
+    if (taskStatusDropdownRef.value && !taskStatusDropdownRef.value.contains(target)) {
+        taskStatusDropdownOpen.value = false;
+    }
+};
+
 const goRepository = () => {
     router.push('/repository');
 };
@@ -758,10 +828,12 @@ onMounted(async () => {
     resetMcpForm();
     resetApiForm();
     resetTaskForm();
+    document.addEventListener('pointerdown', handleTaskDropdownOutside);
     await Promise.all([loadUserProfile(), loadMcpList(), loadApiList(), loadTaskList(), loadTaskAgents()]);
 });
 
 onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', handleTaskDropdownOutside);
     resetProfileAvatarDraft();
 });
 </script>
@@ -937,11 +1009,20 @@ onBeforeUnmount(() => {
                         <button
                             v-for="item in mcpList"
                             :key="item.mcpId"
-                            class="w-full rounded-[10px] border border-[var(--border-color)] p-[12px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                            class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             @click="openMcpDialog(item)"
                         >
-                            <div class="text-[14px] font-semibold">MCP 名称：{{ item.mcpName || '-' }}</div>
-                            <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">MCP 描述：{{ item.mcpDesc || '暂无描述' }}</div>
+                            <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                                <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                    {{ item.mcpName || '-' }}
+                                </div>
+                                <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
+                                    {{ formatMcpTypeLabel(item.mcpType) }}
+                                </span>
+                            </div>
+                            <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)]">
+                                {{ item.mcpDesc || '暂无描述' }}
+                            </div>
                         </button>
                     </div>
                     <div class="pt-[6px] text-[16px] font-semibold">新增个人 MCP</div>
@@ -983,7 +1064,7 @@ onBeforeUnmount(() => {
                 <div v-else-if="activeTab === 'api'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
                         <div class="flex flex-wrap items-center justify-between gap-[10px]">
-                            <div class="text-[16px] font-semibold">我配置过的个人 API</div>
+                            <div class="text-[16px] font-semibold">我配置过的 API 列表</div>
                             <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="apiKeyword"
@@ -1010,11 +1091,17 @@ onBeforeUnmount(() => {
                         <button
                             v-for="item in apiList"
                             :key="item.apiId"
-                            class="w-full rounded-[10px] border border-[var(--border-color)] p-[12px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                            class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             @click="openApiDialog(item)"
                         >
-                            <div class="text-[14px] font-semibold">模型名称：{{ item.modelName || '-' }}</div>
-                            <div class="mt-[4px] text-[12px] text-[var(--text-secondary)]">API 地址：{{ item.apiBaseUrl || '-' }}</div>
+                            <div class="flex min-w-0 flex-wrap items-center gap-x-[12px] gap-y-[6px]">
+                                <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                    {{ item.modelName || '-' }}
+                                </div>
+                                <div class="min-w-0 text-[12px] text-[var(--text-secondary)]">
+                                    {{ formatApiDisplayUrl(item) }}
+                                </div>
+                            </div>
                         </button>
                     </div>
                     <div class="pt-[6px] text-[16px] font-semibold">新增个人 API</div>
@@ -1124,12 +1211,48 @@ onBeforeUnmount(() => {
                     <div class="space-y-[10px]">
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">MiniAgent</span>
-                            <select v-model="taskForm.agentId" class="rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px]">
-                                <option value="">请选择 MiniAgent</option>
-                                <option v-for="item in taskAgents" :key="item.agentId" :value="item.agentId">
-                                    {{ item.agentName }}
-                                </option>
-                            </select>
+                            <div ref="taskAgentDropdownRef" class="relative">
+                                <button
+                                    class="flex w-full items-center justify-between rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-left text-[13px] text-[var(--text-primary)] outline-none transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                    type="button"
+                                    :class="taskAgentDropdownOpen ? 'border-[var(--accent-color)] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]' : ''"
+                                    @click="toggleTaskDropdown('agent')"
+                                >
+                                    <span class="truncate">{{ selectedTaskAgentLabel }}</span>
+                                    <svg
+                                        viewBox="0 0 20 20"
+                                        class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)] transition-transform duration-200"
+                                        :class="taskAgentDropdownOpen ? 'rotate-180' : ''"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M5.5 7.5 10 12l4.5-4.5H5.5z" />
+                                    </svg>
+                                </button>
+                                <div
+                                    v-if="taskAgentDropdownOpen"
+                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-[20] max-h-[240px] overflow-y-auto rounded-[14px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
+                                >
+                                    <button
+                                        class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
+                                        :class="!taskForm.agentId ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
+                                        type="button"
+                                        @click="selectTaskAgent('')"
+                                    >
+                                        请选择 MiniAgent
+                                    </button>
+                                    <button
+                                        v-for="item in taskAgents"
+                                        :key="item.agentId"
+                                        class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
+                                        :class="taskForm.agentId === item.agentId ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
+                                        type="button"
+                                        @click="selectTaskAgent(item.agentId)"
+                                    >
+                                        <span class="truncate">{{ item.agentName }}</span>
+                                    </button>
+                                </div>
+                            </div>
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">执行周期</span>
@@ -1157,10 +1280,40 @@ onBeforeUnmount(() => {
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">状态</span>
-                            <select v-model="taskForm.taskStatus" class="rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px]">
-                                <option :value="1">启用</option>
-                                <option :value="0">禁用</option>
-                            </select>
+                            <div ref="taskStatusDropdownRef" class="relative">
+                                <button
+                                    class="flex w-full items-center justify-between rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-left text-[13px] text-[var(--text-primary)] outline-none transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                    type="button"
+                                    :class="taskStatusDropdownOpen ? 'border-[var(--accent-color)] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]' : ''"
+                                    @click="toggleTaskDropdown('status')"
+                                >
+                                    <span>{{ selectedTaskStatusLabel }}</span>
+                                    <svg
+                                        viewBox="0 0 20 20"
+                                        class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)] transition-transform duration-200"
+                                        :class="taskStatusDropdownOpen ? 'rotate-180' : ''"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M5.5 7.5 10 12l4.5-4.5H5.5z" />
+                                    </svg>
+                                </button>
+                                <div
+                                    v-if="taskStatusDropdownOpen"
+                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-[20] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
+                                >
+                                    <button
+                                        v-for="item in taskStatusOptions"
+                                        :key="item.value"
+                                        class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
+                                        :class="Number(taskForm.taskStatus) === item.value ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
+                                        type="button"
+                                        @click="selectTaskStatus(item.value)"
+                                    >
+                                        {{ item.label }}
+                                    </button>
+                                </div>
+                            </div>
                         </label>
                     </div>
                     <div class="flex items-center gap-[10px]">

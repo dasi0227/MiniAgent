@@ -1,15 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { repoList } from '../request/api';
+import { repoDeleteMineAgent, repoList } from '../request/api';
 import { normalizeError } from '../request/request';
-import { useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
+import { useSettingsStore } from '../router/pinia';
 import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
 import Footer from './Footer.vue';
 
-const router = useRouter();
 const settingsStore = useSettingsStore();
-const welcomeLaunchStore = useWelcomeLaunchStore();
 
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const loading = ref(false);
@@ -39,25 +36,25 @@ const resolveCardTone = (item) => {
     if (isDarkTheme.value) {
         if (type === 'STEP') {
             return {
-                card: 'border-[rgba(245,158,11,0.22)] bg-[rgba(15,23,42,0.72)] shadow-[0_18px_40px_rgba(15,23,42,0.26)]',
-                glow: 'linear-gradient(160deg, rgba(251,191,36,0.18), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.26), rgba(15,23,42,0) 58%)',
-                badge: 'border-[rgba(251,191,36,0.34)] bg-[rgba(251,191,36,0.12)] text-[#fcd34d]',
-                primaryButton: 'border-[rgba(251,191,36,0.34)] bg-[rgba(251,191,36,0.12)] text-[#fcd34d] hover:bg-[rgba(251,191,36,0.18)]'
+                card: 'border-[rgba(245,158,11,0.18)] bg-[rgba(18,30,54,0.72)] shadow-[0_16px_34px_rgba(2,8,23,0.18)] backdrop-blur-[10px]',
+                glow: 'linear-gradient(155deg, rgba(245,158,11,0.12), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.16), rgba(15,23,42,0) 58%)',
+                badge: 'border-[rgba(251,191,36,0.28)] bg-[rgba(251,191,36,0.1)] text-[#f7d487]',
+                primaryButton: 'border-[rgba(251,191,36,0.26)] bg-[rgba(251,191,36,0.08)] text-[#f7d487] hover:bg-[rgba(251,191,36,0.14)]'
             };
         }
         if (type === 'LOOP') {
             return {
-                card: 'border-[rgba(16,185,129,0.22)] bg-[rgba(15,23,42,0.72)] shadow-[0_18px_40px_rgba(15,23,42,0.26)]',
-                glow: 'linear-gradient(160deg, rgba(16,185,129,0.16), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(45,212,191,0.22), rgba(15,23,42,0) 58%)',
-                badge: 'border-[rgba(52,211,153,0.34)] bg-[rgba(16,185,129,0.12)] text-[#86efac]',
-                primaryButton: 'border-[rgba(52,211,153,0.34)] bg-[rgba(16,185,129,0.12)] text-[#86efac] hover:bg-[rgba(16,185,129,0.18)]'
+                card: 'border-[rgba(16,185,129,0.18)] bg-[rgba(18,30,54,0.72)] shadow-[0_16px_34px_rgba(2,8,23,0.18)] backdrop-blur-[10px]',
+                glow: 'linear-gradient(155deg, rgba(16,185,129,0.12), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(45,212,191,0.16), rgba(15,23,42,0) 58%)',
+                badge: 'border-[rgba(52,211,153,0.28)] bg-[rgba(16,185,129,0.1)] text-[#9decc0]',
+                primaryButton: 'border-[rgba(52,211,153,0.26)] bg-[rgba(16,185,129,0.08)] text-[#9decc0] hover:bg-[rgba(16,185,129,0.14)]'
             };
         }
         return {
-            card: 'border-[rgba(96,165,250,0.22)] bg-[rgba(15,23,42,0.72)] shadow-[0_18px_40px_rgba(15,23,42,0.26)]',
-            glow: 'linear-gradient(160deg, rgba(96,165,250,0.17), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(96,165,250,0.24), rgba(15,23,42,0) 58%)',
-            badge: 'border-[rgba(96,165,250,0.34)] bg-[rgba(96,165,250,0.12)] text-[#bfdbfe]',
-            primaryButton: 'border-[rgba(96,165,250,0.34)] bg-[rgba(96,165,250,0.12)] text-[#bfdbfe] hover:bg-[rgba(96,165,250,0.18)]'
+            card: 'border-[rgba(96,165,250,0.18)] bg-[rgba(18,30,54,0.72)] shadow-[0_16px_34px_rgba(2,8,23,0.18)] backdrop-blur-[10px]',
+            glow: 'linear-gradient(155deg, rgba(96,165,250,0.12), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(96,165,250,0.16), rgba(15,23,42,0) 58%)',
+            badge: 'border-[rgba(96,165,250,0.28)] bg-[rgba(96,165,250,0.1)] text-[#c9e0ff]',
+            primaryButton: 'border-[rgba(96,165,250,0.26)] bg-[rgba(96,165,250,0.08)] text-[#c9e0ff] hover:bg-[rgba(96,165,250,0.14)]'
         };
     }
 
@@ -85,6 +82,12 @@ const resolveCardTone = (item) => {
     };
 };
 
+const dangerButtonClass = computed(() =>
+    isDarkTheme.value
+        ? 'border-[rgba(248,113,113,0.24)] bg-[rgba(127,29,29,0.16)] text-[#fda4af] hover:bg-[rgba(127,29,29,0.24)]'
+        : 'border-[rgba(239,68,68,0.22)] bg-[rgba(254,242,242,0.92)] text-[#dc2626] hover:bg-[rgba(254,226,226,0.96)]'
+);
+
 const sections = computed(() => [
     {
         key: 'mine',
@@ -111,22 +114,26 @@ const toggleSection = (key) => {
     sectionOpen[key] = !sectionOpen[key];
 };
 
-const useAgent = (item) => {
-    if (!item?.agentId) {
-        message.value = '该条目没有可直接使用的 MiniAgent';
-        return;
-    }
-    welcomeLaunchStore.setTask({
-        type: 'work',
-        prompt: '请根据当前任务执行。',
-        sessionTitle: resolveAgentName(item),
-        agentId: item.agentId
-    });
-    router.push('/work');
-};
-
 const doRemove = () => {
     message.value = '当前后端未提供仓库移除接口';
+};
+
+const deleteMineAgent = async (item) => {
+    if (!item?.agentId) {
+        message.value = '该条目缺少可删除的 MiniAgent 标识';
+        return;
+    }
+    const confirmed = window.confirm(`确认删除「${resolveAgentName(item)}」吗？`);
+    if (!confirmed) return;
+    loading.value = true;
+    message.value = '';
+    try {
+        await repoDeleteMineAgent({ agentId: item.agentId });
+        await loadRepository();
+    } catch (error) {
+        message.value = normalizeError(error).message || '删除 MiniAgent 失败';
+        loading.value = false;
+    }
 };
 
 const loadRepository = async () => {
@@ -153,7 +160,7 @@ onMounted(loadRepository);
 
 <template>
     <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--page-bg)]">
-        <div class="overflow-y-auto py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
+        <div class="overflow-y-scroll overflow-x-hidden [scrollbar-gutter:stable] py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
             <div class="mx-auto max-w-[1120px]">
                 <header class="flex flex-wrap items-end justify-between gap-[14px]">
                     <div>
@@ -179,20 +186,15 @@ onMounted(loadRepository);
                             type="button"
                             @click="toggleSection(section.key)"
                         >
+                            <svg viewBox="0 0 20 20" class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)]" fill="currentColor" aria-hidden="true">
+                                <path :d="sectionOpen[section.key] ? 'M5.5 7.5 10 12l4.5-4.5H5.5z' : 'M7 4.5 13 10 7 15.5V4.5z'" />
+                            </svg>
+
                             <div class="flex min-w-0 items-center gap-[10px]">
                                 <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">{{ section.title }}</h2>
                                 <span class="rounded-full border border-[rgba(148,163,184,0.18)] px-[9px] py-[2px] text-[11px] font-semibold text-[var(--text-secondary)]">
                                     {{ section.items.length }}
                                 </span>
-                            </div>
-
-                            <div
-                                class="ml-auto flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border border-[rgba(148,163,184,0.18)] text-[var(--text-secondary)] transition"
-                                :class="sectionOpen[section.key] ? 'rotate-180 bg-[rgba(148,163,184,0.08)]' : 'bg-transparent'"
-                            >
-                                <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                    <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
                             </div>
                         </button>
 
@@ -228,9 +230,6 @@ onMounted(loadRepository);
                                             >
                                                 {{ resolveAgentType(item) }}
                                             </span>
-                                            <span class="text-[11px] text-[var(--text-secondary)]">
-                                                {{ resolveSectionLabel(section.key) }}
-                                            </span>
                                         </div>
 
                                         <div class="relative mt-[16px] space-y-[10px]">
@@ -243,17 +242,25 @@ onMounted(loadRepository);
                                         </div>
 
                                         <div class="relative mt-auto flex items-center justify-end gap-[8px] pt-[18px]">
-                                            <button
+                                            <span
                                                 class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"
                                                 :class="resolveCardTone(item).primaryButton"
-                                                type="button"
-                                                @click="useAgent(item)"
                                             >
-                                                使用
+                                                查看
+                                            </span>
+                                            <button
+                                                v-if="section.key === 'mine'"
+                                                class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"
+                                                :class="dangerButtonClass"
+                                                type="button"
+                                                @click="deleteMineAgent(item)"
+                                            >
+                                                删除
                                             </button>
                                             <button
-                                                v-if="section.key !== 'mine'"
-                                                class="rounded-[12px] border border-[rgba(148,163,184,0.18)] bg-[rgba(255,255,255,0.76)] px-[12px] py-[8px] text-[12px] font-semibold text-[var(--text-secondary)] transition hover:border-[rgba(100,116,139,0.24)] hover:text-[var(--text-primary)] dark:bg-[rgba(15,23,42,0.24)]"
+                                                v-else
+                                                class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"
+                                                :class="dangerButtonClass"
                                                 type="button"
                                                 @click="doRemove(item)"
                                             >

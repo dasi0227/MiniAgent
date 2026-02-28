@@ -1007,21 +1007,21 @@ const loadProfileResources = async () => {
 
             <div class="flex flex-col gap-[8px]">
                 <button
-                    class="flex w-full items-center justify-between px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
+                    class="flex w-full items-center gap-[8px] px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
                     :class="isChatRoute ? 'text-[#7bc8ff]' : ''"
                     type="button"
                     @click="showChatList = !showChatList"
                 >
-                    <span class="inline-flex w-[140px] items-center">Chat 会话</span>
                     <svg
                         viewBox="0 0 20 20"
                         class="h-[14px] w-[14px] shrink-0 transition-transform duration-200"
-                        :class="showChatList ? 'rotate-90' : ''"
+                        :class="showChatList ? 'rotate-90 text-[#7bc8ff]' : ''"
                         fill="currentColor"
                         aria-hidden="true"
                     >
                         <path d="M7 4.5L13 10L7 15.5V4.5z" />
                     </svg>
+                    <span class="inline-flex items-center">Chat 会话</span>
                 </button>
                 <div
                     :class="getCollapseClasses(showChatList)"
@@ -1083,7 +1083,7 @@ const loadProfileResources = async () => {
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="chats.length === 0" class="mt-[4px] text-[13px] text-[rgba(231,236,244,0.7)]">
+                            <div v-if="chats.length === 0" class="mt-[4px] pl-[22px] text-[13px] text-[rgba(231,236,244,0.7)]">
                                 暂无会话
                             </div>
                     </div>
@@ -1092,21 +1092,21 @@ const loadProfileResources = async () => {
 
             <div class="flex flex-col gap-[8px]">
                 <button
-                    class="flex w-full items-center justify-between px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
+                    class="flex w-full items-center gap-[8px] px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
                     :class="isAgentRoute ? 'text-[#7bc8ff]' : ''"
                     type="button"
                     @click="showAgentList = !showAgentList"
                 >
-                    <span class="inline-flex w-[140px] items-center">Work 会话</span>
                     <svg
                         viewBox="0 0 20 20"
                         class="h-[14px] w-[14px] shrink-0 transition-transform duration-200"
-                        :class="showAgentList ? 'rotate-90' : ''"
+                        :class="showAgentList ? 'rotate-90 text-[#7bc8ff]' : ''"
                         fill="currentColor"
                         aria-hidden="true"
                     >
                         <path d="M7 4.5L13 10L7 15.5V4.5z" />
                     </svg>
+                    <span class="inline-flex items-center">Work 会话</span>
                 </button>
                 <div
                     :class="getCollapseClasses(showAgentList)"
@@ -1168,7 +1168,7 @@ const loadProfileResources = async () => {
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="agentSessions.length === 0" class="mt-[4px] text-[13px] text-[rgba(231,236,244,0.7)]">
+                            <div v-if="agentSessions.length === 0" class="mt-[4px] pl-[22px] text-[13px] text-[rgba(231,236,244,0.7)]">
                                 暂无会话
                             </div>
                     </div>
