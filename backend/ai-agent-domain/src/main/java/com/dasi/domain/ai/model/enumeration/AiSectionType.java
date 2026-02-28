@@ -26,7 +26,18 @@ public enum AiSectionType {
     PLANNER_STEP("任务步骤", "planner_step"),
     RUNNER_RESULT("运行结果", "runner_result"),
     RUNNER_STATUS("运行状态", "runner_status"),
-    REPLIER_OVERVIEW("任务回复", "replier_overview")
+    REPLIER_OVERVIEW("任务回复", "replier_overview"),
+    OBSERVER_DEMAND("任务目标解析", "observer_demand"),
+    OBSERVER_HISTORY("现状观察", "observer_history"),
+    OBSERVER_JUDGEMENT("继续判断", "observer_judgement"),
+    OBSERVER_STATUS("观察状态", "observer_status"),
+    REASONER_TARGET("下一步目标", "reasoner_target"),
+    REASONER_ACTION("下一步动作", "reasoner_action"),
+    REASONER_ACCEPTANCE("验收条件", "reasoner_acceptance"),
+    ACTOR_TARGET("执行目标", "actor_target"),
+    ACTOR_PROCESS("执行过程", "actor_process"),
+    ACTOR_RESULT("执行结果", "actor_result"),
+    EVALUATOR_OVERVIEW("最终结论", "evaluator_overview")
     ;
 
     private String name;

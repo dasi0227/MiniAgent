@@ -59,6 +59,22 @@ public class ExecuteResponseEntity {
         return createResponse(REPLIER.getRole(), sectionType, sectionContent, null, null, sessionId);
     }
 
+    public static ExecuteResponseEntity createObserverResponse(String sectionType, String sectionContent, Integer round, String sessionId) {
+        return createResponse(OBSERVER.getRole(), sectionType, sectionContent, round, null, sessionId);
+    }
+
+    public static ExecuteResponseEntity createReasonerResponse(String sectionType, String sectionContent, Integer round, String sessionId) {
+        return createResponse(REASONER.getRole(), sectionType, sectionContent, round, null, sessionId);
+    }
+
+    public static ExecuteResponseEntity createActorResponse(String sectionType, String sectionContent, Integer round, String sessionId) {
+        return createResponse(ACTOR.getRole(), sectionType, sectionContent, round, null, sessionId);
+    }
+
+    public static ExecuteResponseEntity createEvaluatorResponse(String sectionType, String sectionContent, Integer round, String sessionId) {
+        return createResponse(EVALUATOR.getRole(), sectionType, sectionContent, round, null, sessionId);
+    }
+
     public static ExecuteResponseEntity createCompleteResponse(String sectionContent, String sessionId) {
         return createResponse("complete", null, sectionContent, null, null, sessionId);
     }

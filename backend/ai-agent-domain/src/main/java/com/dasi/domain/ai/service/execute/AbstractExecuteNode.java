@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import static com.dasi.domain.ai.model.enumeration.AiSectionType.EVALUATOR_OVERVIEW;
 import static com.dasi.domain.ai.model.enumeration.AiSectionType.REPLIER_OVERVIEW;
 import static com.dasi.domain.ai.model.enumeration.AiSectionType.SUMMARIZER_OVERVIEW;
 
@@ -65,7 +66,9 @@ public abstract class AbstractExecuteNode extends AbstractMultiThreadStrategyRou
         try {
             String payload = JSON.toJSONString(executeResponseEntity);
             persistUtil.saveWorkSseMessage(sessionId, payload);
-            if (SUMMARIZER_OVERVIEW.getType().equals(sectionType) || REPLIER_OVERVIEW.getType().equals(sectionType)) {
+            if (SUMMARIZER_OVERVIEW.getType().equals(sectionType)
+                    || REPLIER_OVERVIEW.getType().equals(sectionType)
+                    || EVALUATOR_OVERVIEW.getType().equals(sectionType)) {
                 persistUtil.saveWorkAssistantMessage(sessionId, executeResponseEntity.getSectionContent());
             }
         } catch (Exception e) {

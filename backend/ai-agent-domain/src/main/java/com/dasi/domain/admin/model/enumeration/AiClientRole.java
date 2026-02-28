@@ -17,6 +17,10 @@ public enum AiClientRole {
     PLANNER("任务规划专家", "planner"),
     RUNNER("任务运行专家", "runner"),
     REPLIER("任务回复专家", "replier"),
+    OBSERVER("任务观察专家", "observer"),
+    REASONER("任务推理专家", "reasoner"),
+    ACTOR("任务行动专家", "actor"),
+    EVALUATOR("任务评估专家", "evaluator"),
     ;
 
     private String name;

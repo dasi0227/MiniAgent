@@ -4,7 +4,7 @@ import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.model.entity.ExecuteResponseEntity;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
 import com.dasi.domain.ai.service.execute.IExecuteStrategy;
-import com.dasi.domain.ai.service.execute.loop.node.ExecuteLoopRootNode;
+import com.dasi.domain.ai.service.execute.react.node.ExecuteReactRootNode;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
