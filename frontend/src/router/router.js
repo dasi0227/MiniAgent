@@ -66,9 +66,9 @@ const routes = [
         }
     },
     {
-        // Disable public registration; unauthenticated users must login.
         path: '/register',
-        redirect: '/login',
+        name: 'register',
+        component: Auth,
         meta: {
             hideSidebar: true
         }
@@ -172,7 +172,7 @@ router.beforeEach((to, from, next) => {
 
     // Global auth gate: if not logged in, allow only the login pages.
     if (!auth.token) {
-        const allow = to.path === '/login' || to.path === '/admin/login';
+        const allow = to.path === '/login' || to.path === '/register' || to.path === '/admin/login';
         if (!allow) {
             next({ path: '/login', replace: true });
             return;

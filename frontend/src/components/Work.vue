@@ -184,11 +184,19 @@ const currentAgentId = computed({
     set: (value) => {
         const session = agentStore.currentSession;
         if (session?.sessionId) {
+            if (agentStore.isSessionSelectionLocked(session.sessionId)) {
+                return;
+            }
             agentStore.setSessionAgent(session.sessionId, value || '');
             return;
         }
         pendingAgentId.value = value || '';
     }
+});
+const isAgentLocked = computed(() => {
+    const sessionId = agentStore.currentSession?.sessionId || '';
+    if (!sessionId) return false;
+    return agentStore.isSessionSelectionLocked(sessionId);
 });
 
 const currentAgentLabel = computed(() => {
@@ -389,6 +397,12 @@ watch(
     { immediate: true }
 );
 
+watch(isAgentLocked, (locked) => {
+    if (locked) {
+        agentDropdownOpen.value = false;
+    }
+});
+
 watch(
     () => agentStore.currentSessionId,
     async (sessionId) => {
@@ -414,11 +428,12 @@ watch(
 );
 
 const toggleAgentDropdown = () => {
-    if (agentOptions.value.length === 0) return;
+    if (agentOptions.value.length === 0 || isAgentLocked.value) return;
     agentDropdownOpen.value = !agentDropdownOpen.value;
 };
 
 const selectAgent = async (value) => {
+    if (isAgentLocked.value) return;
     currentAgentId.value = value;
     agentDropdownOpen.value = false;
     try {
@@ -505,6 +520,8 @@ const sendMessage = async (options = {}) => {
     agentStore.setSending(true);
     const controller = new AbortController();
     agentStore.setAbortController(controller);
+    agentStore.setSessionSelectionLocked(validSession.sessionId, true);
+    agentDropdownOpen.value = false;
     agentStore.addUserMessage(content);
     renameSessionIfNeeded(validSession, content);
     if (!Object.prototype.hasOwnProperty.call(options, 'content')) {
@@ -621,11 +638,13 @@ const consumeWelcomeLaunchTask = async () => {
 
     if (task.agentId) {
         pendingAgentId.value = task.agentId;
-        currentAgentId.value = task.agentId;
-        try {
-            await dispatchArmory({ armoryType: 'work', armoryId: task.agentId });
-        } catch (error) {
-            console.warn('绑定 Work armory 失败', error);
+        if (!isAgentLocked.value) {
+            currentAgentId.value = task.agentId;
+            try {
+                await dispatchArmory({ armoryType: 'work', armoryId: task.agentId });
+            } catch (error) {
+                console.warn('绑定 Work armory 失败', error);
+            }
         }
     } else if (!currentAgentId.value && agentOptions.value.length > 0) {
         currentAgentId.value = agentOptions.value[0].value;
@@ -701,12 +720,18 @@ onBeforeUnmount(() => {
                         <div class="relative min-w-[220px]">
                             <div
                                 ref="agentSelectRef"
-                                class="inline-flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
-                                :class="agentOptions.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
+                                class="inline-flex min-h-[36px] w-full items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                                :class="agentOptions.length === 0 || isAgentLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'"
                                 @click="toggleAgentDropdown"
                             >
-                                <span class="inline-flex items-center gap-[6px]">
+                                <span class="inline-flex items-center gap-[8px]">
                                     <span class="font-bold text-[var(--text-primary)]">{{ currentAgentLabel }}</span>
+                                    <span
+                                        v-if="isAgentLocked"
+                                        class="rounded-full border border-[rgba(148,163,184,0.22)] bg-[rgba(241,245,249,0.95)] px-[8px] py-[2px] text-[11px] font-semibold text-[var(--text-secondary)]"
+                                    >
+                                        已锁定
+                                    </span>
                                 </span>
                                 <span
                                     class="caret transition-transform duration-150"

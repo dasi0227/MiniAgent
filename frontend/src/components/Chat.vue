@@ -201,11 +201,19 @@ const currentModel = computed({
     set: (value) => {
         const chat = chatStore.currentChat;
         if (chat?.sessionId) {
+            if (chatStore.isChatSelectionLocked(chat.sessionId)) {
+                return;
+            }
             chatStore.setChatClient(chat.sessionId, value || '');
             return;
         }
         pendingClientId.value = value || '';
     }
+});
+const isClientLocked = computed(() => {
+    const sessionId = chatStore.currentChat?.sessionId || '';
+    if (!sessionId) return false;
+    return chatStore.isChatSelectionLocked(sessionId);
 });
 
 const currentModelLabel = computed(() => {
@@ -375,6 +383,12 @@ watch(
     { immediate: true }
 );
 
+watch(isClientLocked, (locked) => {
+    if (locked) {
+        modelDropdownOpen.value = false;
+    }
+});
+
 const fetchTags = async () => {
     try {
         const resp = await queryRagTags();
@@ -491,11 +505,14 @@ const consumeWelcomeLaunchTask = async () => {
         await fetchModels();
     }
     if (task.clientId) {
-        currentModel.value = task.clientId;
-        try {
-            await dispatchArmory({ armoryType: 'chat', armoryId: task.clientId });
-        } catch (error) {
-            console.warn('绑定 Chat armory 失败', error);
+        pendingClientId.value = task.clientId;
+        if (!isClientLocked.value) {
+            currentModel.value = task.clientId;
+            try {
+                await dispatchArmory({ armoryType: 'chat', armoryId: task.clientId });
+            } catch (error) {
+                console.warn('绑定 Chat armory 失败', error);
+            }
         }
     } else if (!currentModel.value && models.value.length > 0) {
         currentModel.value = models.value[0].value;
@@ -744,6 +761,8 @@ const sendMessage = async (options = {}) => {
     chatStore.setSending(true);
     const controller = new AbortController();
     chatStore.setAbortController(controller);
+    chatStore.setChatSelectionLocked(sessionId, true);
+    modelDropdownOpen.value = false;
     chatStore.addUserMessage(content);
     renameChatIfNeeded(validChat, content);
     if (!Object.prototype.hasOwnProperty.call(options, 'content')) {
@@ -988,7 +1007,7 @@ const saveSettings = () => {
 const getContent = (message) => (message?.content ? message.content.toString() : '');
 
 const toggleModelDropdown = () => {
-    if (models.value.length === 0) return;
+    if (models.value.length === 0 || isClientLocked.value) return;
     mcpDropdownOpen.value = false;
     ragDropdownOpen.value = false;
     modelDropdownOpen.value = !modelDropdownOpen.value;
@@ -1010,6 +1029,7 @@ const toggleMcpSelection = (value) => {
 };
 
 const selectModel = async (value) => {
+    if (isClientLocked.value) return;
     currentModel.value = value;
     modelDropdownOpen.value = false;
     try {
@@ -1215,11 +1235,19 @@ const handleUpload = async () => {
                         <div class="relative min-w-[200px]">
                             <div
                                 ref="modelSelectRef"
-                                class="inline-flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
-                                :class="models.length === 0 ? 'cursor-not-allowed opacity-70' : ''"
+                                class="inline-flex min-h-[36px] w-full items-center justify-between gap-[10px] rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] shadow-[0_12px_30px_rgba(27,36,55,0.08)]"
+                                :class="models.length === 0 || isClientLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'"
                                 @click="toggleModelDropdown"
                             >
-                                <span class="font-bold text-[var(--text-primary)]">{{ currentModelLabel }}</span>
+                                <span class="inline-flex items-center gap-[8px]">
+                                    <span class="font-bold text-[var(--text-primary)]">{{ currentModelLabel }}</span>
+                                    <span
+                                        v-if="isClientLocked"
+                                        class="rounded-full border border-[rgba(148,163,184,0.22)] bg-[rgba(241,245,249,0.95)] px-[8px] py-[2px] text-[11px] font-semibold text-[var(--text-secondary)]"
+                                    >
+                                        已锁定
+                                    </span>
+                                </span>
                                 <span
                                     class="caret transition-transform duration-150"
                                     :class="modelDropdownOpen ? 'caret-open' : 'caret-closed'"

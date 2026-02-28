@@ -5,6 +5,8 @@ const AGENT_SETTINGS_KEY = 'agent_settings';
 const AUTH_KEY = 'auth_info';
 const CHAT_SESSION_CLIENT_KEY = 'chat_session_client_map';
 const WORK_SESSION_AGENT_KEY = 'work_session_agent_map';
+const CHAT_SESSION_LOCK_KEY = 'chat_session_lock_map';
+const WORK_SESSION_LOCK_KEY = 'work_session_lock_map';
 const APP_BASE = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
 const loadSessionBindingMap = (key) => {
@@ -53,6 +55,35 @@ const setPersistedSessionBinding = (storageKey, session, value) => {
 };
 
 const removePersistedSessionBinding = (storageKey, session) => {
+    const key = getSessionBindingKey(session);
+    if (!key) return;
+    const map = loadSessionBindingMap(storageKey);
+    if (Object.prototype.hasOwnProperty.call(map, key)) {
+        delete map[key];
+        saveSessionBindingMap(storageKey, map);
+    }
+};
+
+const getPersistedSessionLock = (storageKey, session) => {
+    const key = getSessionBindingKey(session);
+    if (!key) return false;
+    const map = loadSessionBindingMap(storageKey);
+    return Boolean(map[key]);
+};
+
+const setPersistedSessionLock = (storageKey, session, locked) => {
+    const key = getSessionBindingKey(session);
+    if (!key) return;
+    const map = loadSessionBindingMap(storageKey);
+    if (!locked) {
+        delete map[key];
+    } else {
+        map[key] = true;
+    }
+    saveSessionBindingMap(storageKey, map);
+};
+
+const removePersistedSessionLock = (storageKey, session) => {
     const key = getSessionBindingKey(session);
     if (!key) return;
     const map = loadSessionBindingMap(storageKey);
@@ -291,9 +322,14 @@ export const useChatStore = defineStore('chat', {
                 };
                 merged.messages = Array.isArray(merged.messages) ? merged.messages : [];
                 const persistedClientId = getPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, merged);
+                const persistedClientLocked = getPersistedSessionLock(CHAT_SESSION_LOCK_KEY, merged);
                 merged.clientId = merged.clientId || existing?.clientId || persistedClientId || '';
+                merged.clientLocked = Boolean(existing?.clientLocked || merged.clientLocked || persistedClientLocked);
                 if (merged.clientId) {
                     setPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, merged, merged.clientId);
+                }
+                if (merged.clientLocked) {
+                    setPersistedSessionLock(CHAT_SESSION_LOCK_KEY, merged, true);
                 }
                 return merged;
             });
@@ -305,24 +341,33 @@ export const useChatStore = defineStore('chat', {
         upsertChat(chat) {
             if (!chat) return;
             const persistedClientId = getPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, chat);
+            const persistedClientLocked = getPersistedSessionLock(CHAT_SESSION_LOCK_KEY, chat);
             const idx = this.chats.findIndex((item) => item.sessionId === chat.sessionId);
             if (idx === -1) {
                 const normalized = {
                     ...chat,
                     messages: Array.isArray(chat.messages) ? chat.messages : [],
-                    clientId: chat.clientId || persistedClientId || ''
+                    clientId: chat.clientId || persistedClientId || '',
+                    clientLocked: Boolean(chat.clientLocked || persistedClientLocked)
                 };
                 this.chats.unshift(normalized);
                 if (normalized.clientId) {
                     setPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, normalized, normalized.clientId);
                 }
+                if (normalized.clientLocked) {
+                    setPersistedSessionLock(CHAT_SESSION_LOCK_KEY, normalized, true);
+                }
             } else {
                 const merged = { ...this.chats[idx], ...chat };
                 merged.messages = Array.isArray(merged.messages) ? merged.messages : [];
                 merged.clientId = merged.clientId || persistedClientId || '';
+                merged.clientLocked = Boolean(merged.clientLocked || persistedClientLocked);
                 this.chats[idx] = merged;
                 if (merged.clientId) {
                     setPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, merged, merged.clientId);
+                }
+                if (merged.clientLocked) {
+                    setPersistedSessionLock(CHAT_SESSION_LOCK_KEY, merged, true);
                 }
             }
         },
@@ -338,6 +383,7 @@ export const useChatStore = defineStore('chat', {
             const target = this.chats[idx];
             this.chats.splice(idx, 1);
             removePersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, target);
+            removePersistedSessionLock(CHAT_SESSION_LOCK_KEY, target);
             if (this.currentChatId === chatId) {
                 this.currentChatId = this.chats[0]?.sessionId || null;
             }
@@ -354,6 +400,20 @@ export const useChatStore = defineStore('chat', {
                 chat.clientId = clientId || '';
                 setPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, chat, chat.clientId);
             }
+        },
+        setChatSelectionLocked(chatId, locked = true) {
+            const chat = this.chats.find((item) => item.sessionId === chatId);
+            if (!chat) return;
+            chat.clientLocked = Boolean(locked);
+            setPersistedSessionLock(CHAT_SESSION_LOCK_KEY, chat, chat.clientLocked);
+        },
+        isChatSelectionLocked(chatId) {
+            const chat = this.chats.find((item) => item.sessionId === chatId);
+            if (chat) {
+                return Boolean(chat.clientLocked);
+            }
+            if (!chatId) return false;
+            return Boolean(loadSessionBindingMap(CHAT_SESSION_LOCK_KEY)[chatId]);
         },
         addUserMessage(content) {
             const chat = this.currentChat;
@@ -441,9 +501,14 @@ export const useAgentStore = defineStore('agent', {
                 merged.messages = Array.isArray(merged.messages) ? merged.messages : [];
                 merged.cards = Array.isArray(merged.cards) ? merged.cards : [];
                 const persistedAgentId = getPersistedSessionBinding(WORK_SESSION_AGENT_KEY, merged);
+                const persistedAgentLocked = getPersistedSessionLock(WORK_SESSION_LOCK_KEY, merged);
                 merged.agentId = merged.agentId || existing?.agentId || persistedAgentId || '';
+                merged.agentLocked = Boolean(existing?.agentLocked || merged.agentLocked || persistedAgentLocked);
                 if (merged.agentId) {
                     setPersistedSessionBinding(WORK_SESSION_AGENT_KEY, merged, merged.agentId);
+                }
+                if (merged.agentLocked) {
+                    setPersistedSessionLock(WORK_SESSION_LOCK_KEY, merged, true);
                 }
                 return merged;
             });
@@ -455,26 +520,35 @@ export const useAgentStore = defineStore('agent', {
         upsertSession(session) {
             if (!session) return;
             const persistedAgentId = getPersistedSessionBinding(WORK_SESSION_AGENT_KEY, session);
+            const persistedAgentLocked = getPersistedSessionLock(WORK_SESSION_LOCK_KEY, session);
             const idx = this.sessions.findIndex((item) => item.sessionId === session.sessionId);
             if (idx === -1) {
                 const normalized = {
                     ...session,
                     messages: Array.isArray(session.messages) ? session.messages : [],
                     cards: Array.isArray(session.cards) ? session.cards : [],
-                    agentId: session.agentId || persistedAgentId || ''
+                    agentId: session.agentId || persistedAgentId || '',
+                    agentLocked: Boolean(session.agentLocked || persistedAgentLocked)
                 };
                 this.sessions.unshift(normalized);
                 if (normalized.agentId) {
                     setPersistedSessionBinding(WORK_SESSION_AGENT_KEY, normalized, normalized.agentId);
+                }
+                if (normalized.agentLocked) {
+                    setPersistedSessionLock(WORK_SESSION_LOCK_KEY, normalized, true);
                 }
             } else {
                 const merged = { ...this.sessions[idx], ...session };
                 merged.messages = Array.isArray(merged.messages) ? merged.messages : [];
                 merged.cards = Array.isArray(merged.cards) ? merged.cards : [];
                 merged.agentId = merged.agentId || persistedAgentId || '';
+                merged.agentLocked = Boolean(merged.agentLocked || persistedAgentLocked);
                 this.sessions[idx] = merged;
                 if (merged.agentId) {
                     setPersistedSessionBinding(WORK_SESSION_AGENT_KEY, merged, merged.agentId);
+                }
+                if (merged.agentLocked) {
+                    setPersistedSessionLock(WORK_SESSION_LOCK_KEY, merged, true);
                 }
             }
         },
@@ -490,6 +564,7 @@ export const useAgentStore = defineStore('agent', {
             const target = this.sessions[idx];
             this.sessions.splice(idx, 1);
             removePersistedSessionBinding(WORK_SESSION_AGENT_KEY, target);
+            removePersistedSessionLock(WORK_SESSION_LOCK_KEY, target);
             if (this.currentSessionId === sessionId) {
                 this.currentSessionId = this.sessions[0]?.sessionId || null;
             }
@@ -512,6 +587,20 @@ export const useAgentStore = defineStore('agent', {
                 session.agentId = agentId || '';
                 setPersistedSessionBinding(WORK_SESSION_AGENT_KEY, session, session.agentId);
             }
+        },
+        setSessionSelectionLocked(sessionId, locked = true) {
+            const session = this.sessions.find((item) => item.sessionId === sessionId);
+            if (!session) return;
+            session.agentLocked = Boolean(locked);
+            setPersistedSessionLock(WORK_SESSION_LOCK_KEY, session, session.agentLocked);
+        },
+        isSessionSelectionLocked(sessionId) {
+            const session = this.sessions.find((item) => item.sessionId === sessionId);
+            if (session) {
+                return Boolean(session.agentLocked);
+            }
+            if (!sessionId) return false;
+            return Boolean(loadSessionBindingMap(WORK_SESSION_LOCK_KEY)[sessionId]);
         },
         addUserMessage(content) {
             const session = this.currentSession;
