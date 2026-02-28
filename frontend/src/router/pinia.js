@@ -30,7 +30,6 @@ const saveSessionBindingMap = (key, map) => {
 const getSessionBindingKey = (session) => {
     if (!session || typeof session !== 'object') return '';
     if (session.sessionId) return String(session.sessionId);
-    if (session.id !== null && session.id !== undefined) return String(session.id);
     return '';
 };
 
@@ -99,14 +98,13 @@ const normalizeStoredUser = (user) => {
     if (!user || typeof user !== 'object') {
         return null;
     }
-    const userId = Number(user.userId);
     const username = typeof (user.username || user.userName) === 'string' ? String(user.username || user.userName).trim() : '';
     const role = typeof (user.role || user.userRole) === 'string' ? String(user.role || user.userRole).trim() : '';
-    if (!Number.isFinite(userId) || !username || !role) {
+    if (!username || !role) {
         return null;
     }
     return {
-        userId,
+        userId: Number.isFinite(Number(user.userId)) ? Number(user.userId) : null,
         username,
         role,
         userName: username,
@@ -275,7 +273,7 @@ export const useChatStore = defineStore('chat', {
     }),
     getters: {
         currentChat(state) {
-            const chat = state.chats.find((item) => item.id === state.currentChatId);
+            const chat = state.chats.find((item) => item.sessionId === state.currentChatId);
             return chat || state.chats[0] || null;
         },
         currentMessages(state) {
@@ -284,9 +282,9 @@ export const useChatStore = defineStore('chat', {
     },
     actions: {
         setChats(chats) {
-            const existingMap = new Map(this.chats.map((item) => [item.id, item]));
+            const existingMap = new Map(this.chats.map((item) => [item.sessionId, item]));
             const normalized = (Array.isArray(chats) ? chats : []).map((chat) => {
-                const existing = existingMap.get(chat?.id);
+                const existing = existingMap.get(chat?.sessionId);
                 const merged = {
                     ...(existing || {}),
                     ...(chat || {})
@@ -307,7 +305,7 @@ export const useChatStore = defineStore('chat', {
         upsertChat(chat) {
             if (!chat) return;
             const persistedClientId = getPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, chat);
-            const idx = this.chats.findIndex((item) => item.id === chat.id);
+            const idx = this.chats.findIndex((item) => item.sessionId === chat.sessionId);
             if (idx === -1) {
                 const normalized = {
                     ...chat,
@@ -329,29 +327,29 @@ export const useChatStore = defineStore('chat', {
             }
         },
         updateChatTitle(chatId, newTitle) {
-            const chat = this.chats.find((item) => item.id === chatId);
+            const chat = this.chats.find((item) => item.sessionId === chatId);
             if (chat) {
                 chat.title = newTitle || '未命名会话';
             }
         },
         removeChat(chatId) {
-            const idx = this.chats.findIndex((item) => item.id === chatId);
+            const idx = this.chats.findIndex((item) => item.sessionId === chatId);
             if (idx === -1) return;
             const target = this.chats[idx];
             this.chats.splice(idx, 1);
             removePersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, target);
             if (this.currentChatId === chatId) {
-                this.currentChatId = this.chats[0]?.id || null;
+                this.currentChatId = this.chats[0]?.sessionId || null;
             }
         },
         setChatMessages(chatId, messages) {
-            const chat = this.chats.find((item) => item.id === chatId);
+            const chat = this.chats.find((item) => item.sessionId === chatId);
             if (chat) {
                 chat.messages = Array.isArray(messages) ? messages : [];
             }
         },
         setChatClient(chatId, clientId) {
-            const chat = this.chats.find((item) => item.id === chatId);
+            const chat = this.chats.find((item) => item.sessionId === chatId);
             if (chat) {
                 chat.clientId = clientId || '';
                 setPersistedSessionBinding(CHAT_SESSION_CLIENT_KEY, chat, chat.clientId);
@@ -421,7 +419,7 @@ export const useAgentStore = defineStore('agent', {
     }),
     getters: {
         currentSession(state) {
-            const session = state.sessions.find((item) => item.id === state.currentSessionId);
+            const session = state.sessions.find((item) => item.sessionId === state.currentSessionId);
             return session || state.sessions[0] || null;
         },
         currentMessages() {
@@ -433,9 +431,9 @@ export const useAgentStore = defineStore('agent', {
     },
     actions: {
         setSessions(sessions) {
-            const existingMap = new Map(this.sessions.map((item) => [item.id, item]));
+            const existingMap = new Map(this.sessions.map((item) => [item.sessionId, item]));
             const normalized = (Array.isArray(sessions) ? sessions : []).map((session) => {
-                const existing = existingMap.get(session?.id);
+                const existing = existingMap.get(session?.sessionId);
                 const merged = {
                     ...(existing || {}),
                     ...(session || {})
@@ -457,7 +455,7 @@ export const useAgentStore = defineStore('agent', {
         upsertSession(session) {
             if (!session) return;
             const persistedAgentId = getPersistedSessionBinding(WORK_SESSION_AGENT_KEY, session);
-            const idx = this.sessions.findIndex((item) => item.id === session.id);
+            const idx = this.sessions.findIndex((item) => item.sessionId === session.sessionId);
             if (idx === -1) {
                 const normalized = {
                     ...session,
@@ -481,35 +479,35 @@ export const useAgentStore = defineStore('agent', {
             }
         },
         updateSessionTitle(sessionId, newTitle) {
-            const session = this.sessions.find((item) => item.id === sessionId);
+            const session = this.sessions.find((item) => item.sessionId === sessionId);
             if (session) {
                 session.title = newTitle || '未命名会话';
             }
         },
         removeSession(sessionId) {
-            const idx = this.sessions.findIndex((item) => item.id === sessionId);
+            const idx = this.sessions.findIndex((item) => item.sessionId === sessionId);
             if (idx === -1) return;
             const target = this.sessions[idx];
             this.sessions.splice(idx, 1);
             removePersistedSessionBinding(WORK_SESSION_AGENT_KEY, target);
             if (this.currentSessionId === sessionId) {
-                this.currentSessionId = this.sessions[0]?.id || null;
+                this.currentSessionId = this.sessions[0]?.sessionId || null;
             }
         },
         setSessionMessages(sessionId, messages) {
-            const session = this.sessions.find((item) => item.id === sessionId);
+            const session = this.sessions.find((item) => item.sessionId === sessionId);
             if (session) {
                 session.messages = Array.isArray(messages) ? messages : [];
             }
         },
         setSessionCards(sessionId, cards) {
-            const session = this.sessions.find((item) => item.id === sessionId);
+            const session = this.sessions.find((item) => item.sessionId === sessionId);
             if (session) {
                 session.cards = Array.isArray(cards) ? cards : [];
             }
         },
         setSessionAgent(sessionId, agentId) {
-            const session = this.sessions.find((item) => item.id === sessionId);
+            const session = this.sessions.find((item) => item.sessionId === sessionId);
             if (session) {
                 session.agentId = agentId || '';
                 setPersistedSessionBinding(WORK_SESSION_AGENT_KEY, session, session.agentId);

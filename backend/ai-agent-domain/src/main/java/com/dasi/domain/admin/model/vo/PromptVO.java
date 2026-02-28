@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PromptVO {
-    private Long id;
     private String promptId;
     private String promptName;
     private String systenPrompt;

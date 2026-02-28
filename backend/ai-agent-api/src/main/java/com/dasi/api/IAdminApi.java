@@ -20,7 +20,7 @@ public interface IAdminApi {
 
     Result<Void> apiUpdate(ApiManageDTO dto);
 
-    Result<Void> apiDelete(Long id);
+    Result<Void> apiDelete(String apiId);
 
     Result<PageResult<ModelVO>> modelPage(ModelPageDTO dto);
 
@@ -28,7 +28,7 @@ public interface IAdminApi {
 
     Result<Void> modelUpdate(ModelManageDTO dto);
 
-    Result<Void> modelDelete(Long id);
+    Result<Void> modelDelete(String modelId);
 
     Result<PageResult<McpVO>> mcpPage(McpPageDTO dto);
 
@@ -36,7 +36,7 @@ public interface IAdminApi {
 
     Result<Void> mcpUpdate(McpManageDTO dto);
 
-    Result<Void> mcpDelete(Long id);
+    Result<Void> mcpDelete(String mcpId);
 
     Result<PageResult<AdvisorVO>> advisorPage(AdvisorPageDTO dto);
 
@@ -44,7 +44,7 @@ public interface IAdminApi {
 
     Result<Void> advisorUpdate(AdvisorManageDTO dto);
 
-    Result<Void> advisorDelete(Long id);
+    Result<Void> advisorDelete(String advisorId);
 
     Result<PageResult<PromptVO>> promptPage(PromptPageDTO dto);
 
@@ -52,7 +52,7 @@ public interface IAdminApi {
 
     Result<Void> promptUpdate(PromptManageDTO dto);
 
-    Result<Void> promptDelete(Long id);
+    Result<Void> promptDelete(String promptId);
 
     Result<PageResult<ClientVO>> clientPage(ClientPageDTO dto);
 
@@ -60,9 +60,9 @@ public interface IAdminApi {
 
     Result<Void> clientUpdate(ClientManageDTO dto);
 
-    Result<Void> clientDelete(Long id);
+    Result<Void> clientDelete(String clientId);
 
-    Result<Void> clientToggle(Long id, Integer clientStatus);
+    Result<Void> clientToggle(String clientId, Integer clientStatus);
 
     Result<PageResult<AgentVO>> agentPage(AgentPageDTO dto);
 
@@ -72,9 +72,9 @@ public interface IAdminApi {
 
     Result<Void> agentUpdate(AgentManageDTO dto);
 
-    Result<Void> agentDelete(Long id);
+    Result<Void> agentDelete(String agentId);
 
-    Result<Void> agentToggle(Long id, Integer agentStatus);
+    Result<Void> agentToggle(String agentId, Integer agentStatus);
 
     Result<PageResult<UserVO>> userPage(UserPageDTO dto);
 
@@ -82,9 +82,9 @@ public interface IAdminApi {
 
     Result<Void> userUpdate(UserManageDTO dto);
 
-    Result<Void> userDelete(Long id);
+    Result<Void> userDelete(String userName);
 
-    Result<Void> userToggle(Long id, Integer userStatus);
+    Result<Void> userToggle(String userName, Integer userStatus);
 
     Result<Map<String, List<ConfigVO>>> configList(ConfigListDTO dto);
 
@@ -92,9 +92,9 @@ public interface IAdminApi {
 
     Result<Void> configUpdate(ConfigManageDTO dto);
 
-    Result<Void> configDelete(Long id);
+    Result<Void> configDelete(String clientId, String configType, String configValue);
 
-    Result<Void> configToggle(Long id, Integer configStatus);
+    Result<Void> configToggle(String clientId, String configType, String configValue, Integer configStatus);
 
     Result<List<ClientDetailVO>> flowClient();
 
@@ -104,7 +104,7 @@ public interface IAdminApi {
 
     Result<Void> flowUpdate(FlowManageDTO dto);
 
-    Result<Void> flowDelete(Long id);
+    Result<Void> flowDelete(String agentId, String clientId);
 
     Result<PageResult<TaskVO>> taskPage(TaskPageDTO dto);
 
@@ -112,9 +112,9 @@ public interface IAdminApi {
 
     Result<Void> taskUpdate(TaskManageDTO dto);
 
-    Result<Void> taskDelete(Long id);
+    Result<Void> taskDelete(String taskId);
 
-    Result<Void> taskToggle(Long id, Integer taskStatus);
+    Result<Void> taskToggle(String taskId, Integer taskStatus);
 
     Result<List<SessionVO>> listSession();
 

@@ -12,11 +12,11 @@ public interface IUserRepository {
 
     UserVO queryUserByUserName(String userName);
 
-    UserVO queryUserById(Long id);
+    UserVO queryUserById(Long userId);
 
     UserVO insertUser(String userName, String password);
 
-    UserVO updateUser(Long id, String userName, String password, String userAvatar);
+    UserVO updateUser(Long userId, String userName, String password, String userAvatar);
 
     List<UserApiVO> apiList(String keyword);
 
@@ -24,7 +24,7 @@ public interface IUserRepository {
 
     void apiUpdate(SettingApiDTO dto);
 
-    void apiDelete(Long id);
+    void apiDelete(String apiId);
 
     List<UserMcpVO> mcpList(String keyword);
 
@@ -32,6 +32,6 @@ public interface IUserRepository {
 
     void mcpUpdate(SettingMcpDTO dto);
 
-    void mcpDelete(Long id);
+    void mcpDelete(String mcpId);
 
 }

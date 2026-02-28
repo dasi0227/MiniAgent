@@ -71,20 +71,6 @@
         FROM ai_task
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               task_id,
-               agent_id,
-               task_cron,
-               task_desc,
-               task_param,
-               task_status,
-               create_time,
-               update_time
-        FROM ai_task
-        WHERE id = #{id}
-    </select>
-
     <select id="queryByTaskId" resultMap="dataMap">
         SELECT id,
                task_id,

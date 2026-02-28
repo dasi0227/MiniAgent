@@ -23,8 +23,6 @@ public interface IAiPromptDao {
 
     Integer countAll();
 
-    AiPrompt queryById(@Param("id") Long id);
-
     void insert(AiPrompt aiPrompt);
 
     void update(AiPrompt aiPrompt);

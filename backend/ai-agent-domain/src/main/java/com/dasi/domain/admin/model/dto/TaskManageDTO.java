@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TaskManageDTO {
 
-    private Long id;
-
     @NotBlank
     private String taskId;
 

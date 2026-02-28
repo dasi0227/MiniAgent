@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ModelVO {
-    private Long id;
     private String modelId;
     private String apiId;
     private String modelName;

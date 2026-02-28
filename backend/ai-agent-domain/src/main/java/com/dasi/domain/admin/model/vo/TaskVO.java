@@ -12,9 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaskVO {
-
-    private Long id;
-
     private String taskId;
 
     private String agentId;

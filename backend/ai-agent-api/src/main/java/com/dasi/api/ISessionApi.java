@@ -12,9 +12,9 @@ public interface ISessionApi {
 
     Result<SessionVO> insertSession(String sessionTitle, String sessionType);
 
-    Result<Void> updateSession(Long id, String sessionTitle);
+    Result<Void> updateSession(String sessionId, String sessionTitle);
 
-    Result<Void> deleteSession(Long id, String sessionId);
+    Result<Void> deleteSession(String sessionId);
 
     Result<List<MessageVO>> listChatMessage(String sessionId);
 

@@ -65,20 +65,6 @@
         FROM ai_api
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               api_id,
-               api_base_url,
-               api_key,
-               api_completions_path,
-               api_embeddings_path,
-               api_from,
-               create_time,
-               update_time
-        FROM ai_api
-        WHERE id = #{id}
-    </select>
-
     <select id="listApiId" resultType="java.lang.String">
         SELECT api_id
         FROM ai_api
@@ -111,10 +97,10 @@
         WHERE id = #{id}
     </update>
 
-    <delete id="deleteById">
+    <delete id="deleteByApiId">
         DELETE
         FROM ai_api
-        WHERE id = #{id}
+        WHERE api_id = #{apiId}
     </delete>
 
     <select id="listUserApi" resultType="com.dasi.infrastructure.persistent.po.AiUserApi">

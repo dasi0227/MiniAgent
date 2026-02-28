@@ -34,7 +34,7 @@ public interface IUserApi {
 
     Result<Void> apiUpdate(SettingApiDTO dto);
 
-    Result<Void> apiDelete(Long id);
+    Result<Void> apiDelete(String apiId);
 
     Result<List<UserMcpVO>> mcpList(String keyword);
 
@@ -42,5 +42,5 @@ public interface IUserApi {
 
     Result<Void> mcpUpdate(SettingMcpDTO dto);
 
-    Result<Void> mcpDelete(Long id);
+    Result<Void> mcpDelete(String mcpId);
 }

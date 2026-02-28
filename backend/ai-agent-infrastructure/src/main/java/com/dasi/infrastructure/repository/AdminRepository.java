@@ -190,13 +190,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_API_PREFIX, cacheClass = ApiVO.class, cacheType = CacheType.VALUE)
-    public ApiVO apiQuery(Long id) {
-        AiApi aiApi = aiApiDao.queryById(id);
-        return toApiVO(aiApi);
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_API_PREFIX, cacheClass = ApiVO.class, cacheType = CacheType.VALUE)
     public ApiVO apiQuery(String apiId) {
         return toApiVO(aiApiDao.queryByApiId(apiId));
     }
@@ -211,14 +204,19 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void apiUpdate(ApiManageDTO apiManageDTO) {
+        AiApi existed = aiApiDao.queryByApiId(apiManageDTO.getApiId());
+        if (existed == null) {
+            return;
+        }
         AiApi aiApi = toApiPO(apiManageDTO);
+        aiApi.setId(existed.getId());
         aiApiDao.update(aiApi);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void apiDelete(Long id) {
-        aiApiDao.deleteById(id);
+    public void apiDelete(String apiId) {
+        aiApiDao.deleteByApiId(apiId);
     }
 
     // -------------------- Model --------------------
@@ -249,13 +247,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_MODEL_PREFIX, cacheClass = ModelVO.class, cacheType = CacheType.VALUE)
-    public ModelVO modelQuery(Long id) {
-        AiModel po = aiModelDao.queryById(id);
-        return toModelVO(po);
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_MODEL_PREFIX, cacheClass = ModelVO.class, cacheType = CacheType.VALUE)
     public ModelVO modelQuery(String modelId) {
         return toModelVO(aiModelDao.queryByModelId(modelId));
     }
@@ -269,13 +260,19 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void modelUpdate(ModelManageDTO dto) {
-        aiModelDao.update(toModelPo(dto));
+        AiModel existed = aiModelDao.queryByModelId(dto.getModelId());
+        if (existed == null) {
+            return;
+        }
+        AiModel po = toModelPo(dto);
+        po.setId(existed.getId());
+        aiModelDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void modelDelete(Long id) {
-        aiModelDao.deleteById(id);
+    public void modelDelete(String modelId) {
+        aiModelDao.deleteByModelId(modelId);
     }
 
     // -------------------- MCP --------------------
@@ -298,12 +295,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_MCP_PREFIX, cacheClass = McpVO.class, cacheType = CacheType.VALUE)
-    public McpVO mcpQuery(Long id) {
-        return toMcpVO(aiMcpDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_MCP_PREFIX, cacheClass = McpVO.class, cacheType = CacheType.VALUE)
     public McpVO mcpQuery(String mcpId) {
         return toMcpVO(aiMcpDao.queryByMcpId(mcpId));
     }
@@ -317,13 +308,19 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void mcpUpdate(McpManageDTO dto) {
-        aiMcpDao.update(toMcpPo(dto));
+        AiMcp existed = aiMcpDao.queryByMcpId(dto.getMcpId());
+        if (existed == null) {
+            return;
+        }
+        AiMcp po = toMcpPo(dto);
+        po.setId(existed.getId());
+        aiMcpDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void mcpDelete(Long id) {
-        aiMcpDao.delete(id);
+    public void mcpDelete(String mcpId) {
+        aiMcpDao.deleteByMcpId(mcpId);
     }
 
     // -------------------- Advisor --------------------
@@ -346,12 +343,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_ADVISOR_PREFIX, cacheClass = AdvisorVO.class, cacheType = CacheType.VALUE)
-    public AdvisorVO advisorQuery(Long id) {
-        return toAdvisorVO(aiAdvisorDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_ADVISOR_PREFIX, cacheClass = AdvisorVO.class, cacheType = CacheType.VALUE)
     public AdvisorVO advisorQuery(String advisorId) {
         return toAdvisorVO(aiAdvisorDao.queryByAdvisorId(advisorId));
     }
@@ -365,13 +356,22 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void advisorUpdate(AdvisorManageDTO dto) {
-        aiAdvisorDao.update(toAdvisorPo(dto));
+        AiAdvisor existed = aiAdvisorDao.queryByAdvisorId(dto.getAdvisorId());
+        if (existed == null) {
+            return;
+        }
+        AiAdvisor po = toAdvisorPo(dto);
+        po.setId(existed.getId());
+        aiAdvisorDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void advisorDelete(Long id) {
-        aiAdvisorDao.delete(id);
+    public void advisorDelete(String advisorId) {
+        AiAdvisor po = aiAdvisorDao.queryByAdvisorId(advisorId);
+        if (po != null) {
+            aiAdvisorDao.delete(po.getId());
+        }
     }
 
     // -------------------- Prompt --------------------
@@ -394,12 +394,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_PROMPT_PREFIX, cacheClass = PromptVO.class, cacheType = CacheType.VALUE)
-    public PromptVO promptQuery(Long id) {
-        return toPromptVO(aiPromptDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_PROMPT_PREFIX, cacheClass = PromptVO.class, cacheType = CacheType.VALUE)
     public PromptVO promptQuery(String promptId) {
         return toPromptVO(aiPromptDao.queryByPromptId(promptId));
     }
@@ -413,13 +407,22 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void promptUpdate(PromptManageDTO dto) {
-        aiPromptDao.update(toPromptPo(dto));
+        AiPrompt existed = aiPromptDao.queryByPromptId(dto.getPromptId());
+        if (existed == null) {
+            return;
+        }
+        AiPrompt po = toPromptPo(dto);
+        po.setId(existed.getId());
+        aiPromptDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void promptDelete(Long id) {
-        aiPromptDao.delete(id);
+    public void promptDelete(String promptId) {
+        AiPrompt po = aiPromptDao.queryByPromptId(promptId);
+        if (po != null) {
+            aiPromptDao.delete(po.getId());
+        }
     }
 
     // -------------------- Client --------------------
@@ -442,12 +445,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_CLIENT_PREFIX, cacheClass = ClientVO.class, cacheType = CacheType.VALUE)
-    public ClientVO clientQuery(Long id) {
-        return toClientVO(aiClientDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_CLIENT_PREFIX, cacheClass = ClientVO.class, cacheType = CacheType.VALUE)
     public ClientVO clientQuery(String clientId) {
         return toClientVO(aiClientDao.queryByClientId(clientId));
     }
@@ -461,20 +458,30 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void clientUpdate(ClientManageDTO dto) {
-        aiClientDao.update(toClientPo(dto));
+        AiClient existed = aiClientDao.queryByClientId(dto.getClientId());
+        if (existed == null) {
+            return;
+        }
+        AiClient po = toClientPo(dto);
+        po.setId(existed.getId());
+        aiClientDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void clientDelete(Long id) {
-        aiClientDao.delete(id);
+    public void clientDelete(String clientId) {
+        aiClientDao.deleteByClientId(clientId);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void clientToggle(Long id, Integer status) {
+    public void clientToggle(String clientId, Integer status) {
+        AiClient existed = aiClientDao.queryByClientId(clientId);
+        if (existed == null) {
+            return;
+        }
         AiClient po = AiClient.builder()
-                .id(id)
+                .id(existed.getId())
                 .clientStatus(status)
                 .build();
         aiClientDao.toggle(po);
@@ -507,12 +514,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = AgentVO.class, cacheType = CacheType.VALUE)
-    public AgentVO agentQuery(Long id) {
-        return toAgentVO(aiAgentDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = AgentVO.class, cacheType = CacheType.VALUE)
     public AgentVO agentQuery(String agentId) {
         return toAgentVO(aiAgentDao.queryAgentByAgentId(agentId));
     }
@@ -526,20 +527,30 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void agentUpdate(AgentManageDTO dto) {
-        aiAgentDao.update(toAgentPo(dto));
+        AiAgent existed = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
+        if (existed == null) {
+            return;
+        }
+        AiAgent po = toAgentPo(dto);
+        po.setId(existed.getId());
+        aiAgentDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void agentDelete(Long id) {
-        aiAgentDao.delete(id);
+    public void agentDelete(String agentId) {
+        aiAgentDao.deleteByAgentId(agentId);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void agentToggle(Long id, Integer status) {
+    public void agentToggle(String agentId, Integer status) {
+        AiAgent existed = aiAgentDao.queryAgentByAgentId(agentId);
+        if (existed == null) {
+            return;
+        }
         AiAgent po = AiAgent.builder()
-                .id(id)
+                .id(existed.getId())
                 .agentStatus(status)
                 .build();
         aiAgentDao.toggle(po);
@@ -566,12 +577,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.VALUE)
-    public UserVO userQuery(Long id) {
-        return toUserVO(userDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.VALUE)
     public UserVO userQuery(String userName) {
         return toUserVO(userDao.queryByUserName(userName));
     }
@@ -585,19 +590,32 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void userUpdate(UserManageDTO dto) {
-        userDao.update(toUserPo(dto));
+        String originUserName = dto.getOriginUserName() == null ? dto.getUserName() : dto.getOriginUserName();
+        AiUser existed = userDao.queryByUserName(originUserName);
+        if (existed == null) {
+            return;
+        }
+        AiUser po = toUserPo(dto);
+        po.setId(existed.getId());
+        userDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void userDelete(Long id) {
-        userDao.delete(id);
+    public void userDelete(String userName) {
+        AiUser existed = userDao.queryByUserName(userName);
+        if (existed != null) {
+            userDao.delete(existed.getId());
+        }
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void userToggle(Long id, Integer status) {
-        userDao.toggle(id, status);
+    public void userToggle(String userName, Integer status) {
+        AiUser existed = userDao.queryByUserName(userName);
+        if (existed != null) {
+            userDao.toggle(existed.getId(), status);
+        }
     }
 
     // -------------------- Config --------------------
@@ -615,12 +633,6 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = ADMIN_CONFIG_PREFIX, cacheType = CacheType.VALUE, cacheClass = ConfigVO.class)
-    public ConfigVO configQuery(Long id) {
-        return toConfigVO(aiConfigDao.queryById(id));
-    }
-
-    @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void configInsert(ConfigManageDTO dto) {
         aiConfigDao.insert(toConfigPO(dto));
@@ -629,19 +641,34 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void configUpdate(ConfigManageDTO dto) {
-        aiConfigDao.update(toConfigPO(dto));
+        String originClientId = dto.getOriginClientId() == null ? dto.getClientId() : dto.getOriginClientId();
+        String originConfigType = dto.getOriginConfigType() == null ? dto.getConfigType() : dto.getOriginConfigType();
+        String originConfigValue = dto.getOriginConfigValue() == null ? dto.getConfigValue() : dto.getOriginConfigValue();
+        AiConfig existed = aiConfigDao.queryByUniqueKey(originClientId, originConfigType, originConfigValue);
+        if (existed == null) {
+            return;
+        }
+        AiConfig po = toConfigPO(dto);
+        po.setId(existed.getId());
+        aiConfigDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void configDelete(Long id) {
-        aiConfigDao.delete(id);
+    public void configDelete(String clientId, String configType, String configValue) {
+        AiConfig existed = aiConfigDao.queryByUniqueKey(clientId, configType, configValue);
+        if (existed != null) {
+            aiConfigDao.delete(existed.getId());
+        }
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void configToggle(Long id, Integer status) {
-        aiConfigDao.toggle(id, status);
+    public void configToggle(String clientId, String configType, String configValue, Integer status) {
+        AiConfig existed = aiConfigDao.queryByUniqueKey(clientId, configType, configValue);
+        if (existed != null) {
+            aiConfigDao.toggle(existed.getId(), status);
+        }
     }
 
     // -------------------- Flow --------------------
@@ -724,12 +751,6 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @Cacheable(cachePrefix = ADMIN_FLOW_PREFIX, cacheType = CacheType.VALUE, cacheClass = FlowVO.class)
-    public FlowVO flowQuery(Long id) {
-        return toFlowVO(aiFlowDao.queryById(id));
-    }
-
-    @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void flowInsert(FlowManageDTO dto) {
         aiFlowDao.insert(toFlowPO(dto));
@@ -738,13 +759,24 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void flowUpdate(FlowManageDTO dto) {
-        aiFlowDao.update(toFlowPO(dto));
+        String originAgentId = dto.getOriginAgentId() == null ? dto.getAgentId() : dto.getOriginAgentId();
+        String originClientId = dto.getOriginClientId() == null ? dto.getClientId() : dto.getOriginClientId();
+        AiFlow existed = aiFlowDao.queryByAgentIdAndClientId(originAgentId, originClientId);
+        if (existed == null) {
+            return;
+        }
+        AiFlow po = toFlowPO(dto);
+        po.setId(existed.getId());
+        aiFlowDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void flowDelete(Long id) {
-        aiFlowDao.delete(id);
+    public void flowDelete(String agentId, String clientId) {
+        AiFlow existed = aiFlowDao.queryByAgentIdAndClientId(agentId, clientId);
+        if (existed != null) {
+            aiFlowDao.delete(existed.getId());
+        }
     }
 
     // -------------------- Task --------------------
@@ -767,12 +799,6 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     @Cacheable(cachePrefix = ADMIN_TASK_PREFIX, cacheType = CacheType.VALUE, cacheClass = TaskVO.class)
-    public TaskVO taskQuery(Long id) {
-        return toTaskVO(aiTaskDao.queryById(id));
-    }
-
-    @Override
-    @Cacheable(cachePrefix = ADMIN_TASK_PREFIX, cacheType = CacheType.VALUE, cacheClass = TaskVO.class)
     public TaskVO taskQuery(String taskId) {
         return toTaskVO(aiTaskDao.queryByTaskId(taskId));
     }
@@ -786,20 +812,33 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void taskUpdate(TaskManageDTO dto) {
-        aiTaskDao.update(toTaskPO(dto));
+        AiTask existed = aiTaskDao.queryByTaskId(dto.getTaskId());
+        if (existed == null) {
+            return;
+        }
+        AiTask po = toTaskPO(dto);
+        po.setId(existed.getId());
+        aiTaskDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void taskDelete(Long id) {
-        aiTaskDao.delete(id);
+    public void taskDelete(String taskId) {
+        AiTask existed = aiTaskDao.queryByTaskId(taskId);
+        if (existed != null) {
+            aiTaskDao.delete(existed.getId());
+        }
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
-    public void taskToggle(Long id, Integer status) {
+    public void taskToggle(String taskId, Integer status) {
+        AiTask existed = aiTaskDao.queryByTaskId(taskId);
+        if (existed == null) {
+            return;
+        }
         AiTask po = AiTask.builder()
-                .id(id)
+                .id(existed.getId())
                 .taskStatus(status)
                 .build();
         aiTaskDao.toggle(po);
@@ -867,7 +906,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return ApiVO.builder()
-                .id(po.getId())
                 .apiId(po.getApiId())
                 .apiBaseUrl(po.getApiBaseUrl())
                 .apiKey(po.getApiKey())
@@ -879,7 +917,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiApi toApiPO(ApiManageDTO dto) {
         return AiApi.builder()
-                .id(dto.getId())
                 .apiId(dto.getApiId())
                 .apiBaseUrl(dto.getApiBaseUrl())
                 .apiKey(dto.getApiKey())
@@ -891,7 +928,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiModel toModelPo(ModelManageDTO dto) {
         return AiModel.builder()
-                .id(dto.getId())
                 .modelId(dto.getModelId())
                 .apiId(dto.getApiId())
                 .modelName(dto.getModelName())
@@ -905,7 +941,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return ModelVO.builder()
-                .id(po.getId())
                 .modelId(po.getModelId())
                 .apiId(po.getApiId())
                 .modelName(po.getModelName())
@@ -919,7 +954,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return McpVO.builder()
-                .id(po.getId())
                 .mcpId(po.getMcpId())
                 .mcpName(po.getMcpName())
                 .mcpType(po.getMcpType())
@@ -933,7 +967,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiMcp toMcpPo(McpManageDTO dto) {
         return AiMcp.builder()
-                .id(dto.getId())
                 .mcpId(dto.getMcpId())
                 .mcpName(dto.getMcpName())
                 .mcpType(dto.getMcpType())
@@ -950,7 +983,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return AdvisorVO.builder()
-                .id(po.getId())
                 .advisorId(po.getAdvisorId())
                 .advisorName(po.getAdvisorName())
                 .advisorType(po.getAdvisorType())
@@ -961,7 +993,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiAdvisor toAdvisorPo(AdvisorManageDTO dto) {
         return AiAdvisor.builder()
-                .id(dto.getId())
                 .advisorId(dto.getAdvisorId())
                 .advisorName(dto.getAdvisorName())
                 .advisorType(dto.getAdvisorType())
@@ -974,7 +1005,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return PromptVO.builder()
-                .id(po.getId())
                 .promptId(po.getPromptId())
                 .promptName(po.getPromptName())
                 .systenPrompt(po.getSystenPrompt())
@@ -984,7 +1014,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiPrompt toPromptPo(PromptManageDTO dto) {
         return AiPrompt.builder()
-                .id(dto.getId())
                 .promptId(dto.getPromptId())
                 .promptName(dto.getPromptName())
                 .systenPrompt(dto.getSystenPrompt())
@@ -996,7 +1025,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return ClientVO.builder()
-                .id(po.getId())
                 .clientId(po.getClientId())
                 .clientType(po.getClientType())
                 .clientRole(po.getClientRole())
@@ -1010,7 +1038,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiClient toClientPo(ClientManageDTO dto) {
         return AiClient.builder()
-                .id(dto.getId())
                 .clientId(dto.getClientId())
                 .clientType(dto.getClientType())
                 .clientRole(dto.getClientRole())
@@ -1027,7 +1054,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return AgentVO.builder()
-                .id(po.getId())
                 .agentId(po.getAgentId())
                 .agentName(po.getAgentName())
                 .agentType(po.getAgentType())
@@ -1040,7 +1066,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiAgent toAgentPo(AgentManageDTO dto) {
         return AiAgent.builder()
-                .id(dto.getId())
                 .agentId(dto.getAgentId())
                 .agentName(dto.getAgentName())
                 .agentType(dto.getAgentType())
@@ -1056,7 +1081,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return UserVO.builder()
-                .id(po.getId())
                 .userName(po.getUserName())
                 .userRole(po.getUserRole())
                 .userAvatar(po.getUserAvatar())
@@ -1067,7 +1091,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiUser toUserPo(UserManageDTO dto) {
         return AiUser.builder()
-                .id(dto.getId())
                 .userName(dto.getUserName())
                 .password(dto.getPassword())
                 .userRole(dto.getUserRole())
@@ -1078,7 +1101,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiConfig toConfigPO(ConfigManageDTO dto) {
         return AiConfig.builder()
-                .id(dto.getId())
                 .clientId(dto.getClientId())
                 .configType(dto.getConfigType())
                 .configValue(dto.getConfigValue())
@@ -1092,7 +1114,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return ConfigVO.builder()
-                .id(po.getId())
                 .clientId(po.getClientId())
                 .configType(po.getConfigType())
                 .configValue(po.getConfigValue())
@@ -1107,7 +1128,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return FlowVO.builder()
-                .id(po.getId())
                 .agentId(po.getAgentId())
                 .clientId(po.getClientId())
                 .clientRole(po.getClientRole())
@@ -1119,7 +1139,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiFlow toFlowPO(FlowManageDTO dto) {
         return AiFlow.builder()
-                .id(dto.getId())
                 .agentId(dto.getAgentId())
                 .clientId(dto.getClientId())
                 .clientRole(dto.getClientRole())
@@ -1133,7 +1152,6 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return TaskVO.builder()
-                .id(po.getId())
                 .taskId(po.getTaskId())
                 .agentId(po.getAgentId())
                 .taskCron(po.getTaskCron())
@@ -1146,7 +1164,6 @@ public class AdminRepository implements IAdminRepository {
 
     private AiTask toTaskPO(TaskManageDTO dto) {
         return AiTask.builder()
-                .id(dto.getId())
                 .taskId(dto.getTaskId())
                 .agentId(dto.getAgentId())
                 .taskCron(dto.getTaskCron())
@@ -1160,10 +1177,10 @@ public class AdminRepository implements IAdminRepository {
         if (session == null) {
             return null;
         }
+        AiUser user = session.getUserId() == null ? null : userDao.queryById(session.getUserId());
         return SessionVO.builder()
-                .id(session.getId())
                 .sessionId(session.getSessionId())
-                .sessionUser(session.getSessionUser())
+                .userName(user == null ? null : user.getUserName())
                 .sessionTitle(session.getSessionTitle())
                 .sessionType(session.getSessionType())
                 .createTime(session.getCreateTime())

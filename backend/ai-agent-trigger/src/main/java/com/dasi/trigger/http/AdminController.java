@@ -50,8 +50,8 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/api/delete")
-    public Result<Void> apiDelete(@RequestParam("id") Long id) {
-        adminService.apiDelete(id);
+    public Result<Void> apiDelete(@RequestParam("apiId") String apiId) {
+        adminService.apiDelete(apiId);
         return Result.success();
     }
 
@@ -74,8 +74,8 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/model/delete")
-    public Result<Void> modelDelete(@RequestParam("id") Long id) {
-        adminService.modelDelete(id);
+    public Result<Void> modelDelete(@RequestParam("modelId") String modelId) {
+        adminService.modelDelete(modelId);
         return Result.success();
     }
 
@@ -98,8 +98,8 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/mcp/delete")
-    public Result<Void> mcpDelete(@RequestParam("id") Long id) {
-        adminService.mcpDelete(id);
+    public Result<Void> mcpDelete(@RequestParam("mcpId") String mcpId) {
+        adminService.mcpDelete(mcpId);
         return Result.success();
     }
 
@@ -122,8 +122,8 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/advisor/delete")
-    public Result<Void> advisorDelete(@RequestParam("id") Long id) {
-        adminService.advisorDelete(id);
+    public Result<Void> advisorDelete(@RequestParam("advisorId") String advisorId) {
+        adminService.advisorDelete(advisorId);
         return Result.success();
     }
 
@@ -146,8 +146,8 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/prompt/delete")
-    public Result<Void> promptDelete(@RequestParam("id") Long id) {
-        adminService.promptDelete(id);
+    public Result<Void> promptDelete(@RequestParam("promptId") String promptId) {
+        adminService.promptDelete(promptId);
         return Result.success();
     }
 
@@ -170,14 +170,14 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/client/delete")
-    public Result<Void> clientDelete(@RequestParam("id") Long id) {
-        adminService.clientDelete(id);
+    public Result<Void> clientDelete(@RequestParam("clientId") String clientId) {
+        adminService.clientDelete(clientId);
         return Result.success();
     }
 
     @PostMapping("/client/toggle")
-    public Result<Void> clientToggle(@RequestParam("id") Long id, @RequestParam("clientStatus") Integer clientStatus) {
-        adminService.clientToggle(id, clientStatus);
+    public Result<Void> clientToggle(@RequestParam("clientId") String clientId, @RequestParam("clientStatus") Integer clientStatus) {
+        adminService.clientToggle(clientId, clientStatus);
         return Result.success();
     }
 
@@ -205,14 +205,14 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/agent/delete")
-    public Result<Void> agentDelete(@RequestParam("id") Long id) {
-        adminService.agentDelete(id);
+    public Result<Void> agentDelete(@RequestParam("agentId") String agentId) {
+        adminService.agentDelete(agentId);
         return Result.success();
     }
 
     @PostMapping("/agent/toggle")
-    public Result<Void> agentToggle(@RequestParam("id") Long id, @RequestParam("agentStatus") Integer agentStatus) {
-        adminService.agentToggle(id, agentStatus);
+    public Result<Void> agentToggle(@RequestParam("agentId") String agentId, @RequestParam("agentStatus") Integer agentStatus) {
+        adminService.agentToggle(agentId, agentStatus);
         return Result.success();
     }
 
@@ -235,14 +235,14 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/user/delete")
-    public Result<Void> userDelete(@RequestParam("id") Long id) {
-        adminService.userDelete(id);
+    public Result<Void> userDelete(@RequestParam("userName") String userName) {
+        adminService.userDelete(userName);
         return Result.success();
     }
 
     @PostMapping("/user/toggle")
-    public Result<Void> userToggle(@RequestParam("id") Long id, @RequestParam("userStatus") Integer userStatus) {
-        adminService.userToggle(id, userStatus);
+    public Result<Void> userToggle(@RequestParam("userName") String userName, @RequestParam("userStatus") Integer userStatus) {
+        adminService.userToggle(userName, userStatus);
         return Result.success();
     }
 
@@ -265,14 +265,19 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/config/delete")
-    public Result<Void> configDelete(@RequestParam("id") Long id) {
-        adminService.configDelete(id);
+    public Result<Void> configDelete(@RequestParam("clientId") String clientId,
+                                     @RequestParam("configType") String configType,
+                                     @RequestParam("configValue") String configValue) {
+        adminService.configDelete(clientId, configType, configValue);
         return Result.success();
     }
 
     @PostMapping("/config/toggle")
-    public Result<Void> configToggle(@RequestParam("id") Long id, @RequestParam("configStatus") Integer configStatus) {
-        adminService.configToggle(id, configStatus);
+    public Result<Void> configToggle(@RequestParam("clientId") String clientId,
+                                     @RequestParam("configType") String configType,
+                                     @RequestParam("configValue") String configValue,
+                                     @RequestParam("configStatus") Integer configStatus) {
+        adminService.configToggle(clientId, configType, configValue, configStatus);
         return Result.success();
     }
 
@@ -300,8 +305,8 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/flow/delete")
-    public Result<Void> flowDelete(@RequestParam("id") Long id) {
-        adminService.flowDelete(id);
+    public Result<Void> flowDelete(@RequestParam("agentId") String agentId, @RequestParam("clientId") String clientId) {
+        adminService.flowDelete(agentId, clientId);
         return Result.success();
     }
 
@@ -324,14 +329,14 @@ public class AdminController implements IAdminApi {
     }
 
     @PostMapping("/task/delete")
-    public Result<Void> taskDelete(@RequestParam("id") Long id) {
-        adminService.taskDelete(id);
+    public Result<Void> taskDelete(@RequestParam("taskId") String taskId) {
+        adminService.taskDelete(taskId);
         return Result.success();
     }
 
     @PostMapping("/task/toggle")
-    public Result<Void> taskToggle(@RequestParam("id") Long id, @RequestParam("taskStatus") Integer taskStatus) {
-        adminService.taskToggle(id, taskStatus);
+    public Result<Void> taskToggle(@RequestParam("taskId") String taskId, @RequestParam("taskStatus") Integer taskStatus) {
+        adminService.taskToggle(taskId, taskStatus);
         return Result.success();
     }
 

@@ -12,7 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ConfigManageDTO {
 
-    private Long id;
+    private String originClientId;
+
+    private String originConfigType;
+
+    private String originConfigValue;
 
     @NotBlank
     private String clientId;

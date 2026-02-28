@@ -22,13 +22,9 @@ public interface IAiModelDao {
 
     Integer countAll();
 
-    AiModel queryById(@Param("id") Long id);
-
     void insert(AiModel aiModel);
 
     void update(AiModel aiModel);
-
-    void deleteById(@Param("id") Long id);
 
     void deleteByModelId(@Param("modelId") String modelId);
 

@@ -71,19 +71,6 @@
         FROM ai_model
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               model_id,
-               api_id,
-               model_name,
-               model_type,
-               model_from,
-               create_time,
-               update_time
-        FROM ai_model
-        WHERE id = #{id}
-    </select>
-
     <select id="queryModelIdByApiId" resultType="java.lang.String">
         SELECT model_id
         FROM ai_model
@@ -118,12 +105,6 @@
         </set>
         WHERE id = #{id}
     </update>
-
-    <delete id="deleteById">
-        DELETE
-        FROM ai_model
-        WHERE id = #{id}
-    </delete>
 
     <delete id="deleteByModelId">
         DELETE

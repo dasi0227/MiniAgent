@@ -128,22 +128,6 @@
         FROM ai_client
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               client_id,
-               client_type,
-               client_role,
-               model_id,
-               model_name,
-               client_name,
-               client_status,
-               client_from,
-               create_time,
-               update_time
-        FROM ai_client
-        WHERE id = #{id}
-    </select>
-
     <select id="queryClientIdByModelId" resultType="java.lang.String">
         SELECT client_id
         FROM ai_client
@@ -188,12 +172,6 @@
         SET client_status = #{clientStatus}
         WHERE id = #{id}
     </update>
-
-    <delete id="delete">
-        DELETE
-        FROM ai_client
-        WHERE id = #{id}
-    </delete>
 
     <delete id="deleteByClientId">
         DELETE

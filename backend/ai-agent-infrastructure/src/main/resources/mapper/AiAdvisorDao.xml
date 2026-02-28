@@ -66,18 +66,6 @@
         FROM ai_advisor
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               advisor_id,
-               advisor_name,
-               advisor_type,
-               advisor_param,
-               create_time,
-               update_time
-        FROM ai_advisor
-        WHERE id = #{id}
-    </select>
-
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiAdvisor">
         INSERT INTO ai_advisor (advisor_id,
                                 advisor_name,

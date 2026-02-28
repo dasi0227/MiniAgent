@@ -33,8 +33,6 @@ public interface IAiConfigDao {
                               @Param("configType") String configType,
                               @Param("configValue") String configValue);
 
-    AiConfig queryById(@Param("id") Long id);
-
     void insert(AiConfig aiConfig);
 
     void update(AiConfig aiConfig);

@@ -37,52 +37,52 @@ public class SessionService implements ISessionService {
 
     @Override
     public List<SessionVO> listSession() {
-        return sessionRepository.listSession(userContext.getUserName());
+        return sessionRepository.listSession(requireUserId());
     }
 
     @Override
     public SessionVO insertSession(String sessionTitle, String sessionType) {
-        String sessionUser = userContext.getUserName();
+        Long userId = requireUserId();
 
-        int count = sessionRepository.countSessionByType(sessionUser, sessionType);
+        int count = sessionRepository.countSessionByType(userId, sessionType);
         if (count >= CHAT_SESSION_LIMIT) {
             throw new SessionException("每种类型最多 3 个会话");
         }
 
         String sessionId = generateSessionId(sessionType);
-        sessionRepository.insertSession(sessionId, sessionUser, sessionTitle, sessionType);
+        sessionRepository.insertSession(sessionId, userId, sessionTitle, sessionType);
         return sessionRepository.querySessionBySessionId(sessionId);
     }
 
     @Override
-    public void updateSession(Long id, String sessionTitle) {
-        SessionVO sessionVO = requireSession(id);
-        String sessionUser = requireUser();
-        if (!sessionUser.equals(sessionVO.getSessionUser())) {
+    public void updateSession(String sessionId, String sessionTitle) {
+        requireSession(sessionId);
+        Long userId = requireUserId();
+        if (!userId.equals(requireOwnerId(sessionId))) {
             throw new SessionException("无权限修改该会话");
         }
 
         String title = StringUtils.hasText(sessionTitle) ? sessionTitle.trim() : "未命名会话";
-        sessionRepository.updateSessionTitle(id, title);
+        sessionRepository.updateSessionTitle(sessionId, title);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteSession(Long id, String sessionId) {
-        SessionVO sessionVO = requireSession(sessionId);
-        String sessionUser = requireUser();
-        if (!sessionUser.equals(sessionVO.getSessionUser())) {
+    public void deleteSession(String sessionId) {
+        requireSession(sessionId);
+        Long userId = requireUserId();
+        if (!userId.equals(requireOwnerId(sessionId))) {
             throw new SessionException("无权限修改该会话");
         }
 
-        sessionRepository.deleteSession(id, sessionId);
+        sessionRepository.deleteSession(sessionId);
     }
 
     @Override
     public List<MessageVO> listChatMessage(String sessionId) {
-        SessionVO sessionVO = requireSession(sessionId);
-        String sessionUser = requireUser();
-        if (notAdmin() && !sessionUser.equals(sessionVO.getSessionUser())) {
+        requireSession(sessionId);
+        Long userId = requireUserId();
+        if (notAdmin() && !userId.equals(requireOwnerId(sessionId))) {
             throw new SessionException("无权限修改该会话");
         }
 
@@ -91,9 +91,9 @@ public class SessionService implements ISessionService {
 
     @Override
     public List<MessageVO> listWorkSseMessage(String sessionId) {
-        SessionVO sessionVO = requireSession(sessionId);
-        String sessionUser = requireUser();
-        if (notAdmin() && !sessionUser.equals(sessionVO.getSessionUser())) {
+        requireSession(sessionId);
+        Long userId = requireUserId();
+        if (notAdmin() && !userId.equals(requireOwnerId(sessionId))) {
             throw new SessionException("无权限修改该会话");
         }
 
@@ -102,9 +102,9 @@ public class SessionService implements ISessionService {
 
     @Override
     public List<MessageVO> listWorkAnswerMessage(String sessionId) {
-        SessionVO sessionVO = requireSession(sessionId);
-        String sessionUser = requireUser();
-        if (notAdmin() && !sessionUser.equals(sessionVO.getSessionUser())) {
+        requireSession(sessionId);
+        Long userId = requireUserId();
+        if (notAdmin() && !userId.equals(requireOwnerId(sessionId))) {
             throw new SessionException("无权限修改该会话");
         }
 
@@ -132,11 +132,11 @@ public class SessionService implements ISessionService {
         }
 
         if (!UserRoleType.ADMIN.getType().equals(role)) {
-            String sessionUser = userContext.getUserName();
-            if (!StringUtils.hasText(sessionUser)) {
+            Long userId = userContext.getUserId();
+            if (userId == null) {
                 return "用户信息缺失";
             }
-            if (!sessionUser.equals(sessionVO.getSessionUser())) {
+            if (!userId.equals(requireOwnerId(sessionId))) {
                 return "无权限访问该会话";
             }
         }
@@ -153,14 +153,6 @@ public class SessionService implements ISessionService {
     }
 
 
-    private SessionVO requireSession(Long id) {
-        SessionVO session = sessionRepository.querySessionById(id);
-        if (session == null) {
-            throw new SessionException("会话不存在");
-        }
-        return session;
-    }
-
     private SessionVO requireSession(String sessionId) {
         SessionVO session = sessionRepository.querySessionBySessionId(sessionId);
         if (session == null) {
@@ -169,12 +161,20 @@ public class SessionService implements ISessionService {
         return session;
     }
 
-    private String requireUser() {
-        String userName = userContext.getUserName();
-        if (!StringUtils.hasText(userName)) {
+    private Long requireOwnerId(String sessionId) {
+        Long ownerId = sessionRepository.querySessionOwnerId(sessionId);
+        if (ownerId == null) {
+            throw new SessionException("会话不存在");
+        }
+        return ownerId;
+    }
+
+    private Long requireUserId() {
+        Long userId = userContext.getUserId();
+        if (userId == null) {
             throw new SessionException("用户信息缺失");
         }
-        return userName;
+        return userId;
     }
 
     private String generateSessionId(String type) {

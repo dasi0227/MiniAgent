@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ConfigVO {
-    private Long id;
     private String clientId;
     private String configType;
     private String configValue;

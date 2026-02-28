@@ -12,6 +12,7 @@ import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.domain.workspace.repository.IWorkspaceRepository;
+import com.dasi.types.annotation.CacheEvict;
 import com.dasi.types.result.PageResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.dasi.types.constant.RedisConstant.QUERY_WORK_AGENT_KEY;
 
 @Slf4j
 @Service
@@ -81,12 +84,14 @@ public class WorkspaceService implements IWorkspaceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(keyPrefix = {QUERY_WORK_AGENT_KEY})
     public void agentFork(String templateId) {
         workspaceRepository.agentFork(templateId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(keyPrefix = {QUERY_WORK_AGENT_KEY})
     public void agentBaseUpdate(AgentBaseUpdateDTO dto) {
         workspaceRepository.agentBaseUpdate(dto);
     }
@@ -110,6 +115,7 @@ public class WorkspaceService implements IWorkspaceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(keyPrefix = {QUERY_WORK_AGENT_KEY})
     public void agentDelete(String agentId) {
         workspaceRepository.agentDelete(agentId);
     }

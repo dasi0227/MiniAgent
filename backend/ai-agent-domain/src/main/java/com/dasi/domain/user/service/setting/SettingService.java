@@ -87,7 +87,7 @@ public class SettingService implements ISettingService {
             }
         }
 
-        userVO = userRepository.updateUser(userVO.getId(), userName, newPassword, newAvatar);
+        userVO = userRepository.updateUser(userVO.getUserId(), userName, newPassword, newAvatar);
         return buildAuthResponse(userVO);
     }
 
@@ -95,7 +95,6 @@ public class SettingService implements ISettingService {
         String token = jwtUtil.generateToken(userVO);
         return AuthVO.builder()
                 .token(token)
-                .userId(userVO.getId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
                 .userAvatar(ossUtil.getObjectUrl(userVO.getUserAvatar()))
@@ -124,8 +123,8 @@ public class SettingService implements ISettingService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiDelete(Long id) {
-        userRepository.apiDelete(id);
+    public void apiDelete(String apiId) {
+        userRepository.apiDelete(apiId);
     }
 
 
@@ -146,7 +145,7 @@ public class SettingService implements ISettingService {
     }
 
     @Override
-    public void mcpDelete(Long id) {
-        userRepository.mcpDelete(id);
+    public void mcpDelete(String mcpId) {
+        userRepository.mcpDelete(mcpId);
     }
 }

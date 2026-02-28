@@ -16,25 +16,15 @@ const requireText = (value, field) => {
     return normalized;
 };
 
-const requireNumber = (value, field) => {
-    const normalized = Number(value);
-    if (!Number.isFinite(normalized)) {
-        throw new Error(`登录信息异常：${field} 缺失`);
-    }
-    return normalized;
-};
-
 export const parseAuthPayload = (resp) => {
     const payload = pickResultData(resp);
     const token = requireText(payload?.token, 'token');
-    const userId = requireNumber(payload?.userId, 'userId');
     const username = requireText(payload?.username || payload?.userName, 'username');
     const role = requireText(payload?.role || payload?.userRole, 'role');
 
     return {
         token,
         user: {
-            userId,
             username,
             role,
             userName: username,

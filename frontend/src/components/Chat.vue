@@ -87,9 +87,8 @@ const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() 
 const mapSession = (session) => {
     if (!session) return null;
     return {
-        id: session.id,
         sessionId: session.sessionId,
-        sessionUser: session.sessionUser,
+        sessionUser: session.userName || session.sessionUser || '',
         title: session.sessionTitle || '新会话',
         sessionType: normalizeSessionType(session.sessionType || session.type),
         createdAt: session.createTime ? Date.parse(session.createTime) : Date.now(),
@@ -137,9 +136,9 @@ const ensureChatSessionValid = async (chat) => {
     if (!chat?.sessionId) return null;
     try {
         const chatList = await listRemoteChatSessions();
-        const matched = chatList.find((item) => item.sessionId === chat.sessionId || item.id === chat.id);
+        const matched = chatList.find((item) => item.sessionId === chat.sessionId);
         if (!matched) {
-            dropInvalidChatSession(chat.id);
+            dropInvalidChatSession(chat.sessionId);
             return null;
         }
         return matched;
@@ -201,8 +200,8 @@ const currentModel = computed({
     },
     set: (value) => {
         const chat = chatStore.currentChat;
-        if (chat?.id) {
-            chatStore.setChatClient(chat.id, value || '');
+        if (chat?.sessionId) {
+            chatStore.setChatClient(chat.sessionId, value || '');
             return;
         }
         pendingClientId.value = value || '';
@@ -281,8 +280,8 @@ const loadChatMessages = async (sessionId, chatId = chatStore.currentChatId) => 
 
 const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, sessionTitle = '新会话' } = {}) => {
     if (!forceNew && chatStore.currentChat) {
-        if (!chatStore.currentChatId && chatStore.currentChat?.id) {
-            chatStore.setCurrentChatId(chatStore.currentChat.id);
+        if (!chatStore.currentChatId && chatStore.currentChat?.sessionId) {
+            chatStore.setCurrentChatId(chatStore.currentChat.sessionId);
         }
         return chatStore.currentChat;
     }
@@ -294,14 +293,14 @@ const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, se
             chatStore.upsertChat(created);
             if (!resolvedChat.sessionId) {
                 const chatList = await refreshChatSessions();
-                resolvedChat = chatList.find((item) => item.id === created.id) || resolvedChat;
+                resolvedChat = chatList.find((item) => item.sessionId === created.sessionId) || resolvedChat;
             }
             if (skipInitialLoad) {
-                skipNextLoadChatId.value = resolvedChat.id;
+                skipNextLoadChatId.value = resolvedChat.sessionId;
             }
-            chatStore.setCurrentChatId(resolvedChat.id);
+            chatStore.setCurrentChatId(resolvedChat.sessionId);
             if (pendingClientId.value) {
-                chatStore.setChatClient(resolvedChat.id, pendingClientId.value);
+                chatStore.setChatClient(resolvedChat.sessionId, pendingClientId.value);
             }
             return resolvedChat;
         }
@@ -309,9 +308,9 @@ const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, se
         const session = chatList[0] || null;
         if (!session) return null;
         if (skipInitialLoad) {
-            skipNextLoadChatId.value = session.id;
+            skipNextLoadChatId.value = session.sessionId;
         }
-        chatStore.setCurrentChatId(session.id);
+        chatStore.setCurrentChatId(session.sessionId);
         return session;
     } catch (error) {
         sendError.value = normalizeError(error).message || '创建会话失败';
@@ -323,9 +322,9 @@ const renameChatIfNeeded = async (chat, content) => {
     if (!chat) return;
     if (chat.title && chat.title !== '新会话') return;
     const nextTitle = content.slice(0, 20) || '新会话';
-    chatStore.updateChatTitle(chat.id, nextTitle);
+    chatStore.updateChatTitle(chat.sessionId, nextTitle);
     try {
-        await updateSession({ id: chat.id, sessionTitle: nextTitle });
+        await updateSession({ sessionId: chat.sessionId, sessionTitle: nextTitle });
     } catch (error) {
         sendError.value = normalizeError(error).message || '更新会话失败';
     }
@@ -418,7 +417,7 @@ const fetchModels = async () => {
                     return { label: item, value: item, sourceType: 'system' };
                 }
                 if (item && typeof item === 'object') {
-                    const clientId = item.clientId || item.modelId || item.id || '';
+                    const clientId = item.clientId || item.modelId || '';
                     const modelName = item.modelName || item.name || clientId;
                     const sourceType = item.sourceType || 'system';
                     if (!clientId) return null;
@@ -460,7 +459,7 @@ const fetchMcpTools = async () => {
         const normalized = list
             .map((item) => {
                 if (!item || typeof item !== 'object') return null;
-                const mcpId = item.mcpId || item.id || '';
+                const mcpId = item.mcpId || '';
                 const mcpName = item.mcpName || item.name || mcpId;
                 const mcpDesc = item.mcpDesc || item.desc || '';
                 const sourceType = item.sourceType || 'system';
@@ -545,7 +544,7 @@ onMounted(() => {
         const session = chatStore.currentChat;
         const sessionId = session?.sessionId || '';
         if (!sessionId) return;
-        await loadChatMessages(sessionId, session?.id);
+        await loadChatMessages(sessionId, session?.sessionId);
     }, 5000);
 });
 
@@ -728,8 +727,8 @@ const sendMessage = async (options = {}) => {
     if (!chat) return;
     const validChat = await ensureChatSessionValid(chat);
     if (!validChat) return;
-    if (validChat?.id) {
-        chatStore.setChatClient(validChat.id, resolvedClientId);
+    if (validChat?.sessionId) {
+        chatStore.setChatClient(validChat.sessionId, resolvedClientId);
     }
     if (userMessageCount.value >= 20) {
         sendError.value = '当前会话已达到 20 条用户消息上限，请新建会话';

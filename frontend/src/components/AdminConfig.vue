@@ -30,7 +30,9 @@ const modalVisible = ref(false);
 const modalError = ref('');
 const editingId = ref(null);
 const currentForm = reactive({
-    id: null,
+    originClientId: '',
+    originConfigType: '',
+    originConfigValue: '',
     clientId: '',
     configType: '',
     configValue: '',
@@ -83,7 +85,9 @@ const openCreate = (clientId = '') => {
     editingId.value = null;
     modalError.value = '';
     Object.assign(currentForm, {
-        id: null,
+        originClientId: '',
+        originConfigType: '',
+        originConfigValue: '',
         clientId: clientId || '',
         configType: '',
         configValue: '',
@@ -94,9 +98,18 @@ const openCreate = (clientId = '') => {
 };
 
 const openEdit = (row) => {
-    editingId.value = row.id;
+    editingId.value = `${row.clientId || ''}::${row.configType || ''}::${row.configValue || ''}`;
     modalError.value = '';
-    Object.assign(currentForm, row);
+    Object.assign(currentForm, {
+        originClientId: row.clientId || '',
+        originConfigType: row.configType || '',
+        originConfigValue: row.configValue || '',
+        clientId: row.clientId || '',
+        configType: row.configType || '',
+        configValue: row.configValue || '',
+        configParam: row.configParam || '',
+        configStatus: row.configStatus ?? 1
+    });
     modalVisible.value = true;
 };
 
@@ -132,7 +145,11 @@ const saveForm = async () => {
 const handleDelete = async (row) => {
     if (!window.confirm('确认删除该配置？')) return;
     try {
-        const res = await configDelete(row.id);
+        const res = await configDelete({
+            clientId: row.clientId,
+            configType: row.configType,
+            configValue: row.configValue
+        });
         unwrapResult(res, '删除失败');
         await fetchList();
     } catch (err) {
@@ -145,7 +162,14 @@ const switchStatus = async (row, val) => {
     const old = row.configStatus;
     row.configStatus = val;
     try {
-        const res = await configToggle(row.id, val);
+        const res = await configToggle(
+            {
+                clientId: row.clientId,
+                configType: row.configType,
+                configValue: row.configValue
+            },
+            val
+        );
         unwrapResult(res, '更新状态失败');
     } catch (err) {
         row.configStatus = old;
@@ -245,7 +269,7 @@ onMounted(async () => {
                                         </tr>
                                         <tr
                                             v-for="row in card.list"
-                                            :key="row.id"
+                                            :key="`${row.clientId}-${row.configType}-${row.configValue}`"
                                             class="config-table-row border-t border-[#e2e8f0] hover:bg-[#f1f5f9]"
                                         >
                                             <td class="px-3 py-2 text-[#0f172a] truncate" :title="row.configType">{{ row.configType }}</td>

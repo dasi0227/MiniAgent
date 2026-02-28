@@ -82,7 +82,7 @@ const normalizeOptions = (list, idKey, nameKey) => {
     const normalized = (Array.isArray(list) ? list : [])
         .map((item) => {
             if (!item || typeof item !== 'object') return null;
-            const value = item[idKey] || item.id || '';
+            const value = item[idKey] || '';
             const label = item[nameKey] || item.name || value;
             if (!value) return null;
             return { value, label };
@@ -135,7 +135,7 @@ const triggerChatAction = async (action) => {
                 return { value: item, label: item };
             }
             if (!item || typeof item !== 'object') return null;
-            const value = item.clientId || item.modelId || item.id || '';
+            const value = item.clientId || item.modelId || '';
             const label = item.modelName || item.name || value;
             if (!value) return null;
             return { value, label };

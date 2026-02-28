@@ -20,7 +20,7 @@ public class AiSession {
     private String sessionId;
 
     /** 用户 id */
-    private String sessionUser;
+    private Long userId;
 
     /** 会话标题 */
     private String sessionTitle;

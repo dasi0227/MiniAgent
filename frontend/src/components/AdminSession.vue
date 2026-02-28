@@ -60,9 +60,8 @@ const pickData = (resp, message = '操作失败') => {
 const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() : '');
 
 const mapSession = (session) => ({
-    id: session.id,
     sessionId: session.sessionId,
-    sessionUser: session.sessionUser,
+    sessionUser: session.userName || session.sessionUser || '',
     sessionTitle: session.sessionTitle || '新会话',
     sessionType: normalizeSessionType(session.sessionType || session.type),
     createTime: session.createTime

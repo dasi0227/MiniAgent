@@ -92,7 +92,6 @@ public class QueryRepository implements IQueryRepository {
     }
 
     @Override
-    @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = WorkAgentVO.class, cacheType = CacheType.LIST)
     public List<WorkAgentVO> queryWorkAgentVOList() {
 
         Long userId = userContext.getUserId();
@@ -101,8 +100,6 @@ public class QueryRepository implements IQueryRepository {
         if (aiAgentList == null || aiAgentList.isEmpty()) {
             return new ArrayList<>();
         }
-
-        // TODO：还需要把用户 fork 到仓库的 agent 加入进来
 
         return aiAgentList.stream()
                 .filter(a -> a != null && Integer.valueOf(1).equals(a.getAgentStatus()))

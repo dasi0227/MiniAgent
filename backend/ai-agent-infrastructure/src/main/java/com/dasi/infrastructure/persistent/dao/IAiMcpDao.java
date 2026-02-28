@@ -25,13 +25,11 @@ public interface IAiMcpDao {
 
     Integer countAll();
 
-    AiMcp queryById(@Param("id") Long id);
-
     void insert(AiMcp aiMcp);
 
     void update(AiMcp aiMcp);
 
-    void delete(@Param("id") Long id);
+    void deleteByMcpId(@Param("mcpId") String mcpId);
 
     List<AiMcp> listUserMcp(@Param("keyword") String keyword, @Param("userId") Long userId);
 

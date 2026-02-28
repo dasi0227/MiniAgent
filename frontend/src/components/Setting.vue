@@ -90,7 +90,7 @@ const mcpDialogOpen = ref(false);
 const mcpDialogSaving = ref(false);
 const mcpDialogError = ref('');
 const mcpDialogForm = reactive({
-    id: null,
+    mcpId: '',
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
@@ -114,7 +114,7 @@ const apiDialogOpen = ref(false);
 const apiDialogSaving = ref(false);
 const apiDialogError = ref('');
 const apiDialogForm = reactive({
-    id: null,
+    apiId: '',
     modelName: '',
     apiBaseUrl: '',
     apiCompletionPath: '/v1/chat/completions',
@@ -364,7 +364,6 @@ const saveProfile = async () => {
     }
     try {
         const resp = await updatePassword({
-            id: currentUser.value.userId,
             username: profileForm.username,
             oldPassword: profileForm.oldPassword,
             newPassword: profileForm.newPassword,
@@ -426,7 +425,7 @@ const submitMcpInsert = async () => {
 const openMcpDialog = (item) => {
     if (!item) return;
     mcpDialogError.value = '';
-    mcpDialogForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
+    mcpDialogForm.mcpId = (item.mcpId || '').trim();
     mcpDialogForm.mcpName = item.mcpName || '';
     mcpDialogForm.mcpType = item.mcpType || '';
     mcpDialogForm.mcpDesc = item.mcpDesc || '';
@@ -439,11 +438,11 @@ const saveMcpDialog = async () => {
     mcpDialogError.value = '';
     mcpDialogSaving.value = true;
     try {
-        if (!Number.isFinite(Number(mcpDialogForm.id))) {
+        if (!mcpDialogForm.mcpId.trim()) {
             throw new Error('MCP 配置标识缺失，请刷新后重试');
         }
         const payload = {
-            id: Number(mcpDialogForm.id),
+            mcpId: mcpDialogForm.mcpId.trim(),
             mcpName: (mcpDialogForm.mcpName || '').trim(),
             mcpType: (mcpDialogForm.mcpType || '').trim(),
             mcpDesc: (mcpDialogForm.mcpDesc || '').trim(),
@@ -477,7 +476,7 @@ const loadApiList = async (keyword = '') => {
     }
 };
 
-const buildApiPayload = (form, id = null) => {
+const buildApiPayload = (form, apiId = '') => {
     const modelName = (form.modelName || '').trim();
     const apiBaseUrl = (form.apiBaseUrl || '').trim();
     const apiCompletionPath = (form.apiCompletionPath || '').trim();
@@ -492,8 +491,8 @@ const buildApiPayload = (form, id = null) => {
         apiCompletionPath,
         apiKey
     };
-    if (Number.isFinite(Number(id))) {
-        payload.id = Number(id);
+    if (apiId) {
+        payload.apiId = apiId;
     }
     return payload;
 };
@@ -516,7 +515,7 @@ const submitApiInsert = async () => {
 const openApiDialog = (item) => {
     if (!item) return;
     apiDialogError.value = '';
-    apiDialogForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
+    apiDialogForm.apiId = (item.apiId || '').trim();
     apiDialogForm.modelName = item.modelName || '';
     apiDialogForm.apiBaseUrl = item.apiBaseUrl || '';
     apiDialogForm.apiCompletionPath = item.apiCompletionPath || '/v1/chat/completions';
@@ -528,10 +527,10 @@ const saveApiDialog = async () => {
     apiDialogError.value = '';
     apiDialogSaving.value = true;
     try {
-        if (!Number.isFinite(Number(apiDialogForm.id))) {
+        if (!apiDialogForm.apiId.trim()) {
             throw new Error('API 配置标识缺失，请刷新后重试');
         }
-        const payload = buildApiPayload(apiDialogForm, apiDialogForm.id);
+        const payload = buildApiPayload(apiDialogForm, apiDialogForm.apiId.trim());
         await userApiUpdate(payload);
         apiDialogOpen.value = false;
         await loadApiList(apiKeyword.value);
@@ -753,7 +752,7 @@ onBeforeUnmount(() => {
                         <div v-else-if="mcpList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
                         <button
                             v-for="item in mcpList"
-                            :key="item.id || item.mcpId"
+                            :key="item.mcpId"
                             class="w-full rounded-[10px] border border-[var(--border-color)] p-[12px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             @click="openMcpDialog(item)"
                         >
@@ -825,7 +824,7 @@ onBeforeUnmount(() => {
                         <div v-else-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 API 配置</div>
                         <button
                             v-for="item in apiList"
-                            :key="item.id || item.apiId"
+                            :key="item.apiId"
                             class="w-full rounded-[10px] border border-[var(--border-color)] p-[12px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             @click="openApiDialog(item)"
                         >

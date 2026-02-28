@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FlowVO {
-    private Long id;
     private String agentId;
     private String clientId;
     private String clientRole;

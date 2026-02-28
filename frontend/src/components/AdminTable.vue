@@ -35,13 +35,11 @@ const moduleDefs = [
         search: ['idKeyword', 'nameKeyword', 'clientType', 'clientRole', 'modelId'],
         query: { idKeyword: '', nameKeyword: '', clientType: '', clientRole: '', modelId: '', pageNum: 1, pageSize: 10 },
         formDefaults: () => ({
-            id: null,
             clientId: '',
             clientType: '',
             clientRole: '',
             modelId: '',
             clientName: '',
-            clientDesc: '',
             clientStatus: 1
         }),
         fields: [
@@ -50,7 +48,6 @@ const moduleDefs = [
             { prop: 'clientType', label: '类型', type: 'select', required: true, optionsKey: 'clientTypes' },
             { prop: 'clientRole', label: '角色', required: true },
             { prop: 'modelId', label: '模型 ID', type: 'select', optionsKey: 'modelIds', required: true },
-            { prop: 'clientDesc', label: '描述', type: 'textarea' },
             { prop: 'clientStatus', label: '状态', type: 'switch' }
         ],
         columns: [
@@ -126,11 +123,10 @@ const moduleDefs = [
         search: ['idKeyword', 'nameKeyword'],
         query: { idKeyword: '', nameKeyword: '', pageNum: 1, pageSize: 10 },
         formDefaults: () => ({
-            id: null,
             mcpId: '',
             mcpName: '',
             mcpType: '',
-            mcpConfig: '',
+            mcpParam: '',
             mcpDesc: '',
             mcpTimeout: 180,
             mcpChat: 0
@@ -139,7 +135,7 @@ const moduleDefs = [
             { prop: 'mcpId', label: 'MCP ID', required: true },
             { prop: 'mcpName', label: '名称', required: true },
             { prop: 'mcpType', label: '类型', required: true },
-            { prop: 'mcpConfig', label: '配置', type: 'textarea', required: true },
+            { prop: 'mcpParam', label: '配置', type: 'textarea', required: true },
             { prop: 'mcpDesc', label: '描述', type: 'textarea' },
             { prop: 'mcpTimeout', label: '超时时间', type: 'number' },
             { prop: 'mcpChat', label: '聊天可用', type: 'switch' }
@@ -159,20 +155,15 @@ const moduleDefs = [
         search: ['idKeyword', 'nameKeyword'],
         query: { idKeyword: '', nameKeyword: '', pageNum: 1, pageSize: 10 },
         formDefaults: () => ({
-            id: null,
             advisorId: '',
             advisorName: '',
             advisorType: '',
-            advisorDesc: '',
-            advisorOrder: 0,
             advisorParam: ''
         }),
         fields: [
             { prop: 'advisorId', label: 'Advisor ID', required: true },
             { prop: 'advisorName', label: '名称', required: true },
             { prop: 'advisorType', label: '类型', required: true },
-            { prop: 'advisorOrder', label: '顺序', type: 'number' },
-            { prop: 'advisorDesc', label: '描述', type: 'textarea' },
             { prop: 'advisorParam', label: '参数', type: 'textarea' }
         ],
         columns: [
@@ -190,17 +181,14 @@ const moduleDefs = [
         search: ['idKeyword', 'nameKeyword'],
         query: { idKeyword: '', nameKeyword: '', pageNum: 1, pageSize: 10 },
         formDefaults: () => ({
-            id: null,
             promptId: '',
             promptName: '',
-            promptContent: '',
-            promptDesc: ''
+            systenPrompt: ''
         }),
         fields: [
             { prop: 'promptId', label: 'Prompt ID', required: true },
             { prop: 'promptName', label: '名称', required: true },
-            { prop: 'promptContent', label: '内容', type: 'textarea', required: true },
-            { prop: 'promptDesc', label: '描述', type: 'textarea' }
+            { prop: 'systenPrompt', label: '系统提示词', type: 'textarea', required: true }
         ],
         columns: [
             { prop: 'promptId', label: 'ID' },
@@ -216,7 +204,7 @@ const moduleDefs = [
         search: ['userNameKeyWord', 'userRole'],
         query: { userNameKeyWord: '', userRole: '', pageNum: 1, pageSize: 10 },
         formDefaults: () => ({
-            id: null,
+            originUserName: '',
             userName: '',
             password: '',
             userRole: 'account',
@@ -225,7 +213,7 @@ const moduleDefs = [
         }),
         fields: [
             { prop: 'userName', label: '用户名', required: true },
-            { prop: 'password', label: '密码', type: 'password', requiredOnCreate: true },
+            { prop: 'password', label: '密码', type: 'password', required: true },
             {
                 prop: 'userRole',
                 label: '角色',
@@ -386,6 +374,22 @@ const showErrorToast = (error, defaultMsg = '操作失败') => {
     notifyAdminError(error, msg);
 };
 
+const resolveRowKey = (moduleKey, row = {}) => {
+    const fieldMap = {
+        client: 'clientId',
+        api: 'apiId',
+        model: 'modelId',
+        mcp: 'mcpId',
+        advisor: 'advisorId',
+        prompt: 'promptId',
+        user: 'userName',
+        task: 'taskId',
+        agent: 'agentId'
+    };
+    const field = fieldMap[moduleKey];
+    return field ? row?.[field] || '' : '';
+};
+
 const loadRefs = async () => {
     const loadList = async (setter, fn) => {
         try {
@@ -459,16 +463,19 @@ const openCreate = () => {
 };
 
 const openEdit = (row) => {
-    editingId.value = row.id;
+    editingId.value = resolveRowKey(currentKey.value, row);
     modalError.value = '';
     Object.assign(currentForm, currentModule.value.formDefaults(), row);
+    if (currentKey.value === 'user') {
+        currentForm.originUserName = row.userName || '';
+    }
     modalVisible.value = true;
 };
 
 const handleDelete = async (row) => {
     if (!window.confirm('确认删除该记录？')) return;
     try {
-        const res = await adminDelete(currentKey.value, row.id);
+        const res = await adminDelete(currentKey.value, resolveRowKey(currentKey.value, row));
         unwrapResult(res, '删除失败');
         await fetchList();
     } catch (err) {
@@ -511,7 +518,7 @@ const switchStatus = async (row, val) => {
     const oldVal = row[currentModule.value.statusField];
     row[currentModule.value.statusField] = val;
     try {
-        const res = await adminToggle(currentKey.value, row.id, val);
+        const res = await adminToggle(currentKey.value, resolveRowKey(currentKey.value, row), val);
         unwrapResult(res, '更新状态失败');
     } catch (err) {
         row[currentModule.value.statusField] = oldVal;
@@ -715,7 +722,7 @@ const handleSelectModule = (key) => {
                             </tr>
                             <tr
                                 v-for="row in stateMap[currentKey].list"
-                                :key="row.id"
+                                :key="resolveRowKey(currentKey, row)"
                                 class="border-t border-[#e2e8f0] hover:bg-[#f8fafc]"
                             >
                                 <td

@@ -368,10 +368,16 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         String snapshot = snapshotUtil.buildSnapshot(agentId);
 
         AiModel aiModel = aiModelDao.queryByModelId(aiAgent.getModelId());
+        if (aiModel == null) {
+            throw new MiniAgentException(com.dasi.types.constant.ExceptionMessage.PUBLISH_MODEL_MISSING);
+        }
         String modelName = aiModel.getModelName();
         String modelType = aiModel.getModelType();
 
         AiApi aiApi = aiApiDao.queryByApiId(aiModel.getApiId());
+        if (aiApi == null) {
+            throw new MiniAgentException(com.dasi.types.constant.ExceptionMessage.PUBLISH_API_MISSING);
+        }
         String apiBaseUrl = aiApi.getApiBaseUrl();
         String apiCompletionUrl = aiApi.getApiCompletionsPath();
 

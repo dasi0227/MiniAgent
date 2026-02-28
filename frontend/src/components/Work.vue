@@ -63,9 +63,8 @@ const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() 
 const mapSession = (session) => {
     if (!session) return null;
     return {
-        id: session.id,
         sessionId: session.sessionId,
-        sessionUser: session.sessionUser,
+        sessionUser: session.userName || session.sessionUser || '',
         title: session.sessionTitle || '新会话',
         sessionType: normalizeSessionType(session.sessionType || session.type),
         createdAt: session.createTime ? Date.parse(session.createTime) : Date.now(),
@@ -114,9 +113,9 @@ const ensureWorkSessionValid = async (session) => {
     if (!session?.sessionId) return null;
     try {
         const workList = await listRemoteWorkSessions();
-        const matched = workList.find((item) => item.sessionId === session.sessionId || item.id === session.id);
+        const matched = workList.find((item) => item.sessionId === session.sessionId);
         if (!matched) {
-            dropInvalidWorkSession(session.id);
+            dropInvalidWorkSession(session.sessionId);
             return null;
         }
         return matched;
@@ -184,8 +183,8 @@ const currentAgentId = computed({
     },
     set: (value) => {
         const session = agentStore.currentSession;
-        if (session?.id) {
-            agentStore.setSessionAgent(session.id, value || '');
+        if (session?.sessionId) {
+            agentStore.setSessionAgent(session.sessionId, value || '');
             return;
         }
         pendingAgentId.value = value || '';
@@ -213,7 +212,7 @@ const fetchAgents = async () => {
         const normalized = list
             .map((item) => {
                 if (!item || typeof item !== 'object') return null;
-                const agentId = item.agentId || item.id || '';
+                const agentId = item.agentId || '';
                 const agentName = item.agentName || item.name || agentId;
                 const agentDesc = item.agentDesc || item.desc || '';
                 if (!agentId) return null;
@@ -313,8 +312,8 @@ const loadWorkMessages = async (sessionId) => {
 
 const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话' } = {}) => {
     if (!forceNew && agentStore.currentSession) {
-        if (!agentStore.currentSessionId && agentStore.currentSession?.id) {
-            agentStore.setCurrentSessionId(agentStore.currentSession.id);
+        if (!agentStore.currentSessionId && agentStore.currentSession?.sessionId) {
+            agentStore.setCurrentSessionId(agentStore.currentSession.sessionId);
         }
         return agentStore.currentSession;
     }
@@ -324,18 +323,18 @@ const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话' 
         if (created) {
             agentStore.upsertSession(created);
             if (forceNew) {
-                skipNextLoadSessionId.value = created.id;
+                skipNextLoadSessionId.value = created.sessionId;
             }
-            agentStore.setCurrentSessionId(created.id);
+            agentStore.setCurrentSessionId(created.sessionId);
             if (pendingAgentId.value) {
-                agentStore.setSessionAgent(created.id, pendingAgentId.value);
+                agentStore.setSessionAgent(created.sessionId, pendingAgentId.value);
             }
             return created;
         }
         const workList = await refreshWorkSessions();
         const session = workList[0] || null;
         if (!session) return null;
-        agentStore.setCurrentSessionId(session.id);
+        agentStore.setCurrentSessionId(session.sessionId);
         return session;
     } catch (error) {
         sendError.value = normalizeError(error).message || '创建会话失败';
@@ -347,9 +346,9 @@ const renameSessionIfNeeded = async (session, content) => {
     if (!session) return;
     if (session.title && session.title !== '新会话') return;
     const nextTitle = content.slice(0, 20) || '新会话';
-    agentStore.updateSessionTitle(session.id, nextTitle);
+    agentStore.updateSessionTitle(session.sessionId, nextTitle);
     try {
-        await updateSession({ id: session.id, sessionTitle: nextTitle });
+        await updateSession({ sessionId: session.sessionId, sessionTitle: nextTitle });
     } catch (error) {
         sendError.value = normalizeError(error).message || '更新会话失败';
     }
@@ -499,8 +498,8 @@ const sendMessage = async (options = {}) => {
         sendError.value = '当前会话已达到 3 条用户消息上限，请新建会话';
         return;
     }
-    if (validSession?.id) {
-        agentStore.setSessionAgent(validSession.id, resolvedAgentId);
+    if (validSession?.sessionId) {
+        agentStore.setSessionAgent(validSession.sessionId, resolvedAgentId);
     }
     agentStore.stopCurrentRequest();
     agentStore.setSending(true);
@@ -650,7 +649,7 @@ const consumeWelcomeLaunchTask = async () => {
         sendError.value = '暂无可用 MiniAgent，请先在后台配置 MiniAgent';
         return;
     }
-    agentStore.setSessionAgent(validSession.id, resolvedAgentId);
+    agentStore.setSessionAgent(validSession.sessionId, resolvedAgentId);
     currentAgentId.value = resolvedAgentId;
 
     inputValue.value = prompt;

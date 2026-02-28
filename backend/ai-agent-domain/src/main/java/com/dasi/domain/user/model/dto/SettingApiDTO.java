@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SettingApiDTO {
 
-    private Long id;
+    private String apiId;
 
     @NotNull
     private String modelName;

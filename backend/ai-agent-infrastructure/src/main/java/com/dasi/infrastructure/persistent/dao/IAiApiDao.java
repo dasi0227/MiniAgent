@@ -20,13 +20,11 @@ public interface IAiApiDao {
 
     Integer countAll();
 
-    AiApi queryById(@Param("id") Long id);
-
     void insert(AiApi aiApi);
 
     void update(AiApi aiApi);
 
-    void deleteById(@Param("id") Long id);
+    void deleteByApiId(@Param("apiId") String apiId);
 
     List<String> listApiId();
 

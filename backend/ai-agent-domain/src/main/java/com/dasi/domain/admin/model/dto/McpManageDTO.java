@@ -13,8 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class McpManageDTO {
 
-    private Long id;
-
     @NotBlank
     private String mcpId;
 

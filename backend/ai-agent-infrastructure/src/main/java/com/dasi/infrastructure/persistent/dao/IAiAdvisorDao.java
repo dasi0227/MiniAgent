@@ -21,8 +21,6 @@ public interface IAiAdvisorDao {
 
     Integer countAll();
 
-    AiAdvisor queryById(@Param("id") Long id);
-
     void insert(AiAdvisor aiAdvisor);
 
     void update(AiAdvisor aiAdvisor);

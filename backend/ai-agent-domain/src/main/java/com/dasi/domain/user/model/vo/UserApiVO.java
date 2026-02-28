@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserApiVO {
-
-    private Long id;
-
     private String apiId;
 
     private String modelName;

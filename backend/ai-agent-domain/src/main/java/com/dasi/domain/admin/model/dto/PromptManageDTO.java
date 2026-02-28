@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PromptManageDTO {
 
-    private Long id;
-
     @NotBlank
     private String promptId;
 

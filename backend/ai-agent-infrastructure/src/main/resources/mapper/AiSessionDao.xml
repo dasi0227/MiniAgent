@@ -5,30 +5,30 @@
     <resultMap id="dataMap" type="com.dasi.infrastructure.persistent.po.AiSession">
         <id column="id" property="id"/>
         <result column="session_id" property="sessionId"/>
-        <result column="session_user" property="sessionUser"/>
+        <result column="user_id" property="userId"/>
         <result column="session_title" property="sessionTitle"/>
         <result column="session_type" property="sessionType"/>
         <result column="created_at" property="createTime"/>
         <result column="updated_at" property="updateTime"/>
     </resultMap>
 
-    <select id="queryByUser" resultMap="dataMap">
+    <select id="queryByUserId" resultMap="dataMap">
         SELECT id,
                session_id,
-               session_user,
+               user_id,
                session_title,
                session_type,
                created_at,
                updated_at
         FROM ai_session
-        WHERE session_user = #{sessionUser}
+        WHERE user_id = #{userId}
         ORDER BY updated_at DESC, id DESC
     </select>
 
     <select id="queryAll" resultMap="dataMap">
         SELECT id,
                session_id,
-               session_user,
+               user_id,
                session_title,
                session_type,
                created_at,
@@ -37,22 +37,10 @@
         ORDER BY updated_at DESC, id DESC
     </select>
 
-    <select id="queryById" parameterType="java.lang.Long" resultMap="dataMap">
-        SELECT id,
-               session_id,
-               session_user,
-               session_title,
-               session_type,
-               created_at,
-               updated_at
-        FROM ai_session
-        WHERE id = #{id}
-    </select>
-
     <select id="queryBySessionId" resultMap="dataMap">
         SELECT id,
                session_id,
-               session_user,
+               user_id,
                session_title,
                session_type,
                created_at,
@@ -61,10 +49,10 @@
         WHERE session_id = #{sessionId}
     </select>
 
-    <select id="countByUserAndType" resultType="int">
+    <select id="countByUserIdAndType" resultType="int">
         SELECT COUNT(1)
         FROM ai_session
-        WHERE session_user = #{sessionUser}
+        WHERE user_id = #{userId}
           AND session_type = #{sessionType}
     </select>
 
@@ -80,18 +68,18 @@
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiSession" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO ai_session (session_id, session_user, session_title, session_type)
-        VALUES (#{sessionId}, #{sessionUser}, #{sessionTitle}, #{sessionType})
+        INSERT INTO ai_session (session_id, user_id, session_title, session_type)
+        VALUES (#{sessionId}, #{userId}, #{sessionTitle}, #{sessionType})
     </insert>
 
     <update id="updateTitle">
         UPDATE ai_session
         SET session_title = #{sessionTitle}
-        WHERE id = #{id}
+        WHERE session_id = #{sessionId}
     </update>
 
     <delete id="delete">
         DELETE FROM ai_session
-        WHERE id = #{id}
+        WHERE session_id = #{sessionId}
     </delete>
 </mapper>

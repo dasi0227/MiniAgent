@@ -11,13 +11,11 @@ public interface IAiSessionDao {
 
     List<AiSession> queryAll();
 
-    List<AiSession> queryByUser(@Param("sessionUser") String sessionUser);
-
-    AiSession queryById(@Param("id") Long id);
+    List<AiSession> queryByUserId(@Param("userId") Long userId);
 
     AiSession queryBySessionId(@Param("sessionId") String sessionId);
 
-    int countByUserAndType(@Param("sessionUser") String sessionUser, @Param("sessionType") String sessionType);
+    int countByUserIdAndType(@Param("userId") Long userId, @Param("sessionType") String sessionType);
 
     int countAll();
 
@@ -25,8 +23,8 @@ public interface IAiSessionDao {
 
     void insert(AiSession session);
 
-    void updateTitle(@Param("id") Long id, @Param("sessionTitle") String sessionTitle);
+    void updateTitle(@Param("sessionId") String sessionId, @Param("sessionTitle") String sessionTitle);
 
-    void delete(@Param("id") Long id);
+    void delete(@Param("sessionId") String sessionId);
 
 }

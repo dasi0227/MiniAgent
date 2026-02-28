@@ -52,8 +52,8 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserVO queryUserById(Long id) {
-        AiUser user = userDao.queryById(id);
+    public UserVO queryUserById(Long userId) {
+        AiUser user = userDao.queryById(userId);
         return toUserVO(user);
     }
 
@@ -71,15 +71,15 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public UserVO updateUser(Long id, String userName, String password, String userAvatar) {
+    public UserVO updateUser(Long userId, String userName, String password, String userAvatar) {
         AiUser user = AiUser.builder()
-                .id(id)
+                .id(userId)
                 .userName(userName)
                 .password(password)
                 .userAvatar(userAvatar)
                 .build();
         userDao.update(user);
-        return toUserVO(userDao.queryById(id));
+        return toUserVO(userDao.queryById(userId));
     }
 
     private UserVO toUserVO(AiUser user) {
@@ -87,7 +87,7 @@ public class UserRepository implements IUserRepository {
             return null;
         }
         return UserVO.builder()
-                .id(user.getId())
+                .userId(user.getId())
                 .userName(user.getUserName())
                 .password(user.getPassword())
                 .userRole(user.getUserRole())
@@ -106,7 +106,6 @@ public class UserRepository implements IUserRepository {
         }
         for (AiUserApi userApi : userApiList) {
             userApiVOList.add(UserApiVO.builder()
-                    .id(userApi.getId())
                     .apiId(userApi.getApiId())
                     .modelName(userApi.getModelName())
                     .modelType(userApi.getModelType())
@@ -144,11 +143,11 @@ public class UserRepository implements IUserRepository {
     @Override
     public void apiUpdate(SettingApiDTO dto) {
         Long userId = userContext.getUserId();
-        if (dto.getId() == null) {
+        if (dto.getApiId() == null) {
             throw new MiniAgentException(LACK_PARAM);
         }
 
-        AiApi aiApi = apiDao.queryById(dto.getId());
+        AiApi aiApi = apiDao.queryByApiId(dto.getApiId());
         if (aiApi == null || !aiApi.getApiFrom().equals(userId)) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
@@ -169,14 +168,14 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void apiDelete(Long id) {
+    public void apiDelete(String apiId) {
         Long userId = userContext.getUserId();
 
-        AiApi aiApi = apiDao.queryById(id);
+        AiApi aiApi = apiDao.queryByApiId(apiId);
         if (!aiApi.getApiFrom().equals(userId)) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
-        apiDao.deleteById(id);
+        apiDao.deleteByApiId(apiId);
 
         String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
         AiModel aiModel = modelDao.queryByModelId(modelId);
@@ -196,7 +195,6 @@ public class UserRepository implements IUserRepository {
         }
         for (AiMcp aiMcp : mcpList) {
             userMcpVOList.add(UserMcpVO.builder()
-                    .id(aiMcp.getId())
                     .mcpId(aiMcp.getMcpId())
                     .mcpName(aiMcp.getMcpName())
                     .mcpType(aiMcp.getMcpType())
@@ -229,11 +227,11 @@ public class UserRepository implements IUserRepository {
     @Override
     public void mcpUpdate(SettingMcpDTO dto) {
         Long userId = userContext.getUserId();
-        if (dto.getId() == null) {
+        if (dto.getMcpId() == null) {
             throw new MiniAgentException(LACK_PARAM);
         }
 
-        AiMcp aiMcp = mcpDao.queryById(dto.getId());
+        AiMcp aiMcp = mcpDao.queryByMcpId(dto.getMcpId());
         if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
@@ -246,14 +244,14 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void mcpDelete(Long id) {
+    public void mcpDelete(String mcpId) {
         Long userId = userContext.getUserId();
 
-        AiMcp aiMcp = mcpDao.queryById(id);
+        AiMcp aiMcp = mcpDao.queryByMcpId(mcpId);
         if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
-        mcpDao.delete(id);
+        mcpDao.deleteByMcpId(mcpId);
     }
 
 }

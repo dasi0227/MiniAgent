@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageVO {
-    private Long id;
     private String messageContent;
     private String messageRole;
     private String messageType;

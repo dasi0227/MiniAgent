@@ -7,19 +7,19 @@ import java.util.List;
 
 public interface ISessionRepository {
 
-    List<SessionVO> listSession(String sessionUser);
+    List<SessionVO> listSession(Long userId);
 
-    int countSessionByType(String sessionUser, String sessionType);
+    int countSessionByType(Long userId, String sessionType);
 
-    SessionVO querySessionById(Long id);
+    void insertSession(String sessionId, Long userId, String sessionTitle, String sessionType);
 
-    void insertSession(String sessionId, String sessionUser, String sessionTitle, String sessionType);
+    void updateSessionTitle(String sessionId, String sessionTitle);
 
-    void updateSessionTitle(Long id, String sessionTitle);
-
-    void deleteSession(Long id, String sessionId);
+    void deleteSession(String sessionId);
 
     List<MessageVO> listMessageBySessionAndType(String sessionId, String messageType);
 
     SessionVO querySessionBySessionId(String sessionId);
+
+    Long querySessionOwnerId(String sessionId);
 }

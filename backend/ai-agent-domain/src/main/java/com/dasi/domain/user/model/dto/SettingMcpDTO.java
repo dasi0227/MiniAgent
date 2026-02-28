@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SettingMcpDTO {
 
-    private Long id;
+    private String mcpId;
 
     @NotNull
     private String mcpName;

@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClientManageDTO {
 
-    private Long id;
-
     @NotBlank
     private String clientId;
 

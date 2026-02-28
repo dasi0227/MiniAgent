@@ -12,9 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SessionVO {
-    private Long id;
     private String sessionId;
-    private String sessionUser;
+    private String userName;
     private String sessionTitle;
     private String sessionType;
     private LocalDateTime createTime;

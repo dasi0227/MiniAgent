@@ -68,19 +68,6 @@
         LIMIT 1
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               agent_id,
-               client_id,
-               client_role,
-               user_prompt,
-               flow_seq,
-               create_time,
-               update_time
-        FROM ai_flow
-        WHERE id = #{id}
-    </select>
-
     <select id="countAll" resultType="int">
         SELECT COUNT(1)
         FROM ai_flow

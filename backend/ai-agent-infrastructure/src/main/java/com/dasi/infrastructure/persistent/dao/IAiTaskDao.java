@@ -23,8 +23,6 @@ public interface IAiTaskDao {
 
     Integer countAll();
 
-    AiTask queryById(@Param("id") Long id);
-
     AiTask queryByTaskId(@Param("taskId") String taskId);
 
     void insert(AiTask aiTask);

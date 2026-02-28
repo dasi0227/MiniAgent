@@ -33,15 +33,15 @@ public class SessionController implements ISessionApi {
 
     @PostMapping("/update")
     @Override
-    public Result<Void> updateSession(@RequestParam("id") Long id, @RequestParam("sessionTitle") String sessionTitle) {
-        sessionService.updateSession(id, sessionTitle);
+    public Result<Void> updateSession(@RequestParam("sessionId") String sessionId, @RequestParam("sessionTitle") String sessionTitle) {
+        sessionService.updateSession(sessionId, sessionTitle);
         return Result.success();
     }
 
     @PostMapping("/delete")
     @Override
-    public Result<Void> deleteSession(@RequestParam("id") Long id, @RequestParam("sessionId") String sessionId) {
-        sessionService.deleteSession(id, sessionId);
+    public Result<Void> deleteSession(@RequestParam("sessionId") String sessionId) {
+        sessionService.deleteSession(sessionId);
         return Result.success();
     }
 

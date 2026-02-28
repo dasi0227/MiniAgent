@@ -104,8 +104,8 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/api/delete")
     @Override
-    public Result<Void> apiDelete(@RequestParam Long id) {
-        settingService.apiDelete(id);
+    public Result<Void> apiDelete(@RequestParam String apiId) {
+        settingService.apiDelete(apiId);
         return Result.success();
     }
 
@@ -131,8 +131,8 @@ public class UserController implements IUserApi {
 
     @PostMapping(value = "/mcp/delete")
     @Override
-    public Result<Void> mcpDelete(@RequestParam Long id) {
-        settingService.mcpDelete(id);
+    public Result<Void> mcpDelete(@RequestParam String mcpId) {
+        settingService.mcpDelete(mcpId);
         return Result.success();
     }
 

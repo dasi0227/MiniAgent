@@ -37,9 +37,19 @@ const SESSION_ADMIN_LIST_PATH = `${ADMIN_BASE_PATH}/session/list`;
 const ADMIN_STATUS_PARAM = {
     client: 'clientStatus',
     agent: 'agentStatus',
-    config: 'configStatus',
     user: 'userStatus',
     task: 'taskStatus'
+};
+const ADMIN_PRIMARY_PARAM = {
+    api: 'apiId',
+    model: 'modelId',
+    mcp: 'mcpId',
+    advisor: 'advisorId',
+    prompt: 'promptId',
+    client: 'clientId',
+    agent: 'agentId',
+    user: 'userName',
+    task: 'taskId'
 };
 
 const USER_MCP_BASE_PATH = `${USER_BASE_PATH}/mcp`;
@@ -65,10 +75,11 @@ const PLAZA_COMMENT_PATH = `${PLAZA_BASE_PATH}/comment`;
 const PLAZA_DISCOMMENT_PATH = `${PLAZA_BASE_PATH}/discomment`;
 const PLAZA_COMMENT_AREA_PATH = `${PLAZA_BASE_PATH}/comment-area`;
 const PLAZA_DELETE_PATH = `${PLAZA_BASE_PATH}/delete`;
-const REPO_LIST_PATH = `${WORKSPACE_BASE_PATH}/repo/list`;
+const REPO_LIST_PATH = `${WORKSPACE_BASE_PATH}/repo/map`;
 const WORKSPACE_AGENT_PUBLISH_PATH = `${WORKSPACE_BASE_PATH}/agent/publish`;
 const WORKSPACE_AGENT_TEMPLATE_PATH = `${WORKSPACE_BASE_PATH}/agent/template`;
 const WORKSPACE_AGENT_DELETE_PATH = `${WORKSPACE_BASE_PATH}/agent/delete`;
+const WORKSPACE_AGENT_FORK_PATH = `${WORKSPACE_BASE_PATH}/agent/fork`;
 
 const unsupportedApi = (name) => Promise.reject(new Error(`${name} 暂未开放`));
 
@@ -105,6 +116,16 @@ const normalizeAdminPayload = (moduleKey, payload = {}) => {
         }
         delete normalized.promptContent;
     }
+    if (moduleKey === 'client') {
+        delete normalized.clientDesc;
+    }
+    if (moduleKey === 'advisor') {
+        delete normalized.advisorDesc;
+        delete normalized.advisorOrder;
+    }
+    if (moduleKey === 'prompt') {
+        delete normalized.promptDesc;
+    }
     return normalized;
 };
 
@@ -122,6 +143,25 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
         return {
             ...item,
             promptContent: item.promptContent || item.systenPrompt || ''
+        };
+    }
+    if (moduleKey === 'client') {
+        return {
+            ...item,
+            clientDesc: item.clientDesc || ''
+        };
+    }
+    if (moduleKey === 'advisor') {
+        return {
+            ...item,
+            advisorDesc: item.advisorDesc || '',
+            advisorOrder: item.advisorOrder ?? 0
+        };
+    }
+    if (moduleKey === 'prompt') {
+        return {
+            ...item,
+            promptDesc: item.promptDesc || ''
         };
     }
     return item;
@@ -147,6 +187,7 @@ const normalizeFlowPayload = (payload = {}) => {
         normalized.userPrompt = normalized.flowPrompt;
     }
     delete normalized.flowPrompt;
+    delete normalized.id;
     return normalized;
 };
 
@@ -168,7 +209,6 @@ const normalizeUserMcpPayload = (payload = {}) => {
         normalized.mcpParam = normalized.mcpConfig;
     }
     delete normalized.mcpConfig;
-    delete normalized.mcpId;
     return normalized;
 };
 
@@ -190,7 +230,6 @@ const normalizeUserApiPayload = (payload = {}) => {
     if (!normalized || typeof normalized !== 'object') {
         return normalized;
     }
-    delete normalized.apiId;
     if (!normalized.modelType) {
         normalized.modelType = 'chat';
     }
@@ -361,9 +400,8 @@ export const login = async ({ username, password }) =>
 export const register = async ({ username, password }) =>
     http.post(REGISTER_PATH, trimStrings({ userName: username, password }));
 export const fetchProfile = async () => http.post(PROFILE_QUERY_PATH);
-export const updatePassword = async ({ id, username, userName, oldPassword, newPassword, avatar }) => {
+export const updatePassword = async ({ username, userName, oldPassword, newPassword, avatar }) => {
     const profilePayload = trimStrings({
-        id,
         userName: userName || username,
         oldPassword,
         newPassword
@@ -384,11 +422,11 @@ export const listAdminSessions = async () => http.post(SESSION_ADMIN_LIST_PATH);
 export const insertSession = async ({ sessionTitle, sessionType }) =>
     http.post(SESSION_INSERT_PATH, null, { params: trimStrings({ sessionTitle, sessionType }) });
 
-export const updateSession = async ({ id, sessionTitle }) =>
-    http.post(SESSION_UPDATE_PATH, null, { params: trimStrings({ id, sessionTitle }) });
+export const updateSession = async ({ sessionId, sessionTitle }) =>
+    http.post(SESSION_UPDATE_PATH, null, { params: trimStrings({ sessionId, sessionTitle }) });
 
-export const deleteSession = async ({ id, sessionId }) =>
-    http.post(SESSION_DELETE_PATH, null, { params: { id, sessionId } });
+export const deleteSession = async ({ sessionId }) =>
+    http.post(SESSION_DELETE_PATH, null, { params: { sessionId } });
 
 export const listChatMessages = async ({ sessionId }) =>
     http.post(SESSION_CHAT_MESSAGE_PATH, null, { params: { sessionId } });
@@ -413,12 +451,18 @@ export const adminInsert = async (moduleKey, payload = {}) =>
 export const adminUpdate = async (moduleKey, payload = {}) =>
     http.post(buildAdminPath(moduleKey, 'update'), normalizeAdminPayload(moduleKey, payload));
 
-export const adminDelete = async (moduleKey, id) =>
-    http.post(buildAdminPath(moduleKey, 'delete'), null, { params: { id } });
+export const adminDelete = async (moduleKey, value) => {
+    const paramKey = ADMIN_PRIMARY_PARAM[moduleKey];
+    if (!paramKey) {
+        return unsupportedApi(`${moduleKey} 删除`);
+    }
+    return http.post(buildAdminPath(moduleKey, 'delete'), null, { params: { [paramKey]: value } });
+};
 
-export const adminToggle = async (moduleKey, id, status) => {
+export const adminToggle = async (moduleKey, value, status) => {
     const statusKey = ADMIN_STATUS_PARAM[moduleKey];
-    return http.post(buildAdminPath(moduleKey, 'toggle'), null, { params: { id, [statusKey]: status } });
+    const paramKey = ADMIN_PRIMARY_PARAM[moduleKey];
+    return http.post(buildAdminPath(moduleKey, 'toggle'), null, { params: { [paramKey]: value, [statusKey]: status } });
 };
 
 export const flowClients = async () => http.post(`${ADMIN_BASE_PATH}/flow/client`);
@@ -426,16 +470,18 @@ export const flowAgent = async (agentId) =>
     normalizeFlowResponse(await http.post(`${ADMIN_BASE_PATH}/flow/agent`, null, { params: { agentId } }));
 export const flowInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/insert`, normalizeFlowPayload(payload));
 export const flowUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/flow/update`, normalizeFlowPayload(payload));
-export const flowDelete = async (id) => http.post(`${ADMIN_BASE_PATH}/flow/delete`, null, { params: { id } });
+export const flowDelete = async ({ agentId, clientId }) =>
+    http.post(`${ADMIN_BASE_PATH}/flow/delete`, null, { params: { agentId, clientId } });
 
 export const adminAgentList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/agent/list`, trimStrings(payload));
 
 export const configList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/list`, trimStrings(payload));
 export const configInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/insert`, trimStrings(payload));
 export const configUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/update`, trimStrings(payload));
-export const configDelete = async (id) => http.post(`${ADMIN_BASE_PATH}/config/delete`, null, { params: { id } });
-export const configToggle = async (id, status) =>
-    http.post(`${ADMIN_BASE_PATH}/config/toggle`, null, { params: { id, configStatus: status } });
+export const configDelete = async ({ clientId, configType, configValue }) =>
+    http.post(`${ADMIN_BASE_PATH}/config/delete`, null, { params: { clientId, configType, configValue } });
+export const configToggle = async ({ clientId, configType, configValue }, status) =>
+    http.post(`${ADMIN_BASE_PATH}/config/toggle`, null, { params: { clientId, configType, configValue, configStatus: status } });
 
 const ADMIN_LIST_BASE = `${ADMIN_BASE_PATH}/list`;
 export const listClientType = async () => http.post(`${ADMIN_LIST_BASE}/clientType`);
@@ -451,13 +497,13 @@ export const userApiList = async (keyword = '') =>
     http.post(USER_API_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
 export const userApiInsert = async (payload = {}) => http.post(USER_API_INSERT_PATH, normalizeUserApiPayload(payload));
 export const userApiUpdate = async (payload = {}) => http.post(USER_API_UPDATE_PATH, normalizeUserApiPayload(payload));
-export const userApiDelete = async (id) => http.post(USER_API_DELETE_PATH, null, { params: { id } });
+export const userApiDelete = async (apiId) => http.post(USER_API_DELETE_PATH, null, { params: { apiId } });
 
 export const userMcpList = async (keyword = '') =>
     normalizeUserMcpResponse(await http.post(USER_MCP_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } }));
 export const userMcpInsert = async (payload = {}) => http.post(USER_MCP_INSERT_PATH, normalizeUserMcpPayload(payload));
 export const userMcpUpdate = async (payload = {}) => http.post(USER_MCP_UPDATE_PATH, normalizeUserMcpPayload(payload));
-export const userMcpDelete = async (id) => http.post(USER_MCP_DELETE_PATH, null, { params: { id } });
+export const userMcpDelete = async (mcpId) => http.post(USER_MCP_DELETE_PATH, null, { params: { mcpId } });
 
 // 以下接口后端当前未实现，保留函数供调用方降级处理
 export const userMcpToggle = async () => unsupportedApi('MCP 启停');
@@ -475,8 +521,8 @@ export const studioListMine = async () => unsupportedApi('Studio 我的列表');
 export const plazaList = async (payload = {}) => http.post(PLAZA_PAGE_PATH, normalizePlazaQueryPayload(payload));
 export const plazaDetail = async ({ templateId }) =>
     http.post(WORKSPACE_AGENT_TEMPLATE_PATH, null, { params: { templateId } });
-export const plazaPublish = async ({ agentId }) =>
-    http.post(WORKSPACE_AGENT_PUBLISH_PATH, null, { params: { agentId } });
+export const plazaPublish = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_PUBLISH_PATH, trimStrings(payload));
 export const plazaLike = async ({ plazaId }) => http.post(PLAZA_LIKE_PATH, null, { params: { plazaId } });
 export const plazaDislike = async ({ plazaId }) => http.post(PLAZA_DISLIKE_PATH, null, { params: { plazaId } });
 export const plazaFavor = async ({ plazaId }) => http.post(PLAZA_FAVOR_PATH, null, { params: { plazaId } });
@@ -491,6 +537,6 @@ export const plazaCommentCount = async () => unsupportedApi('Plaza 评论计数'
 // -------------------- Repository --------------------
 export const repoList = async () => http.post(REPO_LIST_PATH);
 export const repoAdd = async () => unsupportedApi('Repository 添加');
-export const repoRemove = async ({ agentId }) =>
-    http.post(WORKSPACE_AGENT_DELETE_PATH, null, { params: { agentId } });
-export const repoFork = async () => unsupportedApi('Repository Fork');
+export const repoRemove = async () => unsupportedApi('Repository 移除');
+export const repoFork = async ({ templateId }) =>
+    http.post(WORKSPACE_AGENT_FORK_PATH, null, { params: { templateId } });

@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AgentManageDTO {
 
-    private Long id;
-
     @NotBlank
     private String agentId;
 

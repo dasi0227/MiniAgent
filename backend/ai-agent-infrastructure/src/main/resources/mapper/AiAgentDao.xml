@@ -121,21 +121,6 @@
         FROM ai_agent
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               agent_id,
-               agent_name,
-               agent_type,
-               agent_desc,
-               model_id,
-               agent_status,
-               agent_from,
-               create_time,
-               update_time
-        FROM ai_agent
-        WHERE id = #{id}
-    </select>
-
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">
         INSERT INTO ai_agent (agent_id,
                               agent_name,
@@ -171,12 +156,6 @@
         SET agent_status = #{agentStatus}
         WHERE id = #{id}
     </update>
-
-    <delete id="delete">
-        DELETE
-        FROM ai_agent
-        WHERE id = #{id}
-    </delete>
 
     <delete id="deleteByAgentId">
         DELETE

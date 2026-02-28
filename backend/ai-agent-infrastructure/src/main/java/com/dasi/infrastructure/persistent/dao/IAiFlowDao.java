@@ -19,8 +19,6 @@ public interface IAiFlowDao {
 
     AiFlow queryByAgentIdAndClientRole(@Param("agentId") String agentId, @Param("clientRole") String clientRole);
 
-    AiFlow queryById(@Param("id") Long id);
-
     Integer countAll();
 
     void insert(AiFlow aiFlow);

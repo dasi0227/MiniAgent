@@ -375,7 +375,8 @@ const modalError = ref('');
 const editingId = ref(null);
 const currentForm = reactive({});
 const flowForm = reactive({
-    id: null,
+    originAgentId: '',
+    originClientId: '',
     flowSeq: 1,
     flowPrompt: 'auto',
     clientRole: ''
@@ -425,7 +426,6 @@ const formSchemas = {
             { prop: 'clientType', label: '类型', type: 'select', optionsKey: 'clientTypes', required: true },
             { prop: 'clientRole', label: '角色', type: 'select', optionsKey: 'clientRoles', required: true },
             { prop: 'modelId', label: '模型 ID', type: 'select', optionsKey: 'modelIds', required: true },
-            { prop: 'clientDesc', label: '描述', type: 'textarea' },
             { prop: 'clientStatus', label: '状态', type: 'switch' }
         ],
         defaults: () => ({
@@ -435,7 +435,6 @@ const formSchemas = {
             clientType: '',
             clientRole: '',
             modelId: '',
-            clientDesc: '',
             clientStatus: 1
         })
     },
@@ -481,15 +480,13 @@ const formSchemas = {
         fields: [
             { prop: 'promptId', label: 'Prompt ID', required: true },
             { prop: 'promptName', label: '名称', required: true },
-            { prop: 'promptContent', label: '内容', type: 'textarea', required: true },
-            { prop: 'promptDesc', label: '描述', type: 'textarea' }
+            { prop: 'promptContent', label: '系统提示词', type: 'textarea', required: true }
         ],
         defaults: () => ({
             id: null,
             promptId: '',
             promptName: '',
-            promptContent: '',
-            promptDesc: ''
+            promptContent: ''
         })
     },
     advisor: {
@@ -499,8 +496,6 @@ const formSchemas = {
             { prop: 'advisorId', label: 'Advisor ID', required: true },
             { prop: 'advisorName', label: '名称', required: true },
             { prop: 'advisorType', label: '类型', required: true },
-            { prop: 'advisorOrder', label: '顺序', type: 'number' },
-            { prop: 'advisorDesc', label: '描述', type: 'textarea' },
             { prop: 'advisorParam', label: '参数', type: 'textarea' }
         ],
         defaults: () => ({
@@ -508,8 +503,6 @@ const formSchemas = {
             advisorId: '',
             advisorName: '',
             advisorType: '',
-            advisorOrder: 0,
-            advisorDesc: '',
             advisorParam: ''
         })
     },
@@ -591,7 +584,8 @@ const openNodeModal = (node) => {
         activeClientId.value = currentForm.clientId;
         const flow = flowMapByClient.value.get(currentForm.clientId);
         Object.assign(flowForm, {
-            id: flow?.id || null,
+            originAgentId: flow?.agentId || '',
+            originClientId: flow?.clientId || '',
             flowSeq: flow?.flowSeq || 1,
             flowPrompt: flow?.flowPrompt || 'auto',
             clientRole: flow?.clientRole || currentForm.clientRole || ''
@@ -683,14 +677,15 @@ const saveFlow = async () => {
     loading.save = true;
     try {
         const payload = {
-            id: flowForm.id || null,
             agentId: agentId.value,
             clientId: activeClientId.value,
             clientRole: flowForm.clientRole,
             flowPrompt: flowForm.flowPrompt,
             flowSeq: flowForm.flowSeq
         };
-        if (flowForm.id) {
+        if (flowForm.originAgentId && flowForm.originClientId) {
+            payload.originAgentId = flowForm.originAgentId;
+            payload.originClientId = flowForm.originClientId;
             await unwrapResult(flowUpdate(payload), '更新 Flow 失败');
         } else {
             await unwrapResult(flowInsert(payload), '新增 Flow 失败');
@@ -707,10 +702,13 @@ const saveFlow = async () => {
 };
 
 const deleteFlow = async () => {
-    if (!flowForm.id) return;
+    if (!flowForm.originAgentId || !flowForm.originClientId) return;
     loading.save = true;
     try {
-        await unwrapResult(flowDelete(flowForm.id), '删除 Flow 失败');
+        await unwrapResult(
+            flowDelete({ agentId: flowForm.originAgentId, clientId: flowForm.originClientId }),
+            '删除 Flow 失败'
+        );
         modalVisible.value = false;
         await fetchData();
     } catch (err) {
@@ -727,6 +725,8 @@ const resolveConfigType = (keyword) => {
     return configTypes.value.find((item) => String(item || '').toLowerCase().includes(lower)) || '';
 };
 
+const resolveConfigKey = (item = {}) => `${item.clientId || ''}::${item.configType || ''}::${item.configValue || ''}`;
+
 const prepareConfigForms = () => {
     Object.keys(configEditMap).forEach((key) => delete configEditMap[key]);
     Object.assign(configNewMap, {
@@ -737,7 +737,7 @@ const prepareConfigForms = () => {
 
     const list = configMapByClient.value[activeClientId.value] || [];
     list.forEach((item) => {
-        configEditMap[item.id] = {
+        configEditMap[resolveConfigKey(item)] = {
             configValue: item.configValue,
             configParam: item.configParam,
             configStatus: item.configStatus ?? 1
@@ -758,8 +758,9 @@ const configGroups = computed(() => {
 });
 
 const saveConfigItem = async (item) => {
-    if (!item?.id) return;
-    const draft = configEditMap[item.id];
+    const configKey = resolveConfigKey(item);
+    if (!configKey.trim()) return;
+    const draft = configEditMap[configKey];
     if (!draft?.configValue) {
         modalError.value = 'ConfigValue 不能为空';
         return;
@@ -768,7 +769,9 @@ const saveConfigItem = async (item) => {
     try {
         await unwrapResult(
             configUpdate({
-                id: item.id,
+                originClientId: item.clientId,
+                originConfigType: item.configType,
+                originConfigValue: item.configValue,
                 clientId: item.clientId,
                 configType: item.configType,
                 configValue: draft.configValue,
@@ -789,10 +792,17 @@ const saveConfigItem = async (item) => {
 };
 
 const deleteConfigItem = async (item) => {
-    if (!item?.id) return;
+    if (!item?.clientId || !item?.configType || !item?.configValue) return;
     loading.save = true;
     try {
-        await unwrapResult(configDelete(item.id), '删除配置失败');
+        await unwrapResult(
+            configDelete({
+                clientId: item.clientId,
+                configType: item.configType,
+                configValue: item.configValue
+            }),
+            '删除配置失败'
+        );
         modalVisible.value = false;
         await fetchData();
     } catch (err) {
@@ -843,12 +853,23 @@ const addConfigItem = async (groupKey) => {
 };
 
 const toggleConfigStatus = async (item) => {
-    if (!item?.id) return;
-    const draft = configEditMap[item.id];
+    const configKey = resolveConfigKey(item);
+    if (!configKey.trim()) return;
+    const draft = configEditMap[configKey];
     const next = draft.configStatus === 1 ? 0 : 1;
     draft.configStatus = next;
     try {
-        await unwrapResult(configToggle(item.id, next), '更新配置状态失败');
+        await unwrapResult(
+            configToggle(
+                {
+                    clientId: item.clientId,
+                    configType: item.configType,
+                    configValue: item.configValue
+                },
+                next
+            ),
+            '更新配置状态失败'
+        );
     } catch (err) {
         draft.configStatus = next === 1 ? 0 : 1;
         const msg = normalizeError(err).message || '更新配置状态失败';
@@ -1303,7 +1324,7 @@ onMounted(async () => {
                     <div class="mt-4 flex gap-3">
                         <button class="rounded-[10px] bg-[#1d4ed8] px-4 py-2 text-[13px] font-semibold text-white" type="button" @click="saveFlow">保存 Flow</button>
                         <button
-                            v-if="flowForm.id"
+                            v-if="flowForm.originAgentId && flowForm.originClientId"
                             class="rounded-[10px] border border-[#e2e8f0] px-4 py-2 text-[13px] font-semibold text-[#0f172a]"
                             type="button"
                             @click="deleteFlow"
@@ -1320,14 +1341,14 @@ onMounted(async () => {
                         <div>
                             <div class="text-[13px] font-semibold text-[#0f172a]">Prompt</div>
                             <div class="mt-2 space-y-2">
-                                <div v-for="item in configGroups.prompt" :key="item.id" class="rounded-[10px] border border-[#e2e8f0] p-3">
+                                <div v-for="item in configGroups.prompt" :key="resolveConfigKey(item)" class="rounded-[10px] border border-[#e2e8f0] p-3">
                                     <div class="grid gap-2 sm:grid-cols-2">
-                                        <input v-model="configEditMap[item.id].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Prompt ID" />
-                                        <input v-model="configEditMap[item.id].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
+                                        <input v-model="configEditMap[resolveConfigKey(item)].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Prompt ID" />
+                                        <input v-model="configEditMap[resolveConfigKey(item)].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div class="mt-2 flex items-center justify-between">
                                         <button class="text-[12px] text-[#0f172a]" type="button" @click="toggleConfigStatus(item)">
-                                            状态：{{ configEditMap[item.id].configStatus === 1 ? '启用' : '禁用' }}
+                                            状态：{{ configEditMap[resolveConfigKey(item)].configStatus === 1 ? '启用' : '禁用' }}
                                         </button>
                                         <div class="flex gap-2">
                                             <button class="text-[12px] text-[#1d4ed8]" type="button" @click="saveConfigItem(item)">保存</button>
@@ -1356,14 +1377,14 @@ onMounted(async () => {
                         <div>
                             <div class="text-[13px] font-semibold text-[#0f172a]">Advisor</div>
                             <div class="mt-2 space-y-2">
-                                <div v-for="item in configGroups.advisor" :key="item.id" class="rounded-[10px] border border-[#e2e8f0] p-3">
+                                <div v-for="item in configGroups.advisor" :key="resolveConfigKey(item)" class="rounded-[10px] border border-[#e2e8f0] p-3">
                                     <div class="grid gap-2 sm:grid-cols-2">
-                                        <input v-model="configEditMap[item.id].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Advisor ID" />
-                                        <input v-model="configEditMap[item.id].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
+                                        <input v-model="configEditMap[resolveConfigKey(item)].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Advisor ID" />
+                                        <input v-model="configEditMap[resolveConfigKey(item)].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div class="mt-2 flex items-center justify-between">
                                         <button class="text-[12px] text-[#0f172a]" type="button" @click="toggleConfigStatus(item)">
-                                            状态：{{ configEditMap[item.id].configStatus === 1 ? '启用' : '禁用' }}
+                                            状态：{{ configEditMap[resolveConfigKey(item)].configStatus === 1 ? '启用' : '禁用' }}
                                         </button>
                                         <div class="flex gap-2">
                                             <button class="text-[12px] text-[#1d4ed8]" type="button" @click="saveConfigItem(item)">保存</button>
@@ -1392,14 +1413,14 @@ onMounted(async () => {
                         <div>
                             <div class="text-[13px] font-semibold text-[#0f172a]">MCP</div>
                             <div class="mt-2 space-y-2">
-                                <div v-for="item in configGroups.mcp" :key="item.id" class="rounded-[10px] border border-[#e2e8f0] p-3">
+                                <div v-for="item in configGroups.mcp" :key="resolveConfigKey(item)" class="rounded-[10px] border border-[#e2e8f0] p-3">
                                     <div class="grid gap-2 sm:grid-cols-2">
-                                        <input v-model="configEditMap[item.id].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="MCP ID" />
-                                        <input v-model="configEditMap[item.id].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
+                                        <input v-model="configEditMap[resolveConfigKey(item)].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="MCP ID" />
+                                        <input v-model="configEditMap[resolveConfigKey(item)].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div class="mt-2 flex items-center justify-between">
                                         <button class="text-[12px] text-[#0f172a]" type="button" @click="toggleConfigStatus(item)">
-                                            状态：{{ configEditMap[item.id].configStatus === 1 ? '启用' : '禁用' }}
+                                            状态：{{ configEditMap[resolveConfigKey(item)].configStatus === 1 ? '启用' : '禁用' }}
                                         </button>
                                         <div class="flex gap-2">
                                             <button class="text-[12px] text-[#1d4ed8]" type="button" @click="saveConfigItem(item)">保存</button>

@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiVO {
-    private Long id;
     private String apiId;
     private String apiBaseUrl;
     private String apiKey;

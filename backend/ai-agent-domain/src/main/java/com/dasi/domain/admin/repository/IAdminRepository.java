@@ -16,106 +16,95 @@ public interface IAdminRepository {
     // Api
     List<ApiVO> apiPage(ApiPageDTO apiPageDTO);
     Integer apiCount(ApiPageDTO apiPageDTO);
-    ApiVO apiQuery(Long id);
     ApiVO apiQuery(String apiId);
     void apiInsert(ApiManageDTO apiManageDTO);
     void apiUpdate(ApiManageDTO apiManageDTO);
-    void apiDelete(Long id);
+    void apiDelete(String apiId);
 
     // Model
     List<ModelVO> modelPage(ModelPageDTO dto);
     Integer modelCount(ModelPageDTO dto);
-    ModelVO modelQuery(Long id);
     ModelVO modelQuery(String modelId);
     void modelInsert(ModelManageDTO dto);
     void modelUpdate(ModelManageDTO dto);
-    void modelDelete(Long id);
+    void modelDelete(String modelId);
 
     // Mcp
     List<McpVO> mcpPage(McpPageDTO dto);
     Integer mcpCount(McpPageDTO dto);
-    McpVO mcpQuery(Long id);
     McpVO mcpQuery(String mcpId);
     void mcpInsert(McpManageDTO dto);
     void mcpUpdate(McpManageDTO dto);
-    void mcpDelete(Long id);
+    void mcpDelete(String mcpId);
 
     // Advisor
     List<AdvisorVO> advisorPage(AdvisorPageDTO dto);
     Integer advisorCount(AdvisorPageDTO dto);
-    AdvisorVO advisorQuery(Long id);
     AdvisorVO advisorQuery(String advisorId);
     void advisorInsert(AdvisorManageDTO dto);
     void advisorUpdate(AdvisorManageDTO dto);
-    void advisorDelete(Long id);
+    void advisorDelete(String advisorId);
 
     // Prompt
     List<PromptVO> promptPage(PromptPageDTO dto);
     Integer promptCount(PromptPageDTO dto);
-    PromptVO promptQuery(Long id);
     PromptVO promptQuery(String promptId);
     void promptInsert(PromptManageDTO dto);
     void promptUpdate(PromptManageDTO dto);
-    void promptDelete(Long id);
+    void promptDelete(String promptId);
 
     // Client
     List<ClientVO> clientPage(ClientPageDTO dto);
     Integer clientCount(ClientPageDTO dto);
-    ClientVO clientQuery(Long id);
     ClientVO clientQuery(String clientId);
     void clientInsert(ClientManageDTO dto);
     void clientUpdate(ClientManageDTO dto);
-    void clientDelete(Long id);
-    void clientToggle(Long id, Integer status);
+    void clientDelete(String clientId);
+    void clientToggle(String clientId, Integer status);
 
     // Agent
     List<AgentVO> agentPage(AgentPageDTO dto);
     List<AgentVO> agentList(AgentListDTO dto);
     Integer agentCount(AgentPageDTO dto);
-    AgentVO agentQuery(Long id);
     AgentVO agentQuery(String agentId);
     void agentInsert(AgentManageDTO dto);
     void agentUpdate(AgentManageDTO dto);
-    void agentDelete(Long id);
-    void agentToggle(Long id, Integer status);
+    void agentDelete(String agentId);
+    void agentToggle(String agentId, Integer status);
 
     // User
     List<UserVO> userPage(UserPageDTO dto);
     Integer userCount(UserPageDTO dto);
-    UserVO userQuery(Long id);
     UserVO userQuery(String userName);
     void userInsert(UserManageDTO dto);
     void userUpdate(UserManageDTO dto);
-    void userDelete(Long id);
-    void userToggle(Long id, Integer status);
+    void userDelete(String userName);
+    void userToggle(String userName, Integer status);
 
     // Config
     List<ConfigVO> configList(ConfigListDTO dto);
     ConfigVO configQuery(ConfigManageDTO dto);
-    ConfigVO configQuery(Long id);
     void configInsert(ConfigManageDTO dto);
     void configUpdate(ConfigManageDTO dto);
-    void configDelete(Long id);
-    void configToggle(Long id, Integer status);
+    void configDelete(String clientId, String configType, String configValue);
+    void configToggle(String clientId, String configType, String configValue, Integer status);
 
     // Flow
     List<ClientDetailVO> flowClient();
     List<FlowVO> flowAgent(String agentId);
     FlowVO flowQuery(String agentId, String clientId);
-    FlowVO flowQuery(Long id);
     void flowInsert(FlowManageDTO dto);
     void flowUpdate(FlowManageDTO dto);
-    void flowDelete(Long id);
+    void flowDelete(String agentId, String clientId);
 
     // Task
     List<TaskVO> taskPage(TaskPageDTO dto);
     Integer taskCount(TaskPageDTO dto);
-    TaskVO taskQuery(Long id);
     TaskVO taskQuery(String taskId);
     void taskInsert(TaskManageDTO dto);
     void taskUpdate(TaskManageDTO dto);
-    void taskDelete(Long id);
-    void taskToggle(Long id, Integer status);
+    void taskDelete(String taskId);
+    void taskToggle(String taskId, Integer status);
 
     // Session
     List<SessionVO> listSession();

@@ -68,17 +68,6 @@
         FROM ai_prompt
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               prompt_id,
-               prompt_name,
-               systen_prompt,
-               create_time,
-               update_time
-        FROM ai_prompt
-        WHERE id = #{id}
-    </select>
-
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiPrompt">
         INSERT INTO ai_prompt (prompt_id,
                                prompt_name,

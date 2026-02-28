@@ -14,7 +14,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FlowManageDTO {
 
-    private Long id;
+    private String originAgentId;
+
+    private String originClientId;
 
     @NotBlank
     private String agentId;

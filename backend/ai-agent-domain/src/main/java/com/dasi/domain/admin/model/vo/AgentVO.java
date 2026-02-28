@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgentVO {
-    private Long id;
     private String agentId;
     private String agentName;
     private String agentType;

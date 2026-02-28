@@ -22,7 +22,7 @@ public interface ISettingService {
 
     void apiUpdate(SettingApiDTO dto);
 
-    void apiDelete(Long id);
+    void apiDelete(String apiId);
 
     List<UserMcpVO> mcpList(String keyword);
 
@@ -30,6 +30,6 @@ public interface ISettingService {
 
     void mcpUpdate(SettingMcpDTO dto);
 
-    void mcpDelete(Long id);
+    void mcpDelete(String mcpId);
 
 }

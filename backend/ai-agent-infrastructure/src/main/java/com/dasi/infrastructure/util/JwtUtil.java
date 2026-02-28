@@ -26,7 +26,7 @@ public class JwtUtil implements IJwtUtil {
 
     @Override
     public String generateToken(UserVO userVO) {
-        if (userVO == null || userVO.getId() == null) {
+        if (userVO == null || userVO.getUserId() == null) {
             throw new IllegalArgumentException("用户信息缺失，无法签发 Token");
         }
 
@@ -38,7 +38,7 @@ public class JwtUtil implements IJwtUtil {
                 .withIssuer(jwtProperties.getIssuer())
                 .withIssuedAt(now)
                 .withExpiresAt(expireAt)
-                .withClaim(CLAIM_USER_ID, userVO.getId())
+                .withClaim(CLAIM_USER_ID, userVO.getUserId())
                 .withClaim(CLAIM_USER_NAME, userVO.getUserName())
                 .withClaim(CLAIM_USER_ROLE, userVO.getUserRole())
                 .sign(getAlgorithm());
@@ -67,7 +67,7 @@ public class JwtUtil implements IJwtUtil {
             throw new JWTVerificationException("Token 缺少必要用户信息");
         }
         return UserVO.builder()
-                .id(userId)
+                .userId(userId)
                 .userName(userName)
                 .userRole(userRole)
                 .build();

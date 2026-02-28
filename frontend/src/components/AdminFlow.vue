@@ -193,8 +193,11 @@ const performReplace = async (slot, newClient) => {
     loading.replacing = true;
     try {
         const existing = slot.flow;
-        if (existing?.id) {
-            pickData(await flowDelete(existing.id), '删除旧配置失败');
+        if (existing?.agentId && existing?.clientId) {
+            pickData(
+                await flowDelete({ agentId: existing.agentId, clientId: existing.clientId }),
+                '删除旧配置失败'
+            );
         }
         const prompt = (existing?.flowPrompt && existing.flowPrompt.trim()) || 'auto';
         pickData(

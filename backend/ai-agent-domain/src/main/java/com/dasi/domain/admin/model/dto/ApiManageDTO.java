@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ApiManageDTO {
 
-    private Long id;
-
     @NotBlank
     private String apiId;
 

@@ -68,7 +68,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         userContext.set(UserContext.UserInfo.builder()
-                .userId(userVO.getId())
+                .userId(userVO.getUserId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
                 .build());

@@ -28,6 +28,20 @@ public class ExceptionMessage {
 
     public static final String ILLEGAL_DATA = "数据不合法";
 
+    public static final String PUBLISH_FLOW_EMPTY = "智能体工作流为空，无法发布";
+
+    public static final String PUBLISH_CLIENT_MISSING = "工作流客户端不存在，无法发布";
+
+    public static final String PUBLISH_PROMPT_CONFIG_MISSING = "客户端缺少 Prompt 配置，无法发布";
+
+    public static final String PUBLISH_PROMPT_MISSING = "客户端 Prompt 数据缺失，无法发布";
+
+    public static final String PUBLISH_MCP_MISSING = "客户端 MCP 数据缺失，无法发布";
+
+    public static final String PUBLISH_MODEL_MISSING = "智能体模型配置缺失，无法发布";
+
+    public static final String PUBLISH_API_MISSING = "智能体 API 配置缺失，无法发布";
+
 
     public static final String AVATAR_UPLOAD_3 = "";
     public static final String AVATAR_UPLOAD_4 = "";

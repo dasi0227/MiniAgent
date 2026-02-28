@@ -360,9 +360,8 @@ const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() 
 const mapSession = (session) => {
     if (!session) return null;
     return {
-        id: session.id,
         sessionId: session.sessionId,
-        sessionUser: session.sessionUser,
+        sessionUser: session.userName || session.sessionUser || '',
         title: session.sessionTitle || '新会话',
         sessionType: normalizeSessionType(session.sessionType || session.type),
         createdAt: session.createTime ? Date.parse(session.createTime) : Date.now(),
@@ -412,13 +411,13 @@ const loadSessions = async () => {
         agentStore.setSessions(agentList);
 
         const nextChatId =
-            chatStore.currentChatId && chatsList.some((item) => item.id === chatStore.currentChatId)
+            chatStore.currentChatId && chatsList.some((item) => item.sessionId === chatStore.currentChatId)
                 ? chatStore.currentChatId
-                : chatsList[0]?.id || null;
+                : chatsList[0]?.sessionId || null;
         const nextAgentId =
-            agentStore.currentSessionId && agentList.some((item) => item.id === agentStore.currentSessionId)
+            agentStore.currentSessionId && agentList.some((item) => item.sessionId === agentStore.currentSessionId)
                 ? agentStore.currentSessionId
-                : agentList[0]?.id || null;
+                : agentList[0]?.sessionId || null;
         chatStore.setCurrentChatId(nextChatId);
         agentStore.setCurrentSessionId(nextAgentId);
         redirectWelcomeIfNoSession();
@@ -509,21 +508,21 @@ const formatTitle = (title) => {
 };
 
 const startRenameChat = (chat) => {
-    editingChatId.value = chat.id;
+    editingChatId.value = chat.sessionId;
     editChatTitle.value = chat.title || '';
     nextTick(() => {
-        chatTitleInputRefs.value?.[chat.id]?.focus?.();
+        chatTitleInputRefs.value?.[chat.sessionId]?.focus?.();
     });
 };
 
 const saveRenameChat = async (chat) => {
-    if (!chat || editingChatId.value !== chat.id) {
+    if (!chat || editingChatId.value !== chat.sessionId) {
         return;
     }
     const title = editChatTitle.value.trim() || '未命名会话';
     try {
-        await updateSession({ id: chat.id, sessionTitle: title });
-        chatStore.updateChatTitle(chat.id, title);
+        await updateSession({ sessionId: chat.sessionId, sessionTitle: title });
+        chatStore.updateChatTitle(chat.sessionId, title);
         sessionError.value = '';
     } catch (error) {
         sessionError.value = normalizeError(error).message || '更新会话失败';
@@ -538,10 +537,10 @@ const cancelRenameChat = () => {
 };
 
 const startRenameAgent = (session) => {
-    editingAgentId.value = session.id;
+    editingAgentId.value = session.sessionId;
     editAgentTitle.value = session.title || '';
     nextTick(() => {
-        agentTitleInputRefs.value?.[session.id]?.focus?.();
+        agentTitleInputRefs.value?.[session.sessionId]?.focus?.();
     });
 };
 
@@ -564,13 +563,13 @@ const setAgentTitleInputRef = (id, el) => {
 };
 
 const saveRenameAgent = async (session) => {
-    if (!session || editingAgentId.value !== session.id) {
+    if (!session || editingAgentId.value !== session.sessionId) {
         return;
     }
     const title = editAgentTitle.value.trim() || '未命名会话';
     try {
-        await updateSession({ id: session.id, sessionTitle: title });
-        agentStore.updateSessionTitle(session.id, title);
+        await updateSession({ sessionId: session.sessionId, sessionTitle: title });
+        agentStore.updateSessionTitle(session.sessionId, title);
         sessionError.value = '';
     } catch (error) {
         sessionError.value = normalizeError(error).message || '更新会话失败';
@@ -597,12 +596,12 @@ const handleDelete = async () => {
     try {
         const target =
             deleteTarget.value.type === 'agent'
-                ? agentStore.sessions.find((item) => item.id === deleteTarget.value.id)
-                : chatStore.chats.find((item) => item.id === deleteTarget.value.id);
+                ? agentStore.sessions.find((item) => item.sessionId === deleteTarget.value.id)
+                : chatStore.chats.find((item) => item.sessionId === deleteTarget.value.id);
         if (!target) {
             throw new Error('会话不存在');
         }
-        await deleteSession({ id: target.id, sessionId: target.sessionId });
+        await deleteSession({ sessionId: target.sessionId });
         if (deleteTarget.value.type === 'agent') {
             agentStore.removeSession(deleteTarget.value.id);
         } else {
@@ -642,11 +641,11 @@ const confirmNewSession = async (type) => {
         if (created) {
             if (type === 'work') {
                 agentStore.upsertSession(created);
-                agentStore.setCurrentSessionId(created.id);
+                agentStore.setCurrentSessionId(created.sessionId);
                 router.push('/work');
             } else {
                 chatStore.upsertChat(created);
-                chatStore.setCurrentChatId(created.id);
+                chatStore.setCurrentChatId(created.sessionId);
                 router.push('/chat');
             }
             closeNewSessionPicker();
@@ -659,10 +658,10 @@ const confirmNewSession = async (type) => {
             throw new Error('创建会话失败');
         }
         if (type === 'work') {
-            agentStore.setCurrentSessionId(session.id);
+            agentStore.setCurrentSessionId(session.sessionId);
             router.push('/work');
         } else {
-            chatStore.setCurrentChatId(session.id);
+            chatStore.setCurrentChatId(session.sessionId);
             router.push('/chat');
         }
         closeNewSessionPicker();
@@ -703,7 +702,6 @@ const saveProfile = async () => {
     }
     try {
         const resp = await updatePassword({
-            id: currentUser.value.userId,
             username: profileForm.username,
             oldPassword: profileForm.oldPassword,
             newPassword: profileForm.newPassword,
@@ -748,7 +746,7 @@ const toggleTheme = () => {
 };
 
 const resetMcpForm = () => {
-    mcpForm.id = null;
+    mcpForm.id = '';
     mcpForm.mcpName = '';
     mcpForm.mcpTransport = 'mcp';
     mcpForm.mcpConfig = '';
@@ -758,7 +756,7 @@ const resetMcpForm = () => {
 };
 
 const resetApiForm = () => {
-    apiForm.id = null;
+    apiForm.id = '';
     apiForm.modelName = '';
     apiForm.modelType = '';
     apiForm.apiBaseUrl = '';
@@ -815,7 +813,7 @@ const loadUserMcp = async () => {
 
 const editMcp = (item) => {
     if (!item) return;
-    mcpForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
+    mcpForm.id = (item.mcpId || '').trim();
     mcpForm.mcpName = item.mcpName || '';
     mcpForm.mcpTransport = mapBackendMcpTypeToTransport(item.mcpType);
     mcpForm.mcpConfig = item.mcpParam || item.mcpConfig || '';
@@ -837,8 +835,8 @@ const saveMcp = async () => {
         mcpDesc: mcpForm.mcpDesc,
         mcpSecret: mcpForm.secretMapText || '{}'
     };
-    if (mcpEditing.value && Number.isFinite(Number(mcpForm.id))) {
-        payload.id = Number(mcpForm.id);
+    if (mcpEditing.value && mcpForm.id) {
+        payload.mcpId = mcpForm.id;
     }
     try {
         if (mcpEditing.value) {
@@ -854,10 +852,10 @@ const saveMcp = async () => {
 };
 
 const deleteMcp = async (item) => {
-    if (!item?.id) return;
+    if (!item?.mcpId) return;
     try {
-        await userMcpDelete(item.id);
-        if (mcpForm.id === item.id) {
+        await userMcpDelete(item.mcpId);
+        if (mcpForm.id === item.mcpId) {
             resetMcpForm();
         }
         await loadUserMcp();
@@ -868,7 +866,7 @@ const deleteMcp = async (item) => {
 
 const editApi = (item) => {
     if (!item) return;
-    apiForm.id = Number.isFinite(Number(item.id)) ? Number(item.id) : null;
+    apiForm.id = (item.apiId || '').trim();
     apiForm.modelName = item.modelName || '';
     apiForm.modelType = item.modelType || '';
     apiForm.apiBaseUrl = item.apiBaseUrl || '';
@@ -895,8 +893,8 @@ const saveApi = async () => {
         apiKey: apiForm.apiKey.trim(),
         apiCompletionPath: apiForm.apiCompletionPath.trim() || '/v1/chat/completions'
     };
-    if (apiEditing.value && Number.isFinite(Number(apiForm.id))) {
-        payload.id = Number(apiForm.id);
+    if (apiEditing.value && apiForm.id) {
+        payload.apiId = apiForm.id;
     }
     try {
         if (apiEditing.value) {
@@ -912,10 +910,10 @@ const saveApi = async () => {
 };
 
 const deleteApi = async (item) => {
-    if (!item?.id) return;
+    if (!item?.apiId) return;
     try {
-        await userApiDelete(item.id);
-        if (apiForm.id === item.id) {
+        await userApiDelete(item.apiId);
+        if (apiForm.id === item.apiId) {
             resetApiForm();
         }
         await loadUserApi();
@@ -1032,23 +1030,23 @@ const loadProfileResources = async () => {
                     <div :class="[COLLAPSE_INNER_CLASS, 'flex flex-col gap-[8px]']">
                             <div
                                 v-for="chat in chats"
-                                :key="chat.id"
+                                :key="chat.sessionId"
                                 :class="[
                                     'w-full rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-[12px] py-[10px] transition-all duration-200 hover:border-[rgba(111,125,255,0.8)] hover:bg-[rgba(255,255,255,0.07)]',
-                                    chat.id === currentChatId && route.path.startsWith('/chat')
+                                    chat.sessionId === currentChatId && route.path.startsWith('/chat')
                                         ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.25),rgba(83,197,255,0.1))] shadow-[0_10px_20px_rgba(0,0,0,0.12)]'
                                         : ''
                                 ]"
                             >
                                 <div
                                     class="flex items-center justify-between gap-[10px]"
-                                    @click="editingChatId === chat.id ? null : handleSelectChat(chat.id)"
+                                    @click="editingChatId === chat.sessionId ? null : handleSelectChat(chat.sessionId)"
                                 >
                                     <div class="min-w-0 flex flex-col">
-                                        <template v-if="editingChatId === chat.id">
+                                        <template v-if="editingChatId === chat.sessionId">
                                             <input
                                                 v-model="editChatTitle"
-                                                :ref="(el) => setChatTitleInputRef(chat.id, el)"
+                                                :ref="(el) => setChatTitleInputRef(chat.sessionId, el)"
                                                 class="w-full rounded-[8px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[6px] font-semibold text-[#e7ecf4]"
                                                 :placeholder="chat.title || '未命名会话'"
                                                 maxlength="30"
@@ -1078,7 +1076,7 @@ const loadProfileResources = async () => {
                                             class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#ef4444] hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.16)]"
                                             type="button"
                                             title="删除"
-                                            @click.stop="openDeleteConfirm('chat', chat.id)"
+                                            @click.stop="openDeleteConfirm('chat', chat.sessionId)"
                                         >
                                             🗑
                                         </button>
@@ -1117,23 +1115,23 @@ const loadProfileResources = async () => {
                     <div :class="[COLLAPSE_INNER_CLASS, 'flex flex-col gap-[8px]']">
                             <div
                                 v-for="session in agentSessions"
-                                :key="session.id"
+                                :key="session.sessionId"
                                 :class="[
                                     'w-full rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-[12px] py-[10px] transition-all duration-200 hover:border-[rgba(111,125,255,0.8)] hover:bg-[rgba(255,255,255,0.07)]',
-                                    session.id === currentAgentSessionId && route.path.startsWith('/work')
+                                    session.sessionId === currentAgentSessionId && route.path.startsWith('/work')
                                         ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.25),rgba(83,197,255,0.1))] shadow-[0_10px_20px_rgba(0,0,0,0.12)]'
                                         : ''
                                 ]"
                             >
                                 <div
                                     class="flex items-center justify-between gap-[10px]"
-                                    @click="editingAgentId === session.id ? null : handleSelectAgent(session.id)"
+                                    @click="editingAgentId === session.sessionId ? null : handleSelectAgent(session.sessionId)"
                                 >
                                     <div class="min-w-0 flex flex-col">
-                                        <template v-if="editingAgentId === session.id">
+                                        <template v-if="editingAgentId === session.sessionId">
                                             <input
                                                 v-model="editAgentTitle"
-                                                :ref="(el) => setAgentTitleInputRef(session.id, el)"
+                                                :ref="(el) => setAgentTitleInputRef(session.sessionId, el)"
                                                 class="w-full rounded-[8px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] px-[8px] py-[6px] font-semibold text-[#e7ecf4]"
                                                 :placeholder="session.title || '未命名会话'"
                                                 maxlength="30"
@@ -1163,7 +1161,7 @@ const loadProfileResources = async () => {
                                             class="grid h-[30px] w-[30px] place-items-center rounded-full border border-[rgba(255,255,255,0.25)] text-[13px] text-[#e7ecf4] transition-all duration-200 hover:border-[#ef4444] hover:text-[#ef4444] hover:bg-[rgba(239,68,68,0.16)]"
                                             type="button"
                                             title="删除"
-                                            @click.stop="openDeleteConfirm('agent', session.id)"
+                                            @click.stop="openDeleteConfirm('agent', session.sessionId)"
                                         >
                                             🗑
                                         </button>

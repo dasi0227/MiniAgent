@@ -11,9 +11,9 @@ public interface ISessionService {
 
     SessionVO insertSession(String sessionTitle, String sessionType);
 
-    void updateSession(Long id, String sessionTitle);
+    void updateSession(String sessionId, String sessionTitle);
 
-    void deleteSession(Long id, String sessionId);
+    void deleteSession(String sessionId);
 
     List<MessageVO> listChatMessage(String sessionId);
 

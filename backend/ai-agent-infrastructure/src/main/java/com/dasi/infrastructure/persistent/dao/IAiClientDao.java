@@ -30,13 +30,9 @@ public interface IAiClientDao {
 
     Integer countAll();
 
-    AiClient queryById(@Param("id") Long id);
-
     void insert(AiClient aiClient);
 
     void update(AiClient aiClient);
-
-    void delete(@Param("id") Long id);
 
     Integer deleteByClientId(@Param("clientId") String clientId);
 

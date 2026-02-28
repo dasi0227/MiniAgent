@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserMcpVO {
-
-    private Long id;
-
     private String mcpId;
 
     private String mcpName;

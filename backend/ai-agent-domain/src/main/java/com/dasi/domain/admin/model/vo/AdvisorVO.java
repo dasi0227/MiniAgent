@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdvisorVO {
-    private Long id;
     private String advisorId;
     private String advisorName;
     private String advisorType;

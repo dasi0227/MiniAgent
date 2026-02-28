@@ -29,13 +29,9 @@ public interface IAiAgentDao {
 
     Integer countAll();
 
-    AiAgent queryById(@Param("id") Long id);
-
     void insert(AiAgent aiAgent);
 
     void update(AiAgent aiAgent);
-
-    void delete(@Param("id") Long id);
 
     void deleteByAgentId(@Param("agentId") String agentId);
 

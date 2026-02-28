@@ -41,9 +41,9 @@ onMounted(async () => {
     try {
         const resp = await repoList();
         const payload = resp?.data ?? resp?.result ?? resp;
-        const selfList = Array.isArray(payload?.self?.list) ? payload.self.list : [];
-        const favorList = Array.isArray(payload?.favor?.list) ? payload.favor.list : [];
-        const forkList = Array.isArray(payload?.fork?.list) ? payload.fork.list : [];
+        const selfList = Array.isArray(payload?.self) ? payload.self : [];
+        const favorList = Array.isArray(payload?.favor) ? payload.favor : [];
+        const forkList = Array.isArray(payload?.fork) ? payload.fork : [];
         mineAgents.value = selfList.map((item) => ({ ...(item || {}), sourceType: 'self' }));
         repoItems.value = [
             ...forkList.map((item) => ({ ...(item || {}), sourceType: 'fork' })),

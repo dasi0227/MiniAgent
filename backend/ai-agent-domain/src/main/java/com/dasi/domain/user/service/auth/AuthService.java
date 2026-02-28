@@ -67,7 +67,6 @@ public class AuthService implements IAuthService {
         String token = jwtUtil.generateToken(userVO);
         return AuthVO.builder()
                 .token(token)
-                .userId(userVO.getId())
                 .userName(userVO.getUserName())
                 .userRole(userVO.getUserRole())
                 .userAvatar(ossUtil.getObjectUrl(userVO.getUserAvatar()))

@@ -118,23 +118,6 @@
         FROM ai_mcp
     </select>
 
-    <select id="queryById" resultMap="dataMap">
-        SELECT id,
-               mcp_id,
-               mcp_name,
-               mcp_type,
-               mcp_param,
-               mcp_secret,
-               mcp_desc,
-               mcp_timeout,
-               mcp_chat,
-               mcp_from,
-               create_time,
-               update_time
-        FROM ai_mcp
-        WHERE id = #{id}
-    </select>
-
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiMcp">
         INSERT INTO ai_mcp (mcp_id,
                             mcp_name,
@@ -197,9 +180,9 @@
         ORDER BY create_time DESC, id DESC
     </select>
 
-    <delete id="delete">
+    <delete id="deleteByMcpId">
         DELETE
         FROM ai_mcp
-        WHERE id = #{id}
+        WHERE mcp_id = #{mcpId}
     </delete>
 </mapper>

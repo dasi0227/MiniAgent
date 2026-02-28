@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClientVO {
-    private Long id;
     private String clientId;
     private String clientType;
     private String clientRole;
