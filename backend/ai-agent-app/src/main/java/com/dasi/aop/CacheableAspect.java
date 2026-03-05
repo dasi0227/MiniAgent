@@ -1,8 +1,9 @@
 package com.dasi.aop;
 
+import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.redis.IRedisUtil;
-import com.dasi.types.enumeration.CacheType;
 import com.dasi.types.annotation.Cacheable;
+import com.dasi.types.enumeration.CacheType;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -22,6 +23,9 @@ public class CacheableAspect {
 
     @Resource
     private IRedisUtil redisUtil;
+
+    @Resource
+    private UserContext userContext;
 
     @Around("@annotation(cacheable)")
     public Object around(ProceedingJoinPoint joinPoint, Cacheable cacheable) throws Throwable {
@@ -105,15 +109,29 @@ public class CacheableAspect {
         if (StringUtils.isBlank(cacheKey) == StringUtils.isBlank(cachePrefix)) {
             throw new IllegalStateException("cacheKey 和 cachePrefix 必须有且只能有一个有值");
         }
-        if (!StringUtils.isBlank(cacheKey)) {
-            return cacheKey;
+
+        String baseKey;
+        if (StringUtils.isNotBlank(cacheKey)) {
+            baseKey = cacheKey;
+        } else if (args == null || args.length == 0) {
+            baseKey = cachePrefix + methodName;
+        } else {
+            baseKey = cachePrefix + methodName + ":" + Arrays.stream(args)
+                    .map(this::safeToString)
+                    .collect(Collectors.joining(","));
         }
-        if (args == null || args.length == 0) {
-            return cachePrefix + methodName;
+
+        return appendUserScope(baseKey);
+    }
+
+    private String appendUserScope(String baseKey) {
+        String role = userContext.getUserRole();
+        if ("admin".equalsIgnoreCase(role)) {
+            return baseKey;
+        } else {
+            Long userId = userContext.getUserId();
+            return baseKey + ":" + userId;
         }
-        return cachePrefix + methodName + ":" + Arrays.stream(args)
-                .map(this::safeToString)
-                .collect(Collectors.joining(","));
     }
 
     private String safeToString(Object arg) {

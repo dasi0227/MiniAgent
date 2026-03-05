@@ -8,6 +8,9 @@ public class RedisConstant {
     public static final String QUERY_CHAT_MCP_KEY = "query:chat-mcp";
     public static final String QUERY_CHAT_RAG_KEY = "query:chat-rag";
 
+    // armroy
+    public static final String ARMORY_PREFIX = "armory:";
+
     // ai
     public static final String AI_API_VO_PREFIX = "ai:api:vo:";
     public static final String AI_MODEL_VO_PREFIX = "ai:model:vo:";
@@ -19,7 +22,6 @@ public class RedisConstant {
     public static final String AI_AGENT_TYPE_PREFIX = "ai:agent:type:";
     public static final String AI_TASK_VO_LIST_KEY = "ai:task:vo-list";
     public static final String AI_MCP_VO_LIST_PREFIX = "ai:mcp:vo-list:";
-    public static final String AI_ARMORY_PREFIX = "ai:armory:";
 
     // admin
     public static final String ADMIN_API_PREFIX = "admin:api:";
@@ -35,5 +37,10 @@ public class RedisConstant {
     public static final String ADMIN_TASK_PREFIX = "admin:task:";
     public static final String ADMIN_DEPEND_PREFIX = "admin:depend:";
     public static final String ADMIN_LIST_PREFIX = "admin:list:";
+
+    // user
+    public static final String USER_API_PREFIX = "user:api:";
+    public static final String USER_MCP_PREFIX = "user:mcp:";
+    public static final String USER_TASK_PREFIX = "user:task:";
 
 }

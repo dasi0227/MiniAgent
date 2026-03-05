@@ -17,7 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static com.dasi.types.constant.RedisConstant.AI_ARMORY_PREFIX;
+import static com.dasi.types.constant.RedisConstant.ARMORY_PREFIX;
 
 @Slf4j
 @Service
@@ -48,7 +48,7 @@ public class DispatchService implements IDispatchService {
             throw new IllegalStateException("装配入口不存在");
         }
 
-        String armoryKey = AI_ARMORY_PREFIX + armoryType;
+        String armoryKey = ARMORY_PREFIX + armoryType;
         Set<String> cacheSet = redisUtil.getSet(armoryKey, String.class);
 
         if (cacheSet != null && !cacheSet.isEmpty()) {

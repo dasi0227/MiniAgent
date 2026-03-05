@@ -58,6 +58,7 @@
                update_time
         FROM ai_agent
         <where>
+            AND agent_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND agent_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -87,6 +88,7 @@
         update_time
         FROM ai_agent
         <where>
+            AND agent_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND agent_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -104,6 +106,7 @@
         SELECT COUNT(1)
         FROM ai_agent
         <where>
+            AND agent_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND agent_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -119,6 +122,7 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_agent
+        WHERE agent_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiAgent">

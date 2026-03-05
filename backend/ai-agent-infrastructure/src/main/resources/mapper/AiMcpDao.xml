@@ -87,6 +87,7 @@
                update_time
         FROM ai_mcp
         <where>
+            AND mcp_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND mcp_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -104,6 +105,7 @@
         SELECT COUNT(1)
         FROM ai_mcp
         <where>
+            AND mcp_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND mcp_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -116,6 +118,7 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_mcp
+        WHERE mcp_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiMcp">

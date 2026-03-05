@@ -40,6 +40,7 @@
         update_time
         FROM ai_api
         <where>
+            AND api_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND api_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -54,6 +55,7 @@
         SELECT COUNT(1)
         FROM ai_api
         <where>
+            AND api_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND api_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -63,11 +65,13 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_api
+        WHERE api_from = 0
     </select>
 
     <select id="listApiId" resultType="java.lang.String">
         SELECT api_id
         FROM ai_api
+        WHERE api_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiApi">

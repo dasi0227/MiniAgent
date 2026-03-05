@@ -92,6 +92,7 @@ public class QueryRepository implements IQueryRepository {
     }
 
     @Override
+    @Cacheable(cacheKey = QUERY_WORK_AGENT_KEY, cacheClass = WorkAgentVO.class, cacheType = CacheType.LIST)
     public List<WorkAgentVO> queryWorkAgentVOList() {
 
         Long userId = userContext.getUserId();

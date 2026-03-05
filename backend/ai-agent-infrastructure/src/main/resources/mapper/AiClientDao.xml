@@ -63,6 +63,7 @@
                update_time
         FROM ai_client
         WHERE client_type = 'work'
+          AND client_from = 0
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -79,6 +80,7 @@
                update_time
         FROM ai_client
         <where>
+            AND client_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -105,6 +107,7 @@
         SELECT COUNT(1)
         FROM ai_client
         <where>
+            AND client_from = 0
             <if test="idKeyword != null and idKeyword != ''">
                 AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
             </if>
@@ -126,6 +129,7 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_client
+        WHERE client_from = 0
     </select>
 
     <select id="queryClientIdByModelId" resultType="java.lang.String">
