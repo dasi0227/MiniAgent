@@ -26,13 +26,9 @@ public class ExecuteStrategyFactory {
 
     }
 
-    public IExecuteStrategy getStrategyByType(String type) {
-        return type2StrategyMap.get(type);
-    }
-
     public IExecuteStrategy getStrategyByAgentId(String aiAgentId) {
         String type = aiRepository.queryExecuteTypeByAgentId(aiAgentId);
-        return getStrategyByType(type);
+        return type2StrategyMap.get(type);
     }
 
 }
