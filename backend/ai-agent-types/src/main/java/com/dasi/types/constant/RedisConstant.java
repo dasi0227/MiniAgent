@@ -43,4 +43,10 @@ public class RedisConstant {
     public static final String USER_MCP_PREFIX = "user:mcp:";
     public static final String USER_TASK_PREFIX = "user:task:";
 
+    // workspace
+    public static final String WORKSPACE_PLAZA_PREFIX = "workspace:plaza:";
+    public static final String WORKSPACE_COMMENT_PREFIX = "workspace:comment:";
+    public static final String WORKSPACE_REPO_PREFIX = "workspace:repo:";
+    public static final String WORKSPACE_TEMPLATE_PREFIX = "workspace:template:";
+
 }

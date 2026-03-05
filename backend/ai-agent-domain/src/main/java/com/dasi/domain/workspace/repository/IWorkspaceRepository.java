@@ -11,16 +11,18 @@ import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
-import com.dasi.types.result.PageResult;
 
 import java.util.List;
-import java.util.Map;
 
 public interface IWorkspaceRepository {
 
-    PageResult<PlazaVO> pagePlaza(PlazaPageDTO dto);
+    List<PlazaVO> plazaPage(PlazaPageDTO dto);
 
-    PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO dto);
+    Integer plazaCount(PlazaPageDTO dto);
+
+    List<CommentVO> plazaCommentList(PlazaCommentAreaDTO dto);
+
+    Integer plazaCommentCount(String plazaId);
 
     void plazaLike(String plazaId, boolean liked);
 
@@ -32,7 +34,7 @@ public interface IWorkspaceRepository {
 
     void plazaDelete(String plazaId);
 
-    Map<String, List<RepoVO>> repoMap();
+    List<RepoVO> repoList();
 
     void agentPublish(AgentPublishDTO dto);
 

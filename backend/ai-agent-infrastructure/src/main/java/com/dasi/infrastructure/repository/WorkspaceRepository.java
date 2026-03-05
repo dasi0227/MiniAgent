@@ -21,17 +21,23 @@ import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.domain.workspace.repository.IWorkspaceRepository;
 import com.dasi.infrastructure.persistent.dao.*;
 import com.dasi.infrastructure.persistent.po.*;
+import com.dasi.types.annotation.CacheEvict;
+import com.dasi.types.annotation.Cacheable;
+import com.dasi.types.enumeration.CacheType;
 import com.dasi.types.exception.MiniAgentException;
-import com.dasi.types.result.PageResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_DATA;
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_USER;
+import static com.dasi.types.constant.RedisConstant.*;
 
 @Slf4j
 @Repository
@@ -95,93 +101,83 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     private ISnapshotUtil snapshotUtil;
 
     @Override
-    public PageResult<PlazaVO> pagePlaza(PlazaPageDTO dto) {
+    @Cacheable(cachePrefix = WORKSPACE_PLAZA_PREFIX, cacheType = CacheType.LIST, cacheClass = PlazaVO.class)
+    public List<PlazaVO> plazaPage(PlazaPageDTO dto) {
         int pageNum = dto.getPageNum();
         int pageSize = dto.getPageSize();
         int offset = (pageNum - 1) * pageSize;
 
         List<AiPlaza> aiPlazaList = aiPlazaDao.page(dto.getKeyword(), dto.getSortBy(), dto.getSortOrder(), offset, pageSize);
-        Integer total = aiPlazaDao.count(dto.getKeyword());
-        if (total == null) {
-            total = 0;
+        if (aiPlazaList == null || aiPlazaList.isEmpty()) {
+            return List.of();
         }
 
-        List<PlazaVO> plazaVOList = List.of();
-        if (aiPlazaList != null && !aiPlazaList.isEmpty()) {
-            Long userId = userContext.getUserId();
-            List<String> plazaIdList = aiPlazaList.stream().map(AiPlaza::getPlazaId).toList();
+        Long userId = userContext.getUserId();
+        List<String> plazaIdList = aiPlazaList.stream().map(AiPlaza::getPlazaId).toList();
 
-            List<String> likedList = aiPlazaLikeDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
-            List<String> favoredList = aiPlazaFavorDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
-            List<String> commentedList = aiPlazaCommentDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
+        List<String> likedList = aiPlazaLikeDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
+        List<String> favoredList = aiPlazaFavorDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
+        List<String> commentedList = aiPlazaCommentDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
 
-            plazaVOList = aiPlazaList.stream().map(aiPlaza -> PlazaVO.builder()
-                    .plazaId(aiPlaza.getPlazaId())
-                    .templateId(aiPlaza.getTemplateId())
-                    .agentName(aiPlaza.getAgentName())
-                    .agentType(aiPlaza.getAgentType())
-                    .userName(aiPlaza.getUserName())
-                    .plazaTitle(aiPlaza.getPlazaTitle())
-                    .plazaDesc(aiPlaza.getPlazaDesc())
-                    .likeCount(aiPlaza.getLikeCount())
-                    .favorCount(aiPlaza.getFavorCount())
-                    .commentCount(aiPlaza.getCommentCount())
-                    .liked(likedList.contains(aiPlaza.getPlazaId()))
-                    .favored(favoredList.contains(aiPlaza.getPlazaId()))
-                    .commented(commentedList.contains(aiPlaza.getPlazaId()))
-                    .createTime(aiPlaza.getCreateTime())
-                    .build()).toList();
-        }
-
-        int pageSum = pageSize == 0 ? 0 : (total + pageSize - 1) / pageSize;
-        return PageResult.<PlazaVO>builder()
-                .list(plazaVOList)
-                .total(total)
-                .pageNum(pageNum)
-                .pageSize(pageSize)
-                .pageSum(pageSum)
-                .build();
+        return aiPlazaList.stream().map(aiPlaza -> PlazaVO.builder()
+                .plazaId(aiPlaza.getPlazaId())
+                .templateId(aiPlaza.getTemplateId())
+                .agentName(aiPlaza.getAgentName())
+                .agentType(aiPlaza.getAgentType())
+                .userName(aiPlaza.getUserName())
+                .plazaTitle(aiPlaza.getPlazaTitle())
+                .plazaDesc(aiPlaza.getPlazaDesc())
+                .likeCount(aiPlaza.getLikeCount())
+                .favorCount(aiPlaza.getFavorCount())
+                .commentCount(aiPlaza.getCommentCount())
+                .liked(likedList.contains(aiPlaza.getPlazaId()))
+                .favored(favoredList.contains(aiPlaza.getPlazaId()))
+                .commented(commentedList.contains(aiPlaza.getPlazaId()))
+                .createTime(aiPlaza.getCreateTime())
+                .build()).toList();
     }
 
     @Override
-    public PageResult<CommentVO> plazaCommentArea(PlazaCommentAreaDTO dto) {
+    @Cacheable(cachePrefix = WORKSPACE_PLAZA_PREFIX, cacheType = CacheType.VALUE, cacheClass = Integer.class)
+    public Integer plazaCount(PlazaPageDTO dto) {
+        Integer total = aiPlazaDao.count(dto.getKeyword());
+        return total == null ? 0 : total;
+    }
+
+    @Override
+    @Cacheable(cachePrefix = WORKSPACE_COMMENT_PREFIX, cacheType = CacheType.LIST, cacheClass = CommentVO.class)
+    public List<CommentVO> plazaCommentList(PlazaCommentAreaDTO dto) {
         Long userId = userContext.getUserId();
-        int pageNum = dto.getPageNum();
         int pageSize = dto.getPageSize();
-        int offset = (pageNum - 1) * pageSize;
+        int offset = (dto.getPageNum() - 1) * pageSize;
         String plazaId = dto.getPlazaId();
 
         List<AiPlazaComment> aiPlazaCommentList = aiPlazaCommentDao.listByPlazaId(plazaId, offset, pageSize);
-        List<CommentVO> commentVOList = List.of();
-        if (aiPlazaCommentList != null && !aiPlazaCommentList.isEmpty()) {
-            commentVOList = aiPlazaCommentList.stream()
-                    .map(aiPlazaComment -> CommentVO.builder()
-                            .commentId(aiPlazaComment.getCommentId())
-                            .plazaId(aiPlazaComment.getPlazaId())
-                            .userId(aiPlazaComment.getUserId())
-                            .userName(aiPlazaComment.getUserName())
-                            .commentContent(aiPlazaComment.getCommentContent())
-                            .createTime(aiPlazaComment.getCreateTime())
-                            .mine(userId != null && userId.equals(aiPlazaComment.getUserId()))
-                            .build())
-                    .toList();
+        if (aiPlazaCommentList == null || aiPlazaCommentList.isEmpty()) {
+            return List.of();
         }
-
-        Integer total = aiPlazaCommentDao.countByPlazaId(plazaId);
-        if (total == null) {
-            total = 0;
-        }
-        int pageSum = (total + pageSize - 1) / pageSize;
-        return PageResult.<CommentVO>builder()
-                .list(commentVOList)
-                .total(total)
-                .pageNum(pageNum)
-                .pageSize(pageSize)
-                .pageSum(pageSum)
-                .build();
+        return aiPlazaCommentList.stream()
+                .map(aiPlazaComment -> CommentVO.builder()
+                        .commentId(aiPlazaComment.getCommentId())
+                        .plazaId(aiPlazaComment.getPlazaId())
+                        .userId(aiPlazaComment.getUserId())
+                        .userName(aiPlazaComment.getUserName())
+                        .commentContent(aiPlazaComment.getCommentContent())
+                        .createTime(aiPlazaComment.getCreateTime())
+                        .mine(userId != null && userId.equals(aiPlazaComment.getUserId()))
+                        .build())
+                .toList();
     }
 
     @Override
+    @Cacheable(cachePrefix = WORKSPACE_COMMENT_PREFIX, cacheType = CacheType.VALUE, cacheClass = Integer.class)
+    public Integer plazaCommentCount(String plazaId) {
+        Integer total = aiPlazaCommentDao.countByPlazaId(plazaId);
+        return total == null ? 0 : total;
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void plazaLike(String plazaId, boolean liked) {
         Long userId = userContext.getUserId();
         if (liked) {
@@ -199,6 +195,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void plazaFavor(String plazaId, boolean favored) {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
@@ -234,6 +231,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void plazaComment(PlazaCommentDTO dto) {
         String plazaId = dto.getPlazaId();
         Long userId = userContext.getUserId();
@@ -249,6 +247,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void plazaDiscomment(String plazaId, String commentId) {
         Long userId = userContext.getUserId();
         Integer affected = aiPlazaCommentDao.delete(commentId, userId);
@@ -258,6 +257,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void plazaDelete(String plazaId) {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
@@ -272,20 +272,17 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    public Map<String, List<RepoVO>> repoMap() {
+    @Cacheable(cachePrefix = WORKSPACE_REPO_PREFIX, cacheType = CacheType.LIST, cacheClass = RepoVO.class)
+    public List<RepoVO> repoList() {
         Long userId = userContext.getUserId();
         List<AiRepo> aiRepoList = aiRepoDao.listByUserId(userId);
-
-        Map<String, List<RepoVO>> resultMap = new LinkedHashMap<>();
-        resultMap.put(RepoType.SELF.getType(), new ArrayList<>());
-        resultMap.put(RepoType.FORK.getType(), new ArrayList<>());
-        resultMap.put(RepoType.FAVOR.getType(), new ArrayList<>());
         if (aiRepoList == null || aiRepoList.isEmpty()) {
-            return resultMap;
+            return List.of();
         }
 
+        List<RepoVO> repoVOList = new ArrayList<>();
         for (AiRepo aiRepo : aiRepoList) {
-            if (aiRepo == null || !resultMap.containsKey(aiRepo.getRepoType())) {
+            if (aiRepo == null) {
                 continue;
             }
 
@@ -310,13 +307,13 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 throw new MiniAgentException(ILLEGAL_DATA);
             }
 
-            resultMap.get(aiRepo.getRepoType()).add(repoVOBuilder.build());
+            repoVOList.add(repoVOBuilder.build());
         }
-
-        return resultMap;
+        return repoVOList;
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void agentDelete(String agentId) {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
@@ -357,6 +354,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void agentPublish(AgentPublishDTO dto) {
         String agentId = dto.getAgentId();
         Long userId = userContext.getUserId();
@@ -455,6 +453,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @Cacheable(cachePrefix = WORKSPACE_TEMPLATE_PREFIX, cacheType = CacheType.VALUE, cacheClass = TemplateVO.class)
     public TemplateVO agentTemplate(String templateId) {
         AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
         if (aiTemplate == null) {
@@ -487,6 +486,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void agentFork(String templateId) {
         Long userId = userContext.getUserId();
         AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
@@ -622,6 +622,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void agentBaseUpdate(AgentBaseUpdateDTO dto) {
         AiAgent aiAgent = requireOwnedAgent(dto.getAgentId());
         aiAgentDao.update(AiAgent.builder()
@@ -632,6 +633,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto) {
         requireOwnedAgent(dto.getAgentId());
         AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
@@ -646,6 +648,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
     public void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto) {
         requireOwnedAgent(dto.getAgentId());
         AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
