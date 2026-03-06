@@ -21,6 +21,7 @@ import {
 } from '../request/api';
 import { normalizeError } from '../request/request';
 import { applyStreamToken, createStreamAccumulator, parseThinkText } from '../utils/StringUtil';
+import { areMessageListsEqual, createStableRecordId, toSafeTimestamp } from '../utils/MessageRenderUtil';
 import { useAgentStore, useChatStore, useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
 import Footer from './Footer.vue';
 
@@ -148,15 +149,26 @@ const ensureChatSessionValid = async (chat) => {
     }
 };
 
-const mapMessage = (message) => ({
-    id: message.id || `msg_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-    role: message.messageRole || message.role || 'assistant',
-    content: message.messageContent || message.content || '',
-    think: '',
-    pending: false,
-    error: null,
-    createdAt: message.createTime ? Date.parse(message.createTime) : Date.now()
-});
+const mapMessage = (message, sessionId = '', seenMap = new Map()) => {
+    const role = message?.messageRole || message?.role || 'assistant';
+    const content = message?.messageContent || message?.content || '';
+    const createTime = message?.createTime || message?.createdAt || '';
+    return {
+        id: createStableRecordId({
+            sourceId: message?.id || message?.messageId,
+            sessionId,
+            prefix: 'msg',
+            signatureParts: [createTime, role, content],
+            seenMap
+        }),
+        role,
+        content,
+        think: '',
+        pending: false,
+        error: null,
+        createdAt: toSafeTimestamp(createTime)
+    };
+};
 
 const normalizeSettingValue = (value) => {
     if (value === null || value === undefined || value === '') return '';
@@ -259,20 +271,27 @@ const scrollToBottom = (smooth = true) => {
     });
 };
 
-const loadChatMessages = async (sessionId, chatId = chatStore.currentChatId) => {
+const loadChatMessages = async (sessionId, chatId = chatStore.currentChatId, options = {}) => {
+    const silent = Boolean(options?.silent);
     if (!sessionId) {
         if (chatId) {
             chatStore.setChatMessages(chatId, []);
         }
         return;
     }
-    messageLoading.value = true;
+    if (!silent) {
+        messageLoading.value = true;
+    }
     try {
         const resp = await listChatMessages({ sessionId });
         const list = pickData(resp, '获取消息失败') || [];
-        const mapped = (Array.isArray(list) ? list : []).map(mapMessage);
+        const seenMap = new Map();
+        const mapped = (Array.isArray(list) ? list : []).map((item) => mapMessage(item, sessionId, seenMap));
         if (chatId) {
-            chatStore.setChatMessages(chatId, mapped);
+            const existing = chatStore.chats.find((item) => item.sessionId === chatId)?.messages || [];
+            if (!areMessageListsEqual(existing, mapped)) {
+                chatStore.setChatMessages(chatId, mapped);
+            }
         }
     } catch (error) {
         const message = normalizeError(error).message || '获取消息失败';
@@ -282,7 +301,9 @@ const loadChatMessages = async (sessionId, chatId = chatStore.currentChatId) => 
         }
         sendError.value = message;
     } finally {
-        messageLoading.value = false;
+        if (!silent) {
+            messageLoading.value = false;
+        }
     }
 };
 
@@ -561,7 +582,7 @@ onMounted(() => {
         const session = chatStore.currentChat;
         const sessionId = session?.sessionId || '';
         if (!sessionId) return;
-        await loadChatMessages(sessionId, session?.sessionId);
+        await loadChatMessages(sessionId, session?.sessionId, { silent: true });
     }, 5000);
 });
 

@@ -16,6 +16,7 @@ import {
 } from '../request/api';
 import { normalizeError } from '../request/request';
 import { formatMcpJson } from '../utils/StringUtil';
+import { areCardListsEqual, areMessageListsEqual, createStableRecordId, toSafeTimestamp } from '../utils/MessageRenderUtil';
 import { useAgentSettingsStore, useAgentStore, useChatStore, useWelcomeLaunchStore } from '../router/pinia';
 import Footer from './Footer.vue';
 
@@ -125,16 +126,27 @@ const ensureWorkSessionValid = async (session) => {
     }
 };
 
-const mapMessage = (message) => ({
-    id: message.id || `msg_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-    role: message.messageRole || message.role || 'assistant',
-    content: message.messageContent || message.content || '',
-    pending: false,
-    error: null,
-    createdAt: message.createTime ? Date.parse(message.createTime) : Date.now()
-});
+const mapMessage = (message, sessionId = '', seenMap = new Map()) => {
+    const role = message?.messageRole || message?.role || 'assistant';
+    const content = message?.messageContent || message?.content || '';
+    const createTime = message?.createTime || message?.createdAt || '';
+    return {
+        id: createStableRecordId({
+            sourceId: message?.id || message?.messageId,
+            sessionId,
+            prefix: 'msg',
+            signatureParts: [createTime, role, content],
+            seenMap
+        }),
+        role,
+        content,
+        pending: false,
+        error: null,
+        createdAt: toSafeTimestamp(createTime)
+    };
+};
 
-const mapCard = (message) => {
+const mapCard = (message, sessionId = '', seenMap = new Map()) => {
     const raw = message?.messageContent || '';
     let parsed = null;
     try {
@@ -143,8 +155,15 @@ const mapCard = (message) => {
         parsed = null;
     }
     const payload = parsed && typeof parsed === 'object' ? parsed : { sectionContent: raw };
+    const createTime = message?.createTime || '';
     return {
-        id: message.id || payload.id || `card_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+        id: createStableRecordId({
+            sourceId: message?.id || payload?.id,
+            sessionId,
+            prefix: 'card',
+            signatureParts: [createTime, payload.sectionType, payload.sectionContent, payload.round, payload.step, payload.timestamp],
+            seenMap
+        }),
         clientType: payload.clientType || '',
         sectionType: payload.sectionType || '',
         sectionContent: payload.sectionContent || '',
@@ -279,7 +298,8 @@ const scrollRightToBottom = (smooth = true) => {
     });
 };
 
-const loadWorkMessages = async (sessionId) => {
+const loadWorkMessages = async (sessionId, options = {}) => {
+    const silent = Boolean(options?.silent);
     if (!sessionId) {
         if (agentStore.currentSessionId) {
             agentStore.setSessionMessages(agentStore.currentSessionId, []);
@@ -287,7 +307,9 @@ const loadWorkMessages = async (sessionId) => {
         }
         return;
     }
-    messageLoading.value = true;
+    if (!silent) {
+        messageLoading.value = true;
+    }
     try {
         const [sseResp, answerResp] = await Promise.all([
             listWorkSseMessages({ sessionId }),
@@ -295,16 +317,25 @@ const loadWorkMessages = async (sessionId) => {
         ]);
         const sseList = pickData(sseResp, '获取会话卡片失败') || [];
         const answerList = pickData(answerResp, '获取会话消息失败') || [];
+        const cardSeenMap = new Map();
+        const messageSeenMap = new Map();
         const mappedCards = (Array.isArray(sseList) ? sseList : [])
-            .map(mapCard)
+            .map((item) => mapCard(item, sessionId, cardSeenMap))
             .filter(
                 (card) =>
                     card.sectionType !== 'summarizer_overview' && card.sectionType !== 'replier_overview'
             );
-        const mappedMessages = (Array.isArray(answerList) ? answerList : []).map(mapMessage);
-        if (agentStore.currentSessionId) {
-            agentStore.setSessionCards(agentStore.currentSessionId, mappedCards);
-            agentStore.setSessionMessages(agentStore.currentSessionId, mappedMessages);
+        const mappedMessages = (Array.isArray(answerList) ? answerList : []).map((item) => mapMessage(item, sessionId, messageSeenMap));
+        if (sessionId) {
+            const existingSession = agentStore.sessions.find((item) => item.sessionId === sessionId);
+            const prevCards = existingSession?.cards || [];
+            const prevMessages = existingSession?.messages || [];
+            if (!areCardListsEqual(prevCards, mappedCards)) {
+                agentStore.setSessionCards(sessionId, mappedCards);
+            }
+            if (!areMessageListsEqual(prevMessages, mappedMessages)) {
+                agentStore.setSessionMessages(sessionId, mappedMessages);
+            }
         }
     } catch (error) {
         const message = normalizeError(error).message || '获取消息失败';
@@ -314,7 +345,9 @@ const loadWorkMessages = async (sessionId) => {
         }
         sendError.value = message;
     } finally {
-        messageLoading.value = false;
+        if (!silent) {
+            messageLoading.value = false;
+        }
     }
 };
 
@@ -692,7 +725,7 @@ onMounted(() => {
         const session = agentStore.currentSession;
         const sessionId = session?.sessionId || '';
         if (!sessionId) return;
-        await loadWorkMessages(sessionId);
+        await loadWorkMessages(sessionId, { silent: true });
     }, 5000);
 });
 
