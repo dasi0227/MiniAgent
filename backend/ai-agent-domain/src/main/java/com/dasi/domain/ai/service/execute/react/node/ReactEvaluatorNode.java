@@ -17,7 +17,7 @@ import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
 
 @Slf4j
 @Service(value = "evaluatorNode")
-public class ExecuteEvaluatorNode extends AbstractExecuteNode {
+public class ReactEvaluatorNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -52,7 +52,7 @@ public class ExecuteEvaluatorNode extends AbstractExecuteNode {
                 throw new IllegalStateException("Evaluator 结果解析为空");
             }
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteEvaluatorNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】ReactEvaluatorNode：error={}", e.getMessage(), e);
             evaluatorObject = buildExceptionObject(EVALUATOR.getExceptionType(), e.getMessage());
             evaluatorJson = evaluatorObject.toJSONString();
         }
@@ -81,7 +81,7 @@ public class ExecuteEvaluatorNode extends AbstractExecuteNode {
             ExecuteResponseEntity executeResponseEntity = ExecuteResponseEntity.createEvaluatorResponse(
                     sectionType,
                     sectionContent,
-                    executeContext.getRound(),
+                    executeContext.getPace(),
                     sessionId
             );
 

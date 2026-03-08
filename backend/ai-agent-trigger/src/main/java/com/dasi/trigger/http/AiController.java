@@ -113,6 +113,7 @@ public class AiController implements IAiApi {
                     .sessionId(aiWorkDTO.getSessionId())
                     .maxRound(aiWorkDTO.getMaxRound())
                     .maxRetry(aiWorkDTO.getMaxRetry())
+                    .maxPace(aiWorkDTO.getMaxPace())
                     .build();
 
             dispatchService.dispatchExecuteStrategy(executeRequestEntity, sseEmitter);

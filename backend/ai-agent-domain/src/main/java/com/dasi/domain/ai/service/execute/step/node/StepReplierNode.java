@@ -17,7 +17,7 @@ import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
 
 @Slf4j
 @Service(value = "replierNode")
-public class ExecuteReplierNode extends AbstractExecuteNode {
+public class StepReplierNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -58,7 +58,7 @@ public class ExecuteReplierNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteReplierNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】StepReplierNode：error={}", e.getMessage(), e);
             replierObject = buildExceptionObject(REPLIER.getExceptionType(), e.getMessage());
             replierJson = replierObject.toJSONString();
         }

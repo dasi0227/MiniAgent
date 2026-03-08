@@ -4,7 +4,7 @@ import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.model.entity.ExecuteResponseEntity;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
 import com.dasi.domain.ai.service.execute.IExecuteStrategy;
-import com.dasi.domain.ai.service.execute.loop.node.ExecuteLoopRootNode;
+import com.dasi.domain.ai.service.execute.loop.node.LoopRootNode;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class ExecuteLoopStrategy implements IExecuteStrategy {
 
     @Resource
-    private ExecuteLoopRootNode executeLoopRootNode;
+    private LoopRootNode loopRootNode;
 
     @Override
     public void execute(ExecuteRequestEntity executeRequestEntity, SseEmitter sseEmitter) throws Exception {
@@ -24,7 +24,7 @@ public class ExecuteLoopStrategy implements IExecuteStrategy {
         executeContext.setValue("sseEmitter", sseEmitter);
 
         log.info("【Agent 执行】执行 LoopStrategy");
-        executeLoopRootNode.apply(executeRequestEntity, executeContext);
+        loopRootNode.apply(executeRequestEntity, executeContext);
 
         try {
             ExecuteResponseEntity completeResult = ExecuteResponseEntity.createCompleteResponse("执行完成", executeRequestEntity.getSessionId());

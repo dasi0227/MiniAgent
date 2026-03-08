@@ -24,7 +24,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "reasonerNode")
-public class ExecuteReasonerNode extends AbstractExecuteNode {
+public class ReactReasonerNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -68,7 +68,7 @@ public class ExecuteReasonerNode extends AbstractExecuteNode {
                 throw new IllegalStateException("Reasoner 结果解析为空");
             }
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteReasonerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】ReactReasonerNode：error={}", e.getMessage(), e);
             reasonerObject = buildExceptionObject(REASONER.getExceptionType(), e.getMessage());
             reasonerJson = reasonerObject.toJSONString();
         }
@@ -105,7 +105,7 @@ public class ExecuteReasonerNode extends AbstractExecuteNode {
             ExecuteResponseEntity executeResponseEntity = ExecuteResponseEntity.createReasonerResponse(
                     sectionType,
                     sectionContent,
-                    executeContext.getRound(),
+                    executeContext.getPace(),
                     sessionId
             );
 

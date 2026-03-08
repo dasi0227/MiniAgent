@@ -25,7 +25,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "observerNode")
-public class ExecuteObserverNode extends AbstractExecuteNode {
+public class ReactObserverNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -50,8 +50,8 @@ public class ExecuteObserverNode extends AbstractExecuteNode {
 
             String userPrompt = aiFlowVO.getUserPrompt();
             String observerPrompt = userPrompt.formatted(
-                    executeContext.getRound(),
-                    executeContext.getMaxRound(),
+                    executeContext.getPace(),
+                    executeContext.getMaxPace(),
                     executeContext.getUserMessage(),
                     currentTask,
                     executionHistory
@@ -71,7 +71,7 @@ public class ExecuteObserverNode extends AbstractExecuteNode {
                 throw new IllegalStateException("Observer 结果解析为空");
             }
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteObserverNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】ReactObserverNode：error={}", e.getMessage(), e);
             observerObject = buildExceptionObject(OBSERVER.getExceptionType(), e.getMessage());
             observerJson = observerObject.toJSONString();
         }
@@ -80,13 +80,9 @@ public class ExecuteObserverNode extends AbstractExecuteNode {
         executeContext.setValue(OBSERVER.getContextKey(), observerJson);
 
         String observerStatus = observerObject.getString(OBSERVER_STATUS.getType());
-        if ("COMPLETED".equalsIgnoreCase(observerStatus)
+        executeContext.setCompleted("COMPLETED".equalsIgnoreCase(observerStatus)
                 || "DONE".equalsIgnoreCase(observerStatus)
-                || "PASS".equalsIgnoreCase(observerStatus)) {
-            executeContext.setCompleted(true);
-        } else {
-            executeContext.setCompleted(false);
-        }
+                || "PASS".equalsIgnoreCase(observerStatus));
 
         return router(executeRequestEntity, executeContext);
     }
@@ -94,7 +90,7 @@ public class ExecuteObserverNode extends AbstractExecuteNode {
     @Override
     public StrategyHandler<ExecuteRequestEntity, ExecuteContext, String> get(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
         if (Boolean.TRUE.equals(executeContext.getCompleted())) {
-            log.info("【执行节点】ExecuteObserverNode：任务观察判定完成");
+            log.info("【执行节点】ReactObserverNode：任务观察判定完成");
             return getBean(EVALUATOR.getNodeName());
         }
         return getBean(REASONER.getNodeName());
@@ -116,7 +112,7 @@ public class ExecuteObserverNode extends AbstractExecuteNode {
             ExecuteResponseEntity executeResponseEntity = ExecuteResponseEntity.createObserverResponse(
                     sectionType,
                     sectionContent,
-                    executeContext.getRound(),
+                    executeContext.getPace(),
                     sessionId
             );
 

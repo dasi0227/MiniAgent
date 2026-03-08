@@ -85,6 +85,12 @@ armory:
     - client_chat_qwen
     - client_chat_doubao
 
+# System Model
+system-model:
+  base-url: ${SYSTEM_MODEL_BASE_URL}
+  api-key: ${SYSTEM_MODEL_API_KEY}
+  model: ${SYSTEM_MODEL_NAME}
+
 # Schedule
 schedule:
   refresh-cron: "0 */1 * * * ?"

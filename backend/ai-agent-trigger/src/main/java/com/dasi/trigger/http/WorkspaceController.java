@@ -94,12 +94,6 @@ public class WorkspaceController {
         return Result.success(workspaceService.agentTemplate(templateId));
     }
 
-    @PostMapping("/agent/delete")
-    public Result<Void> agentDelete(@NotBlank @RequestParam String agentId) {
-        workspaceService.agentDelete(agentId);
-        return Result.success();
-    }
-
     @PostMapping("/agent/fork")
     public Result<Void> agentFork(@NotBlank @RequestParam String templateId) {
         workspaceService.agentFork(templateId);
@@ -121,6 +115,18 @@ public class WorkspaceController {
     @PostMapping("/agent/update/systemprompt")
     public Result<Void> agentSystemPromptUpdate(@Valid @RequestBody AgentSystemPromptUpdateDTO dto) {
         workspaceService.agentSystemPromptUpdate(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/delete")
+    public Result<Void> agentDelete(@NotBlank @RequestParam String agentId) {
+        workspaceService.agentDelete(agentId);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/create")
+    public Result<Void> agentCreate(@Valid @RequestBody AgentCreateDTO dto) {
+        workspaceService.agentCreate(dto);
         return Result.success();
     }
 

@@ -53,6 +53,7 @@ public class TaskService implements ITaskService {
                             .sessionId("s-task-" + System.currentTimeMillis())
                             .maxRetry(aiTaskVO.getTaskParam().getMaxRetry())
                             .maxRound(aiTaskVO.getTaskParam().getMaxRound())
+                            .maxPace(aiTaskVO.getTaskParam().getMaxPace())
                             .userMessage(aiTaskVO.getTaskParam().getUserMessage())
                             .build();
                     SseEmitter sseEmitter = new SseEmitter(0L);

@@ -6,6 +6,8 @@ import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.domain.util.snapshot.ISnapshotUtil;
 import com.dasi.domain.util.snapshot.SnapshotView;
 import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
+import com.dasi.domain.workspace.model.dto.AgentCreateDTO;
+import com.dasi.domain.workspace.model.entity.RolePromptEntity;
 import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
 import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
 import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
@@ -351,6 +353,84 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         aiFlowDao.deleteByAgentId(agentId);
         aiRepoDao.deleteByAgentId(agentId);
         aiAgentDao.deleteByAgentId(agentId);
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    public void agentCreate(AgentCreateDTO dto,
+                            Long userId,
+                            java.util.Set<String> mcpIdSet,
+                            List<RolePromptEntity> rolePromptList) {
+        if (rolePromptList == null || rolePromptList.isEmpty()) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        String agentId = randomUtil.randomAgentId();
+        aiAgentDao.insert(AiAgent.builder()
+                .agentId(agentId)
+                .agentName(dto.getAgentName())
+                .agentType(dto.getStrategy())
+                .agentDesc(dto.getAgentDesc())
+                .modelId(dto.getModelId())
+                .agentStatus(1)
+                .agentFrom(userId)
+                .build());
+
+        for (RolePromptEntity rolePrompt : rolePromptList) {
+            String clientId = randomUtil.randomClientId();
+            String promptId = randomUtil.randomPromptId();
+            String clientRole = rolePrompt.getClientRole();
+
+            aiClientDao.insert(AiClient.builder()
+                    .clientId(clientId)
+                    .clientType("work")
+                    .clientRole(clientRole)
+                    .modelId(dto.getModelId())
+                    .modelName(dto.getModelName())
+                    .clientName(dto.getAgentName() + "-" + clientRole)
+                    .clientStatus(1)
+                    .clientFrom(userId)
+                    .build());
+
+            aiPromptDao.insert(AiPrompt.builder()
+                    .promptId(promptId)
+                    .promptName(clientRole + "_prompt")
+                    .systenPrompt(rolePrompt.getSystemPrompt())
+                    .build());
+
+            aiConfigDao.insert(AiConfig.builder()
+                    .clientId(clientId)
+                    .configType(ConfigType.PROMPT.getType())
+                    .configValue(promptId)
+                    .configStatus(1)
+                    .build());
+
+            if (mcpIdSet != null && !mcpIdSet.isEmpty()) {
+                for (String mcpId : mcpIdSet) {
+                    aiConfigDao.insert(AiConfig.builder()
+                            .clientId(clientId)
+                            .configType(ConfigType.MCP.getType())
+                            .configValue(mcpId)
+                            .configStatus(1)
+                            .build());
+                }
+            }
+
+            aiFlowDao.insert(AiFlow.builder()
+                    .agentId(agentId)
+                    .clientId(clientId)
+                    .clientRole(clientRole)
+                    .userPrompt(rolePrompt.getUserPrompt())
+                    .flowSeq(rolePrompt.getFlowSeq())
+                    .build());
+        }
+
+        aiRepoDao.insert(AiRepo.builder()
+                .repoId(randomUtil.randomRepoId())
+                .userId(userId)
+                .agentId(agentId)
+                .repoType(RepoType.SELF.getType())
+                .build());
     }
 
     @Override

@@ -25,7 +25,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "actorNode")
-public class ExecuteActorNode extends AbstractExecuteNode {
+public class ReactActorNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -69,7 +69,7 @@ public class ExecuteActorNode extends AbstractExecuteNode {
                 throw new IllegalStateException("Actor 结果解析为空");
             }
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteActorNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】ReactActorNode：error={}", e.getMessage(), e);
             actorObject = buildExceptionObject(ACTOR.getExceptionType(), e.getMessage());
             actorJson = actorObject.toJSONString();
         }
@@ -86,7 +86,7 @@ public class ExecuteActorNode extends AbstractExecuteNode {
                         【任务行动专家】
                         %s
                         """,
-                executeContext.getRound(),
+                executeContext.getPace(),
                 observerResponse,
                 reasonerResponse,
                 actorJson
@@ -98,15 +98,15 @@ public class ExecuteActorNode extends AbstractExecuteNode {
             currentTask = actorJson;
         }
         executeContext.setCurrentTask(currentTask);
-        executeContext.setRound(executeContext.getRound() + 1);
+        executeContext.setPace(executeContext.getPace() + 1);
 
         return router(executeRequestEntity, executeContext);
     }
 
     @Override
     public StrategyHandler<ExecuteRequestEntity, ExecuteContext, String> get(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
-        if (executeContext.getRound() > executeContext.getMaxRound()) {
-            log.info("【执行节点】ExecuteActorNode：任务已到达最大轮数");
+        if (executeContext.getPace() > executeContext.getMaxPace()) {
+            log.info("【执行节点】ReactActorNode：任务已到达最大轮数");
             return getBean(EVALUATOR.getNodeName());
         }
         return getBean(OBSERVER.getNodeName());
@@ -127,7 +127,7 @@ public class ExecuteActorNode extends AbstractExecuteNode {
             ExecuteResponseEntity executeResponseEntity = ExecuteResponseEntity.createActorResponse(
                     sectionType,
                     sectionContent,
-                    executeContext.getRound(),
+                    executeContext.getPace(),
                     sessionId
             );
 

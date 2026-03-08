@@ -31,4 +31,8 @@ public class AiWorkDTO {
     @Min(1)
     private Integer maxRetry;
 
+    @NotNull
+    @Min(1)
+    private Integer maxPace;
+
 }

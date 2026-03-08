@@ -1,4 +1,4 @@
-package com.dasi.domain.ai.service.execute.step.node;
+package com.dasi.domain.ai.service.execute.react.node;
 
 import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
 import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
@@ -10,33 +10,32 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-import static com.dasi.domain.ai.model.enumeration.AiClientRole.INSPECTOR;
+import static com.dasi.domain.ai.model.enumeration.AiClientRole.OBSERVER;
 
 @Slf4j
 @Service
-public class ExecuteStepRootNode extends AbstractExecuteNode {
+public class ReactRootNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
 
         Map<String, AiFlowVO> aiFlowVOMap = aiRepository.queryAiFlowVOMapByAgentId(executeRequestEntity.getAgentId());
 
-        // 客户端链
         executeContext.setAiFlowVOMap(aiFlowVOMap);
-        // 执行历史
+        executeContext.setPace(0);
+        executeContext.setMaxPace(executeRequestEntity.getMaxPace());
+        executeContext.setCompleted(false);
         executeContext.setExecutionHistory(new StringBuilder());
-        // 用户原始需求
         executeContext.setUserMessage(executeRequestEntity.getUserMessage());
-        // 最大重试次数
-        executeContext.setMaxRetry(executeRequestEntity.getMaxRetry());
+        executeContext.setCurrentTask("这里是起点，请先观察当前任务状态，并判断是否需要继续执行下一小步。");
 
-        log.info("【执行节点】ExecuteStepRootNode：userMessage={}", executeRequestEntity.getUserMessage());
+        log.info("【执行节点】ReactRootNode：userMessage={}", executeRequestEntity.getUserMessage());
         return router(executeRequestEntity, executeContext);
     }
 
     @Override
     public StrategyHandler<ExecuteRequestEntity, ExecuteContext, String> get(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
-        return getBean(INSPECTOR.getNodeName());
+        return getBean(OBSERVER.getNodeName());
     }
 
 }

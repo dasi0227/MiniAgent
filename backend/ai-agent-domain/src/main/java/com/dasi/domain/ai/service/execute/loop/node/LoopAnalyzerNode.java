@@ -22,7 +22,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "analyzerNode")
-public class ExecuteAnalyzerNode extends AbstractExecuteNode {
+public class LoopAnalyzerNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -69,7 +69,7 @@ public class ExecuteAnalyzerNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteAnalyzerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】LoopAnalyzerNode：error={}", e.getMessage(), e);
             analyzerObject = buildExceptionObject(ANALYZER.getExceptionType(), e.getMessage());
             analyzerJson = analyzerObject.toJSONString();
         }
@@ -94,14 +94,14 @@ public class ExecuteAnalyzerNode extends AbstractExecuteNode {
     @Override
     public StrategyHandler<ExecuteRequestEntity, ExecuteContext, String> get(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
 
-        ExecutePerformerNode executePerformerNode = getBean(PERFORMER.getNodeName());
-        ExecuteSummarizerNode executeSummarizerNode = getBean(SUMMARIZER.getNodeName());
+        LoopPerformerNode loopPerformerNode = getBean(PERFORMER.getNodeName());
+        LoopSummarizerNode loopSummarizerNode = getBean(SUMMARIZER.getNodeName());
 
         if (executeContext.getCompleted() == true) {
-            log.info("【执行节点】ExecuteAnalyzerNode：任务已完成");
-            return executeSummarizerNode;
+            log.info("【执行节点】LoopAnalyzerNode：任务已完成");
+            return loopSummarizerNode;
         } else {
-            return executePerformerNode;
+            return loopPerformerNode;
         }
 
     }

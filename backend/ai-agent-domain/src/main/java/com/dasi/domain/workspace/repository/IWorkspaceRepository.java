@@ -5,7 +5,9 @@ import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
+import com.dasi.domain.workspace.model.dto.AgentCreateDTO;
 import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
+import com.dasi.domain.workspace.model.entity.RolePromptEntity;
 import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
 import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
@@ -49,5 +51,10 @@ public interface IWorkspaceRepository {
     TemplateVO agentTemplate(String templateId);
 
     void agentDelete(String agentId);
+
+    void agentCreate(AgentCreateDTO dto,
+                     Long userId,
+                     java.util.Set<String> mcpIdSet,
+                     List<RolePromptEntity> rolePromptList);
 
 }

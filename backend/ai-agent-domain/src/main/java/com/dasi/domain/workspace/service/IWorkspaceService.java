@@ -1,12 +1,6 @@
 package com.dasi.domain.workspace.service;
 
-import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
-import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
-import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
-import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
-import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
-import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
-import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
+import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
@@ -48,4 +42,5 @@ public interface IWorkspaceService {
 
     void agentDelete(String agentId);
 
+    void agentCreate(AgentCreateDTO dto);
 }

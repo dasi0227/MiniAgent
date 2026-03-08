@@ -22,7 +22,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "performerNode")
-public class ExecutePerformerNode extends AbstractExecuteNode {
+public class LoopPerformerNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -65,7 +65,7 @@ public class ExecutePerformerNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecutePerformerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】LoopPerformerNode：error={}", e.getMessage(), e);
             performerObject = buildExceptionObject(PERFORMER.getExceptionType(), e.getMessage());
             performerJson = performerObject.toJSONString();
         }

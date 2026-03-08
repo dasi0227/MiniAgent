@@ -14,7 +14,7 @@ import static com.dasi.domain.ai.model.enumeration.AiClientRole.ANALYZER;
 
 @Slf4j
 @Service
-public class ExecuteLoopRootNode extends AbstractExecuteNode {
+public class LoopRootNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -34,7 +34,7 @@ public class ExecuteLoopRootNode extends AbstractExecuteNode {
         // 用户原始需求
         executeContext.setUserMessage(executeRequestEntity.getUserMessage());
 
-        log.info("【执行节点】ExecuteLoopRootNode：userMessage={}", executeRequestEntity.getUserMessage());
+        log.info("【执行节点】LoopRootNode：userMessage={}", executeRequestEntity.getUserMessage());
         return router(executeRequestEntity, executeContext);
     }
 

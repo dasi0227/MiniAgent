@@ -24,7 +24,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "plannerNode")
-public class ExecutePlannerNode extends AbstractExecuteNode {
+public class StepPlannerNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -67,7 +67,7 @@ public class ExecutePlannerNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecutePlannerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】StepPlannerNode：error={}", e.getMessage(), e);
             plannerArray = buildExceptionArray(PLANNER.getExceptionType(), e.getMessage());
             plannerJson = plannerArray.toJSONString();
         }

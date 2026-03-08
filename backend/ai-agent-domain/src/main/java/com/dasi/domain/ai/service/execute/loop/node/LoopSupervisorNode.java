@@ -23,7 +23,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "supervisorNode")
-public class ExecuteSupervisorNode extends AbstractExecuteNode {
+public class LoopSupervisorNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -72,7 +72,7 @@ public class ExecuteSupervisorNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteSupervisorNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】LoopSupervisorNode：error={}", e.getMessage(), e);
             supervisorObject = buildExceptionObject(SUPERVISOR.getExceptionType(), e.getMessage());
             supervisorJson = supervisorObject.toJSONString();
         }
@@ -86,15 +86,15 @@ public class ExecuteSupervisorNode extends AbstractExecuteNode {
         // 检查客户端结果
         String supervisorStatus = supervisorObject.getString(SUPERVISOR_STATUS.getType());
         if ("FAIL".equalsIgnoreCase(supervisorStatus)) {
-            log.info("【执行节点】ExecuteSupervisorNode：任务执行不合格");
+            log.info("【执行节点】LoopSupervisorNode：任务执行不合格");
             executeContext.setCompleted(false);
             executeContext.setCurrentTask("根据任务监督专家的输出重新执行任务");
         } else if ("OPTIMIZE".equalsIgnoreCase(supervisorStatus)) {
-            log.info("【执行节点】ExecuteSupervisorNode：任务执行有待优化");
+            log.info("【执行节点】LoopSupervisorNode：任务执行有待优化");
             executeContext.setCompleted(false);
             executeContext.setCurrentTask("根据任务监督专家的输出优化执行任务");
         } else if ("PASS".equalsIgnoreCase(supervisorStatus)) {
-            log.info("【执行节点】ExecuteSupervisorNode：任务执行合格");
+            log.info("【执行节点】LoopSupervisorNode：任务执行合格");
             executeContext.setCompleted(true);
         }
 
@@ -123,17 +123,17 @@ public class ExecuteSupervisorNode extends AbstractExecuteNode {
     @Override
     public StrategyHandler<ExecuteRequestEntity, ExecuteContext, String> get(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
 
-        ExecuteAnalyzerNode executeAnalyzerNode = getBean(ANALYZER.getNodeName());
-        ExecuteSummarizerNode executeSummarizerNode = getBean(SUMMARIZER.getNodeName());
+        LoopAnalyzerNode loopAnalyzerNode = getBean(ANALYZER.getNodeName());
+        LoopSummarizerNode loopSummarizerNode = getBean(SUMMARIZER.getNodeName());
 
         if (executeContext.getCompleted() == true) {
-            log.info("【执行节点】ExecuteSupervisorNode：任务监督达标");
-            return executeSummarizerNode;
+            log.info("【执行节点】LoopSupervisorNode：任务监督达标");
+            return loopSummarizerNode;
         } else if (executeContext.getRound() > executeContext.getMaxRound()) {
-            log.info("【执行节点】ExecuteSupervisorNode：任务已到达最大轮数");
-            return executeSummarizerNode;
+            log.info("【执行节点】LoopSupervisorNode：任务已到达最大轮数");
+            return loopSummarizerNode;
         } else {
-            return executeAnalyzerNode;
+            return loopAnalyzerNode;
         }
     }
 

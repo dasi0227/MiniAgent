@@ -22,7 +22,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_NON
 
 @Slf4j
 @Service(value = "inspectorNode")
-public class ExecuteInspectorNode extends AbstractExecuteNode {
+public class StepInspectorNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -60,7 +60,7 @@ public class ExecuteInspectorNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteInspectorNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】StepInspectorNode：error={}", e.getMessage(), e);
             inspectorArray = buildExceptionArray(INSPECTOR.getExceptionType(), e.getMessage());
             inspectorJson = inspectorArray.toJSONString();
         }

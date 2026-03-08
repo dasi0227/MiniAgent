@@ -16,7 +16,7 @@ import java.util.Map;
 public class ExecuteContext {
 
     // ================== 适用于 Loop ==================
-    /** 轮次 */
+    /** 当前轮次 */
     private Integer round;
 
     /** 最大轮次 */
@@ -29,10 +29,17 @@ public class ExecuteContext {
     private String currentTask;
 
     // ================== 适用于 Step ==================
-
+    /** 当前轮次 */
     private Integer step;
 
+    /** 最大重试次数 */
     private Integer maxRetry;
+
+    // ================== 适用于 React ==================
+    /** 当前足迹 */
+    private Integer pace;
+
+    private Integer maxPace;
 
     // ================== 通用 ==================
     /** 执行历史 */

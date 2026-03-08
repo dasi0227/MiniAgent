@@ -17,7 +17,7 @@ import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
 
 @Slf4j
 @Service(value = "summarizerNode")
-public class ExecuteSummarizerNode extends AbstractExecuteNode {
+public class LoopSummarizerNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -58,7 +58,7 @@ public class ExecuteSummarizerNode extends AbstractExecuteNode {
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteSummarizerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】LoopSummarizerNode：error={}", e.getMessage(), e);
             summarizerObject = buildExceptionObject(SUMMARIZER.getExceptionType(), e.getMessage());
             summarizerJson = summarizerObject.toJSONString();
         }

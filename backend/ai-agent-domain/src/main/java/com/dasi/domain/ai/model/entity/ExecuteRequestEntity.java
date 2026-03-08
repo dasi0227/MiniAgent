@@ -21,4 +21,6 @@ public class ExecuteRequestEntity {
 
     private Integer maxRetry;
 
+    private Integer maxPace;
+
 }

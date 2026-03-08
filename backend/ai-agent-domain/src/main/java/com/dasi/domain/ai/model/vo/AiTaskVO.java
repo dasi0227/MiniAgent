@@ -38,6 +38,8 @@ public class AiTaskVO {
 
         private Integer maxRound;
 
+        private Integer maxPace;
+
         private String userMessage;
     }
 
@@ -47,6 +49,7 @@ public class AiTaskVO {
                 this.taskCron,
                 this.taskParam.maxRetry.toString(),
                 this.taskParam.maxRound.toString(),
+                this.taskParam.maxPace.toString(),
                 this.taskParam.userMessage
         );
     }

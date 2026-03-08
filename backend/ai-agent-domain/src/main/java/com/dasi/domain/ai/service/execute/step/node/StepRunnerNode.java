@@ -25,7 +25,7 @@ import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WOR
 
 @Slf4j
 @Service(value = "runnerNode")
-public class ExecuteRunnerNode extends AbstractExecuteNode {
+public class StepRunnerNode extends AbstractExecuteNode {
 
     @Override
     protected String doApply(ExecuteRequestEntity executeRequestEntity, ExecuteContext executeContext) throws Exception {
@@ -47,7 +47,7 @@ public class ExecuteRunnerNode extends AbstractExecuteNode {
 
             List<String> plannerList = executeContext.getValue(PLANNER.getContextKey());
             if (plannerList == null || plannerList.isEmpty()) {
-                log.error("【执行节点】ExecuteRunnerNode：执行步骤为空，错误");
+                log.error("【执行节点】StepRunnerNode：执行步骤为空，错误");
                 return router(executeRequestEntity, executeContext);
             }
 
@@ -95,7 +95,7 @@ public class ExecuteRunnerNode extends AbstractExecuteNode {
                         break;
 
                     } catch (Exception e) {
-                        log.error("【执行节点】ExecuteRunnerNode：step={}, try={}/{}, error={}", step + 1, count++, maxRetry, e.getMessage());
+                        log.error("【执行节点】StepRunnerNode：step={}, try={}/{}, error={}", step + 1, count++, maxRetry, e.getMessage());
                         if (count > maxRetry) {
                             throw new IllegalStateException("超过最大重试次数 " + maxRetry + "，客户端仍然无法执行步骤 " + (step + 1));
                         }
@@ -130,7 +130,7 @@ public class ExecuteRunnerNode extends AbstractExecuteNode {
             executeContext.getExecutionHistory().append(executionHistory);
 
         } catch (Exception e) {
-            log.error("【执行节点】ExecuteRunnerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】StepRunnerNode：error={}", e.getMessage(), e);
             runnerObject = buildExceptionObject(RUNNER.getExceptionType(), e.getMessage());
             parseRunnerResponse(executeContext, runnerObject, executeRequestEntity.getSessionId());
         }
