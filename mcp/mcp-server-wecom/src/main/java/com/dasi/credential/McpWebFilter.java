@@ -1,4 +1,4 @@
-package com.dasi.filter;
+package com.dasi.credential;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,13 +19,10 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class McpHeaderWebFilter implements WebFilter {
+public class McpWebFilter implements WebFilter {
 
     @Resource
     private ObjectMapper objectMapper;
-
-    @Resource
-    private McpHeaderContext mcpHeaderContext;
 
     @Value("${miniagent.mcp.header.secret:X-MiniAgent-Mcp-Secret}")
     private String mcpSecretHeader;
@@ -38,14 +35,14 @@ public class McpHeaderWebFilter implements WebFilter {
         String encodedSecret = exchange.getRequest().getHeaders().getFirst(mcpSecretHeader);
         String userId = exchange.getRequest().getHeaders().getFirst(mcpUserIdHeader);
 
-        mcpHeaderContext.setCredential(parseCredential(encodedSecret, userId));
-
-        return chain.filter(exchange).doFinally(signalType -> mcpHeaderContext.clear());
+        WeComCredential credential = parseCredential(encodedSecret, userId);
+        return chain.filter(exchange)
+                .contextWrite(context -> context.put(McpHeaderContext.CONTEXT_KEY, credential));
     }
 
     private WeComCredential parseCredential(String encodedSecret, String userId) {
         try {
-            if (!StringUtils.hasText(encodedSecret)) {
+            if (!StringUtils.hasText(userId) || !StringUtils.hasText(encodedSecret)) {
                 return new WeComCredential();
             }
 
@@ -59,9 +56,18 @@ public class McpHeaderWebFilter implements WebFilter {
             String corpId = secretMap.get("corpId");
             String corpSecret = secretMap.get("corpSecret");
             String agentId = secretMap.get("agentId");
-            return new WeComCredential(corpId, corpSecret, Integer.valueOf(agentId), userId);
+
+            WeComCredential weComCredential = WeComCredential.builder()
+                    .corpId(corpId)
+                    .corpSecret(corpSecret)
+                    .agentId(Integer.parseInt(agentId))
+                    .userId(userId)
+                    .build();
+
+            log.info("【Header 解析】weComCredential={}", weComCredential);
+            return weComCredential;
         } catch (Exception e) {
-            log.error("【Header 解析】失败", e);
+            log.error("【Header 解析】失败：encodedSecret={}, userId={}", encodedSecret, userId, e);
             return new WeComCredential();
         }
     }

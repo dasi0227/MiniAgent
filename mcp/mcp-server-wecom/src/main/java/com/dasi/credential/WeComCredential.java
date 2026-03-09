@@ -1,11 +1,10 @@
-package com.dasi.filter;
+package com.dasi.credential;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.util.StringUtils;
 
-@Getter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class WeComCredential {

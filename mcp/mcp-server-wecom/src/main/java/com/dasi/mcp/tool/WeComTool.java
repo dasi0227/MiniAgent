@@ -20,13 +20,13 @@ public class WeComTool {
 
     @Tool(description = "企业微信发送应用消息，类型为文本卡片")
     public SendMessageToolResponse sendTextCard(SendTextCardToolRequest toolRequest) throws IOException {
-        log.info("调用 MCP 工具进行企业微信应用文本卡片消息：标题={} 概述={} 链接={}", toolRequest.getTitle(), toolRequest.getDescription(), toolRequest.getUrl());
+        log.info("调用 MCP 工具进行企业微信应用文本卡片消息");
         return weComPort.sendTextCard(toolRequest);
     }
 
     @Tool(description = "企业微信发送应用消息，类型为纯文本")
     public SendMessageToolResponse sendText(SendTextToolRequest toolRequest) throws IOException {
-        log.info("调用 MCP 工具进行企业微信应用文本消息：内容={}", toolRequest.getContent());
+        log.info("调用 MCP 工具进行企业微信应用文本消息");
         return weComPort.sendText(toolRequest);
     }
 

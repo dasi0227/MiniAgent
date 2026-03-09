@@ -1,14 +1,17 @@
 package com.dasi.trigger.handler;
 
-import com.dasi.types.result.Result;
 import com.dasi.types.exception.DependencyConflictException;
 import com.dasi.types.exception.SessionException;
+import com.dasi.types.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+
+import java.io.EOFException;
+import java.io.IOException;
 
 @Slf4j
 @RestControllerAdvice
@@ -22,6 +25,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public void handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
         // ignore，暂不处理爬虫可能导致的错误
+    }
+
+    @ExceptionHandler({EOFException.class, IOException.class})
+    public void handleMethodNotSupported(Exception e) {
+        // ignore，暂不处理 SSE 错误
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

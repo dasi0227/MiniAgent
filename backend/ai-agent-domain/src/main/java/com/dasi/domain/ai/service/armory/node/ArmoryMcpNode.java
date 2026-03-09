@@ -65,8 +65,8 @@ public class ArmoryMcpNode extends AbstractArmoryNode {
                             .builder(baseUri)
                             .sseEndpoint(sseEndPoint)
                             .customizeRequest(requestBuilder -> {
+                                requestBuilder.header(mcpUserIdHeader, String.valueOf(userId));
                                 if (StringUtils.hasText(mcpSecret)) {
-                                    requestBuilder.header(mcpUserIdHeader, String.valueOf(userId));
                                     requestBuilder.header(mcpSecretHeader, Base64.getEncoder().encodeToString(mcpSecret.getBytes(StandardCharsets.UTF_8)));
                                 }
                             })

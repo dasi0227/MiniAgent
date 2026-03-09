@@ -7,6 +7,9 @@ server:
       enabled: true
 
 spring:
+  main:
+    banner-mode: off
+    log-startup-info: false
   application:
     name: mcp-server-wecom
 

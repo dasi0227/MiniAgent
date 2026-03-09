@@ -1,7 +1,7 @@
 package com.dasi.sse.port;
 
-import com.dasi.filter.McpHeaderContext;
-import com.dasi.filter.WeComCredential;
+import com.dasi.credential.McpHeaderContext;
+import com.dasi.credential.WeComCredential;
 import com.dasi.mcp.dto.SendMessageToolResponse;
 import com.dasi.mcp.dto.SendTextCardToolRequest;
 import com.dasi.mcp.dto.SendTextToolRequest;
@@ -86,7 +86,7 @@ public class WeComPort implements IWeComPort {
         }
 
         cacheUtil.putWithTtl(cacheKey, accessToken, Duration.ofSeconds(ttlSeconds));
-        log.info("调用 HTTP 获取企业微信令牌成功，tenant={}", credential.getUserId());
+        log.info("调用 HTTP 获取企业微信令牌成功");
 
         return accessToken;
     }
@@ -156,7 +156,7 @@ public class WeComPort implements IWeComPort {
         // 发送网络请求
         Call<SendMessageHttpResponse> call = weComHttp.sendText(httpRequest, accessToken);
         Response<SendMessageHttpResponse> callResponse = call.execute();
-        log.info("WeCom 发送文本消息：内容={}", toolRequest.getContent());
+        log.info("调用 HTTP 发送企业微信文本消息成功");
 
         return buildToolResponseFromCallResponse(callResponse);
 
@@ -192,7 +192,7 @@ public class WeComPort implements IWeComPort {
 
     private WeComCredential resolveCredential(SendMessageToolResponse toolResponse) {
         WeComCredential credential = mcpHeaderContext.getCredential();
-        if (!credential.checkValid()) {
+        if (credential == null || !credential.checkValid()) {
             toolResponse.setCode(400);
             toolResponse.setInfo("头部信息缺失或非法，必须包含 corpId/corpSecret/agentId/userId");
             return null;
