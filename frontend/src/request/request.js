@@ -2,6 +2,7 @@ import axios from 'axios';
 import router from '../router/router';
 import { useAuthStore } from '../router/pinia';
 import { pushAdminErrorToast } from '../utils/adminErrorToast';
+import { pushErrorToast } from '../utils/errorToast';
 
 // Dev: VITE_API_BASE=http://localhost:8066/miniagent
 // Prod behind nginx under /miniagent: VITE_API_BASE=/miniagent
@@ -70,16 +71,21 @@ const isAdminPage = () => {
     return path.startsWith('/admin') && path !== '/admin/login';
 };
 
-const isNotifiedError = (error) => {
-    if (!error || typeof error !== 'object') return false;
-    return Boolean(error.__adminToastShown || error.raw?.__adminToastShown);
+const isAppPage = () => {
+    const path = router.currentRoute.value.path || '';
+    return !path.startsWith('/admin') && path !== '/login' && path !== '/register';
 };
 
-const markErrorNotified = (error) => {
+const isNotifiedError = (error, flag) => {
+    if (!error || typeof error !== 'object') return false;
+    return Boolean(error?.[flag] || error.raw?.[flag]);
+};
+
+const markErrorNotified = (error, flag) => {
     if (!error || typeof error !== 'object') return;
-    error.__adminToastShown = true;
+    error[flag] = true;
     if (error.raw && typeof error.raw === 'object') {
-        error.raw.__adminToastShown = true;
+        error.raw[flag] = true;
     }
 };
 
@@ -106,7 +112,7 @@ export const notifyAdminError = (error, fallbackMessage = '操作失败') => {
                 ? fallbackMessage
                 : ''
     };
-    if (!isAdminPage() || !message || message === '请求已取消' || isNotifiedError(normalized)) {
+    if (!isAdminPage() || !message || message === '请求已取消' || isNotifiedError(normalized, '__adminToastShown')) {
         return message;
     }
     pushAdminErrorToast({
@@ -114,7 +120,20 @@ export const notifyAdminError = (error, fallbackMessage = '操作失败') => {
         requestPath: meta.requestPath,
         operation: meta.operation
     });
-    markErrorNotified(normalized);
+    markErrorNotified(normalized, '__adminToastShown');
+    return message;
+};
+
+export const notifyAppError = (error, fallbackMessage = '操作失败') => {
+    const normalized = error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'message')
+        ? error
+        : normalizeError(error);
+    const message = normalized?.message || fallbackMessage;
+    if (!isAppPage() || !message || message === '请求已取消' || isNotifiedError(normalized, '__appToastShown')) {
+        return message;
+    }
+    pushErrorToast({ message });
+    markErrorNotified(normalized, '__appToastShown');
     return message;
 };
 

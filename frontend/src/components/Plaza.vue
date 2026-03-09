@@ -12,7 +12,7 @@ import {
     plazaLike,
     plazaList
 } from '../request/api';
-import { normalizeError } from '../request/request';
+import { notifyAppError } from '../request/request';
 import Footer from './Footer.vue';
 
 const router = useRouter();
@@ -215,7 +215,7 @@ const loadPlaza = async () => {
         const data = pickData(resp) || {};
         plazaItems.value = data.list || [];
     } catch (error) {
-        message.value = normalizeError(error).message || '获取广场失败';
+        notifyAppError(error, '获取广场失败');
     } finally {
         loading.value = false;
     }
@@ -253,7 +253,7 @@ const doLike = async (item) => {
         item.likeCount = Math.max(0, (item.likeCount || 0) + (currentLiked ? -1 : 1));
         item.liked = !currentLiked;
     } catch (error) {
-        message.value = normalizeError(error).message || '点赞失败';
+        notifyAppError(error, '点赞失败');
     }
 };
 
@@ -271,7 +271,7 @@ const doFavor = async (item) => {
         item.favorCount = Math.max(0, (item.favorCount || 0) + (currentFavored ? -1 : 1));
         item.favored = !currentFavored;
     } catch (error) {
-        message.value = normalizeError(error).message || '收藏失败';
+        notifyAppError(error, '收藏失败');
     }
 };
 
@@ -287,7 +287,7 @@ const openComment = async (item) => {
     try {
         await loadCommentDetail(item.plazaId, 1);
     } catch (error) {
-        message.value = normalizeError(error).message || '加载评论失败';
+        notifyAppError(error, '加载评论失败');
     }
 };
 
@@ -318,7 +318,7 @@ const doComment = async () => {
         }
         commentForm.commentContent = '';
     } catch (error) {
-        message.value = normalizeError(error).message || '评论失败';
+        notifyAppError(error, '评论失败');
     }
 };
 
@@ -332,7 +332,7 @@ const doDeleteComment = async (comment) => {
         const maxPage = Math.max(1, Math.ceil(nextTotal / commentPageSize.value));
         await loadCommentDetail(commentForm.plazaId, Math.min(commentCurrentPage.value, maxPage));
     } catch (error) {
-        message.value = normalizeError(error).message || '删除评论失败';
+        notifyAppError(error, '删除评论失败');
     }
 };
 
@@ -353,7 +353,7 @@ const changeCommentPage = async (step) => {
     try {
         await loadCommentDetail(commentForm.plazaId, nextPage);
     } catch (error) {
-        message.value = normalizeError(error).message || '加载评论失败';
+        notifyAppError(error, '加载评论失败');
     }
 };
 

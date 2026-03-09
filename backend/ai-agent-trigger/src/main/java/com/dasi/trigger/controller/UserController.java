@@ -1,4 +1,4 @@
-package com.dasi.trigger.http;
+package com.dasi.trigger.controller;
 
 import com.dasi.api.IUserApi;
 import com.dasi.domain.user.model.vo.*;
@@ -34,28 +34,33 @@ public class UserController implements IUserApi {
     @Resource
     private IQueryService queryService;
 
-    @PostMapping("/query/chat-client-list")
+    @PostMapping("/query/work-agent")
     @Override
-    public Result<List<ChatClientVO>> queryChatClientVOList() {
-        return Result.success(queryService.queryChatClientVOList());
+    public Result<List<WorkAgentVO>> queryWorkAgentList() {
+        return Result.success(queryService.queryWorkAgentList());
     }
 
-    @PostMapping("/query/chat-mcp-list")
+    @PostMapping("/query/chat-client")
     @Override
-    public Result<List<ChatMcpVO>> queryChatMcpVOList() {
-        return Result.success(queryService.queryChatMcpVOList());
+    public Result<List<ChatClientVO>> queryChatClientList() {
+        return Result.success(queryService.queryChatClientList());
     }
 
-    @PostMapping("/query/chat-rag-list")
+    @PostMapping("/query/mcp")
     @Override
-    public Result<List<ChatRagVO>> queryRagVOList() {
-        return Result.success(queryService.queryRagVOList());
+    public Result<List<ChatMcpVO>> queryMcpList() {
+        return Result.success(queryService.queryMcpList());
     }
 
-    @PostMapping("/query/agent-list")
+    @PostMapping("/query/rag")
     @Override
-    public Result<List<WorkAgentVO>> queryWorkAgentVOList() {
-        return Result.success(queryService.queryWorkAgentVOList());
+    public Result<List<ChatRagVO>> queryRagList() {
+        return Result.success(queryService.queryRagList());
+    }
+
+    @PostMapping("/query/api")
+    public Result<List<ChatApiVO>> queryApiList() {
+        return Result.success(queryService.queryApiList());
     }
 
     @PostMapping("/auth/login")

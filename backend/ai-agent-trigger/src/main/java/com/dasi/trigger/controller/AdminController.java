@@ -1,4 +1,4 @@
-package com.dasi.trigger.http;
+package com.dasi.trigger.controller;
 
 import com.dasi.api.IAdminApi;
 import com.dasi.domain.admin.model.dto.*;

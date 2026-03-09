@@ -3,10 +3,15 @@ import { computed, watchEffect } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import AdminErrorToast from './components/AdminErrorToast.vue';
+import ErrorToast from './components/ErrorToast.vue';
 import { useSettingsStore } from './router/pinia';
 
 const route = useRoute();
 const hideSidebar = computed(() => route.meta?.hideSidebar);
+const isAdminRoute = computed(() => route.path.startsWith('/admin'));
+const showAppErrorToast = computed(
+    () => !isAdminRoute.value && route.path !== '/login' && route.path !== '/register'
+);
 
 const settingsStore = useSettingsStore();
 
@@ -27,7 +32,10 @@ watchEffect(() => {
         ]"
     >
         <Sidebar v-if="!hideSidebar" />
-        <RouterView />
-        <AdminErrorToast />
+        <div class="relative min-w-0">
+            <RouterView />
+            <ErrorToast v-if="showAppErrorToast" />
+        </div>
+        <AdminErrorToast v-if="isAdminRoute" />
     </div>
 </template>

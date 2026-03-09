@@ -563,22 +563,20 @@ const openNodeModal = (node) => {
 
     if (node.type === 'agent') {
         const payload = node.data || {};
-        editingId.value = payload.id || null;
+        editingId.value = payload.agentId || null;
         Object.assign(currentForm, payload);
         currentForm.agentStatus = payload.agentStatus ?? 1;
     }
     if (node.type === 'client') {
         const detail = clientDetailMap.value.get(node.data.clientId) || {};
         const client = detail.client || {};
-        editingId.value = client.id || null;
+        editingId.value = client.clientId || node.data.clientId || null;
         Object.assign(currentForm, {
-            id: client.id || null,
             clientId: client.clientId || node.data.clientId,
             clientName: client.clientName || '',
             clientType: client.clientType || '',
             clientRole: client.clientRole || detail.clientRole || node.data.clientRole || '',
             modelId: client.modelId || detail.model?.modelId || '',
-            clientDesc: client.clientDesc || '',
             clientStatus: client.clientStatus ?? 1
         });
         activeClientId.value = currentForm.clientId;
@@ -594,27 +592,27 @@ const openNodeModal = (node) => {
     }
     if (node.type === 'model') {
         const payload = node.data || {};
-        editingId.value = payload.id || null;
+        editingId.value = payload.modelId || null;
         Object.assign(currentForm, payload);
     }
     if (node.type === 'api') {
         const payload = node.data || {};
-        editingId.value = payload.id || null;
+        editingId.value = payload.apiId || null;
         Object.assign(currentForm, payload);
     }
     if (node.type === 'prompt') {
         const payload = node.data || {};
-        editingId.value = payload.id || null;
+        editingId.value = payload.promptId || null;
         Object.assign(currentForm, payload);
     }
     if (node.type === 'advisor') {
         const payload = node.data || {};
-        editingId.value = payload.id || null;
+        editingId.value = payload.advisorId || null;
         Object.assign(currentForm, payload);
     }
     if (node.type === 'mcp') {
         const payload = node.data || {};
-        editingId.value = payload.id || null;
+        editingId.value = payload.mcpId || null;
         Object.assign(currentForm, payload);
         currentForm.mcpChat = payload.mcpChat ?? 0;
     }
@@ -950,13 +948,11 @@ const handlePendingRelationAfterCreate = async () => {
         if (!clientDetail) throw new Error('缺少 Client 信息，无法绑定 Model');
         await unwrapResult(
             adminUpdate('client', {
-                id: clientDetail.id,
                 clientId: clientDetail.clientId,
                 clientName: clientDetail.clientName,
                 clientType: clientDetail.clientType,
                 clientRole: clientDetail.clientRole,
                 modelId: currentForm.modelId,
-                clientDesc: clientDetail.clientDesc,
                 clientStatus: clientDetail.clientStatus ?? 1
             }),
             '更新 Client 失败'
@@ -968,7 +964,6 @@ const handlePendingRelationAfterCreate = async () => {
         if (!modelDetail) throw new Error('缺少 Model 信息，无法绑定 API');
         await unwrapResult(
             adminUpdate('model', {
-                id: modelDetail.id,
                 modelId: modelDetail.modelId,
                 modelName: modelDetail.modelName,
                 modelType: modelDetail.modelType,
@@ -1154,7 +1149,7 @@ onMounted(async () => {
                                 <div class="canvas-text">名称：{{ data.client?.clientName || '-' }}</div>
                                 <div class="canvas-text">类型：{{ data.client?.clientType || '-' }}</div>
                                 <div class="canvas-text">角色：{{ data.client?.clientRole || data.clientRole || '-' }}</div>
-                                <div class="canvas-desc">概述：{{ data.client?.clientDesc || '-' }}</div>
+                                <div class="canvas-desc">模型：{{ data.client?.modelId || '-' }}</div>
                             </div>
                         </template>
 
@@ -1165,7 +1160,7 @@ onMounted(async () => {
                                 <div class="canvas-id">{{ data.modelId }}</div>
                                 <div class="canvas-text">名称：{{ data.modelName || '-' }}</div>
                                 <div class="canvas-text">类型：{{ data.modelType || '-' }}</div>
-                                <div class="canvas-desc">概述：{{ data.modelDesc || '-' }}</div>
+                                <div class="canvas-desc">API：{{ data.apiId || '-' }}</div>
                             </div>
                         </template>
 

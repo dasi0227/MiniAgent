@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { repoDeleteMineAgent, repoList } from '../request/api';
-import { normalizeError } from '../request/request';
+import { notifyAppError } from '../request/request';
 import { useSettingsStore } from '../router/pinia';
 import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
 import Footer from './Footer.vue';
@@ -131,7 +131,7 @@ const deleteMineAgent = async (item) => {
         await repoDeleteMineAgent({ agentId: item.agentId });
         await loadRepository();
     } catch (error) {
-        message.value = normalizeError(error).message || '删除 MiniAgent 失败';
+        notifyAppError(error, '删除 MiniAgent 失败');
         loading.value = false;
     }
 };
@@ -149,7 +149,7 @@ const loadRepository = async () => {
         mineAgents.value = [];
         addedAgents.value = [];
         favorAgents.value = [];
-        message.value = normalizeError(error).message || '获取仓库失败';
+        notifyAppError(error, '获取仓库失败');
     } finally {
         loading.value = false;
     }

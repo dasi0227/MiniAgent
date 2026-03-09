@@ -10,6 +10,7 @@ import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { listAdminSessions, listChatMessages, listWorkAnswerMessages, listWorkSseMessages } from '../request/api';
 import { normalizeError, notifyAdminError } from '../request/request';
 import { formatMcpJson } from '../utils/StringUtil';
+import { createStableRecordId, toSafeTimestamp } from '../utils/MessageRenderUtil';
 
 const router = useRouter();
 const currentKey = ref('session');
@@ -67,14 +68,25 @@ const mapSession = (session) => ({
     createTime: session.createTime
 });
 
-const mapChatMessage = (message) => ({
-    id: message.id || `msg_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-    role: message.messageRole || message.role || 'assistant',
-    content: message.messageContent || message.content || '',
-    createdAt: message.createTime ? Date.parse(message.createTime) : Date.now()
-});
+const mapChatMessage = (message, sessionId = '', seenMap = new Map()) => {
+    const role = message?.messageRole || message?.role || 'assistant';
+    const content = message?.messageContent || message?.content || '';
+    const createTime = message?.createTime || message?.createdAt || '';
+    return {
+        id: createStableRecordId({
+            sourceId: message?.messageSeq || message?.messageId || message?.id,
+            sessionId,
+            prefix: 'msg',
+            signatureParts: [createTime, role, content],
+            seenMap
+        }),
+        role,
+        content,
+        createdAt: toSafeTimestamp(createTime)
+    };
+};
 
-const mapCard = (message) => {
+const mapCard = (message, sessionId = '', seenMap = new Map()) => {
     const raw = message?.messageContent || '';
     let parsed = null;
     try {
@@ -84,7 +96,13 @@ const mapCard = (message) => {
     }
     const payload = parsed && typeof parsed === 'object' ? parsed : { sectionContent: raw };
     return {
-        id: message.id || payload.id || `card_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+        id: createStableRecordId({
+            sourceId: message?.messageSeq || payload?.id || message?.id,
+            sessionId,
+            prefix: 'card',
+            signatureParts: [message?.createTime || '', payload.sectionType, payload.sectionContent, payload.round, payload.step, payload.timestamp],
+            seenMap
+        }),
         clientType: payload.clientType || '',
         sectionType: payload.sectionType || '',
         sectionContent: payload.sectionContent || '',
@@ -94,12 +112,23 @@ const mapCard = (message) => {
     };
 };
 
-const mapWorkMessage = (message) => ({
-    id: message.id || `msg_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-    role: message.messageRole || message.role || 'assistant',
-    content: message.messageContent || message.content || '',
-    createdAt: message.createTime ? Date.parse(message.createTime) : Date.now()
-});
+const mapWorkMessage = (message, sessionId = '', seenMap = new Map()) => {
+    const role = message?.messageRole || message?.role || 'assistant';
+    const content = message?.messageContent || message?.content || '';
+    const createTime = message?.createTime || message?.createdAt || '';
+    return {
+        id: createStableRecordId({
+            sourceId: message?.messageSeq || message?.messageId || message?.id,
+            sessionId,
+            prefix: 'msg',
+            signatureParts: [createTime, role, content],
+            seenMap
+        }),
+        role,
+        content,
+        createdAt: toSafeTimestamp(createTime)
+    };
+};
 
 const formatTime = (value) => {
     if (!value) return '';
@@ -147,7 +176,10 @@ const loadDetail = async (session) => {
         if (session.sessionType === 'chat') {
             const resp = await listChatMessages({ sessionId: session.sessionId });
             const list = pickData(resp, '获取会话消息失败') || [];
-            detail.chatMessages = (Array.isArray(list) ? list : []).map(mapChatMessage);
+            const seenMap = new Map();
+            detail.chatMessages = (Array.isArray(list) ? list : []).map((item) =>
+                mapChatMessage(item, session.sessionId, seenMap)
+            );
         } else {
             const [sseResp, answerResp] = await Promise.all([
                 listWorkSseMessages({ sessionId: session.sessionId }),
@@ -155,13 +187,17 @@ const loadDetail = async (session) => {
             ]);
             const sseList = pickData(sseResp, '获取会话卡片失败') || [];
             const answerList = pickData(answerResp, '获取会话消息失败') || [];
+            const cardSeenMap = new Map();
+            const msgSeenMap = new Map();
             detail.workCards = (Array.isArray(sseList) ? sseList : [])
-                .map(mapCard)
+                .map((item) => mapCard(item, session.sessionId, cardSeenMap))
                 .filter(
                     (card) =>
                         card.sectionType !== 'summarizer_overview' && card.sectionType !== 'replier_overview'
                 );
-            detail.workMessages = (Array.isArray(answerList) ? answerList : []).map(mapWorkMessage);
+            detail.workMessages = (Array.isArray(answerList) ? answerList : []).map((item) =>
+                mapWorkMessage(item, session.sessionId, msgSeenMap)
+            );
         }
     } catch (error) {
         const msg = normalizeError(error).message || '获取会话详情失败';

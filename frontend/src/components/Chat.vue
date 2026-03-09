@@ -19,7 +19,7 @@ import {
     uploadRagFile,
     uploadRagGit
 } from '../request/api';
-import { normalizeError } from '../request/request';
+import { normalizeError, notifyAppError } from '../request/request';
 import { applyStreamToken, createStreamAccumulator, parseThinkText } from '../utils/StringUtil';
 import { areMessageListsEqual, createStableRecordId, toSafeTimestamp } from '../utils/MessageRenderUtil';
 import { useAgentStore, useChatStore, useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
@@ -144,18 +144,19 @@ const ensureChatSessionValid = async (chat) => {
         }
         return matched;
     } catch (error) {
-        sendError.value = normalizeError(error).message || '获取会话失败';
+        notifyAppError(error, '获取会话失败');
         return null;
     }
 };
 
 const mapMessage = (message, sessionId = '', seenMap = new Map()) => {
     const role = message?.messageRole || message?.role || 'assistant';
-    const content = message?.messageContent || message?.content || '';
+    const rawContent = message?.messageContent || message?.content || '';
+    const content = parseThinkText(rawContent).answer;
     const createTime = message?.createTime || message?.createdAt || '';
     return {
         id: createStableRecordId({
-            sourceId: message?.id || message?.messageId,
+            sourceId: message?.messageSeq || message?.messageId || message?.id,
             sessionId,
             prefix: 'msg',
             signatureParts: [createTime, role, content],
@@ -299,7 +300,7 @@ const loadChatMessages = async (sessionId, chatId = chatStore.currentChatId, opt
             dropInvalidChatSession(chatId);
             return;
         }
-        sendError.value = message;
+        notifyAppError(error, '获取消息失败');
     } finally {
         if (!silent) {
             messageLoading.value = false;
@@ -342,7 +343,7 @@ const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, se
         chatStore.setCurrentChatId(session.sessionId);
         return session;
     } catch (error) {
-        sendError.value = normalizeError(error).message || '创建会话失败';
+        notifyAppError(error, '创建会话失败');
         return null;
     }
 };
@@ -355,7 +356,7 @@ const renameChatIfNeeded = async (chat, content) => {
     try {
         await updateSession({ sessionId: chat.sessionId, sessionTitle: nextTitle });
     } catch (error) {
-        sendError.value = normalizeError(error).message || '更新会话失败';
+        notifyAppError(error, '更新会话失败');
     }
 };
 
@@ -439,13 +440,7 @@ const fetchTags = async () => {
 const fetchModels = async () => {
     try {
         const resp = await queryChatModels();
-        const list = Array.isArray(resp?.result)
-            ? resp.result
-            : Array.isArray(resp)
-              ? resp
-              : Array.isArray(resp?.data)
-                ? resp.data
-                : [];
+        const list = pickData(resp, '获取模型列表失败') || [];
         const normalized = list
             .map((item) => {
                 if (typeof item === 'string') {
@@ -484,13 +479,7 @@ const fetchModels = async () => {
 const fetchMcpTools = async () => {
     try {
         const resp = await queryChatMcps();
-        const list = Array.isArray(resp?.result)
-            ? resp.result
-            : Array.isArray(resp)
-              ? resp
-              : Array.isArray(resp?.data)
-                ? resp.data
-                : [];
+        const list = pickData(resp, '获取 MCP 工具失败') || [];
         const normalized = list
             .map((item) => {
                 if (!item || typeof item !== 'object') return null;
@@ -843,6 +832,7 @@ const runComplete = async (content, controller, sessionId, clientId) => {
 const runStream = async (content, controller, sessionId, clientId) => {
     const accumulator = createStreamAccumulator();
     const assistantMessage = chatStore.addAssistantMessage({ pending: true, content: '', think: '' });
+    let directRaw = '';
     let closed = false;
 
     const finishStream = () => {
@@ -856,7 +846,7 @@ const runStream = async (content, controller, sessionId, clientId) => {
             }
             accumulator.carry = '';
         }
-        const normalized = normalizeMarkdownSpacing(accumulator.answer);
+        const normalized = normalizeMarkdownSpacing(parseThinkText(accumulator.answer).answer);
         chatStore.updateAssistantMessage(assistantMessage.id, {
             content: normalized,
             think: '',
@@ -894,7 +884,15 @@ const runStream = async (content, controller, sessionId, clientId) => {
                 const { token, answer, direct, finishReason } = extractStreamParts(payload);
                 if (direct) {
                     if (answer) {
-                        accumulator.answer += answer;
+                        const chunk = String(answer);
+                        if (directRaw && chunk.startsWith(directRaw)) {
+                            directRaw = chunk;
+                        } else {
+                            directRaw += chunk;
+                        }
+                        accumulator.answer = parseThinkText(directRaw).answer;
+                        accumulator.carry = '';
+                        accumulator.inThink = false;
                     }
                 } else if (token) {
                     applyStreamToken(accumulator, token);
@@ -1308,7 +1306,7 @@ const handleUpload = async () => {
                             </div>
                             <div
                                 v-if="mcpDropdownOpen"
-                                class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto"
+                                class="absolute left-0 top-[calc(100%+6px)] z-[15] w-full rounded-[12px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_40px_rgba(15,23,42,0.12)] max-h-[240px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                                 @click.stop
                             >
                                 <div

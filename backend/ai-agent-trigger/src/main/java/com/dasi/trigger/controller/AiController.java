@@ -1,4 +1,4 @@
-package com.dasi.trigger.http;
+package com.dasi.trigger.controller;
 
 import com.dasi.api.IAiApi;
 import com.dasi.domain.ai.model.dto.AiChatDTO;
@@ -344,7 +344,7 @@ public class AiController implements IAiApi {
         if (clientId == null || clientId.isBlank()) {
             return true;
         }
-        List<ChatClientVO> list = queryService.queryChatClientVOList();
+        List<ChatClientVO> list = queryService.queryChatClientList();
         if (list == null || list.isEmpty()) {
             return true;
         }
@@ -355,7 +355,7 @@ public class AiController implements IAiApi {
         if (agentId == null || agentId.isBlank()) {
             return true;
         }
-        List<WorkAgentVO> list = queryService.queryWorkAgentVOList();
+        List<WorkAgentVO> list = queryService.queryWorkAgentList();
         if (list == null || list.isEmpty()) {
             return true;
         }

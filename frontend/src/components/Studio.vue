@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryChatMcps, queryChatModels, studioGenerate } from '../request/api';
-import { normalizeError } from '../request/request';
+import { notifyAppError } from '../request/request';
 import Footer from './Footer.vue';
 
 const router = useRouter();
@@ -68,7 +68,7 @@ const doGenerate = async () => {
         });
         message.value = '已完成生成';
     } catch (error) {
-        message.value = normalizeError(error).message || '生成失败';
+        notifyAppError(error, '生成失败');
     } finally {
         loading.value = false;
     }
@@ -82,7 +82,7 @@ onMounted(async () => {
     try {
         await Promise.all([loadModels(), loadMcps()]);
     } catch (error) {
-        message.value = normalizeError(error).message || '初始化失败';
+        notifyAppError(error, '初始化失败');
     }
 });
 </script>

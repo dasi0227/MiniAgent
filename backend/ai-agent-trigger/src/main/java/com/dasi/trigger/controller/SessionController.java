@@ -1,4 +1,4 @@
-package com.dasi.trigger.http;
+package com.dasi.trigger.controller;
 
 import com.dasi.api.ISessionApi;
 import com.dasi.domain.session.model.vo.MessageVO;

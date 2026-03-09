@@ -10,6 +10,9 @@ export const trimStrings = (input) => {
 
 const THINK_START = '<think>';
 const THINK_END = '</think>';
+const THINK_BLOCK_REGEX = /<think\b[^>]*>[\s\S]*?(?:<\/think\s*>|<think\s*\/\s*>)/gi;
+const THINK_OPEN_TO_END_REGEX = /<think\b[^>]*>[\s\S]*$/gi;
+const THINK_TAG_REGEX = /<\/?think\b[^>]*\/?>/gi;
 
 export const parseThinkText = (text) => {
     if (!text) {
@@ -18,7 +21,11 @@ export const parseThinkText = (text) => {
             answer: ''
         };
     }
-    const answer = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+    const normalized = String(text);
+    const answer = normalized
+        .replace(THINK_BLOCK_REGEX, '')
+        .replace(THINK_OPEN_TO_END_REGEX, '')
+        .replace(THINK_TAG_REGEX, '');
     return {
         think: '',
         answer

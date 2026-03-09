@@ -20,7 +20,7 @@ import {
     userTaskUpdate
 } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
-import { normalizeError } from '../request/request';
+import { normalizeError, notifyAppError } from '../request/request';
 import { useAuthStore, useSettingsStore } from '../router/pinia';
 import Footer from './Footer.vue';
 
@@ -381,7 +381,7 @@ const loadUserProfile = async () => {
         });
         profileForm.username = (user?.username || user?.userName || currentUser.value.username || '').trim();
     } catch (error) {
-        profileError.value = normalizeError(error).message || '获取用户资料失败';
+        notifyAppError(error, '获取用户资料失败');
         profileForm.username = (currentUser.value.username || '').trim();
     } finally {
         profileLoading.value = false;
@@ -412,7 +412,7 @@ const saveProfile = async () => {
         profileForm.newPassword = '';
         resetProfileAvatarDraft();
     } catch (error) {
-        profileError.value = normalizeError(error).message || '保存失败';
+        notifyAppError(error, '保存失败');
     } finally {
         profileSaving.value = false;
     }
@@ -426,7 +426,8 @@ const loadMcpList = async (keyword = '') => {
         const list = pickData(resp, '获取 MCP 失败') || [];
         mcpList.value = Array.isArray(list) ? list : [];
     } catch (error) {
-        mcpError.value = normalizeError(error).message || '获取 MCP 失败';
+        mcpList.value = [];
+        notifyAppError(error, '获取 MCP 失败');
     } finally {
         mcpLoading.value = false;
     }
@@ -434,9 +435,9 @@ const loadMcpList = async (keyword = '') => {
 
 const submitMcpInsert = async () => {
     mcpError.value = '';
-    mcpSaving.value = true;
+    let payload = null;
     try {
-        const payload = {
+        payload = {
             mcpName: (mcpForm.mcpName || '').trim(),
             mcpType: (mcpForm.mcpType || '').trim(),
             mcpDesc: (mcpForm.mcpDesc || '').trim(),
@@ -446,11 +447,17 @@ const submitMcpInsert = async () => {
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
         }
+    } catch (error) {
+        mcpError.value = normalizeError(error).message || '新增 MCP 失败';
+        return;
+    }
+    mcpSaving.value = true;
+    try {
         await userMcpInsert(payload);
         resetMcpForm();
         await loadMcpList(mcpKeyword.value);
     } catch (error) {
-        mcpError.value = normalizeError(error).message || '新增 MCP 失败';
+        notifyAppError(error, '新增 MCP 失败');
     } finally {
         mcpSaving.value = false;
     }
@@ -470,12 +477,12 @@ const openMcpDialog = (item) => {
 
 const saveMcpDialog = async () => {
     mcpDialogError.value = '';
-    mcpDialogSaving.value = true;
+    let payload = null;
     try {
         if (!mcpDialogForm.mcpId.trim()) {
             throw new Error('MCP 配置标识缺失，请刷新后重试');
         }
-        const payload = {
+        payload = {
             mcpId: mcpDialogForm.mcpId.trim(),
             mcpName: (mcpDialogForm.mcpName || '').trim(),
             mcpType: (mcpDialogForm.mcpType || '').trim(),
@@ -486,11 +493,17 @@ const saveMcpDialog = async () => {
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
         }
+    } catch (error) {
+        mcpDialogError.value = normalizeError(error).message || '更新 MCP 失败';
+        return;
+    }
+    mcpDialogSaving.value = true;
+    try {
         await userMcpUpdate(payload);
         mcpDialogOpen.value = false;
         await loadMcpList(mcpKeyword.value);
     } catch (error) {
-        mcpDialogError.value = normalizeError(error).message || '更新 MCP 失败';
+        notifyAppError(error, '更新 MCP 失败');
     } finally {
         mcpDialogSaving.value = false;
     }
@@ -504,7 +517,8 @@ const loadApiList = async (keyword = '') => {
         const list = pickData(resp, '获取 API 失败') || [];
         apiList.value = Array.isArray(list) ? list : [];
     } catch (error) {
-        apiError.value = normalizeError(error).message || '获取 API 失败';
+        apiList.value = [];
+        notifyAppError(error, '获取 API 失败');
     } finally {
         apiLoading.value = false;
     }
@@ -533,14 +547,20 @@ const buildApiPayload = (form, apiId = '') => {
 
 const submitApiInsert = async () => {
     apiError.value = '';
+    let payload = null;
+    try {
+        payload = buildApiPayload(apiForm);
+    } catch (error) {
+        apiError.value = normalizeError(error).message || '新增 API 失败';
+        return;
+    }
     apiSaving.value = true;
     try {
-        const payload = buildApiPayload(apiForm);
         await userApiInsert(payload);
         resetApiForm();
         await loadApiList(apiKeyword.value);
     } catch (error) {
-        apiError.value = normalizeError(error).message || '新增 API 失败';
+        notifyAppError(error, '新增 API 失败');
     } finally {
         apiSaving.value = false;
     }
@@ -559,17 +579,23 @@ const openApiDialog = (item) => {
 
 const saveApiDialog = async () => {
     apiDialogError.value = '';
-    apiDialogSaving.value = true;
+    let payload = null;
     try {
         if (!apiDialogForm.apiId.trim()) {
             throw new Error('API 配置标识缺失，请刷新后重试');
         }
-        const payload = buildApiPayload(apiDialogForm, apiDialogForm.apiId.trim());
+        payload = buildApiPayload(apiDialogForm, apiDialogForm.apiId.trim());
+    } catch (error) {
+        apiDialogError.value = normalizeError(error).message || '更新 API 失败';
+        return;
+    }
+    apiDialogSaving.value = true;
+    try {
         await userApiUpdate(payload);
         apiDialogOpen.value = false;
         await loadApiList(apiKeyword.value);
     } catch (error) {
-        apiDialogError.value = normalizeError(error).message || '更新 API 失败';
+        notifyAppError(error, '更新 API 失败');
     } finally {
         apiDialogSaving.value = false;
     }
@@ -603,7 +629,7 @@ const loadTaskAgents = async () => {
             })
             .filter(Boolean);
     } catch (error) {
-        taskError.value = normalizeError(error).message || '获取 MiniAgent 列表失败';
+        notifyAppError(error, '获取 MiniAgent 列表失败');
         taskAgents.value = [];
     }
 };
@@ -616,7 +642,8 @@ const loadTaskList = async () => {
         const list = pickData(resp, '获取 Task 失败') || [];
         taskList.value = Array.isArray(list) ? list : [];
     } catch (error) {
-        taskError.value = normalizeError(error).message || '获取 Task 失败';
+        taskList.value = [];
+        notifyAppError(error, '获取 Task 失败');
     } finally {
         taskLoading.value = false;
     }
@@ -734,13 +761,19 @@ const editTask = (item) => {
 
 const submitTask = async () => {
     taskError.value = '';
+    let payload = null;
+    try {
+        payload = buildTaskPayload(taskForm);
+        if (taskEditing.value && !payload.taskId) {
+            throw new Error('Task 标识缺失，请刷新后重试');
+        }
+    } catch (error) {
+        taskError.value = normalizeError(error).message || (taskEditing.value ? '更新 Task 失败' : '新增 Task 失败');
+        return;
+    }
     taskSaving.value = true;
     try {
-        const payload = buildTaskPayload(taskForm);
         if (taskEditing.value) {
-            if (!payload.taskId) {
-                throw new Error('Task 标识缺失，请刷新后重试');
-            }
             await userTaskUpdate(payload);
         } else {
             await userTaskInsert(payload);
@@ -748,7 +781,7 @@ const submitTask = async () => {
         resetTaskForm();
         await loadTaskList();
     } catch (error) {
-        taskError.value = normalizeError(error).message || (taskEditing.value ? '更新 Task 失败' : '新增 Task 失败');
+        notifyAppError(error, taskEditing.value ? '更新 Task 失败' : '新增 Task 失败');
     } finally {
         taskSaving.value = false;
     }
@@ -772,7 +805,7 @@ const doDeleteTask = async () => {
         taskDeleteTarget.value = null;
         await loadTaskList();
     } catch (error) {
-        taskError.value = normalizeError(error).message || '删除 Task 失败';
+        notifyAppError(error, '删除 Task 失败');
     } finally {
         taskSaving.value = false;
     }
@@ -789,7 +822,7 @@ const toggleTaskStatus = async (item) => {
         }
         await loadTaskList();
     } catch (error) {
-        taskError.value = normalizeError(error).message || '切换 Task 状态失败';
+        notifyAppError(error, '切换 Task 状态失败');
     }
 };
 

@@ -1,4 +1,4 @@
-package com.dasi.trigger.http;
+package com.dasi.trigger.controller;
 
 import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.vo.CommentVO;

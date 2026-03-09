@@ -14,7 +14,7 @@ import {
     queryAgentList,
     updateSession
 } from '../request/api';
-import { normalizeError } from '../request/request';
+import { normalizeError, notifyAppError } from '../request/request';
 import { formatMcpJson } from '../utils/StringUtil';
 import { areCardListsEqual, areMessageListsEqual, createStableRecordId, toSafeTimestamp } from '../utils/MessageRenderUtil';
 import { useAgentSettingsStore, useAgentStore, useChatStore, useWelcomeLaunchStore } from '../router/pinia';
@@ -121,7 +121,7 @@ const ensureWorkSessionValid = async (session) => {
         }
         return matched;
     } catch (error) {
-        sendError.value = normalizeError(error).message || '获取会话失败';
+        notifyAppError(error, '获取会话失败');
         return null;
     }
 };
@@ -132,7 +132,7 @@ const mapMessage = (message, sessionId = '', seenMap = new Map()) => {
     const createTime = message?.createTime || message?.createdAt || '';
     return {
         id: createStableRecordId({
-            sourceId: message?.id || message?.messageId,
+            sourceId: message?.messageSeq || message?.messageId || message?.id,
             sessionId,
             prefix: 'msg',
             signatureParts: [createTime, role, content],
@@ -158,7 +158,7 @@ const mapCard = (message, sessionId = '', seenMap = new Map()) => {
     const createTime = message?.createTime || '';
     return {
         id: createStableRecordId({
-            sourceId: message?.id || payload?.id,
+            sourceId: message?.messageSeq || payload?.id || message?.id,
             sessionId,
             prefix: 'card',
             signatureParts: [createTime, payload.sectionType, payload.sectionContent, payload.round, payload.step, payload.timestamp],
@@ -229,13 +229,7 @@ const currentAgentLabel = computed(() => {
 const fetchAgents = async () => {
     try {
         const resp = await queryAgentList();
-        const list = Array.isArray(resp?.result)
-            ? resp.result
-            : Array.isArray(resp)
-              ? resp
-              : Array.isArray(resp?.data)
-                ? resp.data
-                : [];
+        const list = pickData(resp, '获取 MiniAgent 列表失败') || [];
         const normalized = list
             .map((item) => {
                 if (!item || typeof item !== 'object') return null;
@@ -343,7 +337,7 @@ const loadWorkMessages = async (sessionId, options = {}) => {
             dropInvalidWorkSession(agentStore.currentSessionId);
             return;
         }
-        sendError.value = message;
+        notifyAppError(error, '获取消息失败');
     } finally {
         if (!silent) {
             messageLoading.value = false;
@@ -378,7 +372,7 @@ const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话' 
         agentStore.setCurrentSessionId(session.sessionId);
         return session;
     } catch (error) {
-        sendError.value = normalizeError(error).message || '创建会话失败';
+        notifyAppError(error, '创建会话失败');
         return null;
     }
 };
@@ -391,7 +385,7 @@ const renameSessionIfNeeded = async (session, content) => {
     try {
         await updateSession({ sessionId: session.sessionId, sessionTitle: nextTitle });
     } catch (error) {
-        sendError.value = normalizeError(error).message || '更新会话失败';
+        notifyAppError(error, '更新会话失败');
     }
 };
 
@@ -521,12 +515,19 @@ const rangeStyle = (value) => {
     };
 };
 
-const buildExecutePayload = (userMessage, sessionId, aiAgentId) => ({
-    aiAgentId: aiAgentId || currentAgentId.value,
+const resolveAgentDesc = (agentId) => {
+    const match = agentOptions.value.find((item) => item.value === agentId);
+    return (match?.desc || '').trim() || '暂无';
+};
+
+const buildExecutePayload = (userMessage, sessionId, agentId) => ({
+    agentId: agentId || currentAgentId.value,
+    agentDesc: resolveAgentDesc(agentId || currentAgentId.value),
     userMessage,
     sessionId,
     maxRound: settingsStore.maxRound,
-    maxRetry: settingsStore.maxRetry
+    maxRetry: settingsStore.maxRetry,
+    maxPace: 1
 });
 
 const sendMessage = async (options = {}) => {
@@ -564,7 +565,7 @@ const sendMessage = async (options = {}) => {
     await runExecute(content, controller, validSession.sessionId, resolvedAgentId);
 };
 
-const runExecute = async (content, controller, sessionId, aiAgentId) => {
+const runExecute = async (content, controller, sessionId, agentId) => {
     const assistantMessage = agentStore.addAssistantMessage({ pending: true, content: '' });
     const events = [];
     let closed = false;
@@ -602,7 +603,7 @@ const runExecute = async (content, controller, sessionId, aiAgentId) => {
 
     try {
         await executeAgentStream({
-            ...buildExecutePayload(content, sessionId, aiAgentId),
+            ...buildExecutePayload(content, sessionId, agentId),
             signal: controller.signal,
             onData: (payload) => {
                 if (typeof payload === 'string') {

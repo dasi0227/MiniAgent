@@ -87,6 +87,10 @@ const WORKSPACE_AGENT_PUBLISH_PATH = `${WORKSPACE_BASE_PATH}/agent/publish`;
 const WORKSPACE_AGENT_TEMPLATE_PATH = `${WORKSPACE_BASE_PATH}/agent/template`;
 const WORKSPACE_AGENT_DELETE_PATH = `${WORKSPACE_BASE_PATH}/agent/delete`;
 const WORKSPACE_AGENT_FORK_PATH = `${WORKSPACE_BASE_PATH}/agent/fork`;
+const WORKSPACE_AGENT_CREATE_PATH = `${WORKSPACE_BASE_PATH}/agent/create`;
+const WORKSPACE_AGENT_UPDATE_BASE_PATH = `${WORKSPACE_BASE_PATH}/agent/update/base`;
+const WORKSPACE_AGENT_UPDATE_USERPROMPT_PATH = `${WORKSPACE_BASE_PATH}/agent/update/userprompt`;
+const WORKSPACE_AGENT_UPDATE_SYSTEMPROMPT_PATH = `${WORKSPACE_BASE_PATH}/agent/update/systemprompt`;
 
 const unsupportedApi = (name) => Promise.reject(new Error(`${name} 暂未开放`));
 
@@ -370,25 +374,32 @@ export const dispatchArmory = async ({ armoryType, armoryId }) => {
 };
 
 export const executeAgentStream = async ({
+    agentId,
     aiAgentId,
+    agentDesc,
     userMessage,
     sessionId,
     maxRound,
     maxRetry,
+    maxPace,
     onData,
     onError,
     onDone,
     signal
 }) => {
     const url = AGENT_EXECUTE_PATH;
+    const resolvedAgentId = (agentId || aiAgentId || '').trim();
+    const resolvedAgentDesc = (agentDesc || '').trim() || '暂无';
     return streamFetch(
         url,
         {
-            aiAgentId,
+            agentId: resolvedAgentId,
+            agentDesc: resolvedAgentDesc,
             userMessage,
             sessionId,
             maxRound,
-            maxRetry
+            maxRetry,
+            maxPace: Number(maxPace) > 0 ? Number(maxPace) : 1
         },
         onData,
         onError,
@@ -531,16 +542,35 @@ export const userTaskToggle = async (taskId, taskStatus) =>
     http.post(USER_TASK_TOGGLE_PATH, null, { params: { taskId, taskStatus } });
 
 // 以下接口后端当前未实现，保留函数供调用方降级处理
-export const userMcpToggle = async () => unsupportedApi('MCP 启停');
-export const userMcpTest = async () => unsupportedApi('MCP 测试');
-export const userMcpExport = async () => unsupportedApi('MCP 导出');
-
-// -------------------- Studio（后端未实现） --------------------
+// -------------------- Studio / Workspace Agent --------------------
 export const studioGenerate = async () => unsupportedApi('Studio 生成');
-export const studioCreate = async () => unsupportedApi('Studio 创建');
-export const studioUpdate = async () => unsupportedApi('Studio 更新');
-export const studioDetail = async () => unsupportedApi('Studio 详情');
-export const studioListMine = async () => unsupportedApi('Studio 我的列表');
+export const workspaceAgentCreate = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_CREATE_PATH, trimStrings(payload));
+export const workspaceAgentBaseUpdate = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_UPDATE_BASE_PATH, trimStrings(payload));
+export const workspaceAgentUserPromptUpdate = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_UPDATE_USERPROMPT_PATH, trimStrings(payload));
+export const workspaceAgentSystemPromptUpdate = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_UPDATE_SYSTEMPROMPT_PATH, trimStrings(payload));
+
+// 兼容历史命名，实际复用 workspace/agent 接口
+export const studioCreate = async (payload = {}) => workspaceAgentCreate(payload);
+export const studioUpdate = async (payload = {}) => {
+    const normalized = trimStrings(payload || {});
+    if (normalized && typeof normalized === 'object' && normalized.clientRole) {
+        if (Object.prototype.hasOwnProperty.call(normalized, 'systemPrompt')) {
+            return workspaceAgentSystemPromptUpdate(normalized);
+        }
+        if (Object.prototype.hasOwnProperty.call(normalized, 'userPrompt')) {
+            return workspaceAgentUserPromptUpdate(normalized);
+        }
+    }
+    return workspaceAgentBaseUpdate(normalized);
+};
+export const studioDetail = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_TEMPLATE_PATH, null, { params: { templateId: payload?.templateId || '' } });
+export const studioListMine = async () =>
+    mapResultData(await http.post(REPO_LIST_PATH), (data) => (Array.isArray(data?.self) ? data.self : []));
 
 // -------------------- Plaza --------------------
 export const plazaList = async (payload = {}) => http.post(PLAZA_PAGE_PATH, normalizePlazaQueryPayload(payload));
@@ -557,12 +587,9 @@ export const plazaDiscomment = async ({ plazaId, commentId }) =>
     http.post(PLAZA_DISCOMMENT_PATH, null, { params: { plazaId, commentId } });
 export const plazaCommentArea = async (payload = {}) => http.post(PLAZA_COMMENT_AREA_PATH, trimStrings(payload));
 export const plazaDelete = async ({ plazaId }) => http.post(PLAZA_DELETE_PATH, null, { params: { plazaId } });
-export const plazaCommentCount = async () => unsupportedApi('Plaza 评论计数');
 
 // -------------------- Repository --------------------
 export const repoList = async () => http.post(REPO_LIST_PATH);
-export const repoAdd = async () => unsupportedApi('Repository 添加');
-export const repoRemove = async () => unsupportedApi('Repository 移除');
 export const repoFork = async ({ templateId }) =>
     http.post(WORKSPACE_AGENT_FORK_PATH, null, { params: { templateId } });
 export const repoDeleteMineAgent = async ({ agentId }) =>

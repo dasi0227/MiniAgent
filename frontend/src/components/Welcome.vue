@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryAgentList, queryChatMcps, queryChatModels } from '../request/api';
-import { normalizeError } from '../request/request';
+import { notifyAppError } from '../request/request';
 import { useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
 import { createTypewriter, DEFAULT_TYPEWRITER_SEGMENTS } from '../utils/TypeWriter';
 import Footer from './Footer.vue';
@@ -13,7 +13,6 @@ const settingsStore = useSettingsStore();
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 
 const sending = ref(false);
-const actionError = ref('');
 
 const typewriterState = reactive({
     lines: [],
@@ -97,6 +96,16 @@ const normalizeOptions = (list, idKey, nameKey) => {
     });
 };
 
+const pickData = (resp, message = '操作失败') => {
+    if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
+        if (resp.code !== 200) {
+            throw new Error(resp.info || message);
+        }
+        return resp.data;
+    }
+    return resp?.data ?? resp?.result ?? resp;
+};
+
 const buildSessionTitle = (prompt) => (prompt || '新会话').slice(0, 20) || '新会话';
 
 const pickModelByKeyword = (models, keyword) => {
@@ -121,13 +130,7 @@ const pickMcpByKeywords = (mcps, keywords = []) => {
 
 const triggerChatAction = async (action) => {
     const modelResp = await queryChatModels();
-    const rawModels = Array.isArray(modelResp?.result)
-        ? modelResp.result
-        : Array.isArray(modelResp)
-          ? modelResp
-          : Array.isArray(modelResp?.data)
-            ? modelResp.data
-            : [];
+    const rawModels = pickData(modelResp, '获取 CLIENT 列表失败') || [];
 
     const models = rawModels
         .map((item) => {
@@ -177,13 +180,7 @@ const triggerChatAction = async (action) => {
         selectedModel = target;
 
         const mcpResp = await queryChatMcps();
-        const mcpList = Array.isArray(mcpResp?.result)
-            ? mcpResp.result
-            : Array.isArray(mcpResp)
-              ? mcpResp
-              : Array.isArray(mcpResp?.data)
-                ? mcpResp.data
-                : [];
+        const mcpList = pickData(mcpResp, '获取 MCP 列表失败') || [];
         const mcps = normalizeOptions(mcpList, 'mcpId', 'mcpName');
         const wecomMcp = pickMcpByKeywords(mcps, ['企业微信', 'wecom', 'wxwork']);
         if (!wecomMcp) {
@@ -206,13 +203,7 @@ const triggerChatAction = async (action) => {
 
 const triggerWorkAction = async (action) => {
     const agentResp = await queryAgentList();
-    const agentList = Array.isArray(agentResp?.result)
-        ? agentResp.result
-        : Array.isArray(agentResp)
-          ? agentResp
-          : Array.isArray(agentResp?.data)
-            ? agentResp.data
-            : [];
+    const agentList = pickData(agentResp, '获取 MiniAgent 列表失败') || [];
 
     const agents = normalizeOptions(agentList, 'agentId', 'agentName');
     if (!agents.length) {
@@ -241,7 +232,6 @@ const triggerWorkAction = async (action) => {
 const runAction = async (kind, action) => {
     if (!action || sending.value) return;
     sending.value = true;
-    actionError.value = '';
     try {
         if (kind === 'chat') {
             await triggerChatAction(action);
@@ -249,9 +239,7 @@ const runAction = async (kind, action) => {
             await triggerWorkAction(action);
         }
     } catch (error) {
-        const friendly = normalizeError(error);
-        const rawMessage = friendly.message || (error instanceof Error ? error.message : '执行失败');
-        actionError.value = rawMessage;
+        notifyAppError(error, '执行失败');
     } finally {
         sending.value = false;
     }
@@ -379,9 +367,6 @@ onBeforeUnmount(() => {
                         </button>
                     </div>
 
-                    <div v-if="actionError" class="rounded-[12px] border border-[rgba(239,68,68,0.35)] bg-[rgba(254,242,242,0.8)] px-[12px] py-[10px] text-[13px] text-[#b91c1c]">
-                        {{ actionError }}
-                    </div>
                 </div>
             </div>
         </div>

@@ -26,7 +26,7 @@ import {
     userMcpUpdate
 } from '../request/api';
 import { parseAuthPayload } from '../request/auth';
-import { normalizeError } from '../request/request';
+import { normalizeError, notifyAppError } from '../request/request';
 import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
 
 const router = useRouter();
@@ -422,7 +422,7 @@ const loadSessions = async () => {
         agentStore.setCurrentSessionId(nextAgentId);
         redirectWelcomeIfNoSession();
     } catch (error) {
-        sessionError.value = normalizeError(error).message || '获取会话失败';
+        notifyAppError(error, '获取会话失败');
         chatStore.setChats([]);
         agentStore.setSessions([]);
     } finally {
@@ -525,7 +525,7 @@ const saveRenameChat = async (chat) => {
         chatStore.updateChatTitle(chat.sessionId, title);
         sessionError.value = '';
     } catch (error) {
-        sessionError.value = normalizeError(error).message || '更新会话失败';
+        notifyAppError(error, '更新会话失败');
     }
     editingChatId.value = null;
     editChatTitle.value = '';
@@ -572,7 +572,7 @@ const saveRenameAgent = async (session) => {
         agentStore.updateSessionTitle(session.sessionId, title);
         sessionError.value = '';
     } catch (error) {
-        sessionError.value = normalizeError(error).message || '更新会话失败';
+        notifyAppError(error, '更新会话失败');
     }
     editingAgentId.value = null;
     editAgentTitle.value = '';
@@ -610,7 +610,7 @@ const handleDelete = async () => {
         redirectWelcomeIfNoSession();
         sessionError.value = '';
     } catch (error) {
-        sessionError.value = normalizeError(error).message || '删除会话失败';
+        notifyAppError(error, '删除会话失败');
     }
     showDeleteConfirm.value = false;
     deleteTarget.value = { type: 'chat', id: '' };
@@ -667,7 +667,7 @@ const confirmNewSession = async (type) => {
         closeNewSessionPicker();
         sessionError.value = '';
     } catch (error) {
-        sessionError.value = normalizeError(error).message || '创建会话失败';
+        notifyAppError(error, '创建会话失败');
     }
 };
 
@@ -715,7 +715,7 @@ const saveProfile = async () => {
         resetProfileAvatarDraft();
         showProfile.value = false;
     } catch (error) {
-        profileError.value = normalizeError(error).message || '更新失败，请稍后重试';
+        notifyAppError(error, '更新失败，请稍后重试');
     } finally {
         profileSaving.value = false;
     }
@@ -778,7 +778,7 @@ const loadUserProfile = async () => {
             profileForm.username = user.username || user.userName || currentUser.value.username || '';
         }
     } catch (error) {
-        profileError.value = normalizeError(error).message || '获取用户资料失败';
+        notifyAppError(error, '获取用户资料失败');
     } finally {
         profileLoading.value = false;
     }
@@ -793,7 +793,7 @@ const loadUserApi = async () => {
         apiList.value = Array.isArray(list) ? list : [];
     } catch (error) {
         apiList.value = [];
-        apiError.value = normalizeError(error).message || '获取 API 失败';
+        notifyAppError(error, '获取 API 失败');
     }
 };
 
@@ -805,7 +805,7 @@ const loadUserMcp = async () => {
         const list = pickData(resp, '获取 MCP 失败') || [];
         mcpList.value = Array.isArray(list) ? list : [];
     } catch (error) {
-        mcpError.value = normalizeError(error).message || '获取 MCP 失败';
+        notifyAppError(error, '获取 MCP 失败');
     } finally {
         mcpLoading.value = false;
     }
@@ -847,7 +847,7 @@ const saveMcp = async () => {
         resetMcpForm();
         await loadUserMcp();
     } catch (error) {
-        mcpError.value = normalizeError(error).message || '保存 MCP 失败';
+        notifyAppError(error, '保存 MCP 失败');
     }
 };
 
@@ -860,7 +860,7 @@ const deleteMcp = async (item) => {
         }
         await loadUserMcp();
     } catch (error) {
-        mcpError.value = normalizeError(error).message || '删除 MCP 失败';
+        notifyAppError(error, '删除 MCP 失败');
     }
 };
 
@@ -905,7 +905,7 @@ const saveApi = async () => {
         resetApiForm();
         await loadUserApi();
     } catch (error) {
-        apiError.value = normalizeError(error).message || '保存 API 失败';
+        notifyAppError(error, '保存 API 失败');
     }
 };
 
@@ -918,7 +918,7 @@ const deleteApi = async (item) => {
         }
         await loadUserApi();
     } catch (error) {
-        apiError.value = normalizeError(error).message || '删除 API 失败';
+        notifyAppError(error, '删除 API 失败');
     }
 };
 
@@ -1003,7 +1003,6 @@ const loadProfileResources = async () => {
                 </button>
             </div>
             <div v-if="sessionLoading" class="text-[12px] text-[rgba(231,236,244,0.7)]">会话加载中...</div>
-            <div v-else-if="sessionError" class="text-[12px] text-[#fca5a5]">{{ sessionError }}</div>
 
             <div class="flex flex-col gap-[8px]">
                 <button

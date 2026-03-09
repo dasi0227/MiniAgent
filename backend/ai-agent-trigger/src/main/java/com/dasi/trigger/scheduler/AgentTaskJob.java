@@ -1,4 +1,4 @@
-package com.dasi.trigger.job;
+package com.dasi.trigger.scheduler;
 
 import com.dasi.domain.ai.service.task.ITaskService;
 import jakarta.annotation.Resource;
