@@ -145,8 +145,8 @@ public class QueryRepository implements IQueryRepository {
         String sql = """
                 SELECT DISTINCT metadata::jsonb->>'knowledge' AS knowledge
                 FROM %s
-                WHERE metadata::jsonb ? 'knowledge'
-                  AND metadata::jsonb ? 'userId'
+                WHERE jsonb_exists(metadata::jsonb, 'knowledge')
+                  AND jsonb_exists(metadata::jsonb, 'userId')
                   AND metadata::jsonb->>'knowledge' <> ''
                   AND metadata::jsonb->>'userId' = ?
                 """
