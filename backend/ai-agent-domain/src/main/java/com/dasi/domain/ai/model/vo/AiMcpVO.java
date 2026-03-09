@@ -26,6 +26,9 @@ public class AiMcpVO {
     /** 工具路径 */
     private String mcpParam;
 
+    /** 工具密钥 */
+    private String mcpSecret;
+
     /** 请求超时时间 */
     private Integer mcpTimeout;
 

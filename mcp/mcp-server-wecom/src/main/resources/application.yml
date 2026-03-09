@@ -21,8 +21,8 @@ logging:
     root: info
   config: classpath:logback-spring.xml
 
-wecom:
-  base-url: https://qyapi.weixin.qq.com/
-  agentid: ${WECOM_AGENT_ID}
-  corpid: ${WECOM_CORP_ID}
-  corpsecret: ${WECOM_CORP_SECRET}
+miniagent:
+  mcp:
+    header:
+      secret: X-MiniAgent-Mcp-Secret
+      user-id: X-MiniAgent-Mcp-UserId

@@ -3,6 +3,7 @@ package com.dasi.domain.ai.service.augment;
 import com.dasi.domain.ai.repository.IAiRepository;
 import com.dasi.domain.ai.model.enumeration.AiMcpType;
 import com.dasi.domain.ai.model.vo.AiMcpVO;
+import com.dasi.domain.util.jwt.UserContext;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
@@ -10,6 +11,7 @@ import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
@@ -20,9 +22,12 @@ import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,6 +57,15 @@ public class AugmentService implements IAugmentService {
 
     @Resource
     private IAiRepository aiRepository;
+
+    @Resource
+    private UserContext userContext;
+
+    @Value("${miniagent.mcp.header.secret:X-MiniAgent-Mcp-Secret}")
+    private String mcpSecretHeader;
+
+    @Value("${miniagent.mcp.header.user-id:X-MiniAgent-Mcp-UserId}")
+    private String mcpUserIdHeader;
 
     @Override
     public List<Message> augmentRagMessage(String userMessage, String ragTag) {
@@ -110,10 +124,18 @@ public class AugmentService implements IAugmentService {
                     AiMcpVO.SseConfig sseConfig = aiMcpVO.getSseConfig();
                     String baseUri = sseConfig.getBaseUri();
                     String sseEndPoint = sseConfig.getSseEndPoint();
+                    Long userId = userContext.getUserId();
+                    String mcpSecret = aiMcpVO.getMcpSecret();
 
                     HttpClientSseClientTransport sseClient = HttpClientSseClientTransport
                             .builder(baseUri)
                             .sseEndpoint(sseEndPoint)
+                            .customizeRequest(requestBuilder -> {
+                                if (StringUtils.hasText(mcpSecret)) {
+                                    requestBuilder.header(mcpUserIdHeader, String.valueOf(userId));
+                                    requestBuilder.header(mcpSecretHeader, Base64.getEncoder().encodeToString(mcpSecret.getBytes(StandardCharsets.UTF_8)));
+                                }
+                            })
                             .build();
 
                     mcpSyncClient = McpClient

@@ -2,7 +2,6 @@ package com.dasi;
 
 import com.dasi.mcp.tool.WeComTool;
 import com.dasi.sse.http.IWeComHttp;
-import com.dasi.type.properties.WeComProperties;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
@@ -21,15 +20,17 @@ import java.time.Duration;
 @EnableCaching
 public class McpServerWeComApplication {
 
+    private static final String WECOM_BASE_URL = "https://qyapi.weixin.qq.com/";
+
     public static void main(String[] args) {
         SpringApplication.run(McpServerWeComApplication.class, args);
     }
 
     // 把 HTTP 接口变成一个可以被 Spring 调用的 Java 对象
     @Bean
-    public IWeComHttp createHttp(WeComProperties weComProperties) {
+    public IWeComHttp createHttp() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(weComProperties.getBaseUrl())
+                .baseUrl(WECOM_BASE_URL)
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         return retrofit.create(IWeComHttp.class);

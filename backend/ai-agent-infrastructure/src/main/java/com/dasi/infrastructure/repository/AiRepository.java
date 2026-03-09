@@ -251,6 +251,7 @@ public class AiRepository implements IAiRepository {
                         .mcpName(aiMcp.getMcpName())
                         .mcpType(aiMcp.getMcpType())
                         .mcpParam(aiMcp.getMcpParam())
+                        .mcpSecret(aiMcp.getMcpSecret())
                         .mcpTimeout(aiMcp.getMcpTimeout())
                         .build();
 
@@ -411,6 +412,7 @@ public class AiRepository implements IAiRepository {
                     .mcpName(aiMcp.getMcpName())
                     .mcpType(aiMcp.getMcpType())
                     .mcpParam(aiMcp.getMcpParam())
+                    .mcpSecret(aiMcp.getMcpSecret())
                     .mcpTimeout(aiMcp.getMcpTimeout())
                     .build();
 

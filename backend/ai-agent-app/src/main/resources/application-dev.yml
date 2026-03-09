@@ -91,6 +91,12 @@ miniagent:
       - client_chat_qwen
       - client_chat_doubao
 
+  # MCP Header
+  mcp:
+    header:
+      secret: X-MiniAgent-Mcp-Secret
+      user-id: X-MiniAgent-Mcp-UserId
+
   # System Model
   system-model:
     base-url: ${SYSTEM_MODEL_BASE_URL}

@@ -1,4 +1,4 @@
-package com.dasi.type.util;
+package com.dasi.util;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -9,7 +9,7 @@ import java.time.Duration;
 @Component
 public class CacheUtil {
 
-    private final String CACHE_NAME = "wecom";
+    private final String CACHE_NAME = "WeComAccessToken";
 
     private final CacheManager cacheManager;
 
@@ -47,6 +47,13 @@ public class CacheUtil {
         }
         long expireAtEpochMs = System.currentTimeMillis() + ttl.toMillis();
         cache.put(key, new CacheValue<>(value, expireAtEpochMs));
+    }
+
+    public String buildCacheKey(String tenant, String key) {
+        if (tenant == null || tenant.isBlank()) {
+            return key;
+        }
+        return tenant + ":" + key;
     }
 
     private record CacheValue<T>(T value, long expireAtEpochMs) {

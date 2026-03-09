@@ -1,16 +1,17 @@
 package com.dasi.sse.port;
 
+import com.dasi.filter.McpHeaderContext;
+import com.dasi.filter.WeComCredential;
+import com.dasi.mcp.dto.SendMessageToolResponse;
+import com.dasi.mcp.dto.SendTextCardToolRequest;
 import com.dasi.mcp.dto.SendTextToolRequest;
 import com.dasi.mcp.port.IWeComPort;
-import com.dasi.mcp.dto.SendTextCardToolRequest;
-import com.dasi.mcp.dto.SendMessageToolResponse;
 import com.dasi.sse.dto.GetAccessTokenResponse;
-import com.dasi.sse.dto.SendTextCardHttpRequest;
 import com.dasi.sse.dto.SendMessageHttpResponse;
+import com.dasi.sse.dto.SendTextCardHttpRequest;
 import com.dasi.sse.dto.SendTextHttpRequest;
 import com.dasi.sse.http.IWeComHttp;
-import com.dasi.type.properties.WeComProperties;
-import com.dasi.type.util.CacheUtil;
+import com.dasi.util.CacheUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,12 +25,9 @@ import java.time.Duration;
 @Service
 public class WeComPort implements IWeComPort {
 
-    private static final String ACCESS_TOKEN_CACHE_KEY = "WeComAccessToken";
     private static final int ACCESS_TOKEN_SKEW_SECONDS = 60;
     private static final int ACCESS_TOKEN_FALLBACK_SECONDS = 60;
-
-    @Resource
-    private WeComProperties weComProperties;
+    private static final String ACCESS_TOKEN_CACHE_KEY = "WeComAccessToken";
 
     @Resource
     private IWeComHttp weComHttp;
@@ -37,16 +35,20 @@ public class WeComPort implements IWeComPort {
     @Resource
     private CacheUtil cacheUtil;
 
-    private String getAccessToken() throws IOException {
+    @Resource
+    private McpHeaderContext mcpHeaderContext;
 
-        String cachedToken = cacheUtil.getWithTtl(ACCESS_TOKEN_CACHE_KEY, String.class);
+    private String getAccessToken(WeComCredential credential) throws IOException {
+
+        String cacheKey = cacheUtil.buildCacheKey(credential.getUserId(), ACCESS_TOKEN_CACHE_KEY);
+        String cachedToken = cacheUtil.getWithTtl(cacheKey, String.class);
         if (cachedToken != null && !cachedToken.isBlank()) {
             return cachedToken;
         }
 
         Call<GetAccessTokenResponse> call = weComHttp.getAccessToken(
-                weComProperties.getCorpid(),
-                weComProperties.getCorpsecret()
+                credential.getCorpId(),
+                credential.getCorpSecret()
         );
 
         Response<GetAccessTokenResponse> callResponse = call.execute();
@@ -83,9 +85,8 @@ public class WeComPort implements IWeComPort {
             ttlSeconds = Math.max(1L, expiresIn - ACCESS_TOKEN_SKEW_SECONDS);
         }
 
-        cacheUtil.putWithTtl(ACCESS_TOKEN_CACHE_KEY, accessToken, Duration.ofSeconds(ttlSeconds));
-
-        log.info("调用 HTTP 获取企业微信令牌：token={}", accessToken);
+        cacheUtil.putWithTtl(cacheKey, accessToken, Duration.ofSeconds(ttlSeconds));
+        log.info("调用 HTTP 获取企业微信令牌成功，tenant={}", credential.getUserId());
 
         return accessToken;
     }
@@ -94,9 +95,13 @@ public class WeComPort implements IWeComPort {
     public SendMessageToolResponse sendTextCard(SendTextCardToolRequest toolRequest) throws IOException {
 
         SendMessageToolResponse toolResponse = new SendMessageToolResponse();
+        WeComCredential credential = resolveCredential(toolResponse);
+        if (credential == null) {
+            return toolResponse;
+        }
 
         // 获取令牌
-        String accessToken = getAccessToken();
+        String accessToken = getAccessToken(credential);
         if (accessToken == null || accessToken.isBlank()) {
             toolResponse.setCode(500);
             toolResponse.setInfo("WeCom 获取 access_token 失败");
@@ -111,7 +116,7 @@ public class WeComPort implements IWeComPort {
 
         // 构造网络请求体
         SendTextCardHttpRequest httpRequest = new SendTextCardHttpRequest();
-        httpRequest.setAgentid(weComProperties.getAgentid());
+        httpRequest.setAgentid(credential.getAgentId());
         httpRequest.setTextcard(textCard);
 
         // 发送网络请求
@@ -126,9 +131,13 @@ public class WeComPort implements IWeComPort {
     public SendMessageToolResponse sendText(SendTextToolRequest toolRequest) throws IOException {
 
         SendMessageToolResponse toolResponse = new SendMessageToolResponse();
+        WeComCredential credential = resolveCredential(toolResponse);
+        if (credential == null) {
+            return toolResponse;
+        }
 
         // 获取令牌
-        String accessToken = getAccessToken();
+        String accessToken = getAccessToken(credential);
         if (accessToken == null || accessToken.isBlank()) {
             toolResponse.setCode(500);
             toolResponse.setInfo("WeCom access_token 获取失败");
@@ -141,7 +150,7 @@ public class WeComPort implements IWeComPort {
 
         // 构造网络请求体
         SendTextHttpRequest httpRequest = new SendTextHttpRequest();
-        httpRequest.setAgentid(weComProperties.getAgentid());
+        httpRequest.setAgentid(credential.getAgentId());
         httpRequest.setText(text);
 
         // 发送网络请求
@@ -179,5 +188,16 @@ public class WeComPort implements IWeComPort {
         toolResponse.setMsgId(httpResponse.getMsgid());
 
         return toolResponse;
+    }
+
+    private WeComCredential resolveCredential(SendMessageToolResponse toolResponse) {
+        WeComCredential credential = mcpHeaderContext.getCredential();
+        if (!credential.checkValid()) {
+            toolResponse.setCode(400);
+            toolResponse.setInfo("头部信息缺失或非法，必须包含 corpId/corpSecret/agentId/userId");
+            return null;
+        } else {
+            return credential;
+        }
     }
 }
