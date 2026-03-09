@@ -4,30 +4,30 @@ docker buildx inspect --bootstrap
 
 # mcp-server-csdn
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t dasi0227/mcp-server-csdn:0.1.0 \
+  -t dasi0227/mcp-server-csdn:0.2.0 \
   --push \
   ./mcp-server-csdn
 
 # mcp-server-amap
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t dasi0227/mcp-server-amap:0.1.0 \
+  -t dasi0227/mcp-server-amap:0.2.0 \
   --push \
   ./mcp-server-amap
 
 # mcp-server-wecom
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t dasi0227/mcp-server-wecom:0.1.0 \
+  -t dasi0227/mcp-server-wecom:0.2.0 \
   --push \
   ./mcp-server-wecom
 
 # mcp-server-email
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t dasi0227/mcp-server-email:0.1.0 \
+  -t dasi0227/mcp-server-email:0.2.0 \
   --push \
   ./mcp-server-email
 
 # mcp-server-bocha
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t dasi0227/mcp-server-bocha:0.1.0 \
+  -t dasi0227/mcp-server-bocha:0.2.0 \
   --push \
   ./mcp-server-bocha
