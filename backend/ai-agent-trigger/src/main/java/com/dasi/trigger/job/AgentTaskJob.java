@@ -13,7 +13,7 @@ public class AgentTaskJob {
     @Resource
     private ITaskService taskService;
 
-    @Scheduled(cron = "${schedule.refresh-cron}")
+    @Scheduled(cron = "${miniagent.schedule.refresh-cron}")
     public void refreshAgentTask() {
         taskService.refreshTaskRegistry();
     }

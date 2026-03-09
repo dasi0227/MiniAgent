@@ -43,4 +43,20 @@ public interface IWorkspaceService {
     void agentDelete(String agentId);
 
     void agentCreate(AgentCreateDTO dto);
+
+    void executePlazaLike(String plazaId, boolean liked);
+
+    void executePlazaFavor(String plazaId, boolean favored);
+
+    void executePlazaComment(PlazaCommentDTO dto);
+
+    void executePlazaDiscomment(String plazaId, String commentId);
+
+    void executePlazaDelete(String plazaId);
+
+    void executeAgentPublish(AgentPublishDTO dto);
+
+    void executeAgentFork(String templateId);
+
+    void executeAgentDelete(String agentId);
 }

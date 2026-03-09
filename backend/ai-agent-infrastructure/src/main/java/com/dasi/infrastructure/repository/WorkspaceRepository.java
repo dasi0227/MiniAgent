@@ -5,15 +5,8 @@ import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.domain.util.snapshot.ISnapshotUtil;
 import com.dasi.domain.util.snapshot.SnapshotView;
-import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
-import com.dasi.domain.workspace.model.dto.AgentCreateDTO;
+import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.entity.RolePromptEntity;
-import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
-import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
-import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
-import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
-import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
-import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
 import com.dasi.domain.workspace.model.enumeration.ConfigType;
 import com.dasi.domain.workspace.model.enumeration.RepoType;
 import com.dasi.domain.workspace.model.vo.CommentVO;
@@ -32,10 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_DATA;
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_USER;
@@ -357,15 +347,11 @@ public class WorkspaceRepository implements IWorkspaceRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
-    public void agentCreate(AgentCreateDTO dto,
-                            Long userId,
-                            java.util.Set<String> mcpIdSet,
-                            List<RolePromptEntity> rolePromptList) {
-        if (rolePromptList == null || rolePromptList.isEmpty()) {
-            throw new MiniAgentException(ILLEGAL_DATA);
-        }
-
+    public void agentCreate(AgentCreateDTO dto, List<RolePromptEntity> rolePromptList) {
         String agentId = randomUtil.randomAgentId();
+        Long userId = userContext.getUserId();
+        Set<String> mcpIdSet = dto.getMcpIdSet();
+
         aiAgentDao.insert(AiAgent.builder()
                 .agentId(agentId)
                 .agentName(dto.getAgentName())

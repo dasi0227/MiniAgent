@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties(prefix = "system-model", ignoreInvalidFields = true)
+@ConfigurationProperties(prefix = "miniagent.system-model", ignoreInvalidFields = true)
 public class SystemModelProperties {
 
     private String baseUrl;

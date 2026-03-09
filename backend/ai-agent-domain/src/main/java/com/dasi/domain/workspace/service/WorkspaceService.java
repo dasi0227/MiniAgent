@@ -1,10 +1,13 @@
 package com.dasi.domain.workspace.service;
 
 import com.dasi.domain.util.jwt.UserContext;
+import com.dasi.domain.util.mq.IMqService;
+import com.dasi.domain.util.mq.MqEventDTO;
+import com.dasi.domain.util.mq.MqEventType;
 import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.entity.RolePromptEntity;
-import com.dasi.domain.workspace.model.enumeration.RoleType;
 import com.dasi.domain.workspace.model.enumeration.RepoType;
+import com.dasi.domain.workspace.model.enumeration.RoleType;
 import com.dasi.domain.workspace.model.enumeration.StrategyType;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
@@ -26,7 +29,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.dasi.domain.workspace.model.enumeration.PromptType.SYSTEM_PROMPT;
@@ -41,10 +43,13 @@ public class WorkspaceService implements IWorkspaceService {
     private IWorkspaceRepository workspaceRepository;
 
     @Resource
-    private UserContext userContext;
+    private PromptGenerator promptGenerator;
 
     @Resource
-    private PromptGenerator promptGenerator;
+    private IMqService mqService;
+
+    @Resource
+    private UserContext userContext;
 
     private static final PathMatchingResourcePatternResolver RESOURCE_RESOLVER = new PathMatchingResourcePatternResolver();
 
@@ -79,33 +84,47 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void plazaLike(String plazaId, boolean liked) {
-        workspaceRepository.plazaLike(plazaId, liked);
+        MqEventDTO payload = MqEventDTO.builder()
+                .plazaId(plazaId)
+                .liked(liked)
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.PLAZA_LIKE, payload, userContext.getUser()));
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void plazaFavor(String plazaId, boolean favored) {
-        workspaceRepository.plazaFavor(plazaId, favored);
+        MqEventDTO payload = MqEventDTO.builder()
+                .plazaId(plazaId)
+                .favored(favored)
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.PLAZA_FAVOR, payload, userContext.getUser()));
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void plazaComment(PlazaCommentDTO dto) {
-        workspaceRepository.plazaComment(dto);
+        MqEventDTO payload = MqEventDTO.builder()
+                .plazaId(dto.getPlazaId())
+                .commentContent(dto.getCommentContent())
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.PLAZA_COMMENT, payload, userContext.getUser()));
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void plazaDiscomment(String plazaId, String commentId) {
-        workspaceRepository.plazaDiscomment(plazaId, commentId);
+        MqEventDTO payload = MqEventDTO.builder()
+                .plazaId(plazaId)
+                .commentId(commentId)
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.PLAZA_DISCOMMENT, payload, userContext.getUser()));
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void plazaDelete(String plazaId) {
-        workspaceRepository.plazaDelete(plazaId);
+        MqEventDTO payload = MqEventDTO.builder()
+                .plazaId(plazaId)
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.PLAZA_DELETE, payload, userContext.getUser()));
     }
 
     @Override
@@ -129,15 +148,21 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void agentPublish(AgentPublishDTO dto) {
-        workspaceRepository.agentPublish(dto);
+        MqEventDTO payload = MqEventDTO.builder()
+                .agentId(dto.getAgentId())
+                .plazaTitle(dto.getPlazaTitle())
+                .plazaDesc(dto.getPlazaDesc())
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.AGENT_PUBLISH, payload, userContext.getUser()));
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void agentFork(String templateId) {
-        workspaceRepository.agentFork(templateId);
+        MqEventDTO payload = MqEventDTO.builder()
+                .templateId(templateId)
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.AGENT_FORK, payload, userContext.getUser()));
     }
 
     @Override
@@ -164,19 +189,19 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void agentDelete(String agentId) {
-        workspaceRepository.agentDelete(agentId);
+        MqEventDTO payload = MqEventDTO.builder()
+                .agentId(agentId)
+                .build();
+        mqService.sendMain(mqService.buildTask(MqEventType.AGENT_DELETE, payload, userContext.getUser()));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void agentCreate(AgentCreateDTO dto) {
-        Long userId = userContext.getUserId();
         String agentDesc = dto.getAgentDesc();
         StrategyType strategyType = StrategyType.from(dto.getStrategy());
         String strategy = strategyType.getType();
-        Set<String> mcpIdSet = dto.getMcpIdSet() == null ? Set.of() : dto.getMcpIdSet();
 
         // 获取策略下的角色
         List<RoleType> roleTypeList = RoleType.queryByStrategy(strategyType);
@@ -184,12 +209,22 @@ public class WorkspaceService implements IWorkspaceService {
         List<RolePromptEntity> rolePromptEntityList = new ArrayList<>();
         for (RoleType roleType : roleTypeList) {
             // 读取文件拿到 prompt 内容
-            String systemPrompt = loadTemplateContent(strategy, SYSTEM_PROMPT.getType(), roleType.getTemplateName());
-            String userPrompt = loadTemplateContent(strategy, USER_PROMPT.getType(), roleType.getTemplateName());
-            if (!StringUtils.hasText(systemPrompt)) {
-                throw new MiniAgentException(ILLEGAL_DATA);
-            }
-            if (!StringUtils.hasText(userPrompt)) {
+            String systemPrompt;
+            String userPrompt;
+            try {
+                String systemPath = "classpath:template/" + strategy + "/" + SYSTEM_PROMPT.getType() + "/" + roleType.getTemplateName() + ".md";
+                systemPrompt = StreamUtils.copyToString(RESOURCE_RESOLVER.getResource(systemPath).getInputStream(), StandardCharsets.UTF_8);
+                if (!StringUtils.hasText(systemPrompt)) {
+                    throw new MiniAgentException(ILLEGAL_DATA);
+                }
+
+                String userPath = "classpath:template/" + strategy + "/" + USER_PROMPT.getType() + "/" + roleType.getTemplateName() + ".md";
+                userPrompt = StreamUtils.copyToString(RESOURCE_RESOLVER.getResource(userPath).getInputStream(), StandardCharsets.UTF_8);
+                if (!StringUtils.hasText(userPrompt)) {
+                    throw new MiniAgentException(ILLEGAL_DATA);
+                }
+            } catch (Exception e) {
+                log.error("【Workspace】加载模板失败：strategy={}, roleType={}", strategy, roleType, e);
                 throw new MiniAgentException(ILLEGAL_DATA);
             }
 
@@ -212,17 +247,55 @@ public class WorkspaceService implements IWorkspaceService {
             rolePromptEntityList.add(rolePromptEntity);
         }
 
-        workspaceRepository.agentCreate(dto, userId, mcpIdSet, rolePromptEntityList);
+        workspaceRepository.agentCreate(dto, rolePromptEntityList);
     }
 
-    private String loadTemplateContent(String strategy, String promptType, String templateName) {
-        try {
-            String path = "classpath:template/" + strategy + "/" + promptType + "/" + templateName + ".md";
-            return StreamUtils.copyToString(RESOURCE_RESOLVER.getResource(path).getInputStream(), StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            log.error("【Workspace】加载模板失败：strategy={}, promptType={}, templateName={}", strategy, promptType, templateName, e);
-            throw new MiniAgentException(ILLEGAL_DATA);
-        }
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executePlazaLike(String plazaId, boolean liked) {
+        workspaceRepository.plazaLike(plazaId, liked);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executePlazaFavor(String plazaId, boolean favored) {
+        workspaceRepository.plazaFavor(plazaId, favored);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executePlazaComment(PlazaCommentDTO dto) {
+        workspaceRepository.plazaComment(dto);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executePlazaDiscomment(String plazaId, String commentId) {
+        workspaceRepository.plazaDiscomment(plazaId, commentId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executePlazaDelete(String plazaId) {
+        workspaceRepository.plazaDelete(plazaId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executeAgentPublish(AgentPublishDTO dto) {
+        workspaceRepository.agentPublish(dto);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executeAgentFork(String templateId) {
+        workspaceRepository.agentFork(templateId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void executeAgentDelete(String agentId) {
+        workspaceRepository.agentDelete(agentId);
     }
 
 }

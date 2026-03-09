@@ -52,9 +52,6 @@ public interface IWorkspaceRepository {
 
     void agentDelete(String agentId);
 
-    void agentCreate(AgentCreateDTO dto,
-                     Long userId,
-                     java.util.Set<String> mcpIdSet,
-                     List<RolePromptEntity> rolePromptList);
+    void agentCreate(AgentCreateDTO dto, List<RolePromptEntity> rolePromptList);
 
 }

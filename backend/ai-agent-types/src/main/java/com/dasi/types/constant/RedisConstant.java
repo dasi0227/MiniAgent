@@ -48,5 +48,6 @@ public class RedisConstant {
     public static final String WORKSPACE_COMMENT_PREFIX = "workspace:comment:";
     public static final String WORKSPACE_REPO_PREFIX = "workspace:repo:";
     public static final String WORKSPACE_TEMPLATE_PREFIX = "workspace:template:";
+    public static final String WORKSPACE_MQ_PROCESSED_PREFIX = "workspace:mq:processed:";
 
 }

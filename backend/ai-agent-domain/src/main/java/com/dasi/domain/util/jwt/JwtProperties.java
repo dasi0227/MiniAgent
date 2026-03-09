@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "jwt", ignoreInvalidFields = true)
+@ConfigurationProperties(prefix = "miniagent.jwt", ignoreInvalidFields = true)
 public class JwtProperties {
 
     private String secret;

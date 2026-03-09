@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "oss", ignoreInvalidFields = true)
+@ConfigurationProperties(prefix = "miniagent.oss", ignoreInvalidFields = true)
 public class OssProperties {
 
     private String endpoint;

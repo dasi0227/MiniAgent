@@ -5,6 +5,7 @@ import com.dasi.domain.ai.model.dto.AiChatDTO;
 import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.service.augment.IAugmentService;
 import com.dasi.domain.ai.service.dispatch.IDispatchService;
+import com.dasi.domain.ai.service.execute.MatchChecker;
 import com.dasi.domain.ai.service.rag.IRagService;
 import com.dasi.domain.user.service.query.IQueryService;
 import com.dasi.domain.session.model.enumeration.SessionType;
@@ -69,6 +70,9 @@ public class AiController implements IAiApi {
     @Resource
     private IStatUtil statUtil;
 
+    @Resource
+    private MatchChecker matchChecker;
+
     @Override
     @PostMapping(value = "/work/execute", produces = "text/event-stream")
     public SseEmitter execute(@Valid @RequestBody AiWorkDTO aiWorkDTO) {
@@ -101,6 +105,25 @@ public class AiController implements IAiApi {
                             .data(invalidSessionReason));
                 } catch (Exception e) {
                     log.error("【AI 执行】会话校验失败：sessionId={}", sessionId, e);
+                } finally {
+                    sseEmitter.complete();
+                }
+                return sseEmitter;
+            }
+
+            // TODO：新加检验
+            WorkAgentVO selectedAgent = queryWorkAgent(agentId);
+            String agentDesc = selectedAgent == null ? null : selectedAgent.getAgentDesc();
+            boolean matched = matchChecker.isTaskMatched(agentDesc, userMessage);
+            if (!matched) {
+                String reason = "当前任务需求与智能体定位不匹配，请更换智能体或调整需求";
+                log.warn("【AI 执行】任务匹配校验未通过：agentId={}, agentDesc={}, userMessage={}", agentId, agentDesc, userMessage);
+                try {
+                    sseEmitter.send(SseEmitter.event()
+                            .name("error")
+                            .data(reason));
+                } catch (Exception e) {
+                    log.error("【AI 执行】任务匹配校验响应失败：agentId={}", agentId, e);
                 } finally {
                     sseEmitter.complete();
                 }
@@ -335,14 +358,23 @@ public class AiController implements IAiApi {
     }
 
     private boolean isInactiveWorkAgent(String agentId) {
+        return queryWorkAgent(agentId) == null;
+    }
+
+    private WorkAgentVO queryWorkAgent(String agentId) {
         if (agentId == null || agentId.isBlank()) {
-            return true;
+            return null;
         }
         List<WorkAgentVO> list = queryService.queryWorkAgentVOList();
         if (list == null || list.isEmpty()) {
-            return true;
+            return null;
         }
-        return list.stream().noneMatch(item -> agentId.equals(item.getAgentId()));
+        return list.stream()
+                .filter(item -> agentId.equals(item.getAgentId()))
+                .findFirst()
+                .orElse(null);
     }
+
+
 
 }

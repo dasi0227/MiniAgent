@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Set;
 
 @Data
-@ConfigurationProperties(prefix = "armory",  ignoreInvalidFields = true)
+@ConfigurationProperties(prefix = "miniagent.armory",  ignoreInvalidFields = true)
 public class ArmoryProperties {
 
     private Boolean enable;

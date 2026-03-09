@@ -27,6 +27,11 @@ spring:
   main:
     banner-mode: off
     log-startup-info: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
   ai:
     openai:
       base-url: ${OPENAI_BASE_URL}
@@ -74,36 +79,49 @@ openai:
     table-name: ${EMBEDDING_TABLE_NAME}
     encoding-format: float
 
-# Armory
-armory:
-  enable: false
-  agent-id-list:
-    - agent_weather
-  client-id-list:
-    - client_chat_glm
-    - client_chat_deepseek
-    - client_chat_qwen
-    - client_chat_doubao
+miniagent:
+  # Armory
+  armory:
+    enable: false
+    agent-id-list:
+      - agent_weather
+    client-id-list:
+      - client_chat_glm
+      - client_chat_deepseek
+      - client_chat_qwen
+      - client_chat_doubao
 
-# System Model
-system-model:
-  base-url: ${SYSTEM_MODEL_BASE_URL}
-  api-key: ${SYSTEM_MODEL_API_KEY}
-  model: ${SYSTEM_MODEL_NAME}
+  # System Model
+  system-model:
+    base-url: ${SYSTEM_MODEL_BASE_URL}
+    api-key: ${SYSTEM_MODEL_API_KEY}
+    model: ${SYSTEM_MODEL_NAME}
 
-# Schedule
-schedule:
-  refresh-cron: "0 */1 * * * ?"
+  # MQ
+  mq:
+    exchange: workspace.exchange
+    main-queue: workspace.main.queue
+    retry-queue: workspace.retry.queue
+    dead-queue: workspace.dead.queue
+    main-routing-key: main
+    retry-routing-key: retry
+    dead-routing-key: dead
+    max-retry: 3
+    retry-delay: 5000
 
-# JWT
-jwt:
-  secret: dasi-jwt-secret
-  expire-seconds: 72000000000
-  issuer: ai-agent
+  # Schedule
+  schedule:
+    refresh-cron: "0 */1 * * * ?"
 
-# OSS
-oss:
-  endpoint: ${OSS_ENDPOINT}
-  bucket: ${OSS_BUCKET}
-  access-key-id: ${OSS_ACCESS_KEY_ID}
-  access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+  # JWT
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: ${JWT_ISSUER}
+    expire-seconds: 72000000000
+
+  # OSS
+  oss:
+    endpoint: ${OSS_ENDPOINT}
+    bucket: ${OSS_BUCKET}
+    access-key-id: ${OSS_ACCESS_KEY_ID}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET}

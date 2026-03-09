@@ -73,6 +73,29 @@ services:
     networks:
       - ai-agent
 
+  # ===================== RabbitMQ =====================
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ai-agent
+
   # ===================== One-API =====================
   one-api:
     image: justsong/one-api:v0.6.11-preview.7
@@ -190,6 +213,7 @@ volumes:
   redis_data:
   oneapi_data:
   elasticsearch_data:
+  rabbitmq_data:
 
 networks:
   ai-agent:
