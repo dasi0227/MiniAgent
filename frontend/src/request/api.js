@@ -11,10 +11,11 @@ const RAG_GIT_PATH = `${AI_BASE_PATH}/rag/git`;
 
 const USER_BASE_PATH = '/api/v1/user';
 const QUERY_BASE_PATH = `${USER_BASE_PATH}/query`;
-const CHAT_CLIENTS_PATH = `${QUERY_BASE_PATH}/chat-client-list`;
-const CHAT_MCP_PATH = `${QUERY_BASE_PATH}/chat-mcp-list`;
-const AGENT_LIST_PATH = `${QUERY_BASE_PATH}/agent-list`;
-const RAG_TAGS_PATH = `${QUERY_BASE_PATH}/chat-rag-list`;
+const CHAT_CLIENTS_PATH = `${QUERY_BASE_PATH}/chat-client`;
+const CHAT_MCP_PATH = `${QUERY_BASE_PATH}/mcp`;
+const AGENT_LIST_PATH = `${QUERY_BASE_PATH}/work-agent`;
+const RAG_TAGS_PATH = `${QUERY_BASE_PATH}/rag`;
+const MODEL_LIST_PATH = `${QUERY_BASE_PATH}/model`;
 
 const AUTH_BASE_PATH = `${USER_BASE_PATH}/auth`;
 const LOGIN_PATH = `${AUTH_BASE_PATH}/login`;
@@ -362,6 +363,8 @@ export const queryChatModels = async () => http.post(CHAT_CLIENTS_PATH);
 export const queryChatMcps = async () => http.post(CHAT_MCP_PATH);
 
 export const queryAgentList = async () => http.post(AGENT_LIST_PATH);
+
+export const queryModelList = async () => http.post(MODEL_LIST_PATH);
 
 export const dispatchArmory = async ({ armoryType, armoryId }) => {
     return http.post(

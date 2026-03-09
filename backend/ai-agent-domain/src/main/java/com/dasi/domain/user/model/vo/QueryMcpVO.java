@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class WorkAgentVO {
+public class QueryMcpVO {
 
-    private String agentId;
+    private String mcpId;
 
-    private String agentName;
+    private String mcpName;
 
-    private String agentDesc;
+    private String mcpDesc;
 
 }

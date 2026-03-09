@@ -13,13 +13,13 @@ import java.util.List;
 
 public interface IUserApi {
 
-    Result<List<ChatClientVO>> queryChatClientList();
+    Result<List<QueryChatClientVO>> queryChatClientList();
 
-    Result<List<ChatMcpVO>> queryMcpList();
+    Result<List<QueryMcpVO>> queryMcpList();
 
-    Result<List<ChatRagVO>> queryRagList();
+    Result<List<QueryRagVO>> queryRagList();
 
-    Result<List<WorkAgentVO>> queryWorkAgentList();
+    Result<List<QueryWorkAgentVO>> queryWorkAgentList();
 
     Result<AuthVO> login(AuthDTO dto);
 

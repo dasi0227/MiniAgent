@@ -36,31 +36,31 @@ public class UserController implements IUserApi {
 
     @PostMapping("/query/work-agent")
     @Override
-    public Result<List<WorkAgentVO>> queryWorkAgentList() {
+    public Result<List<QueryWorkAgentVO>> queryWorkAgentList() {
         return Result.success(queryService.queryWorkAgentList());
     }
 
     @PostMapping("/query/chat-client")
     @Override
-    public Result<List<ChatClientVO>> queryChatClientList() {
+    public Result<List<QueryChatClientVO>> queryChatClientList() {
         return Result.success(queryService.queryChatClientList());
     }
 
     @PostMapping("/query/mcp")
     @Override
-    public Result<List<ChatMcpVO>> queryMcpList() {
+    public Result<List<QueryMcpVO>> queryMcpList() {
         return Result.success(queryService.queryMcpList());
     }
 
     @PostMapping("/query/rag")
     @Override
-    public Result<List<ChatRagVO>> queryRagList() {
+    public Result<List<QueryRagVO>> queryRagList() {
         return Result.success(queryService.queryRagList());
     }
 
-    @PostMapping("/query/api")
-    public Result<List<ChatApiVO>> queryApiList() {
-        return Result.success(queryService.queryApiList());
+    @PostMapping("/query/model")
+    public Result<List<QueryModelVO>> queryModelList() {
+        return Result.success(queryService.queryModelList());
     }
 
     @PostMapping("/auth/login")

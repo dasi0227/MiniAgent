@@ -73,10 +73,17 @@ public class AugmentService implements IAugmentService {
         if (ragTag == null || ragTag.isEmpty()) {
             return List.of(new UserMessage(userMessage));
         }
+        Long userId = userContext.getUserId();
+        if (userId == null) {
+            return List.of(new UserMessage(userMessage));
+        }
 
         // 构建向量检索条件
         FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
-        Filter.Expression expression = filterExpressionBuilder.eq("knowledge", ragTag).build();
+        Filter.Expression expression = filterExpressionBuilder.and(
+                filterExpressionBuilder.eq("knowledge", ragTag),
+                filterExpressionBuilder.eq("userId", String.valueOf(userId))
+        ).build();
 
         // 构建向量检索请求
         SearchRequest searchRequest = SearchRequest.builder()

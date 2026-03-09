@@ -12,8 +12,8 @@ import com.dasi.domain.session.model.enumeration.SessionType;
 import com.dasi.domain.session.service.ISessionService;
 import com.dasi.domain.util.persist.IPersistUtil;
 import com.dasi.domain.util.stat.IStatUtil;
-import com.dasi.domain.user.model.vo.ChatClientVO;
-import com.dasi.domain.user.model.vo.WorkAgentVO;
+import com.dasi.domain.user.model.vo.QueryChatClientVO;
+import com.dasi.domain.user.model.vo.QueryWorkAgentVO;
 import com.dasi.domain.ai.model.dto.AiArmoryDTO;
 import com.dasi.domain.ai.model.dto.AiWorkDTO;
 import com.dasi.domain.ai.model.dto.AiUploadDTO;
@@ -344,7 +344,7 @@ public class AiController implements IAiApi {
         if (clientId == null || clientId.isBlank()) {
             return true;
         }
-        List<ChatClientVO> list = queryService.queryChatClientList();
+        List<QueryChatClientVO> list = queryService.queryChatClientList();
         if (list == null || list.isEmpty()) {
             return true;
         }
@@ -355,7 +355,7 @@ public class AiController implements IAiApi {
         if (agentId == null || agentId.isBlank()) {
             return true;
         }
-        List<WorkAgentVO> list = queryService.queryWorkAgentList();
+        List<QueryWorkAgentVO> list = queryService.queryWorkAgentList();
         if (list == null || list.isEmpty()) {
             return true;
         }

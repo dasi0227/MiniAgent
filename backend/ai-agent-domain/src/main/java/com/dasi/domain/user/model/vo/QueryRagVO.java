@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatRagVO {
+public class QueryRagVO {
 
     private String ragTag;
 

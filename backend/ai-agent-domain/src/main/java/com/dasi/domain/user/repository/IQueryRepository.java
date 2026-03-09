@@ -1,20 +1,18 @@
 package com.dasi.domain.user.repository;
 
-import com.dasi.domain.user.model.vo.ChatClientVO;
-import com.dasi.domain.user.model.vo.ChatMcpVO;
-import com.dasi.domain.user.model.vo.ChatRagVO;
-import com.dasi.domain.user.model.vo.WorkAgentVO;
+import com.dasi.domain.user.model.vo.*;
 
 import java.util.List;
 
 public interface IQueryRepository {
 
-    List<ChatClientVO> queryChatClientVOList();
+    List<QueryChatClientVO> queryChatClientList();
 
-    List<ChatRagVO> queryRagVOList();
+    List<QueryRagVO> queryRagList();
 
-    List<ChatMcpVO> queryChatMcpVOList();
+    List<QueryMcpVO> queryMcpList();
 
-    List<WorkAgentVO> queryWorkAgentVOList();
+    List<QueryWorkAgentVO> queryWorkAgentList();
 
+    List<QueryModelVO> queryModelList();
 }

@@ -5,8 +5,9 @@ public class RedisConstant {
     // query
     public static final String QUERY_CHAT_CLIENT_KEY = "query:chat-lient";
     public static final String QUERY_WORK_AGENT_KEY = "query:work-agent";
-    public static final String QUERY_CHAT_MCP_KEY = "query:chat-mcp";
-    public static final String QUERY_CHAT_RAG_KEY = "query:chat-rag";
+    public static final String QUERY_MCP_KEY = "query:mcp";
+    public static final String QUERY_RAG_KEY = "query:rag";
+    public static final String QUERY_API_KEY = "query:api";
 
     // armroy
     public static final String ARMORY_PREFIX = "armory:";

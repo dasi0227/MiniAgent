@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { queryChatMcps, queryChatModels, studioGenerate } from '../request/api';
+import { queryChatMcps, queryModelList, workspaceAgentCreate } from '../request/api';
 import { notifyAppError } from '../request/request';
 import Footer from './Footer.vue';
 
@@ -9,13 +9,15 @@ const router = useRouter();
 const loading = ref(false);
 const message = ref('');
 const mcpList = ref([]);
-const apiList = ref([]);
+const modelList = ref([]);
 
 const form = reactive({
     taskPrompt: '',
     strategy: 'react',
     mcpIdList: [],
-    clientId: ''
+    modelId: '',
+    modelName: '',
+    agentName: ''
 });
 
 const pickData = (resp) => {
@@ -29,11 +31,12 @@ const pickData = (resp) => {
 };
 
 const loadModels = async () => {
-    const resp = await queryChatModels();
+    const resp = await queryModelList();
     const list = pickData(resp) || [];
-    apiList.value = Array.isArray(list) ? list : [];
-    if (!form.clientId && apiList.value.length > 0) {
-        form.clientId = apiList.value[0].clientId || '';
+    modelList.value = Array.isArray(list) ? list : [];
+    if (!form.modelId && modelList.value.length > 0) {
+        form.modelId = modelList.value[0].modelId || '';
+        form.modelName = modelList.value[0].modelName || '';
     }
 };
 
@@ -54,6 +57,18 @@ const toggleMcp = (mcpId) => {
 };
 
 const doGenerate = async () => {
+    if (!form.agentName.trim()) {
+        message.value = '请输入 MiniAgent 名称';
+        return;
+    }
+    if (!form.modelId.trim()) {
+        message.value = '请选择模型';
+        return;
+    }
+    if (!form.modelName.trim()) {
+        message.value = '请输入模型名称';
+        return;
+    }
     if (!form.taskPrompt.trim()) {
         message.value = '请输入任务描述';
         return;
@@ -61,14 +76,17 @@ const doGenerate = async () => {
     loading.value = true;
     message.value = '';
     try {
-        await studioGenerate({
-            taskPrompt: form.taskPrompt,
+        await workspaceAgentCreate({
+            modelId: form.modelId.trim(),
+            modelName: form.modelName.trim(),
+            agentName: form.agentName.trim(),
+            agentDesc: form.taskPrompt.trim(),
             strategy: form.strategy,
-            mcpIdList: form.mcpIdList
+            mcpIdSet: [...new Set(form.mcpIdList)]
         });
-        message.value = '已完成生成';
+        message.value = '创建成功';
     } catch (error) {
-        notifyAppError(error, '生成失败');
+        notifyAppError(error, '创建失败');
     } finally {
         loading.value = false;
     }
@@ -103,27 +121,52 @@ onMounted(async () => {
 
                 <div class="space-y-[18px] rounded-[16px] bg-white p-[18px]">
                     <div class="flex min-h-[50px] items-center gap-[12px]">
-                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">API 选择</div>
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">MiniAgent 名称</div>
+                        <div class="min-w-0 flex-1">
+                            <input
+                                v-model="form.agentName"
+                                class="h-[44px] w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] text-[15px] text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-color)]"
+                                placeholder="请输入 MiniAgent 名称"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="flex min-h-[50px] items-center gap-[12px]">
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">模型名称</div>
+                        <div class="min-w-0 flex-1">
+                            <input
+                                v-model="form.modelName"
+                                class="h-[44px] w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] text-[15px] text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-color)]"
+                                placeholder="请输入模型名称"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="flex min-h-[50px] items-center gap-[12px]">
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">模型选择</div>
                         <div class="min-w-0 flex-1">
                             <div class="no-scrollbar flex items-center gap-[8px] overflow-x-auto pb-[4px]">
                                 <button
-                                    v-for="item in apiList"
-                                    :key="item.clientId"
+                                    v-for="item in modelList"
+                                    :key="item.modelId"
                                     class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
                                     :class="
-                                        form.clientId === item.clientId
+                                        form.modelId === item.modelId
                                             ? 'border-[#c59a4a] bg-[#fff7e8] text-[#8c6929]'
                                             : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#c59a4a]'
                                     "
-                                    @click="form.clientId = item.clientId"
+                                    @click="
+                                        form.modelId = item.modelId || '';
+                                        form.modelName = item.modelName || '';
+                                    "
                                 >
-                                    {{ item.modelName || item.clientId }}
+                                    {{ item.modelName || item.modelId }}
                                 </button>
                                 <div
-                                    v-if="apiList.length === 0"
+                                    v-if="modelList.length === 0"
                                     class="inline-flex h-[44px] shrink-0 items-center rounded-[999px] border border-dashed border-[var(--border-color)] px-[13px] text-[14px] text-[var(--text-secondary)]"
                                 >
-                                    暂无可用的自建 API 客户端
+                                    暂无可用模型
                                 </div>
                             </div>
                         </div>
@@ -189,7 +232,7 @@ onMounted(async () => {
                                 :disabled="loading"
                                 @click="doGenerate"
                             >
-                                {{ loading ? '生成中...' : '一键生成' }}
+                                {{ loading ? '创建中...' : '一键创建' }}
                             </button>
                         </div>
                     </div>

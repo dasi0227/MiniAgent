@@ -32,7 +32,7 @@
         WHERE client_id = #{clientId}
     </select>
 
-    <select id="queryChatClientList" resultMap="dataMap">
+    <select id="queryChatClientByUserId" resultMap="dataMap">
         SELECT id,
                client_id,
                client_type,
@@ -46,7 +46,7 @@
                update_time
         FROM ai_client
         WHERE client_type = 'chat'
-          AND (client_from = #{userId} OR client_from = 0)
+          AND (client_from = 0 OR client_from = #{userId})
     </select>
 
     <select id="queryWorkClientList" resultMap="dataMap">

@@ -15,7 +15,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <select id="queryWorkAgentList" resultMap="dataMap">
+    <select id="queryWorkAgentByUserId" resultMap="dataMap">
         SELECT id,
                agent_id,
                agent_name,

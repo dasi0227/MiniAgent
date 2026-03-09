@@ -2,6 +2,7 @@ package com.dasi.domain.ai.service.rag;
 
 import com.dasi.types.annotation.CacheEvict;
 import com.dasi.domain.ai.model.dto.AiUploadDTO;
+import com.dasi.domain.util.jwt.UserContext;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -22,13 +23,14 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.dasi.types.constant.RedisConstant.QUERY_CHAT_RAG_KEY;
+import static com.dasi.types.constant.RedisConstant.QUERY_RAG_KEY;
 
 @Slf4j
 @Service
 public class RagService implements IRagService {
 
     public static final String PGVECTOR_KNOWLEDGE_KEY = "knowledge";
+    public static final String PGVECTOR_USER_ID_KEY = "userId";
 
     public static final String GIT_CLONE_DIRECTORY = "./git-cloned-repo";
 
@@ -38,8 +40,11 @@ public class RagService implements IRagService {
     @Resource
     private PgVectorStore pgVectorStore;
 
+    @Resource
+    private UserContext userContext;
+
     @Override
-    @CacheEvict(keyPrefix = { QUERY_CHAT_RAG_KEY })
+    @CacheEvict(keyPrefix = {QUERY_RAG_KEY})
     public void uploadTextFile(String ragTag, List<MultipartFile> fileList) {
 
         if (fileList == null || fileList.isEmpty()) {
@@ -65,7 +70,7 @@ public class RagService implements IRagService {
     }
 
     @Override
-    @CacheEvict(keyPrefix = { QUERY_CHAT_RAG_KEY })
+    @CacheEvict(keyPrefix = {QUERY_RAG_KEY})
     public void uploadGitRepo(AiUploadDTO aiUploadDTO) {
 
         String repoUrl = aiUploadDTO.getRepoUrl();
@@ -165,6 +170,12 @@ public class RagService implements IRagService {
 
     private boolean addPgVectorStore(String ragTag, org.springframework.core.io.Resource resource, String fileName) {
         try {
+            Long userId = userContext.getUserId();
+            if (userId == null) {
+                log.warn("【上传知识库】用户信息缺失：ragTag={}, fileName={}", ragTag, fileName);
+                return false;
+            }
+
             TikaDocumentReader reader = new TikaDocumentReader(resource);
 
             List<Document> documentList = reader.get();
@@ -174,10 +185,14 @@ public class RagService implements IRagService {
                 return false;
             }
 
-            documentSplitList.forEach(doc -> doc.getMetadata().put(PGVECTOR_KNOWLEDGE_KEY, ragTag));
+            String userIdText = String.valueOf(userId);
+            documentSplitList.forEach(doc -> {
+                doc.getMetadata().put(PGVECTOR_KNOWLEDGE_KEY, ragTag);
+                doc.getMetadata().put(PGVECTOR_USER_ID_KEY, userIdText);
+            });
             pgVectorStore.add(documentSplitList);
 
-            log.info("【上传知识库】入库成功：ragTag={}, fileName={}", ragTag, fileName);
+            log.info("【上传知识库】入库成功：ragTag={}, fileName={}, userId={}", ragTag, fileName, userIdText);
             return true;
         } catch (Exception e) {
             log.error("【上传知识库】入库失败：ragTag={}, fileName={}, error={}", ragTag, fileName, e.getMessage(), e);

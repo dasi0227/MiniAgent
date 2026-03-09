@@ -11,6 +11,8 @@ public interface IAiModelDao {
 
     AiModel queryByModelId(@Param("modelId") String modelId);
 
+    List<AiModel> queryModelByUserId(@Param("userId") Long userId);
+
     List<AiModel> page(@Param("idKeyword") String idKeyword,
                        @Param("nameKeyword") String nameKeyword,
                        @Param("apiId") String apiId,
@@ -31,5 +33,4 @@ public interface IAiModelDao {
     List<String> queryModelIdByApiId(@Param("apiId") String apiId);
 
     List<String> listModelId();
-
 }

@@ -1,10 +1,7 @@
 package com.dasi.domain.user.service.query;
 
+import com.dasi.domain.user.model.vo.*;
 import com.dasi.domain.user.repository.IQueryRepository;
-import com.dasi.domain.user.model.vo.ChatRagVO;
-import com.dasi.domain.user.model.vo.WorkAgentVO;
-import com.dasi.domain.user.model.vo.ChatClientVO;
-import com.dasi.domain.user.model.vo.ChatMcpVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
@@ -17,23 +14,28 @@ public class QueryService implements IQueryService {
     private IQueryRepository queryRepository;
 
     @Override
-    public List<ChatClientVO> queryChatClientList() {
-        return queryRepository.queryChatClientVOList();
+    public List<QueryWorkAgentVO> queryWorkAgentList() {
+        return queryRepository.queryWorkAgentList();
     }
 
     @Override
-    public List<ChatMcpVO> queryMcpList() {
-        return queryRepository.queryChatMcpVOList();
+    public List<QueryChatClientVO> queryChatClientList() {
+        return queryRepository.queryChatClientList();
     }
 
     @Override
-    public List<ChatRagVO> queryRagList() {
-        return queryRepository.queryRagVOList();
+    public List<QueryMcpVO> queryMcpList() {
+        return queryRepository.queryMcpList();
     }
 
     @Override
-    public List<WorkAgentVO> queryWorkAgentList() {
-        return queryRepository.queryWorkAgentVOList();
+    public List<QueryRagVO> queryRagList() {
+        return queryRepository.queryRagList();
+    }
+
+    @Override
+    public List<QueryModelVO> queryModelList() {
+        return queryRepository.queryModelList();
     }
 
 }

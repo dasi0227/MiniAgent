@@ -54,7 +54,7 @@
         </foreach>
     </select>
 
-    <select id="queryChatMcpList" resultMap="dataMap">
+    <select id="queryMcpByUserId" resultMap="dataMap">
         SELECT id,
                mcp_id,
                mcp_name,

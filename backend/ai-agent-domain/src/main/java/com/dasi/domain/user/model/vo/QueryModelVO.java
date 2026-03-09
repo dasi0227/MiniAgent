@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatMcpVO {
+public class QueryModelVO {
 
-    private String mcpId;
+    private String apiId;
 
-    private String mcpName;
+    private String modelId;
 
-    private String mcpDesc;
+    private String modelName;
 
 }

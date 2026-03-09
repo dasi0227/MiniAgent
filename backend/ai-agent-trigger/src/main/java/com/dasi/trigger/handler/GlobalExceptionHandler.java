@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Void> handleValid(MethodArgumentNotValidException e) {
-        log.error(e.getMessage(), e);
+        log.error("缺少参数：{}", e.getMessage(), e);
         return Result.error(e.getMessage());
     }
 
