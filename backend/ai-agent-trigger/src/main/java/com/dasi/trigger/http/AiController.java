@@ -80,7 +80,8 @@ public class AiController implements IAiApi {
         String sessionId = aiWorkDTO.getSessionId();
         String userMessage = aiWorkDTO.getUserMessage();
         SseEmitter sseEmitter = new SseEmitter(0L);
-        String agentId = aiWorkDTO.getAiAgentId();
+        String agentId = aiWorkDTO.getAgentId();
+        String agentDesc = aiWorkDTO.getAgentDesc();
 
         try {
             if (isInactiveWorkAgent(agentId)) {
@@ -89,7 +90,7 @@ public class AiController implements IAiApi {
                             .name("error")
                             .data("AI 未启用或不存在"));
                 } catch (Exception e) {
-                    log.error("【AI 执行】状态校验失败：agentId={}", agentId, e);
+                    log.error("【AI 执行】状态校验失败：aiWorkDTO={}", aiWorkDTO, e);
                 } finally {
                     sseEmitter.complete();
                 }
@@ -98,32 +99,25 @@ public class AiController implements IAiApi {
 
             String invalidSessionReason = sessionService.validateSessionAccess(sessionId, SessionType.WORK.getType());
             if (StringUtils.hasText(invalidSessionReason)) {
-                log.warn("【AI 执行】会话校验失败：sessionId={}, expectedType={}, error={}", sessionId, SessionType.WORK.getType(), invalidSessionReason);
                 try {
                     sseEmitter.send(SseEmitter.event()
                             .name("error")
                             .data(invalidSessionReason));
                 } catch (Exception e) {
-                    log.error("【AI 执行】会话校验失败：sessionId={}", sessionId, e);
+                    log.error("【AI 执行】会话校验失败：aiWorkDTO={}", aiWorkDTO, e);
                 } finally {
                     sseEmitter.complete();
                 }
                 return sseEmitter;
             }
 
-            // TODO：新加检验
-            WorkAgentVO selectedAgent = queryWorkAgent(agentId);
-            String agentDesc = selectedAgent == null ? null : selectedAgent.getAgentDesc();
-            boolean matched = matchChecker.isTaskMatched(agentDesc, userMessage);
-            if (!matched) {
-                String reason = "当前任务需求与智能体定位不匹配，请更换智能体或调整需求";
-                log.warn("【AI 执行】任务匹配校验未通过：agentId={}, agentDesc={}, userMessage={}", agentId, agentDesc, userMessage);
+            if (!matchChecker.isTaskMatched(agentDesc, userMessage)) {
                 try {
                     sseEmitter.send(SseEmitter.event()
                             .name("error")
-                            .data(reason));
+                            .data("当前任务需求与智能体定位不匹配，请更换智能体或调整需求"));
                 } catch (Exception e) {
-                    log.error("【AI 执行】任务匹配校验响应失败：agentId={}", agentId, e);
+                    log.error("【AI 执行】匹配校验失败：aiWorkDTO={}", aiWorkDTO, e);
                 } finally {
                     sseEmitter.complete();
                 }
@@ -358,23 +352,14 @@ public class AiController implements IAiApi {
     }
 
     private boolean isInactiveWorkAgent(String agentId) {
-        return queryWorkAgent(agentId) == null;
-    }
-
-    private WorkAgentVO queryWorkAgent(String agentId) {
         if (agentId == null || agentId.isBlank()) {
-            return null;
+            return true;
         }
         List<WorkAgentVO> list = queryService.queryWorkAgentVOList();
         if (list == null || list.isEmpty()) {
-            return null;
+            return true;
         }
-        return list.stream()
-                .filter(item -> agentId.equals(item.getAgentId()))
-                .findFirst()
-                .orElse(null);
+        return list.stream().noneMatch(item -> agentId.equals(item.getAgentId()));
     }
-
-
 
 }

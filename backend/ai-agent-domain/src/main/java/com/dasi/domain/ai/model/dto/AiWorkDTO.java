@@ -15,7 +15,10 @@ import lombok.NoArgsConstructor;
 public class AiWorkDTO {
 
     @NotBlank
-    private String aiAgentId;
+    private String agentId;
+
+    @NotBlank
+    private String agentDesc;
 
     @NotBlank
     private String userMessage;

@@ -1,12 +1,12 @@
 package com.dasi.domain.ai.service.execute;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -25,7 +25,7 @@ public class MatchChecker {
             %s
             【用户任务需求】
             %s
-            现在只输出 YES 或 NO。
+            现在只输出 YES 或 NO，严禁输出任何解释、代码和 markdown。
             """;
 
     private final ChatClient matchClient;
@@ -35,26 +35,20 @@ public class MatchChecker {
     }
 
     public boolean isTaskMatched(String agentDesc, String userMessage) {
-        if (!StringUtils.hasText(userMessage)) {
-            return false;
-        }
-        if (!StringUtils.hasText(agentDesc)) {
-            return true;
-        }
-
         try {
             Prompt prompt = new Prompt()
                     .augmentSystemMessage(MATCH_SYSTEM)
                     .augmentUserMessage(MATCH_USER.formatted(agentDesc, userMessage));
             String result = matchClient.prompt(prompt).call().content();
-            if (!StringUtils.hasText(result)) {
-                return true;
+            if (StringUtils.isBlank(result)) {
+                log.warn("【MatchChecker】匹配结果为空，默认拒绝");
+                return false;
+            } else {
+                return result.trim().toUpperCase().contains("YES");
             }
-            String normalized = result.trim().toUpperCase();
-            return !"NO".equals(normalized);
         } catch (Exception e) {
-            log.warn("【MatchChecker】匹配校验失败，默认放行：{}", e.getMessage());
-            return true;
+            log.warn("【MatchChecker】匹配校验失败，默认拒绝：{}", e.getMessage());
+            return false;
         }
     }
 
