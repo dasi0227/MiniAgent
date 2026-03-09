@@ -1,6 +1,6 @@
 package com.dasi.mcp.dto;
 
-import com.dasi.type.util.MarkdownConverter;
+import com.dasi.util.MarkdownConverter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;

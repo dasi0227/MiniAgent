@@ -22,9 +22,8 @@ logging:
     root: info
   config: classpath:logback-spring.xml
 
-csdn:
-  base-url: https://bizapi.csdn.net/
-  categories: AI文章放送
-  tags: java
-  cookie: ${CSDN_COOKIE}
-  cover-url: ${CSDN_COVER_URL}
+miniagent:
+  mcp:
+    header:
+      secret: X-MiniAgent-Mcp-Secret
+      user-id: X-MiniAgent-Mcp-UserId

@@ -1,6 +1,5 @@
 package com.dasi.mcp.dto;
 
-import com.dasi.type.model.WeatherCondition;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;

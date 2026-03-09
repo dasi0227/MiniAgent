@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryChatMcps, queryModelList, workspaceAgentCreate } from '../request/api';
 import { notifyAppError } from '../request/request';
@@ -16,8 +16,12 @@ const form = reactive({
     strategy: 'react',
     mcpIdList: [],
     modelId: '',
-    modelName: '',
     agentName: ''
+});
+
+const selectedModelName = computed(() => {
+    const matched = modelList.value.find((item) => item?.modelId === form.modelId);
+    return (matched?.modelName || '').trim();
 });
 
 const pickData = (resp) => {
@@ -36,7 +40,6 @@ const loadModels = async () => {
     modelList.value = Array.isArray(list) ? list : [];
     if (!form.modelId && modelList.value.length > 0) {
         form.modelId = modelList.value[0].modelId || '';
-        form.modelName = modelList.value[0].modelName || '';
     }
 };
 
@@ -65,8 +68,8 @@ const doGenerate = async () => {
         message.value = '请选择模型';
         return;
     }
-    if (!form.modelName.trim()) {
-        message.value = '请输入模型名称';
+    if (!selectedModelName.value) {
+        message.value = '模型信息缺失，请重新选择模型';
         return;
     }
     if (!form.taskPrompt.trim()) {
@@ -78,7 +81,7 @@ const doGenerate = async () => {
     try {
         await workspaceAgentCreate({
             modelId: form.modelId.trim(),
-            modelName: form.modelName.trim(),
+            modelName: selectedModelName.value,
             agentName: form.agentName.trim(),
             agentDesc: form.taskPrompt.trim(),
             strategy: form.strategy,
@@ -132,17 +135,6 @@ onMounted(async () => {
                     </div>
 
                     <div class="flex min-h-[50px] items-center gap-[12px]">
-                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">模型名称</div>
-                        <div class="min-w-0 flex-1">
-                            <input
-                                v-model="form.modelName"
-                                class="h-[44px] w-full rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] text-[15px] text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-color)]"
-                                placeholder="请输入模型名称"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="flex min-h-[50px] items-center gap-[12px]">
                         <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">模型选择</div>
                         <div class="min-w-0 flex-1">
                             <div class="no-scrollbar flex items-center gap-[8px] overflow-x-auto pb-[4px]">
@@ -157,7 +149,6 @@ onMounted(async () => {
                                     "
                                     @click="
                                         form.modelId = item.modelId || '';
-                                        form.modelName = item.modelName || '';
                                     "
                                 >
                                     {{ item.modelName || item.modelId }}

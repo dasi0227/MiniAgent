@@ -35,52 +35,35 @@ public class McpWebFilter implements WebFilter {
         String encodedSecret = exchange.getRequest().getHeaders().getFirst(mcpSecretHeader);
         String userId = exchange.getRequest().getHeaders().getFirst(mcpUserIdHeader);
 
-        WeComCredential credential = parseCredential(encodedSecret, userId);
+        CsdnCredential credential = parseCredential(encodedSecret, userId);
         return chain.filter(exchange)
                 .contextWrite(context -> context.put(McpHeaderContext.CONTEXT_KEY, credential));
     }
 
-    private WeComCredential parseCredential(String encodedSecret, String userId) {
+    private CsdnCredential parseCredential(String encodedSecret, String userId) {
         try {
             if (!StringUtils.hasText(userId) || !StringUtils.hasText(encodedSecret)) {
-                return new WeComCredential();
+                return new CsdnCredential();
             }
 
             byte[] decodedBytes = Base64.getDecoder().decode(encodedSecret);
             String secretJson = new String(decodedBytes, StandardCharsets.UTF_8);
             if (!StringUtils.hasText(secretJson)) {
-                return new WeComCredential();
+                return new CsdnCredential();
             }
 
             Map<String, String> secretMap = objectMapper.readValue(secretJson, new TypeReference<>() {});
-            String corpId = secretMap.get("corpId");
-            String corpSecret = secretMap.get("corpSecret");
-            String agentId = secretMap.get("agentId");
-
-            Integer agentIdValue = parseAgentId(agentId);
-            WeComCredential weComCredential = WeComCredential.builder()
-                    .corpId(corpId)
-                    .corpSecret(corpSecret)
-                    .agentId(agentIdValue)
+            return CsdnCredential.builder()
+                    .cookie(secretMap.get("cookie"))
+                    .categories(secretMap.get("categories"))
+                    .tags(secretMap.get("tags"))
+                    .coverUrl(secretMap.get("coverUrl"))
                     .userId(userId)
                     .build();
-
-            log.info("【Header 解析】wecom credential 解析完成, userId={}", userId);
-            return weComCredential;
         } catch (Exception e) {
-            log.error("【Header 解析】wecom credential 解析失败, userId={}", userId, e);
-            return new WeComCredential();
+            log.error("【Header 解析】csdn credential 解析失败, userId={}", userId, e);
+            return new CsdnCredential();
         }
     }
 
-    private Integer parseAgentId(String agentIdRaw) {
-        if (!StringUtils.hasText(agentIdRaw)) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(agentIdRaw);
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

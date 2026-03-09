@@ -2,7 +2,6 @@ package com.dasi;
 
 import com.dasi.mcp.tool.BochaTool;
 import com.dasi.sse.http.IBochaHttp;
-import com.dasi.type.properties.BochaProperties;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
@@ -14,15 +13,17 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @SpringBootApplication
 public class McpServerBochaApplication {
 
+    private static final String BOCHA_BASE_URL = "https://api.bocha.cn/";
+
     public static void main(String[] args) {
         SpringApplication.run(McpServerBochaApplication.class, args);
     }
 
     // 把 HTTP 接口变成一个可以被 Spring 调用的 Java 对象
     @Bean
-    public IBochaHttp createHttp(BochaProperties bochaProperties) {
+    public IBochaHttp createHttp() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(bochaProperties.getBaseUrl())
+                .baseUrl(BOCHA_BASE_URL)
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         return retrofit.create(IBochaHttp.class);

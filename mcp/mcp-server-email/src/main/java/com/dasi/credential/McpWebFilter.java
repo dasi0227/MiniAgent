@@ -35,52 +35,50 @@ public class McpWebFilter implements WebFilter {
         String encodedSecret = exchange.getRequest().getHeaders().getFirst(mcpSecretHeader);
         String userId = exchange.getRequest().getHeaders().getFirst(mcpUserIdHeader);
 
-        WeComCredential credential = parseCredential(encodedSecret, userId);
+        EmailCredential credential = parseCredential(encodedSecret, userId);
         return chain.filter(exchange)
                 .contextWrite(context -> context.put(McpHeaderContext.CONTEXT_KEY, credential));
     }
 
-    private WeComCredential parseCredential(String encodedSecret, String userId) {
+    private EmailCredential parseCredential(String encodedSecret, String userId) {
         try {
             if (!StringUtils.hasText(userId) || !StringUtils.hasText(encodedSecret)) {
-                return new WeComCredential();
+                return new EmailCredential();
             }
 
             byte[] decodedBytes = Base64.getDecoder().decode(encodedSecret);
             String secretJson = new String(decodedBytes, StandardCharsets.UTF_8);
             if (!StringUtils.hasText(secretJson)) {
-                return new WeComCredential();
+                return new EmailCredential();
             }
 
             Map<String, String> secretMap = objectMapper.readValue(secretJson, new TypeReference<>() {});
-            String corpId = secretMap.get("corpId");
-            String corpSecret = secretMap.get("corpSecret");
-            String agentId = secretMap.get("agentId");
+            Integer smtpPort = parsePort(secretMap.get("smtpPort"));
 
-            Integer agentIdValue = parseAgentId(agentId);
-            WeComCredential weComCredential = WeComCredential.builder()
-                    .corpId(corpId)
-                    .corpSecret(corpSecret)
-                    .agentId(agentIdValue)
+            return EmailCredential.builder()
+                    .smtpHost(secretMap.get("smtpHost"))
+                    .smtpPort(smtpPort)
+                    .smtpUsername(secretMap.get("smtpUsername"))
+                    .smtpPassword(secretMap.get("smtpPassword"))
+                    .fromAddress(secretMap.get("fromAddress"))
+                    .fromName(secretMap.get("fromName"))
                     .userId(userId)
                     .build();
-
-            log.info("【Header 解析】wecom credential 解析完成, userId={}", userId);
-            return weComCredential;
         } catch (Exception e) {
-            log.error("【Header 解析】wecom credential 解析失败, userId={}", userId, e);
-            return new WeComCredential();
+            log.error("【Header 解析】email credential 解析失败, userId={}", userId, e);
+            return new EmailCredential();
         }
     }
 
-    private Integer parseAgentId(String agentIdRaw) {
-        if (!StringUtils.hasText(agentIdRaw)) {
+    private Integer parsePort(String smtpPortRaw) {
+        if (!StringUtils.hasText(smtpPortRaw)) {
             return null;
         }
         try {
-            return Integer.parseInt(agentIdRaw);
+            return Integer.parseInt(smtpPortRaw);
         } catch (Exception e) {
             return null;
         }
     }
+
 }

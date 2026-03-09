@@ -1,6 +1,6 @@
 package com.dasi.mcp.tool;
 
-import com.dasi.mcp.adapter.IAmapPort;
+import com.dasi.mcp.port.IAmapPort;
 import com.dasi.mcp.dto.CheckWeatherToolRequest;
 import com.dasi.mcp.dto.CheckWeatherToolResponse;
 import jakarta.annotation.Resource;

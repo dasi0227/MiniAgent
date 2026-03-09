@@ -23,26 +23,8 @@ spring:
         name: mcp-server-email
         version: 1.0.0
 
-  mail:
-    host: ${EMAIL_SMTP_HOST}
-    port: ${EMAIL_SMTP_PORT}
-    username: ${EMAIL_SMTP_USERNAME}
-    password: ${EMAIL_SMTP_PASSWORD}
-    protocol: smtp
-    default-encoding: UTF-8
-    properties:
-      mail:
-        smtp:
-          auth: true
-          ssl:
-            enable: false
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 15000
-          timeout: 15000
-          writetimeout: 15000
-
-email:
-  from_address: ${EMAIL_FROM_ADDRESS}
-  from_name: ${EMAIL_FROM_NAME}
+miniagent:
+  mcp:
+    header:
+      secret: X-MiniAgent-Mcp-Secret
+      user-id: X-MiniAgent-Mcp-UserId

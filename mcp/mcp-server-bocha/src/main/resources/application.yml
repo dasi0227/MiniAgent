@@ -23,6 +23,8 @@ spring:
         name: mcp-server-bocha
         version: 1.0.0
 
-bocha:
-  base-url: https://api.bocha.cn/
-  api-key: ${BOCHA_API_KEY}
+miniagent:
+  mcp:
+    header:
+      secret: X-MiniAgent-Mcp-Secret
+      user-id: X-MiniAgent-Mcp-UserId

@@ -1,12 +1,13 @@
 package com.dasi.sse.port;
 
+import com.dasi.credential.BochaCredential;
+import com.dasi.credential.McpHeaderContext;
 import com.dasi.mcp.dto.BochaSearchToolRequest;
 import com.dasi.mcp.dto.BochaSearchToolResponse;
 import com.dasi.mcp.port.IBochaPort;
 import com.dasi.sse.dto.BochaWebSearchHttpRequest;
 import com.dasi.sse.dto.BochaWebSearchHttpResponse;
 import com.dasi.sse.http.IBochaHttp;
-import com.dasi.type.properties.BochaProperties;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 public class BochaPort implements IBochaPort {
 
     @Resource
-    private BochaProperties bochaProperties;
+    private McpHeaderContext mcpHeaderContext;
 
     @Resource
     private IBochaHttp bochaHttp;
@@ -52,9 +53,8 @@ public class BochaPort implements IBochaPort {
             return toolResponse;
         }
 
-        if (bochaProperties.getApiKey() == null || bochaProperties.getApiKey().isBlank()) {
-            toolResponse.setCode("500");
-            toolResponse.setInfo("Bocha API Key 未配置");
+        BochaCredential credential = resolveCredential(toolResponse);
+        if (credential == null) {
             return toolResponse;
         }
 
@@ -64,7 +64,7 @@ public class BochaPort implements IBochaPort {
                 .build();
 
         Call<BochaWebSearchHttpResponse> call = bochaHttp.webSearch(
-                "Bearer " + bochaProperties.getApiKey(),
+                "Bearer " + credential.getApiKey(),
                 httpRequest
         );
 
@@ -121,6 +121,16 @@ public class BochaPort implements IBochaPort {
 
         toolResponse.setResults(results);
         return toolResponse;
+    }
+
+    private BochaCredential resolveCredential(BochaSearchToolResponse toolResponse) {
+        BochaCredential credential = mcpHeaderContext.getCredential();
+        if (credential == null || !credential.checkValid()) {
+            toolResponse.setCode("400");
+            toolResponse.setInfo("头部信息缺失或非法，必须包含 apiKey/userId");
+            return null;
+        }
+        return credential;
     }
 
     private String firstNonBlank(String... values) {

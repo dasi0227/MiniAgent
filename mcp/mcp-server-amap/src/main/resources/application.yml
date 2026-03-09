@@ -21,6 +21,8 @@ logging:
     root: info
   config: classpath:logback-spring.xml
 
-amap:
-  base-url: "https://restapi.amap.com/v3/"
-  api-key: ${AMAP_API_KEY}
+miniagent:
+  mcp:
+    header:
+      secret: X-MiniAgent-Mcp-Secret
+      user-id: X-MiniAgent-Mcp-UserId
