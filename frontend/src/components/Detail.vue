@@ -3,11 +3,15 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { plazaDetail, queryRoleMap as queryRoleMapApi, repoFork } from '../request/api';
 import { notifyAppError } from '../request/request';
+import { useSettingsStore } from '../router/pinia';
 import { pushErrorToast } from '../utils/errorToast';
+import { getStrategyTone } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
 
 const route = useRoute();
 const router = useRouter();
+const settingsStore = useSettingsStore();
+const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 
 const loading = ref(false);
 const message = ref('');
@@ -43,6 +47,7 @@ const pickData = (resp) => {
 
 const templateId = computed(() => (route.params.templateId || '').toString().trim());
 const strategy = computed(() => (detail.value?.agentType || '').toString().toLowerCase());
+const detailTone = computed(() => getStrategyTone(strategy.value, isDarkTheme.value));
 
 const orderedRoleRows = computed(() => {
     const roleKeys = strategyRoleOrder[strategy.value] || [];
@@ -230,7 +235,12 @@ onBeforeUnmount(() => {
                     <header class="pt-0">
                         <div class="grid grid-cols-[1fr_auto_1fr] items-end gap-x-[26px] gap-y-[8px] max-[980px]:grid-cols-1">
                             <span
-                                class="inline-flex items-center rounded-full border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.08)] px-[16px] py-[5px] text-[16px] font-bold tracking-[0.05em] text-[var(--accent-strong)] justify-self-end max-[980px]:justify-self-center max-[980px]:text-[18px]"
+                                class="inline-flex items-center rounded-full border px-[16px] py-[5px] text-[16px] font-bold tracking-[0.05em] justify-self-end max-[980px]:justify-self-center max-[980px]:text-[18px]"
+                                :style="{
+                                    borderColor: detailTone.badgeBorder,
+                                    backgroundColor: detailTone.badgeBg,
+                                    color: detailTone.badgeText
+                                }"
                             >
                                 {{ resolvedAgentType }}
                             </span>
@@ -251,31 +261,42 @@ onBeforeUnmount(() => {
                         </p>
                     </section>
 
-                    <section class="space-y-[8px]">
-                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
-                        <div class="space-y-[4px] text-[15px] text-[var(--text-primary)]">
-                            <p><span class="text-[var(--text-secondary)]">模型类别：</span>{{ detail.modelType || '--' }}</p>
-                            <p><span class="text-[var(--text-secondary)]">模型名称：</span>{{ detail.modelName || '--' }}</p>
-                            <p><span class="text-[var(--text-secondary)]">接口地址：</span>{{ resolvedApiAddress }}</p>
+                    <section class="grid items-stretch gap-[20px] min-[980px]:grid-cols-2">
+                        <div class="flex h-full flex-col space-y-[8px]">
+                            <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
+                            <div class="h-[150px] space-y-[6px]">
+                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--border-color)] px-[12px] text-[15px] text-[var(--text-primary)]">
+                                    <span class="text-[var(--text-secondary)]">模型类别：</span>
+                                    <span class="ml-[4px] truncate">{{ detail.modelType || '--' }}</span>
+                                </div>
+                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--border-color)] px-[12px] text-[15px] text-[var(--text-primary)]">
+                                    <span class="text-[var(--text-secondary)]">模型名称：</span>
+                                    <span class="ml-[4px] truncate">{{ detail.modelName || '--' }}</span>
+                                </div>
+                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--border-color)] px-[12px] text-[15px] text-[var(--text-primary)]">
+                                    <span class="text-[var(--text-secondary)]">接口地址：</span>
+                                    <span class="ml-[4px] truncate">{{ resolvedApiAddress }}</span>
+                                </div>
+                            </div>
                         </div>
-                    </section>
 
-                    <section class="space-y-[8px]">
-                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
-                        <div v-if="mcpInfoList.length > 0" class="max-h-[150px] w-full max-w-[300px] space-y-[6px] overflow-y-auto pr-[2px]">
-                            <button
-                                v-for="(item, index) in mcpInfoList"
-                                :key="`${item.mcpName || 'mcp'}-${index}`"
-                                class="flex w-full items-center justify-between gap-[10px] rounded-[10px] border border-[var(--border-color)] px-[12px] py-[10px] text-left transition hover:border-[var(--accent-color)]"
-                                @click="openMcpInfo(item)"
-                            >
-                                <span class="min-w-0 truncate pr-[10px] text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName || '--' }}</span>
-                                <span class="shrink-0 rounded-full border border-[var(--border-color)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
-                                    {{ (item.mcpType || '--').toUpperCase() }}
-                                </span>
-                            </button>
+                        <div class="flex h-full flex-col space-y-[8px]">
+                            <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
+                            <div v-if="mcpInfoList.length > 0" class="h-[150px] w-full space-y-[6px] overflow-y-auto pr-[2px]">
+                                <button
+                                    v-for="(item, index) in mcpInfoList"
+                                    :key="`${item.mcpName || 'mcp'}-${index}`"
+                                    class="flex w-full items-center justify-between gap-[10px] rounded-[10px] border border-[var(--border-color)] px-[12px] py-[10px] text-left transition hover:border-[var(--accent-color)]"
+                                    @click="openMcpInfo(item)"
+                                >
+                                    <span class="min-w-0 truncate pr-[10px] text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName || '--' }}</span>
+                                    <span class="shrink-0 rounded-full border border-[var(--border-color)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
+                                        {{ (item.mcpType || '--').toUpperCase() }}
+                                    </span>
+                                </button>
+                            </div>
+                            <div v-else class="h-[150px] text-[13px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
                         </div>
-                        <div v-else class="text-[13px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
                     </section>
 
                     <section class="space-y-[10px]">
@@ -287,9 +308,7 @@ onBeforeUnmount(() => {
                                     :title="`查看第 ${row.flowIndex} 步 User Prompt`"
                                     @click="openFlowPrompt(row)"
                                 >
-                                    <svg viewBox="0 0 20 20" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
-                                        <path d="M6 4.5 13 10l-7 5.5V4.5z" />
-                                    </svg>
+                                    <span class="text-[24px] font-bold leading-none">{{ row.flowIndex }}</span>
                                 </button>
                                 <button
                                     class="flex min-w-0 flex-col rounded-[14px] border border-[var(--border-color)] px-[12px] py-[12px] text-left transition hover:border-[var(--accent-color)] hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] min-h-[160px]"
@@ -310,8 +329,14 @@ onBeforeUnmount(() => {
                             :class="
                                 forkState === 'done'
                                     ? 'border-[rgba(16,185,129,0.28)] bg-[rgba(16,185,129,0.08)] text-[#047857]'
-                                    : 'border-[var(--accent-color)] bg-[var(--accent-color)] text-white hover:brightness-95'
+                                    : 'border-[var(--detail-fork-border)] bg-[var(--detail-fork-bg)] text-[var(--detail-fork-text)] hover:border-[var(--detail-fork-hover-bg)] hover:bg-[var(--detail-fork-hover-bg)] hover:text-white'
                             "
+                            :style="{
+                                '--detail-fork-border': detailTone.forkBorder,
+                                '--detail-fork-bg': detailTone.forkBg,
+                                '--detail-fork-text': detailTone.forkText,
+                                '--detail-fork-hover-bg': detailTone.forkHoverBg
+                            }"
                             :disabled="forkState !== 'idle'"
                             @click="doFork"
                         >

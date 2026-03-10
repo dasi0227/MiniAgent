@@ -8,6 +8,11 @@ import chatIconDark from '../assets/chat-white.svg';
 import chatIconLight from '../assets/chat-black.svg';
 import workIconDark from '../assets/work-white.svg';
 import workIconLight from '../assets/work-black.svg';
+import studioIcon from '../assets/studio.svg';
+import plazaIcon from '../assets/plaza.svg';
+import repositoryIcon from '../assets/repository.svg';
+import addIcon from '../assets/add.svg';
+import rightIcon from '../assets/right.svg';
 import { useAgentStore, useAuthStore, useChatStore, useSettingsStore } from '../router/pinia';
 import {
     deleteSession,
@@ -56,6 +61,16 @@ const sidebarGhostButtonClass = computed(() =>
         ? 'border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.16)]'
         : 'border-[rgba(255,255,255,0.24)] bg-[rgba(255,255,255,0.14)] hover:bg-[rgba(255,255,255,0.22)]'
 );
+const sidebarNavItemBaseClass = computed(() =>
+    isDarkTheme.value
+        ? 'text-[rgba(231,236,244,0.9)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white'
+        : 'text-[rgba(237,243,251,0.95)] hover:bg-[rgba(255,255,255,0.15)] hover:text-white'
+);
+const sidebarNavItemActiveClass = computed(() =>
+    isDarkTheme.value
+        ? 'bg-[rgba(123,200,255,0.18)] text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]'
+        : 'bg-[rgba(123,200,255,0.24)] text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]'
+);
 const sidebarIconButtonClass = computed(() =>
     isDarkTheme.value
         ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-[rgba(231,236,244,0.9)] hover:bg-[rgba(255,255,255,0.14)] hover:text-white'
@@ -78,6 +93,7 @@ const isChatRoute = computed(() => route.path.startsWith('/chat'));
 const isWelcomeRoute = computed(() => route.path.startsWith('/welcome'));
 const isStudioRoute = computed(() => route.path.startsWith('/studio'));
 const isPlazaRoute = computed(() => route.path.startsWith('/plaza'));
+const isRepositoryRoute = computed(() => route.path.startsWith('/repository'));
 
 const showChatList = ref(true);
 const showAgentList = ref(true);
@@ -962,64 +978,62 @@ const loadProfileResources = async () => {
         </div>
 
         <div
-            class="mb-[12px] mt-[8px] flex flex-1 flex-col gap-[12px] overflow-y-auto pr-[4px] [scrollbar-gutter:stable_both-edges] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            class="mb-[12px] mt-[8px] flex flex-1 flex-col gap-[6px] overflow-y-auto pr-[4px] [scrollbar-gutter:stable_both-edges] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
-            <div class="flex flex-col gap-[8px]">
+            <div class="flex flex-col gap-[2px]">
                 <button
-                    class="w-full rounded-[12px] border px-[14px] py-[10px] text-[14px] font-semibold transition-all duration-200"
-                    :class="
-                        isStudioRoute
-                            ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
-                            : sidebarGhostButtonClass
-                    "
+                    class="group flex h-[52px] w-full items-center gap-[10px] rounded-[10px] px-[10px] text-[18px] font-bold transition-all duration-200"
+                    :class="isStudioRoute ? sidebarNavItemActiveClass : sidebarNavItemBaseClass"
                     type="button"
                     @click="goRoute('/studio')"
                 >
-                    MiniAgent Studio
+                    <img :src="studioIcon" alt="" class="h-[18px] w-[18px] shrink-0 opacity-95" aria-hidden="true" />
+                    <span>Studio</span>
                 </button>
                 <button
-                    class="w-full rounded-[12px] border px-[14px] py-[10px] text-[14px] font-semibold transition-all duration-200"
-                    :class="
-                        isPlazaRoute
-                            ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
-                            : sidebarGhostButtonClass
-                    "
+                    class="group flex h-[52px] w-full items-center gap-[10px] rounded-[10px] px-[10px] text-[18px] font-bold transition-all duration-200"
+                    :class="isPlazaRoute ? sidebarNavItemActiveClass : sidebarNavItemBaseClass"
                     type="button"
                     @click="goRoute('/plaza')"
                 >
-                    MiniAgent Plaza
+                    <img :src="plazaIcon" alt="" class="h-[18px] w-[18px] shrink-0 opacity-95" aria-hidden="true" />
+                    <span>Plaza</span>
                 </button>
                 <button
-                    class="w-full rounded-[12px] border px-[14px] py-[10px] text-[14px] font-semibold transition-all duration-200"
-                    :class="
-                        isWelcomeRoute
-                            ? 'border-[#7bc8ff] bg-[linear-gradient(135deg,rgba(111,125,255,0.32),rgba(83,197,255,0.2))] text-white shadow-[0_8px_20px_rgba(0,0,0,0.18)]'
-                            : sidebarGhostButtonClass
-                    "
+                    class="group flex h-[52px] w-full items-center gap-[10px] rounded-[10px] px-[10px] text-[18px] font-bold transition-all duration-200"
+                    :class="isRepositoryRoute ? sidebarNavItemActiveClass : sidebarNavItemBaseClass"
+                    type="button"
+                    @click="goRoute('/repository')"
+                >
+                    <img :src="repositoryIcon" alt="" class="h-[18px] w-[18px] shrink-0 opacity-95" aria-hidden="true" />
+                    <span>Repository</span>
+                </button>
+                <button
+                    class="group flex h-[52px] w-full items-center gap-[10px] rounded-[10px] px-[10px] text-[18px] font-bold transition-all duration-200"
+                    :class="isWelcomeRoute ? sidebarNavItemActiveClass : sidebarNavItemBaseClass"
                     type="button"
                     @click="handleNewSession"
                 >
-                    ＋ 新建会话
+                    <img :src="addIcon" alt="" class="h-[18px] w-[18px] shrink-0 opacity-95" aria-hidden="true" />
+                    <span>新建会话</span>
                 </button>
             </div>
             <div v-if="sessionLoading" class="text-[12px] text-[rgba(231,236,244,0.7)]">会话加载中...</div>
 
-            <div class="flex flex-col gap-[8px]">
+            <div class="flex flex-col gap-[2px]">
                 <button
-                    class="flex w-full items-center gap-[8px] px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
-                    :class="isChatRoute ? 'text-[#7bc8ff]' : ''"
+                    class="group flex h-[52px] w-full items-center gap-[10px] rounded-[10px] px-[10px] text-[18px] font-bold transition-all duration-200"
+                    :class="isChatRoute ? sidebarNavItemActiveClass : sidebarNavItemBaseClass"
                     type="button"
                     @click="showChatList = !showChatList"
                 >
-                    <svg
-                        viewBox="0 0 20 20"
-                        class="h-[14px] w-[14px] shrink-0 transition-transform duration-200"
-                        :class="showChatList ? 'rotate-90 text-[#7bc8ff]' : ''"
-                        fill="currentColor"
+                    <img
+                        :src="rightIcon"
+                        alt=""
+                        class="h-[18px] w-[18px] shrink-0 opacity-95 transition-transform duration-200"
+                        :class="showChatList ? 'rotate-90' : ''"
                         aria-hidden="true"
-                    >
-                        <path d="M7 4.5L13 10L7 15.5V4.5z" />
-                    </svg>
+                    />
                     <span class="inline-flex items-center">Chat 会话</span>
                 </button>
                 <div
@@ -1082,29 +1096,27 @@ const loadProfileResources = async () => {
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="chats.length === 0" class="mt-[4px] pl-[22px] text-[13px] text-[rgba(231,236,244,0.7)]">
+                            <div v-if="chats.length === 0" class="mt-[4px] pl-[38px] text-[13px] text-[rgba(231,236,244,0.7)]">
                                 暂无会话
                             </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-[8px]">
+            <div class="flex flex-col gap-[2px]">
                 <button
-                    class="flex w-full items-center gap-[8px] px-[4px] py-[6px] text-[20px] font-bold text-[#f8fafc] transition-all duration-200 hover:text-[#7bc8ff]"
-                    :class="isAgentRoute ? 'text-[#7bc8ff]' : ''"
+                    class="group flex h-[52px] w-full items-center gap-[10px] rounded-[10px] px-[10px] text-[18px] font-bold transition-all duration-200"
+                    :class="isAgentRoute ? sidebarNavItemActiveClass : sidebarNavItemBaseClass"
                     type="button"
                     @click="showAgentList = !showAgentList"
                 >
-                    <svg
-                        viewBox="0 0 20 20"
-                        class="h-[14px] w-[14px] shrink-0 transition-transform duration-200"
-                        :class="showAgentList ? 'rotate-90 text-[#7bc8ff]' : ''"
-                        fill="currentColor"
+                    <img
+                        :src="rightIcon"
+                        alt=""
+                        class="h-[18px] w-[18px] shrink-0 opacity-95 transition-transform duration-200"
+                        :class="showAgentList ? 'rotate-90' : ''"
                         aria-hidden="true"
-                    >
-                        <path d="M7 4.5L13 10L7 15.5V4.5z" />
-                    </svg>
+                    />
                     <span class="inline-flex items-center">Work 会话</span>
                 </button>
                 <div
@@ -1167,7 +1179,7 @@ const loadProfileResources = async () => {
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="agentSessions.length === 0" class="mt-[4px] pl-[22px] text-[13px] text-[rgba(231,236,244,0.7)]">
+                            <div v-if="agentSessions.length === 0" class="mt-[4px] pl-[38px] text-[13px] text-[rgba(231,236,244,0.7)]">
                                 暂无会话
                             </div>
                     </div>

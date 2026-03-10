@@ -5,6 +5,7 @@ import { repoDeleteMineAgent, repoList } from '../request/api';
 import { notifyAppError } from '../request/request';
 import { useSettingsStore } from '../router/pinia';
 import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
+import { getStrategyTone } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
 
 const settingsStore = useSettingsStore();
@@ -33,56 +34,7 @@ const resolveSectionLabel = (key) => {
     return '已收藏';
 };
 
-const resolveCardTone = (item) => {
-    const type = resolveAgentType(item);
-    if (isDarkTheme.value) {
-        if (type === 'STEP') {
-            return {
-                card: 'border-[rgba(245,158,11,0.18)] bg-[rgba(18,30,54,0.72)] shadow-[0_16px_34px_rgba(2,8,23,0.18)] backdrop-blur-[10px]',
-                glow: 'linear-gradient(155deg, rgba(245,158,11,0.12), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.16), rgba(15,23,42,0) 58%)',
-                badge: 'border-[rgba(251,191,36,0.28)] bg-[rgba(251,191,36,0.1)] text-[#f7d487]',
-                primaryButton: 'border-[rgba(251,191,36,0.26)] bg-[rgba(251,191,36,0.08)] text-[#f7d487] hover:bg-[rgba(251,191,36,0.14)]'
-            };
-        }
-        if (type === 'LOOP') {
-            return {
-                card: 'border-[rgba(16,185,129,0.18)] bg-[rgba(18,30,54,0.72)] shadow-[0_16px_34px_rgba(2,8,23,0.18)] backdrop-blur-[10px]',
-                glow: 'linear-gradient(155deg, rgba(16,185,129,0.12), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(45,212,191,0.16), rgba(15,23,42,0) 58%)',
-                badge: 'border-[rgba(52,211,153,0.28)] bg-[rgba(16,185,129,0.1)] text-[#9decc0]',
-                primaryButton: 'border-[rgba(52,211,153,0.26)] bg-[rgba(16,185,129,0.08)] text-[#9decc0] hover:bg-[rgba(16,185,129,0.14)]'
-            };
-        }
-        return {
-            card: 'border-[rgba(96,165,250,0.18)] bg-[rgba(18,30,54,0.72)] shadow-[0_16px_34px_rgba(2,8,23,0.18)] backdrop-blur-[10px]',
-            glow: 'linear-gradient(155deg, rgba(96,165,250,0.12), rgba(15,23,42,0) 52%), radial-gradient(circle at 100% 0, rgba(96,165,250,0.16), rgba(15,23,42,0) 58%)',
-            badge: 'border-[rgba(96,165,250,0.28)] bg-[rgba(96,165,250,0.1)] text-[#c9e0ff]',
-            primaryButton: 'border-[rgba(96,165,250,0.26)] bg-[rgba(96,165,250,0.08)] text-[#c9e0ff] hover:bg-[rgba(96,165,250,0.14)]'
-        };
-    }
-
-    if (type === 'STEP') {
-        return {
-            card: 'border-[rgba(245,158,11,0.16)] bg-[rgba(255,255,255,0.96)] shadow-[0_14px_34px_rgba(15,23,42,0.06)]',
-            glow: 'linear-gradient(160deg, rgba(251,191,36,0.1), rgba(255,255,255,0) 52%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.18), rgba(255,255,255,0) 58%)',
-            badge: 'border-[rgba(245,158,11,0.24)] bg-[rgba(251,191,36,0.12)] text-[#92400e]',
-            primaryButton: 'border-[rgba(245,158,11,0.26)] bg-[rgba(255,251,235,0.92)] text-[#b45309] hover:bg-[rgba(255,247,237,0.98)]'
-        };
-    }
-    if (type === 'LOOP') {
-        return {
-            card: 'border-[rgba(16,185,129,0.16)] bg-[rgba(255,255,255,0.96)] shadow-[0_14px_34px_rgba(15,23,42,0.06)]',
-            glow: 'linear-gradient(160deg, rgba(16,185,129,0.08), rgba(255,255,255,0) 52%), radial-gradient(circle at 100% 0, rgba(45,212,191,0.16), rgba(255,255,255,0) 58%)',
-            badge: 'border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.1)] text-[#047857]',
-            primaryButton: 'border-[rgba(16,185,129,0.24)] bg-[rgba(236,253,245,0.92)] text-[#047857] hover:bg-[rgba(220,252,231,0.98)]'
-        };
-    }
-    return {
-        card: 'border-[rgba(59,130,246,0.14)] bg-[rgba(255,255,255,0.96)] shadow-[0_14px_34px_rgba(15,23,42,0.06)]',
-        glow: 'linear-gradient(160deg, rgba(59,130,246,0.08), rgba(255,255,255,0) 52%), radial-gradient(circle at 100% 0, rgba(96,165,250,0.16), rgba(255,255,255,0) 58%)',
-        badge: 'border-[rgba(59,130,246,0.22)] bg-[rgba(59,130,246,0.09)] text-[#1d4ed8]',
-        primaryButton: 'border-[rgba(59,130,246,0.22)] bg-[rgba(239,246,255,0.92)] text-[#2563eb] hover:bg-[rgba(219,234,254,0.98)]'
-    };
-};
+const resolveCardTone = (item) => getStrategyTone(item?.agentType, isDarkTheme.value);
 
 const dangerButtonClass = computed(() =>
     isDarkTheme.value
@@ -170,13 +122,11 @@ onMounted(loadRepository);
 </script>
 
 <template>
-    <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--page-bg)]">
-        <div class="overflow-y-scroll overflow-x-hidden [scrollbar-gutter:stable] py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
-            <div class="mx-auto max-w-[1120px]">
-                <header class="flex flex-wrap items-end justify-between gap-[14px]">
-                    <div>
-                        <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Repository</h1>
-                    </div>
+    <section class="grid h-screen grid-rows-[1fr_var(--footer-height)] bg-white">
+        <div class="overflow-y-auto py-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
+            <div class="mx-auto max-w-[1100px] space-y-[16px]">
+                <header class="flex items-center justify-between gap-[12px]">
+                    <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Repository</h1>
                 </header>
 
                 <div
@@ -186,7 +136,7 @@ onMounted(loadRepository);
                     {{ message }}
                 </div>
 
-                <div class="mt-[20px] space-y-[2px]">
+                <div class="space-y-[2px]">
                     <section
                         v-for="section in sections"
                         :key="section.key"
@@ -229,15 +179,23 @@ onMounted(loadRepository);
                                     <article
                                         v-for="item in section.items"
                                         :key="item.repoId || item.agentId || item.templateId || resolveAgentName(item)"
-                                        class="group relative flex min-h-[208px] flex-col overflow-hidden rounded-[30px] border p-[18px] transition duration-200 hover:-translate-y-[2px]"
-                                        :class="resolveCardTone(item).card"
+                                        class="group relative flex min-h-[208px] flex-col overflow-hidden rounded-[30px] border p-[18px] transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_16px_36px_rgba(15,23,42,0.12)]"
+                                        :style="{
+                                            borderColor: resolveCardTone(item).cardBorder,
+                                            backgroundColor: resolveCardTone(item).cardBg,
+                                            boxShadow: resolveCardTone(item).cardShadow
+                                        }"
                                     >
-                                        <div class="pointer-events-none absolute inset-0 opacity-100" :style="{ background: resolveCardTone(item).glow }" />
+                                        <div class="pointer-events-none absolute inset-0 opacity-100" :style="{ background: resolveCardTone(item).overlay }" />
 
                                         <div class="relative flex items-start justify-between gap-[12px]">
                                             <span
                                                 class="inline-flex items-center rounded-full border px-[10px] py-[4px] text-[11px] font-semibold tracking-[0.08em]"
-                                                :class="resolveCardTone(item).badge"
+                                                :style="{
+                                                    borderColor: resolveCardTone(item).badgeBorder,
+                                                    backgroundColor: resolveCardTone(item).badgeBg,
+                                                    color: resolveCardTone(item).badgeText
+                                                }"
                                             >
                                                 {{ resolveAgentType(item) }}
                                             </span>
@@ -255,7 +213,13 @@ onMounted(loadRepository);
                                         <div class="relative mt-auto flex items-center justify-end gap-[8px] pt-[18px]">
                                             <button
                                                 class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"
-                                                :class="resolveCardTone(item).primaryButton"
+                                                :style="{
+                                                    '--repo-primary-border': resolveCardTone(item).primaryBtnBorder,
+                                                    '--repo-primary-bg': resolveCardTone(item).primaryBtnBg,
+                                                    '--repo-primary-text': resolveCardTone(item).primaryBtnText,
+                                                    '--repo-primary-hover-bg': resolveCardTone(item).primaryBtnHoverBg
+                                                }"
+                                                :class="'border-[var(--repo-primary-border)] bg-[var(--repo-primary-bg)] text-[var(--repo-primary-text)] hover:bg-[var(--repo-primary-hover-bg)]'"
                                                 type="button"
                                                 @click="viewDetail(item)"
                                             >

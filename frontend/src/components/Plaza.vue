@@ -13,6 +13,7 @@ import {
     plazaList
 } from '../request/api';
 import { notifyAppError } from '../request/request';
+import { getStrategyTone } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
 
 const router = useRouter();
@@ -60,81 +61,7 @@ const isCommented = (item) => Boolean(item?.commented);
 
 const resolveIconColor = (active, color) => (active ? color : '#94a3b8');
 
-const resolveCardTone = (item) => {
-    if (isDarkTheme.value) {
-        const type = displayType(item);
-        if (type === 'STEP') {
-            return {
-                overlay:
-                    'linear-gradient(160deg, rgba(251,191,36,0.14), rgba(15,23,42,0) 48%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.24), rgba(15,23,42,0) 56%)',
-                badgeBg: 'rgba(251,191,36,0.16)',
-                badgeBorder: 'rgba(251,191,36,0.45)',
-                badgeText: '#fcd34d',
-                forkBg: 'rgba(251,191,36,0.14)',
-                forkBorder: 'rgba(251,191,36,0.45)',
-                forkText: '#fbbf24'
-            };
-        }
-        if (type === 'LOOP') {
-            return {
-                overlay:
-                    'linear-gradient(160deg, rgba(14,165,233,0.14), rgba(15,23,42,0) 48%), radial-gradient(circle at 100% 0, rgba(14,165,233,0.24), rgba(15,23,42,0) 56%)',
-                badgeBg: 'rgba(56,189,248,0.16)',
-                badgeBorder: 'rgba(56,189,248,0.42)',
-                badgeText: '#7dd3fc',
-                forkBg: 'rgba(56,189,248,0.14)',
-                forkBorder: 'rgba(56,189,248,0.42)',
-                forkText: '#38bdf8'
-            };
-        }
-        return {
-            overlay:
-                'linear-gradient(160deg, rgba(59,130,246,0.14), rgba(15,23,42,0) 48%), radial-gradient(circle at 100% 0, rgba(59,130,246,0.24), rgba(15,23,42,0) 56%)',
-            badgeBg: 'rgba(96,165,250,0.16)',
-            badgeBorder: 'rgba(96,165,250,0.42)',
-            badgeText: '#93c5fd',
-            forkBg: 'rgba(96,165,250,0.14)',
-            forkBorder: 'rgba(96,165,250,0.42)',
-            forkText: '#60a5fa'
-        };
-    }
-
-    const type = displayType(item);
-    if (type === 'STEP') {
-        return {
-            overlay:
-                'linear-gradient(160deg, rgba(251,191,36,0.09), rgba(255,255,255,0) 46%), radial-gradient(circle at 100% 0, rgba(251,191,36,0.22), rgba(255,255,255,0) 54%)',
-            badgeBg: 'rgba(251,191,36,0.12)',
-            badgeBorder: 'rgba(245,158,11,0.28)',
-            badgeText: '#92400e',
-            forkBg: 'rgba(251,191,36,0.14)',
-            forkBorder: 'rgba(245,158,11,0.45)',
-            forkText: '#b45309'
-        };
-    }
-    if (type === 'LOOP') {
-        return {
-            overlay:
-                'linear-gradient(160deg, rgba(14,165,233,0.08), rgba(255,255,255,0) 46%), radial-gradient(circle at 100% 0, rgba(14,165,233,0.2), rgba(255,255,255,0) 54%)',
-            badgeBg: 'rgba(14,165,233,0.11)',
-            badgeBorder: 'rgba(14,165,233,0.25)',
-            badgeText: '#075985',
-            forkBg: 'rgba(14,165,233,0.12)',
-            forkBorder: 'rgba(14,165,233,0.42)',
-            forkText: '#0369a1'
-        };
-    }
-    return {
-        overlay:
-            'linear-gradient(160deg, rgba(59,130,246,0.09), rgba(255,255,255,0) 46%), radial-gradient(circle at 100% 0, rgba(59,130,246,0.2), rgba(255,255,255,0) 54%)',
-        badgeBg: 'rgba(59,130,246,0.11)',
-        badgeBorder: 'rgba(59,130,246,0.25)',
-        badgeText: '#1d4ed8',
-        forkBg: 'rgba(59,130,246,0.13)',
-        forkBorder: 'rgba(59,130,246,0.45)',
-        forkText: '#2563eb'
-    };
-};
+const resolveCardTone = (item) => getStrategyTone(item?.agentType, isDarkTheme.value);
 
 const resolveSortValue = (item, field) => {
     if (field === 'favor') return Number(item?.favorCount) || 0;
@@ -404,9 +331,6 @@ onBeforeUnmount(() => {
     clearFilterPopoverCloseTimer();
 });
 
-const goRepository = () => {
-    router.push('/repository');
-};
 </script>
 
 <template>
@@ -415,12 +339,6 @@ const goRepository = () => {
             <div class="mx-auto max-w-[1100px] space-y-[16px]">
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold">MiniAgent Plaza</h1>
-                    <button
-                        class="rounded-[10px] border border-[#9ab6d2] bg-[#f2f7ff] px-[12px] py-[8px] text-[14px] font-semibold text-[#6888ad] transition hover:border-[#88a8c7] hover:bg-[#e9f2ff] hover:text-[#57789f]"
-                        @click="goRepository"
-                    >
-                        我的仓库
-                    </button>
                 </div>
 
                 <div class="flex w-full max-w-[560px] items-center gap-[8px]">

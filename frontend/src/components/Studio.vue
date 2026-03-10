@@ -1,11 +1,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { queryChatMcps, queryModelList, workspaceAgentCreate } from '../request/api';
 import { notifyAppError } from '../request/request';
+import { useSettingsStore } from '../router/pinia';
+import { getStudioSelectionTone } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
 
-const router = useRouter();
+const settingsStore = useSettingsStore();
+const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const loading = ref(false);
 const message = ref('');
 const mcpList = ref([]);
@@ -23,6 +25,17 @@ const selectedModelName = computed(() => {
     const matched = modelList.value.find((item) => item?.modelId === form.modelId);
     return (matched?.modelName || '').trim();
 });
+
+const resolveStudioToneStyle = (kind) => {
+    const tone = getStudioSelectionTone(kind, isDarkTheme.value);
+    return {
+        '--studio-active-border': tone.activeBorder,
+        '--studio-active-bg': tone.activeBg,
+        '--studio-active-text': tone.activeText,
+        '--studio-hover-border': tone.hoverBorder,
+        '--studio-hover-bg': tone.hoverBg
+    };
+};
 
 const pickData = (resp) => {
     if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
@@ -95,10 +108,6 @@ const doGenerate = async () => {
     }
 };
 
-const goRepository = () => {
-    router.push('/repository');
-};
-
 onMounted(async () => {
     try {
         await Promise.all([loadModels(), loadMcps()]);
@@ -114,12 +123,6 @@ onMounted(async () => {
             <div class="mx-auto max-w-[1100px] space-y-[16px]">
                 <div class="flex items-center justify-between gap-[12px]">
                     <h1 class="text-[24px] font-bold text-[var(--text-primary)]">MiniAgent Studio</h1>
-                    <button
-                        class="rounded-[10px] border border-[#9ab6d2] bg-[#f2f7ff] px-[12px] py-[8px] text-[14px] font-semibold text-[#6888ad] transition hover:border-[#88a8c7] hover:bg-[#e9f2ff] hover:text-[#57789f]"
-                        @click="goRepository"
-                    >
-                        我的仓库
-                    </button>
                 </div>
 
                 <div class="space-y-[18px] rounded-[16px] bg-white p-[18px]">
@@ -142,10 +145,11 @@ onMounted(async () => {
                                     v-for="item in modelList"
                                     :key="item.modelId"
                                     class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
+                                    :style="resolveStudioToneStyle('model')"
                                     :class="
                                         form.modelId === item.modelId
-                                            ? 'border-[#c59a4a] bg-[#fff7e8] text-[#8c6929]'
-                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#c59a4a]'
+                                            ? 'border-[var(--studio-active-border)] bg-[var(--studio-active-bg)] text-[var(--studio-active-text)]'
+                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[var(--studio-hover-border)] hover:bg-[var(--studio-hover-bg)]'
                                     "
                                     @click="
                                         form.modelId = item.modelId || '';
@@ -164,17 +168,18 @@ onMounted(async () => {
                     </div>
 
                     <div class="flex min-h-[50px] items-center gap-[12px]">
-                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">MCP 工具</div>
+                        <div class="flex h-[44px] w-[140px] shrink-0 items-center text-[16px] font-semibold tracking-[0.02em] text-[var(--text-secondary)]">工具选择</div>
                         <div class="min-w-0 flex-1">
                             <div class="no-scrollbar flex items-center gap-[8px] overflow-x-auto pb-[4px]">
                                 <button
                                     v-for="item in mcpList"
                                     :key="item.mcpId"
                                     class="h-[44px] shrink-0 whitespace-nowrap rounded-[999px] border px-[15px] text-[16px] font-semibold transition"
+                                    :style="resolveStudioToneStyle('tool')"
                                     :class="
                                         form.mcpIdList.includes(item.mcpId)
-                                            ? 'border-[#3e9a68] bg-[#ecf7f0] text-[#2a6a49]'
-                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[#3e9a68]'
+                                            ? 'border-[var(--studio-active-border)] bg-[var(--studio-active-bg)] text-[var(--studio-active-text)]'
+                                            : 'border-[var(--border-color)] bg-white text-[#475569] hover:border-[var(--studio-hover-border)] hover:bg-[var(--studio-hover-bg)]'
                                     "
                                     @click="toggleMcp(item.mcpId)"
                                 >
@@ -198,10 +203,11 @@ onMounted(async () => {
                                     v-for="strategy in ['step', 'loop', 'react']"
                                     :key="strategy"
                                     class="h-[44px] min-w-[104px] shrink-0 rounded-[10px] border px-[17px] text-[16px] font-semibold transition"
+                                    :style="resolveStudioToneStyle(strategy)"
                                     :class="
                                         form.strategy === strategy
-                                            ? 'border-[#c06a6a] bg-[#fff2f2] text-[#9a4444]'
-                                            : 'border-[var(--border-color)] bg-white text-[#334155] hover:border-[#c06a6a] hover:bg-[#fdf7f7]'
+                                            ? 'border-[var(--studio-active-border)] bg-[var(--studio-active-bg)] text-[var(--studio-active-text)]'
+                                            : 'border-[var(--border-color)] bg-white text-[#334155] hover:border-[var(--studio-hover-border)] hover:bg-[var(--studio-hover-bg)]'
                                     "
                                     @click="form.strategy = strategy"
                                 >
