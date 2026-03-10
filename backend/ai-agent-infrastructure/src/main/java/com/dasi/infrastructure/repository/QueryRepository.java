@@ -46,10 +46,10 @@ public class QueryRepository implements IQueryRepository {
     @Resource(name = "postgresqlTemplate")
     private JdbcTemplate jdbcTemplate;
 
-    @Value("${openai.embedding.schema-name}")
+    @Value("${miniagent.embedding.schema-name}")
     private String embeddingSchemaName;
 
-    @Value("${openai.embedding.table-name}")
+    @Value("${miniagent.embedding.table-name}")
     private String embeddingTableName;
 
     @Override

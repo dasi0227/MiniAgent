@@ -69,7 +69,7 @@
                update_time
         FROM ai_mcp
         WHERE mcp_chat = 1
-          AND (mcp_from = #{userId} OR mcp_from = 0)
+          AND mcp_from = #{userId}
     </select>
 
     <select id="page" resultMap="dataMap">

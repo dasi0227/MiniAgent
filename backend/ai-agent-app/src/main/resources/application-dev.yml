@@ -68,28 +68,16 @@ datasource:
     jdbc-url: jdbc:postgresql://127.0.0.1:5432/${POSTGRESQL_DB_NAME}
     pool-name: POSTGRESQL_HIKARI
 
-# OpenAi
-openai:
-  base-url: ${OPENAI_BASE_URL}
-  api-key: ${OPENAI_API_KEY}
+miniagent:
+  # Embedding
   embedding:
+    base-url: ${OPENAI_BASE_URL}
+    api-key: ${OPENAI_API_KEY}
     model: ${EMBEDDING_MODEL}
     dimensions: ${EMBEDDING_DIMENSIONS}
     schema-name: ${EMBEDDING_SCHEMA_NAME}
     table-name: ${EMBEDDING_TABLE_NAME}
     encoding-format: float
-
-miniagent:
-  # Armory
-  armory:
-    enable: false
-    agent-id-list:
-      - agent_weather
-    client-id-list:
-      - client_chat_glm
-      - client_chat_deepseek
-      - client_chat_qwen
-      - client_chat_doubao
 
   # MCP Header
   mcp:
