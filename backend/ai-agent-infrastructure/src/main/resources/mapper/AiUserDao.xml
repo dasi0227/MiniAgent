@@ -76,6 +76,12 @@
         WHERE id = #{id}
     </select>
 
+    <select id="queryUserNameById" resultType="java.lang.String">
+        SELECT user_name
+        FROM ai_user
+        WHERE id = #{id}
+    </select>
+
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiUser" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO ai_user (user_name,
                             password,

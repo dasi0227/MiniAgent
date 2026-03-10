@@ -11,6 +11,8 @@ public interface IAiUserDao {
 
     AiUser queryById(@Param("id") Long id);
 
+    String queryUserNameById(@Param("id") Long id);
+
     AiUser queryByUserName(@Param("userName") String userName);
 
     List<AiUser> page(@Param("userName") String userName,

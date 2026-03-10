@@ -17,7 +17,6 @@ public class AiPlaza {
     private String plazaId;
     private String templateId;
     private Long userId;
-    private String userName;
     private String agentName;
     private String agentType;
     private String plazaTitle;

@@ -8,7 +8,6 @@
         <result column="plaza_id" property="plazaId"/>
         <result column="template_id" property="templateId"/>
         <result column="user_id" property="userId"/>
-        <result column="user_name" property="userName"/>
         <result column="agent_name" property="agentName"/>
         <result column="agent_type" property="agentType"/>
         <result column="plaza_title" property="plazaTitle"/>
@@ -25,7 +24,6 @@
                p.plaza_id,
                p.template_id,
                p.user_id,
-               u.user_name,
                p.agent_name,
                p.agent_type,
                p.plaza_title,
@@ -109,7 +107,6 @@
                p.plaza_id,
                p.template_id,
                p.user_id,
-               u.user_name,
                p.agent_name,
                p.agent_type,
                p.plaza_title,
@@ -130,7 +127,6 @@
                p.plaza_id,
                p.template_id,
                p.user_id,
-               u.user_name,
                p.agent_name,
                p.agent_type,
                p.plaza_title,
@@ -152,7 +148,6 @@
                p.plaza_id,
                p.template_id,
                p.user_id,
-               u.user_name,
                p.agent_name,
                p.agent_type,
                p.plaza_title,

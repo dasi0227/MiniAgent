@@ -26,6 +26,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_DATA;
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_USER;
@@ -111,17 +113,26 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         List<String> favoredList = aiPlazaFavorDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
         List<String> commentedList = aiPlazaCommentDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
 
+        Map<Long, String> plazaUserNameMap = aiPlazaList.stream()
+                .map(AiPlaza::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        plazaUserId -> plazaUserId == 0L ? "system" : aiUserDao.queryUserNameById(plazaUserId)
+                ));
+
         return aiPlazaList.stream().map(aiPlaza -> PlazaVO.builder()
                 .plazaId(aiPlaza.getPlazaId())
                 .templateId(aiPlaza.getTemplateId())
                 .agentName(aiPlaza.getAgentName())
                 .agentType(aiPlaza.getAgentType())
-                .userName(aiPlaza.getUserName())
                 .plazaTitle(aiPlaza.getPlazaTitle())
                 .plazaDesc(aiPlaza.getPlazaDesc())
                 .likeCount(aiPlaza.getLikeCount())
                 .favorCount(aiPlaza.getFavorCount())
                 .commentCount(aiPlaza.getCommentCount())
+                .userName(plazaUserNameMap.get(aiPlaza.getUserId()))
                 .liked(likedList.contains(aiPlaza.getPlazaId()))
                 .favored(favoredList.contains(aiPlaza.getPlazaId()))
                 .commented(commentedList.contains(aiPlaza.getPlazaId()))

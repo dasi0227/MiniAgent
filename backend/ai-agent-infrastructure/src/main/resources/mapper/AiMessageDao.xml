@@ -9,8 +9,8 @@
         <result column="message_role" property="messageRole"/>
         <result column="message_type" property="messageType"/>
         <result column="message_seq" property="messageSeq"/>
-        <result column="created_at" property="createTime"/>
-        <result column="updated_at" property="updateTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <select id="queryBySessionAndType" resultMap="dataMap">
@@ -20,12 +20,12 @@
                message_role,
                message_type,
                message_seq,
-               created_at,
-               updated_at
+               create_time,
+               update_time
         FROM ai_message
         WHERE session_id = #{sessionId}
           AND message_type = #{messageType}
-        ORDER BY message_seq, created_at
+        ORDER BY message_seq, create_time
     </select>
 
     <select id="countBySessionAndType" resultType="int">
@@ -44,11 +44,11 @@
     </select>
 
     <select id="countByDateRange" resultType="com.dasi.infrastructure.persistent.vo.MessageDailyCount">
-        SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(1) AS count
+        SELECT DATE_FORMAT(create_time, '%Y-%m-%d') AS day, COUNT(1) AS count
         FROM ai_message
-        WHERE created_at <![CDATA[>=]]> #{start}
-          AND created_at <![CDATA[<]]> #{end}
-        GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+        WHERE create_time <![CDATA[>=]]> #{start}
+          AND create_time <![CDATA[<]]> #{end}
+        GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
         ORDER BY day
     </select>
 

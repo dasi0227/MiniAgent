@@ -8,8 +8,8 @@
         <result column="user_id" property="userId"/>
         <result column="session_title" property="sessionTitle"/>
         <result column="session_type" property="sessionType"/>
-        <result column="created_at" property="createTime"/>
-        <result column="updated_at" property="updateTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <select id="queryByUserId" resultMap="dataMap">
@@ -18,11 +18,11 @@
                user_id,
                session_title,
                session_type,
-               created_at,
-               updated_at
+               create_time,
+               update_time
         FROM ai_session
         WHERE user_id = #{userId}
-        ORDER BY updated_at DESC, id DESC
+        ORDER BY update_time DESC, id DESC
     </select>
 
     <select id="queryAll" resultMap="dataMap">
@@ -31,10 +31,10 @@
                user_id,
                session_title,
                session_type,
-               created_at,
-               updated_at
+               create_time,
+               update_time
         FROM ai_session
-        ORDER BY updated_at DESC, id DESC
+        ORDER BY update_time DESC, id DESC
     </select>
 
     <select id="queryBySessionId" resultMap="dataMap">
@@ -43,8 +43,8 @@
                user_id,
                session_title,
                session_type,
-               created_at,
-               updated_at
+               create_time,
+               update_time
         FROM ai_session
         WHERE session_id = #{sessionId}
     </select>
