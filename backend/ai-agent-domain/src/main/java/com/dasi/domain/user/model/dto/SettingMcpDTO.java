@@ -1,6 +1,6 @@
 package com.dasi.domain.user.model.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,19 +14,17 @@ public class SettingMcpDTO {
 
     private String mcpId;
 
-    @NotNull
+    @NotBlank
     private String mcpName;
 
-    @NotNull
+    @NotBlank
     private String mcpType;
 
-    @NotNull
-    private String mcpParam;
-
-    @NotNull
+    @NotBlank
     private String mcpDesc;
 
-    @NotNull
+    private String mcpParam;
+
     private String mcpSecret;
 
 }

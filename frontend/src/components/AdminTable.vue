@@ -71,15 +71,13 @@ const moduleDefs = [
             apiId: '',
             apiBaseUrl: '',
             apiKey: '',
-            apiCompletionsPath: '',
-            apiEmbeddingsPath: ''
+            apiCompletionsPath: '/v1/chat/completions'
         }),
         fields: [
             { prop: 'apiId', label: 'API ID', required: true },
             { prop: 'apiBaseUrl', label: 'Base URL', required: true },
             { prop: 'apiKey', label: 'Key', required: true },
-            { prop: 'apiCompletionsPath', label: '对话路径', required: true },
-            { prop: 'apiEmbeddingsPath', label: 'Embedding 路径', required: true }
+            { prop: 'apiCompletionsPath', label: '对话路径', required: true }
         ],
         columns: [
             { prop: 'apiId', label: 'ID' },
@@ -136,7 +134,7 @@ const moduleDefs = [
             { prop: 'mcpName', label: '名称', required: true },
             { prop: 'mcpType', label: '类型', required: true },
             { prop: 'mcpParam', label: '配置', type: 'textarea', required: true },
-            { prop: 'mcpDesc', label: '描述', type: 'textarea' },
+            { prop: 'mcpDesc', label: '描述', type: 'textarea', required: true },
             { prop: 'mcpTimeout', label: '超时时间', type: 'number' },
             { prop: 'mcpChat', label: '聊天可用', type: 'switch' }
         ],
@@ -223,7 +221,7 @@ const moduleDefs = [
                     { label: 'account', value: 'account' }
                 ]
             },
-            { prop: 'userAvatar', label: '头像地址' },
+            { prop: 'userAvatar', label: '头像地址', required: true },
             { prop: 'userStatus', label: '状态', type: 'switch' }
         ],
         columns: [
@@ -252,7 +250,7 @@ const moduleDefs = [
             { prop: 'taskId', label: 'Task ID', required: true },
             { prop: 'agentId', label: 'Agent ID', type: 'select', optionsKey: 'agents', required: true },
             { prop: 'taskCron', label: 'Cron', required: true, placeholder: '如 0 */1 * * * ?' },
-            { prop: 'taskDesc', label: '描述', type: 'textarea' },
+            { prop: 'taskDesc', label: '描述', type: 'textarea', required: true },
             { prop: 'taskParam', label: '参数', type: 'textarea', required: true, placeholder: 'JSON' },
             { prop: 'taskStatus', label: '状态', type: 'switch' }
         ],
@@ -288,7 +286,7 @@ const moduleDefs = [
                 required: true,
                 optionsKey: 'agentTypes'
             },
-            { prop: 'agentDesc', label: '描述', type: 'textarea' },
+            { prop: 'agentDesc', label: '描述', type: 'textarea', required: true },
             { prop: 'agentStatus', label: '状态', type: 'switch' }
         ],
         columns: [
@@ -373,6 +371,11 @@ const showErrorToast = (error, defaultMsg = '操作失败') => {
     const msg = normalizeError(error).message || defaultMsg;
     notifyAdminError(error, msg);
 };
+const isRequiredEmpty = (value) =>
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim() === '') ||
+    (Array.isArray(value) && value.length === 0);
 
 const resolveRowKey = (moduleKey, row = {}) => {
     const fieldMap = {
@@ -487,11 +490,11 @@ const saveForm = async () => {
     const module = currentModule.value;
     modalError.value = '';
     for (const field of module.fields) {
-        if (field.required && !currentForm[field.prop]) {
+        if (field.required && isRequiredEmpty(currentForm[field.prop])) {
             modalError.value = `${field.label} 不能为空`;
             return;
         }
-        if (field.requiredOnCreate && !editingId.value && !currentForm[field.prop]) {
+        if (field.requiredOnCreate && !editingId.value && isRequiredEmpty(currentForm[field.prop])) {
             modalError.value = `${field.label} 不能为空`;
             return;
         }

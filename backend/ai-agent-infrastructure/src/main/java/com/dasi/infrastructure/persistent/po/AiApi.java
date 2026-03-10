@@ -23,13 +23,16 @@ public class AiApi {
     private String apiBaseUrl;
 
     /** 密钥 */
-    private String apiKey;
+    @Builder.Default
+    private String apiKey = "";
 
     /** 对话路径 */
-    private String apiCompletionsPath;
+    @Builder.Default
+    private String apiCompletionsPath = "v1/chat/completions";
 
     /** 嵌入路径 */
-    private String apiEmbeddingsPath;
+    @Builder.Default
+    private String apiEmbeddingsPath = "v1/embeddings";
 
     /** 归属用户 id：0-系统，其它-用户 id */
     private Long apiFrom;

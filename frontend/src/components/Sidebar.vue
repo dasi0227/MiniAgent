@@ -73,8 +73,8 @@ const sidebarNavItemActiveClass = computed(() =>
 );
 const sidebarIconButtonClass = computed(() =>
     isDarkTheme.value
-        ? 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-[rgba(231,236,244,0.9)] hover:bg-[rgba(255,255,255,0.14)] hover:text-white'
-        : 'border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.2)] text-[rgba(237,243,251,0.95)] hover:bg-[rgba(255,255,255,0.3)] hover:text-white'
+        ? 'bg-transparent text-[rgba(231,236,244,0.88)] hover:bg-[rgba(123,200,255,0.12)] hover:text-white'
+        : 'bg-transparent text-[rgba(237,243,251,0.94)] hover:bg-[rgba(123,200,255,0.16)] hover:text-white'
 );
 const sidebarProfileCardClass = computed(() =>
     isDarkTheme.value
@@ -1190,12 +1190,6 @@ const loadProfileResources = async () => {
         <div
             class="group flex w-full items-center justify-between gap-[12px] rounded-[14px] border p-[12px] text-left transition-all duration-200"
             :class="sidebarProfileCardClass"
-            role="button"
-            tabindex="0"
-            title="进入 Settings"
-            @click="openProfile"
-            @keydown.enter.prevent="openProfile"
-            @keydown.space.prevent="openProfile"
         >
             <div class="flex min-w-0 items-center gap-[10px]">
                 <div
@@ -1219,31 +1213,23 @@ const loadProfileResources = async () => {
                 </div>
                 <div class="min-w-0">
                     <div class="truncate font-bold text-white transition-colors duration-200 group-hover:text-[#9ed7ff]">{{ currentUser.username || '访客' }}</div>
-                    <div class="text-[12px] text-[rgba(231,236,244,0.68)] transition-colors duration-200 group-hover:text-[rgba(158,215,255,0.92)]">
-                        Settings
-                    </div>
                 </div>
             </div>
             <div class="flex shrink-0 items-center gap-[8px]">
                 <button
-                    v-if="isLogin"
-                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] border transition"
+                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] transition"
                     :class="sidebarIconButtonClass"
                     type="button"
-                    title="退出登录"
-                    @click.stop="openLogoutConfirm"
+                    title="个人中心设置"
+                    @click.stop="openProfile"
                 >
-                    <svg viewBox="0 0 24 24" class="h-[17px] w-[17px]" fill="currentColor" aria-hidden="true">
-                        <path
-                            d="M10.5 3.75a.75.75 0 000 1.5h6.75v13.5H10.5a.75.75 0 000 1.5H18a.75.75 0 00.75-.75V4.5A.75.75 0 0018 3.75h-7.5z"
-                        />
-                        <path
-                            d="M12.53 12.53a.75.75 0 000-1.06L9.81 8.75a.75.75 0 00-1.06 1.06l1.44 1.44H4.5a.75.75 0 000 1.5h5.69l-1.44 1.44a.75.75 0 101.06 1.06l2.72-2.72z"
-                        />
+                    <svg viewBox="0 0 24 24" class="h-[17px] w-[17px]" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3.2" />
+                        <path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a7.3 7.3 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.3 7.3 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6c.1-.4.1-.7.1-1z" />
                     </svg>
                 </button>
                 <button
-                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] border transition"
+                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] transition"
                     :class="sidebarIconButtonClass"
                     type="button"
                     :title="isDarkTheme ? '切换到白天' : '切换到黑天'"
@@ -1257,6 +1243,23 @@ const loadProfileResources = async () => {
                     <svg v-else viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
                         <path
                             d="M21.752 15.002A9.718 9.718 0 0112 21.75 9.75 9.75 0 0112 2.25c.33 0 .658.016.983.048a.75.75 0 01.34 1.38 7.5 7.5 0 009.098 11.072.75.75 0 011.33.252z"
+                        />
+                    </svg>
+                </button>
+                <button
+                    v-if="isLogin"
+                    class="grid h-[34px] w-[34px] place-items-center rounded-[10px] transition"
+                    :class="sidebarIconButtonClass"
+                    type="button"
+                    title="退出登录"
+                    @click.stop="openLogoutConfirm"
+                >
+                    <svg viewBox="0 0 24 24" class="h-[17px] w-[17px]" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M10.5 3.75a.75.75 0 000 1.5h6.75v13.5H10.5a.75.75 0 000 1.5H18a.75.75 0 00.75-.75V4.5A.75.75 0 0018 3.75h-7.5z"
+                        />
+                        <path
+                            d="M12.53 12.53a.75.75 0 000-1.06L9.81 8.75a.75.75 0 00-1.06 1.06l1.44 1.44H4.5a.75.75 0 000 1.5h5.69l-1.44 1.44a.75.75 0 101.06 1.06l2.72-2.72z"
                         />
                     </svg>
                 </button>

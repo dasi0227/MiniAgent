@@ -587,9 +587,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         aiApiDao.insert(AiApi.builder()
                 .apiId(apiId)
                 .apiBaseUrl(aiTemplate.getApiBaseUrl())
-                .apiKey("")
                 .apiCompletionsPath(aiTemplate.getApiCompletionUrl())
-                .apiEmbeddingsPath(null)
                 .apiFrom(userId)
                 .build());
 

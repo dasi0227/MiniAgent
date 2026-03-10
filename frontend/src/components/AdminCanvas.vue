@@ -68,6 +68,11 @@ const options = reactive({
 const showError = (msg) => {
     notifyAdminError(new Error(msg), msg || '操作失败');
 };
+const isRequiredEmpty = (value) =>
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim() === '') ||
+    (Array.isArray(value) && value.length === 0);
 
 const unwrapResult = (resp, msg = '操作失败') => {
     if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
@@ -405,7 +410,7 @@ const formSchemas = {
             { prop: 'agentId', label: 'Agent ID', required: true },
             { prop: 'agentName', label: '名称', required: true },
             { prop: 'agentType', label: '类型', type: 'select', optionsKey: 'agentTypes', required: true },
-            { prop: 'agentDesc', label: '描述', type: 'textarea' },
+            { prop: 'agentDesc', label: '描述', type: 'textarea', required: true },
             { prop: 'agentStatus', label: '状态', type: 'switch' }
         ],
         defaults: () => ({
@@ -462,16 +467,14 @@ const formSchemas = {
             { prop: 'apiId', label: 'API ID', required: true },
             { prop: 'apiBaseUrl', label: 'Base URL', required: true },
             { prop: 'apiKey', label: 'Key', required: true },
-            { prop: 'apiCompletionsPath', label: '对话路径', required: true },
-            { prop: 'apiEmbeddingsPath', label: 'Embedding 路径', required: true }
+            { prop: 'apiCompletionsPath', label: '对话路径', required: true }
         ],
         defaults: () => ({
             id: null,
             apiId: '',
             apiBaseUrl: '',
             apiKey: '',
-            apiCompletionsPath: '',
-            apiEmbeddingsPath: ''
+            apiCompletionsPath: '/v1/chat/completions'
         })
     },
     prompt: {
@@ -514,7 +517,7 @@ const formSchemas = {
             { prop: 'mcpName', label: '名称', required: true },
             { prop: 'mcpType', label: '类型', required: true },
             { prop: 'mcpConfig', label: '配置', type: 'textarea', required: true },
-            { prop: 'mcpDesc', label: '描述', type: 'textarea' },
+            { prop: 'mcpDesc', label: '描述', type: 'textarea', required: true },
             { prop: 'mcpTimeout', label: '超时时间', type: 'number' },
             { prop: 'mcpChat', label: '聊天可用', type: 'switch' }
         ],
@@ -623,7 +626,7 @@ const validateSchema = () => {
     const schema = currentSchema.value;
     if (!schema) return false;
     for (const field of schema.fields) {
-        if (field.required && !currentForm[field.prop]) {
+        if (field.required && isRequiredEmpty(currentForm[field.prop])) {
             modalError.value = `${field.label} 不能为空`;
             return false;
         }
@@ -1170,7 +1173,6 @@ onMounted(async () => {
                                 <div class="canvas-id">{{ data.apiId }}</div>
                                 <div class="canvas-text line-clamp-2">基础路径：{{ data.apiBaseUrl || '-' }}</div>
                                 <div class="canvas-text">补全路径：{{ data.apiCompletionsPath || '-' }}</div>
-                                <div class="canvas-text">嵌入路径：{{ data.apiEmbeddingsPath || '-' }}</div>
                             </div>
                         </template>
 

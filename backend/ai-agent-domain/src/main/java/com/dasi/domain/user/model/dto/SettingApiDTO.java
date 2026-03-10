@@ -1,6 +1,6 @@
 package com.dasi.domain.user.model.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,19 +14,19 @@ public class SettingApiDTO {
 
     private String apiId;
 
-    @NotNull
+    @NotBlank
     private String modelName;
 
-    @NotNull
+    @NotBlank
     private String modelType;
 
-    @NotNull
+    @NotBlank
     private String apiBaseUrl;
 
-    @NotNull
+    @NotBlank
     private String apiKey;
 
-    @NotNull
+    @NotBlank
     private String apiCompletionPath;
 
 }

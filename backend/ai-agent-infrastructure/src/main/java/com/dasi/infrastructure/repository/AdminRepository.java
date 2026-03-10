@@ -910,7 +910,6 @@ public class AdminRepository implements IAdminRepository {
                 .apiBaseUrl(po.getApiBaseUrl())
                 .apiKey(po.getApiKey())
                 .apiCompletionsPath(po.getApiCompletionsPath())
-                .apiEmbeddingsPath(po.getApiEmbeddingsPath())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -921,7 +920,6 @@ public class AdminRepository implements IAdminRepository {
                 .apiBaseUrl(dto.getApiBaseUrl())
                 .apiKey(dto.getApiKey())
                 .apiCompletionsPath(dto.getApiCompletionsPath())
-                .apiEmbeddingsPath(dto.getApiEmbeddingsPath())
                 .apiFrom(0L)
                 .build();
     }

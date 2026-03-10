@@ -95,6 +95,8 @@ const WORKSPACE_AGENT_UPDATE_USERPROMPT_PATH = `${WORKSPACE_BASE_PATH}/agent/upd
 const WORKSPACE_AGENT_UPDATE_SYSTEMPROMPT_PATH = `${WORKSPACE_BASE_PATH}/agent/update/systemprompt`;
 
 const unsupportedApi = (name) => Promise.reject(new Error(`${name} 暂未开放`));
+const isBlank = (value) => typeof value === 'string' && value.trim() === '';
+const isUnset = (value) => value === null || value === undefined || isBlank(value);
 
 const isResultEnvelope = (resp) =>
     resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code');
@@ -117,9 +119,27 @@ const normalizeAdminPayload = (moduleKey, payload = {}) => {
     if (!normalized || typeof normalized !== 'object') {
         return normalized;
     }
+    if (moduleKey === 'api') {
+        delete normalized.apiEmbeddingsPath;
+        if (isUnset(normalized.apiCompletionsPath)) {
+            normalized.apiCompletionsPath = '/v1/chat/completions';
+        }
+    }
     if (moduleKey === 'mcp') {
         if (!normalized.mcpParam && normalized.mcpConfig) {
             normalized.mcpParam = normalized.mcpConfig;
+        }
+        if (isUnset(normalized.mcpParam)) {
+            normalized.mcpParam = '{}';
+        }
+        if (isUnset(normalized.mcpDesc)) {
+            normalized.mcpDesc = '暂无描述';
+        }
+        if (normalized.mcpTimeout === '' || normalized.mcpTimeout === null || normalized.mcpTimeout === undefined) {
+            normalized.mcpTimeout = 180;
+        }
+        if (normalized.mcpChat === '' || normalized.mcpChat === null || normalized.mcpChat === undefined) {
+            normalized.mcpChat = 0;
         }
         delete normalized.mcpConfig;
     }
@@ -130,7 +150,45 @@ const normalizeAdminPayload = (moduleKey, payload = {}) => {
         delete normalized.promptContent;
     }
     if (moduleKey === 'client') {
+        if (isUnset(normalized.modelName) && !isUnset(normalized.modelId)) {
+            normalized.modelName = normalized.modelId;
+        }
+        if (normalized.clientStatus === '' || normalized.clientStatus === null || normalized.clientStatus === undefined) {
+            normalized.clientStatus = 1;
+        }
         delete normalized.clientDesc;
+    }
+    if (moduleKey === 'agent') {
+        if (isUnset(normalized.agentDesc)) {
+            normalized.agentDesc = '暂无描述';
+        }
+        if (normalized.agentStatus === '' || normalized.agentStatus === null || normalized.agentStatus === undefined) {
+            normalized.agentStatus = 1;
+        }
+    }
+    if (moduleKey === 'task') {
+        if (isUnset(normalized.taskDesc)) {
+            normalized.taskDesc = '暂无描述';
+        }
+        if (isUnset(normalized.taskParam)) {
+            normalized.taskParam = '{}';
+        }
+        if (normalized.taskStatus === '' || normalized.taskStatus === null || normalized.taskStatus === undefined) {
+            normalized.taskStatus = 1;
+        }
+    }
+    if (moduleKey === 'user') {
+        if (isUnset(normalized.userAvatar)) {
+            normalized.userAvatar = 'avatar/default.png';
+        }
+        if (normalized.userStatus === '' || normalized.userStatus === null || normalized.userStatus === undefined) {
+            normalized.userStatus = 1;
+        }
+    }
+    if (moduleKey === 'config') {
+        if (normalized.configStatus === '' || normalized.configStatus === null || normalized.configStatus === undefined) {
+            normalized.configStatus = 1;
+        }
     }
     if (moduleKey === 'advisor') {
         delete normalized.advisorDesc;
@@ -146,9 +204,18 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
     if (!item || typeof item !== 'object') {
         return item;
     }
+    if (moduleKey === 'api') {
+        return {
+            ...item,
+            apiCompletionsPath: item.apiCompletionsPath || '/v1/chat/completions'
+        };
+    }
     if (moduleKey === 'mcp') {
         return {
             ...item,
+            mcpDesc: item.mcpDesc || '暂无描述',
+            mcpTimeout: item.mcpTimeout ?? 180,
+            mcpChat: item.mcpChat ?? 0,
             mcpConfig: item.mcpConfig || item.mcpParam || ''
         };
     }
@@ -161,7 +228,30 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
     if (moduleKey === 'client') {
         return {
             ...item,
+            modelName: item.modelName || item.modelId || '',
             clientDesc: item.clientDesc || ''
+        };
+    }
+    if (moduleKey === 'agent') {
+        return {
+            ...item,
+            agentDesc: item.agentDesc || '暂无描述',
+            agentStatus: item.agentStatus ?? 1
+        };
+    }
+    if (moduleKey === 'task') {
+        return {
+            ...item,
+            taskDesc: item.taskDesc || '暂无描述',
+            taskStatus: item.taskStatus ?? 1,
+            taskParam: item.taskParam || '{}'
+        };
+    }
+    if (moduleKey === 'user') {
+        return {
+            ...item,
+            userAvatar: item.userAvatar || 'avatar/default.png',
+            userStatus: item.userStatus ?? 1
         };
     }
     if (moduleKey === 'advisor') {
@@ -221,6 +311,12 @@ const normalizeUserMcpPayload = (payload = {}) => {
     if (!normalized.mcpParam && normalized.mcpConfig) {
         normalized.mcpParam = normalized.mcpConfig;
     }
+    if (isUnset(normalized.mcpParam)) {
+        normalized.mcpParam = null;
+    }
+    if (isUnset(normalized.mcpSecret)) {
+        normalized.mcpSecret = null;
+    }
     delete normalized.mcpConfig;
     return normalized;
 };
@@ -246,6 +342,9 @@ const normalizeUserApiPayload = (payload = {}) => {
     if (!normalized.modelType) {
         normalized.modelType = 'chat';
     }
+    if (isUnset(normalized.apiCompletionPath)) {
+        normalized.apiCompletionPath = '/v1/chat/completions';
+    }
     return normalized;
 };
 
@@ -253,6 +352,12 @@ const normalizeUserTaskPayload = (payload = {}) => {
     const normalized = trimStrings(payload);
     if (!normalized || typeof normalized !== 'object') {
         return normalized;
+    }
+    if (isUnset(normalized.taskDesc)) {
+        normalized.taskDesc = '暂无描述';
+    }
+    if (isUnset(normalized.taskParam)) {
+        normalized.taskParam = '{}';
     }
     if (normalized.taskStatus === '' || normalized.taskStatus === null || normalized.taskStatus === undefined) {
         normalized.taskStatus = 1;

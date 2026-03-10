@@ -1,6 +1,7 @@
 package com.dasi.domain.admin.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,11 +25,12 @@ public class ClientManageDTO {
     @NotBlank
     private String modelId;
 
+    @NotBlank
     private String modelName;
 
     @NotBlank
     private String clientName;
 
-    @Builder.Default
-    private Integer clientStatus = 1;
+    @NotNull
+    private Integer clientStatus;
 }

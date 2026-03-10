@@ -1,6 +1,7 @@
 package com.dasi.domain.admin.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,7 +30,7 @@ public class ConfigManageDTO {
 
     private String configParam;
 
-    @Builder.Default
-    private Integer configStatus = 1;
+    @NotNull
+    private Integer configStatus;
 
 }

@@ -1,6 +1,7 @@
 package com.dasi.domain.user.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,11 +21,12 @@ public class SettingTaskDTO {
     @NotBlank
     private String taskCron;
 
+    @NotBlank
     private String taskDesc;
 
     @NotBlank
     private String taskParam;
 
-    @Builder.Default
+    @NotNull
     private Integer taskStatus = 1;
 }

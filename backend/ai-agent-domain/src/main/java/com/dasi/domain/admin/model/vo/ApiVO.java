@@ -16,6 +16,5 @@ public class ApiVO {
     private String apiBaseUrl;
     private String apiKey;
     private String apiCompletionsPath;
-    private String apiEmbeddingsPath;
     private LocalDateTime updateTime;
 }

@@ -22,13 +22,16 @@ public class McpManageDTO {
     @NotBlank
     private String mcpType;
 
-    @NotNull
-    private String mcpParam;
-
+    @NotBlank
     private String mcpDesc;
 
+    @NotBlank
+    private String mcpParam;
+
+    @NotNull
     private Integer mcpTimeout;
 
+    @NotNull
     private Integer mcpChat;
 
 }

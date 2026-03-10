@@ -1,6 +1,5 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 import {
@@ -26,7 +25,6 @@ import Footer from './Footer.vue';
 
 const authStore = useAuthStore();
 const settingsStore = useSettingsStore();
-const router = useRouter();
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const activeTab = ref('profile');
 
@@ -354,6 +352,19 @@ const ensureJsonText = (value, fieldLabel) => {
     }
 };
 
+const optionalJsonText = (value, fieldLabel) => {
+    const normalized = (value || '').trim();
+    if (!normalized) {
+        return null;
+    }
+    try {
+        const parsed = JSON.parse(normalized);
+        return JSON.stringify(parsed);
+    } catch (_) {
+        throw new Error(`${fieldLabel} 必须是合法 JSON`);
+    }
+};
+
 const resetMcpForm = () => {
     mcpForm.mcpName = '';
     mcpForm.mcpType = '';
@@ -441,8 +452,8 @@ const submitMcpInsert = async () => {
             mcpName: (mcpForm.mcpName || '').trim(),
             mcpType: (mcpForm.mcpType || '').trim(),
             mcpDesc: (mcpForm.mcpDesc || '').trim(),
-            mcpParam: ensureJsonText(mcpForm.mcpParam, 'MCP 配置'),
-            mcpSecret: ensureJsonText(mcpForm.mcpSecret, 'MCP 密钥配置')
+            mcpParam: optionalJsonText(mcpForm.mcpParam, 'MCP 配置'),
+            mcpSecret: optionalJsonText(mcpForm.mcpSecret, 'MCP 密钥配置')
         };
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
@@ -487,8 +498,8 @@ const saveMcpDialog = async () => {
             mcpName: (mcpDialogForm.mcpName || '').trim(),
             mcpType: (mcpDialogForm.mcpType || '').trim(),
             mcpDesc: (mcpDialogForm.mcpDesc || '').trim(),
-            mcpParam: ensureJsonText(mcpDialogForm.mcpParam, 'MCP 配置'),
-            mcpSecret: ensureJsonText(mcpDialogForm.mcpSecret, 'MCP 密钥配置')
+            mcpParam: optionalJsonText(mcpDialogForm.mcpParam, 'MCP 配置'),
+            mcpSecret: optionalJsonText(mcpDialogForm.mcpSecret, 'MCP 密钥配置')
         };
         if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
@@ -730,13 +741,13 @@ const buildTaskPayload = (form) => {
     const taskCron = (form.taskCron || '').trim();
     const taskDesc = (form.taskDesc || '').trim();
     const taskParam = ensureJsonText(form.taskParam, 'Task 参数');
-    if (!agentId || !taskCron) {
-        throw new Error('请完整填写 Task 必填项');
+    if (!agentId || !taskCron || !taskDesc) {
+        throw new Error('请完整填写 Task 必填项（MiniAgent、执行周期、任务描述、任务参数）');
     }
     const payload = {
         agentId,
         taskCron,
-        taskDesc: taskDesc || '暂无',
+        taskDesc,
         taskParam,
         taskStatus: Number(form.taskStatus) === 0 ? 0 : 1
     };
@@ -845,10 +856,6 @@ const handleTaskDropdownOutside = (event) => {
     }
 };
 
-const goRepository = () => {
-    router.push('/repository');
-};
-
 watch(
     profileAvatarDisplayUrl,
     () => {
@@ -909,12 +916,6 @@ onBeforeUnmount(() => {
                             </button>
                         </nav>
                     </div>
-                    <button
-                        class="rounded-[10px] border border-[#9ab6d2] bg-[#f2f7ff] px-[12px] py-[8px] text-[14px] font-semibold text-[#6888ad] transition hover:border-[#88a8c7] hover:bg-[#e9f2ff] hover:text-[#57789f]"
-                        @click="goRepository"
-                    >
-                        我的仓库
-                    </button>
                 </div>
                 <div class="h-[1px] w-full bg-[var(--border-color)]"></div>
 
@@ -1000,7 +1001,7 @@ onBeforeUnmount(() => {
                     <div v-if="profileLoading" class="text-[12px] text-[var(--text-secondary)]">用户资料加载中...</div>
                     <div v-if="profileAvatarError" class="text-[12px] text-[#ef4444]">{{ profileAvatarError }}</div>
                     <div v-if="profileError" class="text-[12px] text-[#ef4444]">{{ profileError }}</div>
-                    <div class="flex items-center justify-end gap-[10px] pt-[14px]">
+                    <div class="flex items-center justify-start gap-[10px] pt-[14px]">
                         <button
                             class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
                             type="button"
@@ -1074,11 +1075,11 @@ onBeforeUnmount(() => {
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
-                            <textarea v-model="mcpForm.mcpParam" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='请输入 JSON，例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
+                            <textarea v-model="mcpForm.mcpParam" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='可选，JSON 格式；例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                             <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
-                            <textarea v-model="mcpForm.mcpSecret" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='请输入 JSON，例如 {"token":"xxx"}'></textarea>
+                            <textarea v-model="mcpForm.mcpSecret" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='可选，JSON 格式；例如 {"token":"xxx"}'></textarea>
                         </label>
                     </div>
                     <div class="flex items-center gap-[10px]">
@@ -1296,7 +1297,7 @@ onBeforeUnmount(() => {
                             />
                         </label>
                         <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">任务描述</span>
+                            <span class="pt-[10px] text-[var(--text-secondary)]">任务描述（必填）</span>
                             <input
                                 v-model="taskForm.taskDesc"
                                 class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
