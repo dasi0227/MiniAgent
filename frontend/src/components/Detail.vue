@@ -48,6 +48,15 @@ const pickData = (resp) => {
 const templateId = computed(() => (route.params.templateId || '').toString().trim());
 const strategy = computed(() => (detail.value?.agentType || '').toString().toLowerCase());
 const detailTone = computed(() => getStrategyTone(strategy.value, isDarkTheme.value));
+const detailThemeVars = computed(() => ({
+    '--detail-glow-primary': detailTone.value.glowPrimary || 'rgba(59,130,246,0.22)',
+    '--detail-glow-secondary': detailTone.value.glowSecondary || 'rgba(37,99,235,0.14)',
+    '--detail-page-bg': detailTone.value.sectionTintBg || 'var(--page-bg)',
+    '--detail-card-bg': 'var(--surface-1)',
+    '--detail-section-border': detailTone.value.sectionBorder || 'var(--border-color)',
+    '--detail-divider': detailTone.value.divider || 'var(--border-color)',
+    '--detail-focus': detailTone.value.focus || 'var(--accent-color)'
+}));
 
 const orderedRoleRows = computed(() => {
     const roleKeys = strategyRoleOrder[strategy.value] || [];
@@ -215,9 +224,19 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section class="relative grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--page-bg)]">
-        <div class="overflow-y-hidden pt-[2px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
-            <div class="relative mx-auto max-w-[1180px] space-y-[20px]">
+    <section class="relative grid h-screen grid-rows-[1fr_var(--footer-height)] overflow-x-hidden bg-[var(--detail-page-bg)]" :style="detailThemeVars">
+        <div class="overflow-y-hidden overflow-x-hidden pt-[2px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
+            <div class="relative mx-auto max-w-[1180px]">
+                <div
+                    class="pointer-events-none absolute right-[-38px] top-[-36px] z-0 h-[280px] w-[420px] rounded-full blur-[68px]"
+                    :style="{ backgroundImage: 'radial-gradient(closest-side, var(--detail-glow-primary), transparent 72%)' }"
+                />
+                <div
+                    class="pointer-events-none absolute right-[150px] top-[26px] z-0 h-[190px] w-[290px] rounded-full blur-[56px]"
+                    :style="{ backgroundImage: 'radial-gradient(closest-side, var(--detail-glow-secondary), transparent 74%)' }"
+                />
+
+                <div class="relative z-[1] space-y-[20px]">
                 <button
                     class="absolute left-0 top-0 z-[6] inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--text-primary)] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
                     title="返回"
@@ -254,43 +273,45 @@ onBeforeUnmount(() => {
                         </div>
                     </header>
 
-                    <section class="space-y-[10px]">
-                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">智能体概述</h2>
+                    <div class="h-px w-full bg-[var(--detail-divider)]" />
+
+                    <section class="detail-section-panel space-y-[10px]">
+                        <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">智能体概述</h2>
                         <p class="whitespace-pre-wrap text-[15px] leading-[1.75] text-[var(--text-secondary)]">
                             {{ detail.agentDesc || '暂无描述' }}
                         </p>
                     </section>
 
                     <section class="grid items-stretch gap-[20px] min-[980px]:grid-cols-2">
-                        <div class="flex h-full flex-col space-y-[8px]">
-                            <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
+                        <div class="detail-section-panel flex h-full flex-col space-y-[8px]">
+                            <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
                             <div class="h-[150px] space-y-[6px]">
-                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--border-color)] px-[12px] text-[15px] text-[var(--text-primary)]">
+                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--detail-divider)] px-[12px] text-[15px] text-[var(--text-primary)]">
                                     <span class="text-[var(--text-secondary)]">模型类别：</span>
                                     <span class="ml-[4px] truncate">{{ detail.modelType || '--' }}</span>
                                 </div>
-                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--border-color)] px-[12px] text-[15px] text-[var(--text-primary)]">
+                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--detail-divider)] px-[12px] text-[15px] text-[var(--text-primary)]">
                                     <span class="text-[var(--text-secondary)]">模型名称：</span>
                                     <span class="ml-[4px] truncate">{{ detail.modelName || '--' }}</span>
                                 </div>
-                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--border-color)] px-[12px] text-[15px] text-[var(--text-primary)]">
+                                <div class="flex h-[46px] items-center rounded-[10px] border border-[var(--detail-divider)] px-[12px] text-[15px] text-[var(--text-primary)]">
                                     <span class="text-[var(--text-secondary)]">接口地址：</span>
                                     <span class="ml-[4px] truncate">{{ resolvedApiAddress }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex h-full flex-col space-y-[8px]">
-                            <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
+                        <div class="detail-section-panel flex h-full flex-col space-y-[8px]">
+                            <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
                             <div v-if="mcpInfoList.length > 0" class="h-[150px] w-full space-y-[6px] overflow-y-auto pr-[2px]">
                                 <button
                                     v-for="(item, index) in mcpInfoList"
                                     :key="`${item.mcpName || 'mcp'}-${index}`"
-                                    class="flex w-full items-center justify-between gap-[10px] rounded-[10px] border border-[var(--border-color)] px-[12px] py-[10px] text-left transition hover:border-[var(--accent-color)]"
+                                    class="flex w-full items-center justify-between gap-[10px] rounded-[10px] border border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
                                     @click="openMcpInfo(item)"
                                 >
                                     <span class="min-w-0 truncate pr-[10px] text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName || '--' }}</span>
-                                    <span class="shrink-0 rounded-full border border-[var(--border-color)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
+                                    <span class="shrink-0 rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
                                         {{ (item.mcpType || '--').toUpperCase() }}
                                     </span>
                                 </button>
@@ -299,19 +320,19 @@ onBeforeUnmount(() => {
                         </div>
                     </section>
 
-                    <section class="space-y-[10px]">
-                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">角色流程</h2>
+                    <section class="detail-section-panel space-y-[10px]">
+                        <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">角色流程</h2>
                         <div class="grid grid-cols-[40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)] items-stretch gap-[8px]">
                             <template v-for="row in orderedRoleRows" :key="row.roleKey">
                                 <button
-                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border border-[var(--detail-divider)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
                                     :title="`查看第 ${row.flowIndex} 步 User Prompt`"
                                     @click="openFlowPrompt(row)"
                                 >
                                     <span class="text-[24px] font-bold leading-none">{{ row.flowIndex }}</span>
                                 </button>
                                 <button
-                                    class="flex min-w-0 flex-col rounded-[14px] border border-[var(--border-color)] px-[12px] py-[12px] text-left transition hover:border-[var(--accent-color)] hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] min-h-[160px]"
+                                    class="flex min-w-0 flex-col rounded-[14px] border border-[var(--detail-divider)] px-[12px] py-[12px] text-left transition hover:border-[var(--detail-focus)] hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] min-h-[160px]"
                                     @click="openSystemPrompt(row)"
                                 >
                                     <div class="text-center text-[28px] font-bold leading-none text-[var(--text-primary)] max-[1280px]:text-[24px]">
@@ -367,6 +388,7 @@ onBeforeUnmount(() => {
                     </div>
                 </template>
             </div>
+            </div>
         </div>
 
         <Footer />
@@ -376,31 +398,34 @@ onBeforeUnmount(() => {
             class="absolute inset-0 z-[40] grid place-items-center bg-[rgba(0,0,0,0.3)] p-[20px]"
             @click.self="closeModal"
         >
-            <div class="flex h-[520px] w-[860px] max-h-[calc(100%-48px)] max-w-[calc(100%-48px)] flex-col rounded-[14px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[16px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
-                <div class="mb-[10px] flex items-center justify-between gap-[12px]">
-                    <h3 class="text-[16px] font-semibold text-[var(--text-primary)]">{{ modal.title }}</h3>
+            <div
+                class="flex max-h-[calc(100%-48px)] max-w-[calc(100%-48px)] flex-col rounded-[14px] border border-[var(--detail-section-border)] bg-[var(--surface-1)] p-[16px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]"
+                :class="modal.kind === 'mcp' ? 'h-[440px] w-[760px]' : 'h-[520px] w-[860px]'"
+            >
+                <div class="mb-[10px] flex items-center justify-between gap-[12px] border-b border-[var(--detail-divider)] pb-[10px]">
+                    <h3 class="detail-section-title text-[16px] font-semibold text-[var(--text-primary)]">{{ modal.title }}</h3>
                     <button class="text-[20px] text-[var(--text-secondary)]" @click="closeModal">×</button>
                 </div>
-                <div class="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--border-color)] bg-[var(--surface-2)] px-[14px] py-[12px]">
+                <div class="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--detail-divider)] bg-[var(--surface-2)] px-[14px] py-[12px]">
                     <div v-if="modal.kind === 'mcp'" class="space-y-[10px]">
                         <div
                             v-for="(row, idx) in modal.mcpRows"
                             :key="`${row.label}-${idx}`"
-                            class="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-x-[12px] gap-y-[4px]"
+                            class="grid grid-cols-[124px_minmax(0,1fr)] items-start gap-x-[14px] gap-y-[5px]"
                         >
-                            <div class="pt-[2px] text-left text-[13px] font-medium text-[var(--text-secondary)]">
+                            <div class="pt-[2px] text-left text-[15px] font-semibold text-[var(--text-secondary)]">
                                 {{ row.label }}
                             </div>
-                            <div class="min-w-0 text-left text-[14px] text-[var(--text-primary)]">
+                            <div class="min-w-0 text-left text-[16px] text-[var(--text-primary)]">
                                 <div v-if="row.isTags" class="flex flex-wrap gap-[6px]">
                                     <span
                                         v-for="secret in row.value"
                                         :key="secret"
-                                        class="inline-flex items-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] px-[8px] py-[2px] text-[12px] text-[var(--text-secondary)]"
+                                        class="inline-flex items-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] px-[9px] py-[3px] text-[13px] text-[var(--text-secondary)]"
                                     >
                                         {{ secret }}
                                     </span>
-                                    <span v-if="!row.value || row.value.length === 0" class="text-[13px] text-[var(--text-secondary)]">无</span>
+                                    <span v-if="!row.value || row.value.length === 0" class="text-[14px] text-[var(--text-secondary)]">无</span>
                                 </div>
                                 <div v-else class="whitespace-pre-wrap break-words" :class="{ 'leading-[1.7]': row.multiline }">
                                     {{ row.value || '--' }}
@@ -420,6 +445,30 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.detail-section-panel {
+    border: 1px solid var(--detail-section-border);
+    background: var(--detail-card-bg);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.detail-section-title {
+    position: relative;
+    padding-left: 10px;
+}
+
+.detail-section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 16px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: var(--detail-focus);
+}
+
 .role-desc-clamp {
     display: -webkit-box;
     overflow: hidden;

@@ -23,7 +23,13 @@ const STRATEGY_TONES = {
             studioActiveBorder: 'rgba(245,158,11,0.34)',
             studioActiveText: '#9a5a12',
             studioHoverBg: 'rgba(255,251,235,0.92)',
-            studioHoverBorder: 'rgba(245,158,11,0.26)'
+            studioHoverBorder: 'rgba(245,158,11,0.26)',
+            glowPrimary: 'rgba(251,191,36,0.3)',
+            glowSecondary: 'rgba(245,158,11,0.18)',
+            sectionTintBg: 'rgba(255,251,235,0.5)',
+            sectionBorder: 'rgba(245,158,11,0.2)',
+            divider: 'rgba(245,158,11,0.18)',
+            focus: 'rgba(217,119,6,0.48)'
         },
         dark: {
             overlay:
@@ -46,7 +52,13 @@ const STRATEGY_TONES = {
             studioActiveBorder: 'rgba(251,191,36,0.48)',
             studioActiveText: '#f7d487',
             studioHoverBg: 'rgba(251,191,36,0.12)',
-            studioHoverBorder: 'rgba(251,191,36,0.28)'
+            studioHoverBorder: 'rgba(251,191,36,0.28)',
+            glowPrimary: 'rgba(251,191,36,0.28)',
+            glowSecondary: 'rgba(245,158,11,0.16)',
+            sectionTintBg: 'rgba(251,191,36,0.08)',
+            sectionBorder: 'rgba(251,191,36,0.2)',
+            divider: 'rgba(251,191,36,0.18)',
+            focus: 'rgba(251,191,36,0.44)'
         }
     },
     loop: {
@@ -71,7 +83,13 @@ const STRATEGY_TONES = {
             studioActiveBorder: 'rgba(59,130,246,0.34)',
             studioActiveText: '#2563eb',
             studioHoverBg: 'rgba(239,246,255,0.9)',
-            studioHoverBorder: 'rgba(59,130,246,0.26)'
+            studioHoverBorder: 'rgba(59,130,246,0.26)',
+            glowPrimary: 'rgba(59,130,246,0.3)',
+            glowSecondary: 'rgba(14,165,233,0.16)',
+            sectionTintBg: 'rgba(239,246,255,0.48)',
+            sectionBorder: 'rgba(59,130,246,0.18)',
+            divider: 'rgba(59,130,246,0.16)',
+            focus: 'rgba(37,99,235,0.46)'
         },
         dark: {
             overlay:
@@ -94,7 +112,13 @@ const STRATEGY_TONES = {
             studioActiveBorder: 'rgba(96,165,250,0.48)',
             studioActiveText: '#c9e0ff',
             studioHoverBg: 'rgba(96,165,250,0.12)',
-            studioHoverBorder: 'rgba(96,165,250,0.28)'
+            studioHoverBorder: 'rgba(96,165,250,0.28)',
+            glowPrimary: 'rgba(59,130,246,0.26)',
+            glowSecondary: 'rgba(56,189,248,0.14)',
+            sectionTintBg: 'rgba(59,130,246,0.08)',
+            sectionBorder: 'rgba(96,165,250,0.18)',
+            divider: 'rgba(96,165,250,0.16)',
+            focus: 'rgba(96,165,250,0.4)'
         }
     },
     react: {
@@ -119,7 +143,13 @@ const STRATEGY_TONES = {
             studioActiveBorder: 'rgba(16,185,129,0.34)',
             studioActiveText: '#047857',
             studioHoverBg: 'rgba(236,253,245,0.9)',
-            studioHoverBorder: 'rgba(16,185,129,0.26)'
+            studioHoverBorder: 'rgba(16,185,129,0.26)',
+            glowPrimary: 'rgba(16,185,129,0.3)',
+            glowSecondary: 'rgba(20,184,166,0.16)',
+            sectionTintBg: 'rgba(236,253,245,0.48)',
+            sectionBorder: 'rgba(16,185,129,0.18)',
+            divider: 'rgba(16,185,129,0.16)',
+            focus: 'rgba(5,150,105,0.44)'
         },
         dark: {
             overlay:
@@ -142,7 +172,13 @@ const STRATEGY_TONES = {
             studioActiveBorder: 'rgba(52,211,153,0.44)',
             studioActiveText: '#9decc0',
             studioHoverBg: 'rgba(16,185,129,0.12)',
-            studioHoverBorder: 'rgba(52,211,153,0.28)'
+            studioHoverBorder: 'rgba(52,211,153,0.28)',
+            glowPrimary: 'rgba(16,185,129,0.24)',
+            glowSecondary: 'rgba(45,212,191,0.13)',
+            sectionTintBg: 'rgba(16,185,129,0.08)',
+            sectionBorder: 'rgba(52,211,153,0.18)',
+            divider: 'rgba(52,211,153,0.16)',
+            focus: 'rgba(52,211,153,0.4)'
         }
     }
 };
