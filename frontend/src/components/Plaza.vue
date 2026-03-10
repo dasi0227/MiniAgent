@@ -25,7 +25,6 @@ const COMMENT_PAGE_SIZE = 10;
 const COMMENT_CONTENT_LIMIT = 128;
 const commentData = ref({ list: [], total: 0, pageNum: 1, pageSize: COMMENT_PAGE_SIZE });
 const currentCommentItem = ref(null);
-const detailOpen = ref(false);
 const commentOpen = ref(false);
 const searchText = ref('');
 const searchKeyword = ref('');
@@ -296,8 +295,12 @@ const doFork = (item) => {
 };
 
 const openDetail = (item) => {
-    void item;
-    detailOpen.value = true;
+    const templateId = (item?.templateId || '').toString().trim();
+    if (!templateId) {
+        message.value = '该条数据缺少 templateId，暂时无法查看详情';
+        return;
+    }
+    router.push(`/detail/${encodeURIComponent(templateId)}`);
 };
 
 const doComment = async () => {
@@ -603,18 +606,6 @@ const goRepository = () => {
         </div>
 
         <Footer />
-
-                <div v-if="detailOpen" class="fixed inset-0 z-[20] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="detailOpen=false">
-                    <div class="w-full max-w-[760px] space-y-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">
-                        <div class="flex items-center justify-between">
-                    <div class="text-[16px] font-semibold">详情</div>
-                    <button class="text-[20px]" @click="detailOpen=false">×</button>
-                </div>
-                <div class="rounded-[10px] border border-[var(--border-color)] bg-[#f8fafc] px-[12px] py-[18px] text-[14px] text-[var(--text-secondary)]">
-                    详情页暂未开放，后续补充。
-                </div>
-            </div>
-        </div>
 
         <div v-if="commentOpen" class="fixed inset-0 z-[30] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]" @click.self="commentOpen=false">
             <div class="flex h-[min(82vh,680px)] w-full max-w-[980px] flex-col gap-[12px] rounded-[14px] border border-[var(--border-color)] bg-white p-[16px]">

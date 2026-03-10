@@ -538,12 +538,13 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         }
 
         AiPlaza aiPlaza = aiPlazaDao.queryByTemplateId(templateId);
-        AiUser aiUser = aiUserDao.queryById(aiTemplate.getUserId());
+        String userName = aiUserDao.queryUserNameById(aiTemplate.getUserId());
         SnapshotView snapshotView = snapshotUtil.parseSnapshot(aiTemplate.getSnapshot());
 
         return TemplateVO.builder()
                 .templateId(aiTemplate.getTemplateId())
-                .userName(aiUser.getUserName())
+                .createTime(aiTemplate.getCreateTime())
+                .userName(StringUtils.hasText(userName) ? userName : "system")
                 .plazaTitle(aiPlaza.getPlazaTitle())
                 .plazaDesc(aiPlaza.getPlazaDesc())
                 .likeCount(aiPlaza.getLikeCount())

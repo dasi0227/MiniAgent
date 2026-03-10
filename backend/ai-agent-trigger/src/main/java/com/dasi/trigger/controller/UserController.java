@@ -1,15 +1,11 @@
 package com.dasi.trigger.controller;
 
 import com.dasi.api.IUserApi;
+import com.dasi.domain.user.model.dto.*;
 import com.dasi.domain.user.model.vo.*;
 import com.dasi.domain.user.service.auth.IAuthService;
 import com.dasi.domain.user.service.query.IQueryService;
 import com.dasi.domain.user.service.setting.ISettingService;
-import com.dasi.domain.user.model.dto.AuthDTO;
-import com.dasi.domain.user.model.dto.ProfileEditDTO;
-import com.dasi.domain.user.model.dto.SettingApiDTO;
-import com.dasi.domain.user.model.dto.SettingMcpDTO;
-import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.result.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -19,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -56,6 +53,12 @@ public class UserController implements IUserApi {
     @Override
     public Result<List<QueryRagVO>> queryRagList() {
         return Result.success(queryService.queryRagList());
+    }
+
+    @PostMapping("/query/role")
+    @Override
+    public Result<Map<String, QueryRoleVO>> queryRoleMap() {
+        return Result.success(queryService.queryRoleMap());
     }
 
     @PostMapping("/query/model")

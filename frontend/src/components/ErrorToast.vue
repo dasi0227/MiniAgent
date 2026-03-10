@@ -8,7 +8,12 @@ import { appErrorToasts, dismissErrorToast } from '../utils/errorToast';
             <div
                 v-for="toast in appErrorToasts"
                 :key="toast.id"
-                class="pointer-events-auto relative overflow-hidden rounded-[10px] border border-[rgba(248,113,113,0.3)] bg-[var(--surface-1)] shadow-[0_8px_18px_rgba(15,23,42,0.13)]"
+                class="pointer-events-auto relative overflow-hidden rounded-[10px] border bg-[var(--surface-1)] shadow-[0_8px_18px_rgba(15,23,42,0.13)]"
+                :class="
+                    toast.type === 'success'
+                        ? 'border-[rgba(16,185,129,0.32)]'
+                        : 'border-[rgba(248,113,113,0.3)]'
+                "
             >
                 <button
                     class="absolute right-[8px] top-[8px] grid h-[20px] w-[20px] place-items-center rounded-[6px] text-[16px] leading-none text-[var(--text-secondary)] transition hover:bg-[rgba(148,163,184,0.16)] hover:text-[var(--text-primary)]"
@@ -19,15 +24,19 @@ import { appErrorToasts, dismissErrorToast } from '../utils/errorToast';
                     ×
                 </button>
                 <div class="flex items-start gap-[9px] px-[11px] py-[9px] pr-[32px]">
-                    <div class="mt-[1px] grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-[#ef4444] text-[14px] font-bold leading-none text-white">
-                        !
+                    <div
+                        class="mt-[1px] grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full text-[14px] font-bold leading-none text-white"
+                        :class="toast.type === 'success' ? 'bg-[#10b981]' : 'bg-[#ef4444]'"
+                    >
+                        {{ toast.type === 'success' ? '✓' : '!' }}
                     </div>
                     <div class="min-w-0 flex-1 break-words text-[12px] leading-[1.42] text-[var(--text-primary)]">
                         {{ toast.message }}
                     </div>
                 </div>
                 <div
-                    class="h-[3px] bg-[#ef4444] animate-app-error-progress"
+                    class="h-[3px] animate-app-error-progress"
+                    :class="toast.type === 'success' ? 'bg-[#10b981]' : 'bg-[#ef4444]'"
                     :style="{ animationDuration: `${toast.duration}ms` }"
                     @animationend="dismissErrorToast(toast.id)"
                 ></div>

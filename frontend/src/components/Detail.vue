@@ -1,0 +1,411 @@
+<script setup>
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { plazaDetail, queryRoleMap as queryRoleMapApi, repoFork } from '../request/api';
+import { notifyAppError } from '../request/request';
+import { pushErrorToast } from '../utils/errorToast';
+import Footer from './Footer.vue';
+
+const route = useRoute();
+const router = useRouter();
+
+const loading = ref(false);
+const message = ref('');
+const detail = ref(null);
+const roleMap = ref({});
+const forkState = ref('idle');
+let forkDoneTimer = null;
+
+const modal = reactive({
+    open: false,
+    kind: 'text',
+    title: '',
+    content: '',
+    asJson: false,
+    mcpRows: []
+});
+
+const strategyRoleOrder = {
+    step: ['inspector', 'planner', 'runner', 'replier'],
+    loop: ['analyzer', 'performer', 'supervisor', 'summarizer'],
+    react: ['observer', 'reasoner', 'actor', 'evaluator']
+};
+
+const pickData = (resp) => {
+    if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
+        if (resp.code !== 200) {
+            throw new Error(resp.info || '加载失败');
+        }
+        return resp.data;
+    }
+    return resp?.data ?? resp?.result ?? resp;
+};
+
+const templateId = computed(() => (route.params.templateId || '').toString().trim());
+const strategy = computed(() => (detail.value?.agentType || '').toString().toLowerCase());
+
+const orderedRoleRows = computed(() => {
+    const roleKeys = strategyRoleOrder[strategy.value] || [];
+    const systemPrompt = detail.value?.systemPrompt || {};
+    const userPromptList = Array.isArray(detail.value?.userPrompt) ? detail.value.userPrompt : [];
+    return roleKeys.map((roleKey, index) => {
+        const roleRecord = roleMap.value?.[roleKey] || {};
+        return {
+            roleKey,
+            roleName: (roleRecord.roleName || roleKey || '--').toString().toUpperCase(),
+            roleDesc: roleRecord.roleDesc || roleKey || '暂无角色说明',
+            systemPrompt: systemPrompt?.[roleKey] || '',
+            flowPrompt: userPromptList[index] || '',
+            flowIndex: index + 1
+        };
+    });
+});
+
+const resolvedAgentType = computed(() => (detail.value?.agentType || '--').toString().toUpperCase());
+const resolvedAgentName = computed(() => detail.value?.agentName || 'MiniAgent');
+const resolvedAuthor = computed(() => detail.value?.userName || '--');
+
+const resolvedCreateTime = computed(() => {
+    const raw = detail.value?.createTime;
+    if (!raw) return '--';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '--';
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+});
+
+const resolvedApiAddress = computed(() => {
+    const base = (detail.value?.apiBaseUrl || '').trim();
+    const completion = (detail.value?.apiCompletionUrl || '').trim();
+    if (!base && !completion) return '--';
+    if (!completion) return base;
+    if (!base) return completion.startsWith('/') ? completion : `/${completion}`;
+    if (/^https?:\/\//i.test(completion)) return completion;
+    return `${base.replace(/\/+$/, '')}/${completion.replace(/^\/+/, '')}`;
+});
+
+const mcpInfoList = computed(() => (Array.isArray(detail.value?.mcpInfoList) ? detail.value.mcpInfoList : []));
+
+const normalizeConfig = (raw) => {
+    if (!raw) return {};
+    if (typeof raw === 'object') return raw;
+    if (typeof raw === 'string') {
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch {
+            return {};
+        }
+    }
+    return {};
+};
+
+const openTextModal = (title, content, asJson = false) => {
+    modal.kind = 'text';
+    modal.title = title;
+    modal.content = content || '暂无配置';
+    modal.asJson = asJson;
+    modal.mcpRows = [];
+    modal.open = true;
+};
+
+const openSystemPrompt = (row) => {
+    openTextModal(`${row?.roleName || '--'} · SYSTEM PROMPT`, row?.systemPrompt || '');
+};
+
+const openFlowPrompt = (row) => {
+    openTextModal(`${row?.roleName || '--'} · USER PROMPT`, row?.flowPrompt || '');
+};
+
+const openMcpInfo = (item) => {
+    const config = normalizeConfig(item?.mcpParamTemplate);
+    const mcpType = (item?.mcpType || '').toString().toLowerCase();
+    const baseUri = config.baseUri || config.baseUrl || '--';
+    const sseEndpoint = config.sseEndpoint || config.sseEndPoint || '--';
+    const requiredSecrets = Array.isArray(item?.requiredSecrets) ? item.requiredSecrets : [];
+
+    modal.kind = 'mcp';
+    modal.title = `MCP · ${item?.mcpName || '--'}`;
+    modal.content = '';
+    modal.asJson = false;
+    modal.mcpRows = [
+        { label: '使用描述', value: item?.mcpDesc || '暂无描述', multiline: true },
+        { label: '基础路径', value: baseUri || '--' },
+        ...(mcpType === 'sse' ? [{ label: 'SSE 端点', value: sseEndpoint || '--' }] : []),
+        { label: '密钥信息', value: requiredSecrets, isTags: true }
+    ];
+    modal.open = true;
+};
+
+const closeModal = () => {
+    modal.open = false;
+};
+
+const loadDetail = async () => {
+    if (!templateId.value) {
+        message.value = '缺少 templateId';
+        detail.value = null;
+        return;
+    }
+    loading.value = true;
+    message.value = '';
+    try {
+        const [detailResp, roleResp] = await Promise.all([plazaDetail({ templateId: templateId.value }), queryRoleMapApi()]);
+        detail.value = pickData(detailResp) || {};
+        const rolePayload = pickData(roleResp);
+        roleMap.value = rolePayload && typeof rolePayload === 'object' ? rolePayload : {};
+    } catch (error) {
+        detail.value = null;
+        roleMap.value = {};
+        notifyAppError(error, '加载详情失败');
+        message.value = '详情加载失败';
+    } finally {
+        loading.value = false;
+    }
+};
+
+const goBack = () => {
+    if (window.history.length > 1) {
+        router.back();
+        return;
+    }
+    router.push('/plaza');
+};
+
+const doFork = async () => {
+    if (!templateId.value || forkState.value === 'loading' || forkState.value === 'done') return;
+    forkState.value = 'loading';
+    try {
+        await repoFork({ templateId: templateId.value });
+        forkState.value = 'done';
+        pushErrorToast({ message: 'Fork 成功', type: 'success' });
+        if (forkDoneTimer) {
+            clearTimeout(forkDoneTimer);
+        }
+        forkDoneTimer = setTimeout(() => {
+            forkState.value = 'idle';
+            forkDoneTimer = null;
+        }, 2000);
+    } catch (error) {
+        forkState.value = 'idle';
+        notifyAppError(error, 'Fork 失败');
+    }
+};
+
+onMounted(async () => {
+    await loadDetail();
+});
+
+onBeforeUnmount(() => {
+    if (forkDoneTimer) {
+        clearTimeout(forkDoneTimer);
+        forkDoneTimer = null;
+    }
+});
+</script>
+
+<template>
+    <section class="relative grid h-screen grid-rows-[1fr_var(--footer-height)] bg-[var(--page-bg)]">
+        <div class="overflow-y-hidden pt-[2px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
+            <div class="relative mx-auto max-w-[1180px] space-y-[20px]">
+                <button
+                    class="absolute left-0 top-0 z-[6] inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--text-primary)] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                    title="返回"
+                    aria-label="返回"
+                    @click="goBack"
+                >
+                    <svg viewBox="0 0 20 20" class="h-[14px] w-[14px]" fill="currentColor" aria-hidden="true">
+                        <path d="M11.5 4 5.5 10l6 6v-4h3v-4h-3V4z" />
+                    </svg>
+                </button>
+
+                <div v-if="loading" class="text-[13px] text-[var(--text-secondary)]">加载中...</div>
+                <div v-else-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
+                <template v-else-if="detail">
+                    <header class="pt-0">
+                        <div class="grid grid-cols-[1fr_auto_1fr] items-end gap-x-[26px] gap-y-[8px] max-[980px]:grid-cols-1">
+                            <span
+                                class="inline-flex items-center rounded-full border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.08)] px-[16px] py-[5px] text-[16px] font-bold tracking-[0.05em] text-[var(--accent-strong)] justify-self-end max-[980px]:justify-self-center max-[980px]:text-[18px]"
+                            >
+                                {{ resolvedAgentType }}
+                            </span>
+                            <h1 class="justify-self-center text-center text-[42px] font-bold leading-[1.1] text-[var(--text-primary)] max-[980px]:text-[34px]">
+                                {{ resolvedAgentName }}
+                            </h1>
+                            <div class="flex flex-wrap items-end justify-self-start gap-x-[16px] gap-y-[2px] text-[14px] text-[var(--text-secondary)] max-[980px]:justify-self-center">
+                                <span>作者：{{ resolvedAuthor }}</span>
+                                <span>创建时间：{{ resolvedCreateTime }}</span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <section class="space-y-[10px]">
+                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">智能体概述</h2>
+                        <p class="whitespace-pre-wrap text-[15px] leading-[1.75] text-[var(--text-secondary)]">
+                            {{ detail.agentDesc || '暂无描述' }}
+                        </p>
+                    </section>
+
+                    <section class="space-y-[8px]">
+                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
+                        <div class="space-y-[4px] text-[15px] text-[var(--text-primary)]">
+                            <p><span class="text-[var(--text-secondary)]">模型类别：</span>{{ detail.modelType || '--' }}</p>
+                            <p><span class="text-[var(--text-secondary)]">模型名称：</span>{{ detail.modelName || '--' }}</p>
+                            <p><span class="text-[var(--text-secondary)]">接口地址：</span>{{ resolvedApiAddress }}</p>
+                        </div>
+                    </section>
+
+                    <section class="space-y-[8px]">
+                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
+                        <div v-if="mcpInfoList.length > 0" class="max-h-[150px] w-full max-w-[300px] space-y-[6px] overflow-y-auto pr-[2px]">
+                            <button
+                                v-for="(item, index) in mcpInfoList"
+                                :key="`${item.mcpName || 'mcp'}-${index}`"
+                                class="flex w-full items-center justify-between gap-[10px] rounded-[10px] border border-[var(--border-color)] px-[12px] py-[10px] text-left transition hover:border-[var(--accent-color)]"
+                                @click="openMcpInfo(item)"
+                            >
+                                <span class="min-w-0 truncate pr-[10px] text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName || '--' }}</span>
+                                <span class="shrink-0 rounded-full border border-[var(--border-color)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
+                                    {{ (item.mcpType || '--').toUpperCase() }}
+                                </span>
+                            </button>
+                        </div>
+                        <div v-else class="text-[13px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
+                    </section>
+
+                    <section class="space-y-[10px]">
+                        <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">角色流程</h2>
+                        <div class="grid grid-cols-[40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)] items-stretch gap-[8px]">
+                            <template v-for="row in orderedRoleRows" :key="row.roleKey">
+                                <button
+                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                                    :title="`查看第 ${row.flowIndex} 步 User Prompt`"
+                                    @click="openFlowPrompt(row)"
+                                >
+                                    <svg viewBox="0 0 20 20" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
+                                        <path d="M6 4.5 13 10l-7 5.5V4.5z" />
+                                    </svg>
+                                </button>
+                                <button
+                                    class="flex min-w-0 flex-col rounded-[14px] border border-[var(--border-color)] px-[12px] py-[12px] text-left transition hover:border-[var(--accent-color)] hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] min-h-[160px]"
+                                    @click="openSystemPrompt(row)"
+                                >
+                                    <div class="text-center text-[28px] font-bold leading-none text-[var(--text-primary)] max-[1280px]:text-[24px]">
+                                        {{ row.roleName }}
+                                    </div>
+                                    <div class="mt-[12px] text-[14px] leading-[1.65] text-[var(--text-secondary)] role-desc-clamp-long">{{ row.roleDesc || '暂无配置' }}</div>
+                                </button>
+                            </template>
+                        </div>
+                    </section>
+
+                    <div class="flex justify-center pt-[1px]">
+                        <button
+                            class="inline-flex h-[42px] items-center justify-center gap-[8px] rounded-[12px] border px-[22px] text-[15px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
+                            :class="
+                                forkState === 'done'
+                                    ? 'border-[rgba(16,185,129,0.28)] bg-[rgba(16,185,129,0.08)] text-[#047857]'
+                                    : 'border-[var(--accent-color)] bg-[var(--accent-color)] text-white hover:brightness-95'
+                            "
+                            :disabled="forkState !== 'idle'"
+                            @click="doFork"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="h-[16px] w-[16px] shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <circle cx="6" cy="6" r="2.5" />
+                                <circle cx="18" cy="6" r="2.5" />
+                                <circle cx="12" cy="18" r="2.5" />
+                                <path d="M8.2 7.8L10.3 15.1" />
+                                <path d="M15.8 7.8L13.7 15.1" />
+                            </svg>
+                            {{
+                                forkState === 'loading'
+                                    ? 'FORK 中...'
+                                    : forkState === 'done'
+                                        ? '已 FORK'
+                                        : 'FORK'
+                            }}
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <Footer />
+
+        <div
+            v-if="modal.open"
+            class="absolute inset-0 z-[40] grid place-items-center bg-[rgba(0,0,0,0.3)] p-[20px]"
+            @click.self="closeModal"
+        >
+            <div class="flex h-[520px] w-[860px] max-h-[calc(100%-48px)] max-w-[calc(100%-48px)] flex-col rounded-[14px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[16px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="mb-[10px] flex items-center justify-between gap-[12px]">
+                    <h3 class="text-[16px] font-semibold text-[var(--text-primary)]">{{ modal.title }}</h3>
+                    <button class="text-[20px] text-[var(--text-secondary)]" @click="closeModal">×</button>
+                </div>
+                <div class="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--border-color)] bg-[var(--surface-2)] px-[14px] py-[12px]">
+                    <div v-if="modal.kind === 'mcp'" class="space-y-[10px]">
+                        <div
+                            v-for="(row, idx) in modal.mcpRows"
+                            :key="`${row.label}-${idx}`"
+                            class="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-x-[12px] gap-y-[4px]"
+                        >
+                            <div class="pt-[2px] text-left text-[13px] font-medium text-[var(--text-secondary)]">
+                                {{ row.label }}
+                            </div>
+                            <div class="min-w-0 text-left text-[14px] text-[var(--text-primary)]">
+                                <div v-if="row.isTags" class="flex flex-wrap gap-[6px]">
+                                    <span
+                                        v-for="secret in row.value"
+                                        :key="secret"
+                                        class="inline-flex items-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] px-[8px] py-[2px] text-[12px] text-[var(--text-secondary)]"
+                                    >
+                                        {{ secret }}
+                                    </span>
+                                    <span v-if="!row.value || row.value.length === 0" class="text-[13px] text-[var(--text-secondary)]">无</span>
+                                </div>
+                                <div v-else class="whitespace-pre-wrap break-words" :class="{ 'leading-[1.7]': row.multiline }">
+                                    {{ row.value || '--' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <pre
+                        v-else
+                        class="whitespace-pre-wrap break-words text-[13px] leading-[1.65] text-[var(--text-primary)]"
+                        :class="{ 'font-mono text-[12px]': modal.asJson }"
+                    >{{ modal.content }}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>
+
+<style scoped>
+.role-desc-clamp {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.role-desc-clamp-long {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+}
+</style>

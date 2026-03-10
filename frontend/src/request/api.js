@@ -16,6 +16,7 @@ const CHAT_MCP_PATH = `${QUERY_BASE_PATH}/mcp`;
 const AGENT_LIST_PATH = `${QUERY_BASE_PATH}/work-agent`;
 const RAG_TAGS_PATH = `${QUERY_BASE_PATH}/rag`;
 const MODEL_LIST_PATH = `${QUERY_BASE_PATH}/model`;
+const ROLE_MAP_PATH = `${QUERY_BASE_PATH}/role`;
 
 const AUTH_BASE_PATH = `${USER_BASE_PATH}/auth`;
 const LOGIN_PATH = `${AUTH_BASE_PATH}/login`;
@@ -365,6 +366,7 @@ export const queryChatMcps = async () => http.post(CHAT_MCP_PATH);
 export const queryAgentList = async () => http.post(AGENT_LIST_PATH);
 
 export const queryModelList = async () => http.post(MODEL_LIST_PATH);
+export const queryRoleMap = async () => http.post(ROLE_MAP_PATH);
 
 export const dispatchArmory = async ({ armoryType, armoryId }) => {
     return http.post(

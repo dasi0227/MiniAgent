@@ -10,6 +10,7 @@ import com.dasi.types.result.Result;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IUserApi {
 
@@ -20,6 +21,8 @@ public interface IUserApi {
     Result<List<QueryRagVO>> queryRagList();
 
     Result<List<QueryWorkAgentVO>> queryWorkAgentList();
+
+    Result<Map<String, QueryRoleVO>> queryRoleMap();
 
     Result<AuthVO> login(AuthDTO dto);
 

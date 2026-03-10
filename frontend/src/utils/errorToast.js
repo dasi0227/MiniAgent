@@ -58,6 +58,7 @@ export const pushErrorToast = (payload, options = {}) => {
     const source = typeof payload === 'string' ? { message: payload } : payload || {};
     const text = String(source.message || '').trim();
     if (!text) return '';
+    const type = source.type === 'success' ? 'success' : 'error';
 
     const duration = Number(source.duration) > 0
         ? Number(source.duration)
@@ -69,7 +70,8 @@ export const pushErrorToast = (payload, options = {}) => {
     const toast = {
         id,
         message: text,
-        duration
+        duration,
+        type
     };
 
     if (appErrorToasts.length < MAX_VISIBLE) {

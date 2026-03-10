@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { repoDeleteMineAgent, repoList } from '../request/api';
 import { notifyAppError } from '../request/request';
 import { useSettingsStore } from '../router/pinia';
@@ -7,6 +8,7 @@ import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil'
 import Footer from './Footer.vue';
 
 const settingsStore = useSettingsStore();
+const router = useRouter();
 
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 const loading = ref(false);
@@ -116,6 +118,15 @@ const toggleSection = (key) => {
 
 const doRemove = () => {
     message.value = '当前后端未提供仓库移除接口';
+};
+
+const viewDetail = (item) => {
+    const templateId = (item?.templateId || '').toString().trim();
+    if (!templateId) {
+        message.value = '该条数据缺少 templateId，暂时无法查看详情';
+        return;
+    }
+    router.push(`/detail/${encodeURIComponent(templateId)}`);
 };
 
 const deleteMineAgent = async (item) => {
@@ -242,12 +253,14 @@ onMounted(loadRepository);
                                         </div>
 
                                         <div class="relative mt-auto flex items-center justify-end gap-[8px] pt-[18px]">
-                                            <span
+                                            <button
                                                 class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"
                                                 :class="resolveCardTone(item).primaryButton"
+                                                type="button"
+                                                @click="viewDetail(item)"
                                             >
                                                 查看
-                                            </span>
+                                            </button>
                                             <button
                                                 v-if="section.key === 'mine'"
                                                 class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"

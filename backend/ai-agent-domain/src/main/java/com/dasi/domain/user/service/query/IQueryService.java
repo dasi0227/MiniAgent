@@ -3,6 +3,7 @@ package com.dasi.domain.user.service.query;
 import com.dasi.domain.user.model.vo.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IQueryService {
 
@@ -15,4 +16,7 @@ public interface IQueryService {
     List<QueryWorkAgentVO> queryWorkAgentList();
 
     List<QueryModelVO> queryModelList();
+
+    Map<String, QueryRoleVO> queryRoleMap();
+
 }

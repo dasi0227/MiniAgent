@@ -111,7 +111,7 @@ public class SnapshotUtil implements ISnapshotUtil {
                     parseSnapshotUserPrompt(snapshot.getJSONArray("userPrompts"))
             );
         } catch (Exception e) {
-            log.warn("解析 Template 快照失败，snapshot={}", snapshotRaw, e);
+            log.warn("解析 Template 快照失败", e);
             return SnapshotView.empty();
         }
     }
