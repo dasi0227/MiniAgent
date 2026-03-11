@@ -1,11 +1,11 @@
 package com.dasi.domain.workspace.model.vo;
 
-import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -26,6 +26,7 @@ public class PlazaVO {
     private Boolean liked;
     private Boolean favored;
     private Boolean commented;
+    private Boolean forked;
     private LocalDateTime createTime;
 
 }

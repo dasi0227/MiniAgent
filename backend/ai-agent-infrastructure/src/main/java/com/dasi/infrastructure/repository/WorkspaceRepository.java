@@ -107,11 +107,13 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         }
 
         Long userId = userContext.getUserId();
-        List<String> plazaIdList = aiPlazaList.stream().map(AiPlaza::getPlazaId).toList();
+        List<String> plazaIdList = aiPlazaList.stream().map(AiPlaza::getPlazaId).filter(StringUtils::hasText).distinct().toList();
+        List<String> templateIdList = aiPlazaList.stream().map(AiPlaza::getTemplateId).filter(StringUtils::hasText).distinct().toList();
 
-        List<String> likedList = aiPlazaLikeDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
-        List<String> favoredList = aiPlazaFavorDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
-        List<String> commentedList = aiPlazaCommentDao.queryPlazaIdListByUserIdAndPlazaIdList(userId, plazaIdList);
+        Set<String> likedList = aiPlazaLikeDao.queryLikedByUserIdAndPlazaIdList(userId, plazaIdList);
+        Set<String> favoredList = aiPlazaFavorDao.queryFavoredByUserIdAndPlazaIdList(userId, plazaIdList);
+        Set<String> commentedList = aiPlazaCommentDao.queryCommentedByUserIdAndPlazaIdList(userId, plazaIdList);
+        Set<String> forkedList = aiRepoDao.queryForkedByUserIdAndTemplateIdList(userId, templateIdList);
 
         Map<Long, String> plazaUserNameMap = aiPlazaList.stream()
                 .map(AiPlaza::getUserId)
@@ -136,6 +138,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .liked(likedList.contains(aiPlaza.getPlazaId()))
                 .favored(favoredList.contains(aiPlaza.getPlazaId()))
                 .commented(commentedList.contains(aiPlaza.getPlazaId()))
+                .forked(forkedList.contains(aiPlaza.getTemplateId()))
                 .createTime(aiPlaza.getCreateTime())
                 .build()).toList();
     }
@@ -180,7 +183,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void plazaLike(String plazaId, boolean liked) {
         Long userId = userContext.getUserId();
         if (liked) {
@@ -198,7 +201,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void plazaFavor(String plazaId, boolean favored) {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
@@ -234,7 +237,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void plazaComment(PlazaCommentDTO dto) {
         String plazaId = dto.getPlazaId();
         Long userId = userContext.getUserId();
@@ -250,7 +253,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void plazaDiscomment(String plazaId, String commentId) {
         Long userId = userContext.getUserId();
         Integer affected = aiPlazaCommentDao.delete(commentId, userId);
@@ -260,7 +263,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void plazaDelete(String plazaId) {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
@@ -316,7 +319,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void agentDelete(String agentId) {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
@@ -357,7 +360,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void agentCreate(AgentCreateDTO dto, List<RolePromptEntity> rolePromptList) {
         String agentId = randomUtil.randomAgentId();
         Long userId = userContext.getUserId();
@@ -431,7 +434,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void agentPublish(AgentPublishDTO dto) {
         String agentId = dto.getAgentId();
         Long userId = userContext.getUserId();
@@ -564,7 +567,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void agentFork(String templateId) {
         Long userId = userContext.getUserId();
         AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
@@ -698,7 +701,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void agentBaseUpdate(AgentBaseUpdateDTO dto) {
         AiAgent aiAgent = requireOwnedAgent(dto.getAgentId());
         aiAgentDao.update(AiAgent.builder()
@@ -709,7 +712,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto) {
         requireOwnedAgent(dto.getAgentId());
         AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
@@ -724,7 +727,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
     public void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto) {
         requireOwnedAgent(dto.getAgentId());
         AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());

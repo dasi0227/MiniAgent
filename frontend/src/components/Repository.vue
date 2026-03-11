@@ -179,14 +179,13 @@ onMounted(loadRepository);
                                     <article
                                         v-for="item in section.items"
                                         :key="item.repoId || item.agentId || item.templateId || resolveAgentName(item)"
-                                        class="group relative flex min-h-[208px] flex-col overflow-hidden rounded-[30px] border p-[18px] transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_16px_36px_rgba(15,23,42,0.12)]"
+                                        class="group relative flex min-h-[208px] flex-col overflow-hidden rounded-[30px] border p-[18px] shadow-[0_14px_30px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.32)] transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_22px_42px_rgba(15,23,42,0.14)]"
                                         :style="{
                                             borderColor: resolveCardTone(item).cardBorder,
-                                            backgroundColor: resolveCardTone(item).cardBg,
-                                            boxShadow: resolveCardTone(item).cardShadow
+                                            backgroundColor: resolveCardTone(item).cardBg
                                         }"
                                     >
-                                        <div class="pointer-events-none absolute inset-0 opacity-100" :style="{ background: resolveCardTone(item).overlay }" />
+                                        <div class="pointer-events-none absolute inset-0 opacity-[0.72]" :style="{ backgroundImage: resolveCardTone(item).overlay }" />
 
                                         <div class="relative flex items-start justify-between gap-[12px]">
                                             <span
@@ -210,7 +209,7 @@ onMounted(loadRepository);
                                             </p>
                                         </div>
 
-                                        <div class="relative mt-auto flex items-center justify-end gap-[8px] pt-[18px]">
+                                        <div class="relative mt-auto flex items-center justify-start gap-[8px] pt-[18px]">
                                             <button
                                                 class="rounded-[12px] border px-[12px] py-[8px] text-[12px] font-semibold transition"
                                                 :style="{

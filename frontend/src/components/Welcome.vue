@@ -337,7 +337,7 @@ onBeforeUnmount(() => {
                         >
                             <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(59,130,246,0.2),transparent_56%)]"></div>
                             <div class="relative">
-                                <div class="mt-[6px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)]">进入 Agent Studio</div>
+                                <div class="mt-[6px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)]">进入 MiniAgent Studio</div>
                                 <div class="mt-[6px] text-[14px] leading-[1.45] text-[var(--text-secondary)]">
                                     配置执行策略与工具组合，快速创建专属 MiniAgent。
                                 </div>
@@ -355,7 +355,7 @@ onBeforeUnmount(() => {
                         >
                             <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(14,165,233,0.2),transparent_56%)]"></div>
                             <div class="relative">
-                                <div class="mt-[6px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)]">浏览 Agent Plaza</div>
+                                <div class="mt-[6px] text-[20px] font-bold leading-[1.25] text-[var(--text-primary)]">浏览 MiniAgent Plaza</div>
                                 <div class="mt-[6px] text-[14px] leading-[1.45] text-[var(--text-secondary)]">
                                     探索热门的 MiniAgent，查看案例并一键 Fork 到你的仓库。
                                 </div>

@@ -44,7 +44,7 @@
         WHERE plaza_id = #{plazaId}
     </select>
 
-    <select id="queryPlazaIdListByUserIdAndPlazaIdList" resultType="java.lang.String">
+    <select id="queryCommentedByUserIdAndPlazaIdList" resultType="java.lang.String">
         SELECT DISTINCT plaza_id
         FROM ai_plaza_comment
         WHERE user_id = #{userId}

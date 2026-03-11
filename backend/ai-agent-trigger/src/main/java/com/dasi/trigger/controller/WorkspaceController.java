@@ -19,7 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping({"/workspace", "/workplace"})
+@RequestMapping("/workspace")
 public class WorkspaceController {
 
     @Resource

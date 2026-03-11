@@ -60,6 +60,17 @@
         LIMIT 1
     </select>
 
+    <select id="queryForkedByUserIdAndTemplateIdList" resultType="java.lang.String">
+        SELECT template_id
+        FROM ai_repo
+        WHERE user_id = #{userId}
+        AND repo_type = 'fork'
+        AND template_id IN
+        <foreach collection="templateIdList" item="templateId" open="(" separator="," close=")">
+            #{templateId}
+        </foreach>
+    </select>
+
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiRepo">
         INSERT INTO ai_repo (repo_id,
                              user_id,

@@ -5,13 +5,14 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface IAiPlazaLikeDao {
 
     AiPlazaLike queryByPlazaIdAndUserId(@Param("plazaId") String plazaId, @Param("userId") Long userId);
 
-    List<String> queryPlazaIdListByUserIdAndPlazaIdList(@Param("userId") Long userId, @Param("plazaIdList") List<String> plazaIdList);
+    Set<String> queryLikedByUserIdAndPlazaIdList(@Param("userId") Long userId, @Param("plazaIdList") List<String> plazaIdList);
 
     Integer insert(AiPlazaLike aiPlazaLike);
 

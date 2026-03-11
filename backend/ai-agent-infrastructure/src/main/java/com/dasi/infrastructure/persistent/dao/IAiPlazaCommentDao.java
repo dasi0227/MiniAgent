@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface IAiPlazaCommentDao {
@@ -17,7 +18,7 @@ public interface IAiPlazaCommentDao {
 
     Integer countByPlazaId(@Param("plazaId") String plazaId);
 
-    List<String> queryPlazaIdListByUserIdAndPlazaIdList(@Param("userId") Long userId, @Param("plazaIdList") List<String> plazaIdList);
+    Set<String> queryCommentedByUserIdAndPlazaIdList(@Param("userId") Long userId, @Param("plazaIdList") List<String> plazaIdList);
 
     AiPlazaComment queryByCommentId(@Param("commentId") String commentId);
 

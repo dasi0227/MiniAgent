@@ -1343,15 +1343,15 @@ const loadProfileResources = async () => {
                         @click="confirmNewSession('chat')"
                     >
                         <img :src="chatIcon" alt="Chat" class="h-[200px] w-[200px]" />
-                        <div class="text-[40px] font-semibold">Chat Client</div>
+                        <div class="text-[40px] font-semibold">Chat</div>
                     </button>
                     <button
                         class="flex h-[440px] w-[440px] flex-col items-center justify-center gap-[26px] rounded-[28px] border border-[rgba(0,0,0,0.08)] bg-[#f8fafc] text-[#0f172a] shadow-[0_24px_50px_rgba(15,23,42,0.18)] transition-all duration-200 hover:border-[#94a3b8] hover:bg-[#e2e8f0] hover:shadow-[0_30px_60px_rgba(15,23,42,0.22)]"
                         type="button"
                         @click="confirmNewSession('work')"
                     >
-                        <img :src="workIcon" alt="Work" class="h-[200px] w-[200px]" />
-                        <div class="text-[40px] font-semibold">Work MiniAgent</div>
+                        <img :src="workIcon" alt="Work" class="h-[250px] w-[250px]" />
+                        <div class="text-[40px] font-semibold">Work</div>
                     </button>
                 </div>
                 <div v-if="sessionLimitError" class="rounded-[10px] border border-[rgba(15,23,42,0.1)] bg-white px-[16px] py-[10px] text-[14px] text-[#dc2626] shadow-[0_12px_30px_rgba(15,23,42,0.12)]">

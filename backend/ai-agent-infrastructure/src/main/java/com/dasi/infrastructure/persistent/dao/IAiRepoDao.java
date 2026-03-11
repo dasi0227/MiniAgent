@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface IAiRepoDao {
@@ -31,4 +32,6 @@ public interface IAiRepoDao {
                                                     @Param("templateId") String templateId,
                                                     @Param("repoType") String repoType);
 
+    Set<String> queryForkedByUserIdAndTemplateIdList(@Param("userId") Long userId,
+                                                     @Param("templateIdList") List<String> templateIdList);
 }

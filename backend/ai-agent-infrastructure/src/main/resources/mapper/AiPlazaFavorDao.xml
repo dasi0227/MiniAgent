@@ -19,7 +19,7 @@
         LIMIT 1
     </select>
 
-    <select id="queryPlazaIdListByUserIdAndPlazaIdList" resultType="java.lang.String">
+    <select id="queryFavoredByUserIdAndPlazaIdList" resultType="java.lang.String">
         SELECT plaza_id
         FROM ai_plaza_favor
         WHERE user_id = #{userId}
