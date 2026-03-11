@@ -49,6 +49,25 @@
           AND (client_from = 0 OR client_from = #{userId})
     </select>
 
+    <select id="queryChatClientByModelIdAndUserId" resultMap="dataMap">
+        SELECT id,
+               client_id,
+               client_type,
+               client_role,
+               model_id,
+               model_name,
+               client_name,
+               client_status,
+               client_from,
+               create_time,
+               update_time
+        FROM ai_client
+        WHERE client_type = 'chat'
+          AND model_id = #{modelId}
+          AND client_from = #{clientFrom}
+        LIMIT 1
+    </select>
+
     <select id="queryWorkClientList" resultMap="dataMap">
         SELECT id,
                client_id,

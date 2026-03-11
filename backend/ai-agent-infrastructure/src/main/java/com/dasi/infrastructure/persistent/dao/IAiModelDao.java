@@ -32,5 +32,7 @@ public interface IAiModelDao {
 
     List<String> queryModelIdByApiId(@Param("apiId") String apiId);
 
+    AiModel queryByApiId(@Param("apiId") String apiId);
+
     List<String> listModelId();
 }

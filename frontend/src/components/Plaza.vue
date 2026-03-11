@@ -523,8 +523,6 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-if="!loading && filteredItems.length === 0" class="text-[13px] text-[var(--text-secondary)]">暂无数据</div>
-
-                <div v-if="loading" class="text-[13px] text-[var(--text-secondary)]">加载中...</div>
             </div>
         </div>
 

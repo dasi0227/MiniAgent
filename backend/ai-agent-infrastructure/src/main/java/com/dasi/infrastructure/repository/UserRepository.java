@@ -6,14 +6,17 @@ import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.user.repository.IUserRepository;
 import com.dasi.domain.util.jwt.UserContext;
+import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.infrastructure.persistent.dao.IAiApiDao;
 import com.dasi.infrastructure.persistent.dao.IAiAgentDao;
+import com.dasi.infrastructure.persistent.dao.IAiClientDao;
 import com.dasi.infrastructure.persistent.dao.IAiMcpDao;
 import com.dasi.infrastructure.persistent.dao.IAiModelDao;
 import com.dasi.infrastructure.persistent.dao.IAiTaskDao;
 import com.dasi.infrastructure.persistent.dao.IAiUserDao;
 import com.dasi.infrastructure.persistent.po.AiAgent;
 import com.dasi.infrastructure.persistent.po.AiApi;
+import com.dasi.infrastructure.persistent.po.AiClient;
 import com.dasi.infrastructure.persistent.po.AiMcp;
 import com.dasi.infrastructure.persistent.po.AiModel;
 import com.dasi.infrastructure.persistent.po.AiTask;
@@ -50,6 +53,9 @@ public class UserRepository implements IUserRepository {
     private IAiModelDao modelDao;
 
     @Resource
+    private IAiClientDao clientDao;
+
+    @Resource
     private IAiMcpDao mcpDao;
 
     @Resource
@@ -60,6 +66,9 @@ public class UserRepository implements IUserRepository {
 
     @Resource
     private UserContext userContext;
+
+    @Resource
+    private IRandomUtil randomUtil;
 
     @Override
     public UserVO queryUserByUserName(String userName) {
@@ -140,6 +149,7 @@ public class UserRepository implements IUserRepository {
     public void apiInsert(SettingApiDTO dto, String apiId, String modelId) {
         Long userId = userContext.getUserId();
 
+        // 新增 api
         AiApi aiApi = AiApi.builder()
                 .apiId(apiId)
                 .apiBaseUrl(dto.getApiBaseUrl())
@@ -149,6 +159,7 @@ public class UserRepository implements IUserRepository {
                 .build();
         apiDao.insert(aiApi);
 
+        // 新增 model
         AiModel aiModel = AiModel.builder()
                 .apiId(apiId)
                 .modelId(modelId)
@@ -157,6 +168,19 @@ public class UserRepository implements IUserRepository {
                 .modelFrom(userId)
                 .build();
         modelDao.insert(aiModel);
+
+        // 新增 client
+        AiClient aiClient = AiClient.builder()
+                .clientId(randomUtil.randomClientId())
+                .clientType("chat")
+                .clientRole("chatclient")
+                .modelId(modelId)
+                .modelName(dto.getModelName())
+                .clientName(dto.getModelName())
+                .clientStatus(1)
+                .clientFrom(userId)
+                .build();
+        clientDao.insert(aiClient);
     }
 
     @Override
@@ -167,6 +191,7 @@ public class UserRepository implements IUserRepository {
             throw new MiniAgentException(LACK_PARAM);
         }
 
+        // 更改 api
         AiApi aiApi = apiDao.queryByApiId(dto.getApiId());
         if (aiApi == null || !aiApi.getApiFrom().equals(userId)) {
             throw new MiniAgentException(ILLEGAL_USER);
@@ -176,6 +201,7 @@ public class UserRepository implements IUserRepository {
         aiApi.setApiCompletionsPath(dto.getApiCompletionPath());
         apiDao.update(aiApi);
 
+        // 更改 model
         String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
         AiModel aiModel = modelDao.queryByModelId(modelId);
         if (!aiModel.getModelFrom().equals(userId)) {
@@ -185,6 +211,28 @@ public class UserRepository implements IUserRepository {
         aiModel.setModelType(dto.getModelType());
         aiModel.setModelFrom(userId);
         modelDao.update(aiModel);
+
+        // 更改 client
+        AiClient chatClient = clientDao.queryChatClientByModelIdAndUserId(modelId, userId);
+        if (chatClient != null) {
+            chatClient.setModelName(dto.getModelName());
+            chatClient.setClientName(dto.getModelName());
+            chatClient.setClientStatus(1);
+            clientDao.update(chatClient);
+        } else {
+            AiClient aiClient = AiClient.builder()
+                    .clientId(randomUtil.randomClientId())
+                    .clientType("chat")
+                    .clientRole("chatclient")
+                    .modelId(modelId)
+                    .modelName(dto.getModelName())
+                    .clientName(dto.getModelName())
+                    .clientStatus(1)
+                    .clientFrom(userId)
+                    .build();
+            clientDao.insert(aiClient);
+        }
+
     }
 
     @Override
@@ -198,12 +246,20 @@ public class UserRepository implements IUserRepository {
         }
         apiDao.deleteByApiId(apiId);
 
-        String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
-        AiModel aiModel = modelDao.queryByModelId(modelId);
+        AiModel aiModel = modelDao.queryByApiId(apiId);
+        String modelId = aiModel.getModelId();
         if (!aiModel.getModelFrom().equals(userId)) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
         modelDao.deleteByModelId(modelId);
+
+        AiClient aiClient = clientDao.queryChatClientByModelIdAndUserId(modelId, userId);
+        if (aiClient != null) {
+            if (!aiClient.getClientFrom().equals(userId)) {
+                throw new MiniAgentException(ILLEGAL_USER);
+            }
+            clientDao.deleteByClientId(aiClient.getClientId());
+        }
     }
 
     // -------------------- MCP --------------------

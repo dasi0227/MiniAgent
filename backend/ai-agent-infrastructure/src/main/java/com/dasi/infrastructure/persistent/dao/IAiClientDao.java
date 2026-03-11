@@ -12,6 +12,8 @@ public interface IAiClientDao {
 
     List<AiClient> queryChatClientByUserId(@Param("userId") Long userId);
 
+    AiClient queryChatClientByModelIdAndUserId(@Param("modelId") String modelId, @Param("clientFrom") Long clientFrom);
+
     List<AiClient> queryWorkClientList();
 
     List<AiClient> page(@Param("idKeyword") String idKeyword,

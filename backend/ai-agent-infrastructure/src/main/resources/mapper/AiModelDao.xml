@@ -99,6 +99,20 @@
         WHERE model_from = #{userId}
     </select>
 
+    <select id="queryByApiId" resultMap="dataMap">
+        SELECT id,
+               model_id,
+               api_id,
+               model_name,
+               model_type,
+               model_from,
+               create_time,
+               update_time
+        FROM ai_model
+        WHERE api_id = #{apiId}
+        LIMIT 1
+    </select>
+
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiModel">
         INSERT INTO ai_model (model_id,
                               api_id,

@@ -175,20 +175,13 @@ onMounted(loadRepository);
                                 ]"
                             >
                                 <div
-                                    v-if="loading"
-                                    class="rounded-[20px] border border-dashed border-[var(--border-color)] px-[16px] py-[22px] text-center text-[13px] text-[var(--text-secondary)]"
-                                >
-                                    加载中...
-                                </div>
-
-                                <div
-                                    v-else-if="section.items.length === 0"
+                                    v-if="!loading && section.items.length === 0"
                                     class="px-[6px] py-[8px] text-center text-[13px] text-[var(--text-secondary)]"
                                 >
                                     {{ section.emptyText }}
                                 </div>
 
-                                <div v-else class="grid gap-[14px] sm:grid-cols-2 xl:grid-cols-3">
+                                <div v-else-if="section.items.length > 0" class="grid gap-[14px] sm:grid-cols-2 xl:grid-cols-3">
                                     <article
                                         v-for="item in section.items"
                                         :key="item.repoId || item.agentId || item.templateId || resolveAgentName(item)"
