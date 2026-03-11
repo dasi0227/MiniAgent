@@ -328,24 +328,22 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             throw new MiniAgentException(ILLEGAL_USER);
         }
 
-        List<AiTemplate> aiTemplateList = aiTemplateDao.listByAgentIdAndUserId(agentId, userId);
-        if (aiTemplateList != null && !aiTemplateList.isEmpty()) {
-            for (AiTemplate aiTemplate : aiTemplateList) {
-                String templateId = aiTemplate.getTemplateId();
-                List<AiPlaza> aiPlazaList = aiPlazaDao.listByTemplateId(templateId);
-                if (aiPlazaList != null && !aiPlazaList.isEmpty()) {
-                    for (AiPlaza aiPlaza : aiPlazaList) {
-                        String plazaId = aiPlaza.getPlazaId();
-                        aiPlazaLikeDao.deleteByPlazaId(plazaId);
-                        aiPlazaFavorDao.deleteByPlazaId(plazaId);
-                        aiPlazaCommentDao.deleteByPlazaId(plazaId);
-                        aiPlazaDao.deleteByPlazaId(plazaId);
-                    }
+        String templateId = aiAgent.getTemplateId();
+        AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
+        if (aiTemplate != null && userId.equals(aiTemplate.getUserId())) {
+            List<AiPlaza> aiPlazaList = aiPlazaDao.listByTemplateId(templateId);
+            if (aiPlazaList != null && !aiPlazaList.isEmpty()) {
+                for (AiPlaza aiPlaza : aiPlazaList) {
+                    String plazaId = aiPlaza.getPlazaId();
+                    aiPlazaLikeDao.deleteByPlazaId(plazaId);
+                    aiPlazaFavorDao.deleteByPlazaId(plazaId);
+                    aiPlazaCommentDao.deleteByPlazaId(plazaId);
+                    aiPlazaDao.deleteByPlazaId(plazaId);
                 }
-                aiRepoDao.deleteByTemplateId(templateId);
             }
+            aiRepoDao.deleteByTemplateId(templateId);
+            aiTemplateDao.deleteByTemplateIdAndUserId(templateId, userId);
         }
-        aiTemplateDao.deleteByAgentIdAndUserId(agentId, userId);
 
         List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(agentId);
         for (AiFlow aiFlow : aiFlowList) {
@@ -460,13 +458,20 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         String apiBaseUrl = aiApi.getApiBaseUrl();
         String apiCompletionUrl = aiApi.getApiCompletionsPath();
 
-        // 新增或更新 template
-        AiTemplate aiTemplate = aiTemplateDao.queryByAgentIdAndUserId(agentId, userId);
+        String templateId = aiAgent.getTemplateId();
+        if (!StringUtils.hasText(templateId)) {
+            templateId = randomUtil.randomTemplateId();
+            aiAgentDao.update(AiAgent.builder()
+                    .id(aiAgent.getId())
+                    .templateId(templateId)
+                    .build());
+        }
+
+        AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
         if (aiTemplate == null) {
             aiTemplate = AiTemplate.builder()
                     .templateId(randomUtil.randomTemplateId())
                     .userId(userId)
-                    .agentId(aiAgent.getAgentId())
                     .agentName(aiAgent.getAgentName())
                     .agentType(aiAgent.getAgentType())
                     .agentDesc(aiAgent.getAgentDesc())
@@ -477,9 +482,11 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .snapshot(snapshot)
                     .build();
             aiTemplateDao.insert(aiTemplate);
-        } else {
+        }
+        // 更新 template
+        else {
+            aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
             aiTemplate.setUserId(userId);
-            aiTemplate.setAgentId(aiAgent.getAgentId());
             aiTemplate.setAgentName(aiAgent.getAgentName());
             aiTemplate.setAgentType(aiAgent.getAgentType());
             aiTemplate.setAgentDesc(aiAgent.getAgentDesc());
@@ -627,6 +634,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .agentName(aiAgent.getAgentName())
                 .agentType(aiAgent.getAgentType())
                 .agentDesc(aiAgent.getAgentDesc())
+                .createTime(aiAgent.getCreateTime())
                 .modelId(aiAgent.getModelId())
                 .modelName(aiModel.getModelName())
                 .modelType(aiModel.getModelType())
@@ -677,7 +685,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         List<String> mcpIdList = new ArrayList<>();
         List<SnapshotView.McpView> mcpViewList = snapshotView.getMcps();
         for (SnapshotView.McpView mcpInfo : mcpViewList) {
-                String mcpId = randomUtil.randomMcpId();
+            String mcpId = randomUtil.randomMcpId();
             LinkedHashMap<String, String> secretMap = new LinkedHashMap<>();
             for (String secretKey : mcpInfo.getRequiredSecrets()) {
                 if (StringUtils.hasText(secretKey)) {

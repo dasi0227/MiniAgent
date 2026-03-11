@@ -31,6 +31,9 @@ public class AiAgent {
     /** 模型 id */
     private String modelId;
 
+    /** 模版 id */
+    private String templateId;
+
     /** 状态：0-禁用，1-启用 */
     private Integer agentStatus;
 

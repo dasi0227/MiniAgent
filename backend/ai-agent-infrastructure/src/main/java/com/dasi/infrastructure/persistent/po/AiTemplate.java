@@ -16,7 +16,6 @@ public class AiTemplate {
     private Long id;
     private String templateId;
     private Long userId;
-    private String agentId;
     private String agentName;
     private String agentType;
     private String agentDesc;

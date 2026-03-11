@@ -9,6 +9,7 @@
         <result column="agent_type" property="agentType"/>
         <result column="agent_desc" property="agentDesc"/>
         <result column="model_id" property="modelId"/>
+        <result column="template_id" property="templateId"/>
         <result column="agent_status" property="agentStatus"/>
         <result column="agent_from" property="agentFrom"/>
         <result column="create_time" property="createTime"/>
@@ -22,6 +23,7 @@
                agent_type,
                agent_desc,
                model_id,
+               template_id,
                agent_status,
                agent_from,
                create_time,
@@ -37,6 +39,7 @@
                agent_type,
                agent_desc,
                model_id,
+               template_id,
                agent_status,
                agent_from,
                create_time,
@@ -52,6 +55,7 @@
                agent_type,
                agent_desc,
                model_id,
+               template_id,
                agent_status,
                agent_from,
                create_time,
@@ -82,6 +86,7 @@
         agent_type,
         agent_desc,
         model_id,
+        template_id,
         agent_status,
         agent_from,
         create_time,
@@ -131,6 +136,7 @@
                               agent_type,
                               agent_desc,
                               model_id,
+                              template_id,
                               agent_status,
                               agent_from)
         VALUES (#{agentId},
@@ -138,6 +144,7 @@
                 #{agentType},
                 #{agentDesc},
                 #{modelId},
+                #{templateId},
                 #{agentStatus},
                 #{agentFrom})
     </insert>
@@ -150,6 +157,7 @@
             <if test="agentType != null">agent_type = #{agentType},</if>
             <if test="agentDesc != null">agent_desc = #{agentDesc},</if>
             <if test="modelId != null">model_id = #{modelId},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
             <if test="agentStatus != null">agent_status = #{agentStatus},</if>
         </set>
         WHERE id = #{id}
