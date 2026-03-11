@@ -1208,7 +1208,6 @@ onBeforeUnmount(() => {
                 <div v-else-if="activeTab === 'mcp'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
                         <div class="flex flex-wrap items-center gap-[10px]">
-                            <div class="w-full whitespace-nowrap text-[16px] font-semibold md:w-[220px] md:shrink-0">我配置过的 MCP 列表</div>
                             <div class="flex w-full items-center gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="mcpKeyword"
@@ -1269,7 +1268,6 @@ onBeforeUnmount(() => {
                 <div v-else-if="activeTab === 'api'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
                         <div class="flex flex-wrap items-center gap-[10px]">
-                            <div class="w-full whitespace-nowrap text-[16px] font-semibold md:w-[220px] md:shrink-0">我配置过的 API 列表</div>
                             <div class="flex w-full items-center gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="apiKeyword"
@@ -1330,7 +1328,6 @@ onBeforeUnmount(() => {
                 <div v-else class="space-y-[14px]">
                     <div class="space-y-[10px]">
                         <div class="flex flex-wrap items-center gap-[10px]">
-                            <div class="w-full whitespace-nowrap text-[16px] font-semibold md:w-[220px] md:shrink-0">我配置过的 Task 列表</div>
                             <div class="flex w-full items-center gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="taskKeyword"
