@@ -10,14 +10,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AgentUserPromptUpdateDTO {
+public class AgentUpdateBaseDTO {
 
     @NotBlank
     private String agentId;
 
     @NotBlank
-    private String clientRole;
+    private String agentName;
 
-    private String userPrompt;
+    @NotBlank
+    private String agentDesc;
 
 }

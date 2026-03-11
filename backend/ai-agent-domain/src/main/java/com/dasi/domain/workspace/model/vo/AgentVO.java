@@ -5,62 +5,55 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TemplateVO {
-
-    // template 信息
-    private String templateId;
-    private LocalDateTime createTime;
-
-    // user 信息
-    private String userName;
-
-    // plaza 信息
-    private String plazaTitle;
-    private String plazaDesc;
-    private Integer likeCount;
-    private Integer favorCount;
-    private Integer commentCount;
+public class AgentVO {
 
     // agent 信息
+    private String agentId;
     private String agentName;
     private String agentType;
     private String agentDesc;
 
     // model 信息
-    private String apiUrl;
-    private String apiCompletionUrl;
+    private String modelId;
     private String modelName;
     private String modelType;
+    private String apiId;
+    private String apiBaseUrl;
+    private String apiCompletionUrl;
 
+    // mcp 信息
     private List<McpInfo> mcpInfoList;
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class McpInfo {
+        private String mcpId;
         private String mcpName;
         private String mcpType;
         private String mcpParam;
         private String mcpDesc;
-        private List<String> requiredSecrets;
+        private String mcpSecret;
     }
 
+    // client 信息
     private List<ClientInfo> clientInfoList;
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ClientInfo {
+        private String clientId;
         private String clientRole;
+        private String promptId;
         private String systemPrompt;
+        private Long flowId;
         private String userPrompt;
     }
-
 }

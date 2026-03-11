@@ -11,6 +11,8 @@ public interface IAiFlowDao {
 
     List<AiFlow> queryByAgentId(@Param("agentId") String agentId);
 
+    AiFlow queryById(@Param("id") Long id);
+
     void loadUserPrompt(@Param("clientId") String clientId, @Param("userPrompt") String userPrompt);
 
     List<String> queryAgentIdByClientId(@Param("clientId") String clientId);

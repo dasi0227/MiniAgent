@@ -81,7 +81,7 @@ const viewDetail = (item, sectionKey = '') => {
     const hasExplicitForked = typeof item?.forked === 'boolean';
     const inferredForked = hasExplicitForked ? item.forked : sectionKey === 'mine' || sectionKey === 'added';
     router.push({
-        path: `/detail/${encodeURIComponent(templateId)}`,
+        path: `/template/${encodeURIComponent(templateId)}`,
         query: {
             forked: inferredForked ? '1' : '0'
         }

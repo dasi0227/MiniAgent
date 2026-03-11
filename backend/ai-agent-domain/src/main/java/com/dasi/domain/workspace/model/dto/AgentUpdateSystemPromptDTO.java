@@ -1,6 +1,7 @@
 package com.dasi.domain.workspace.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,13 +11,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AgentBaseUpdateDTO {
+public class AgentUpdateSystemPromptDTO {
 
     @NotBlank
     private String agentId;
 
-    private String agentName;
+    @NotBlank
+    private String promptId;
 
-    private String agentDesc;
+    @NotBlank
+    private String systemPrompt;
 
 }

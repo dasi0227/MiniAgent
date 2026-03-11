@@ -9,6 +9,7 @@ import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.entity.RolePromptEntity;
 import com.dasi.domain.workspace.model.enumeration.ConfigType;
 import com.dasi.domain.workspace.model.enumeration.RepoType;
+import com.dasi.domain.workspace.model.vo.AgentVO;
 import com.dasi.domain.workspace.model.vo.CommentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
@@ -183,7 +184,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void plazaLike(String plazaId, boolean liked) {
         Long userId = userContext.getUserId();
         if (liked) {
@@ -201,7 +202,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void plazaFavor(String plazaId, boolean favored) {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
@@ -237,7 +238,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void plazaComment(PlazaCommentDTO dto) {
         String plazaId = dto.getPlazaId();
         Long userId = userContext.getUserId();
@@ -253,7 +254,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void plazaDiscomment(String plazaId, String commentId) {
         Long userId = userContext.getUserId();
         Integer affected = aiPlazaCommentDao.delete(commentId, userId);
@@ -263,7 +264,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void plazaDelete(String plazaId) {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
@@ -319,11 +320,11 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void agentDelete(String agentId) {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
-        if (aiAgent == null || !userId.equals(aiAgent.getAgentFrom())) {
+        if (!userId.equals(aiAgent.getAgentFrom())) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
 
@@ -360,7 +361,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void agentCreate(AgentCreateDTO dto, List<RolePromptEntity> rolePromptList) {
         String agentId = randomUtil.randomAgentId();
         Long userId = userContext.getUserId();
@@ -434,12 +435,12 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void agentPublish(AgentPublishDTO dto) {
         String agentId = dto.getAgentId();
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
-        if (aiAgent == null || !userId.equals(aiAgent.getAgentFrom())) {
+        if (!userId.equals(aiAgent.getAgentFrom())) {
             throw new MiniAgentException(ILLEGAL_USER);
         }
 
@@ -537,7 +538,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     public TemplateVO agentTemplate(String templateId) {
         AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
         if (aiTemplate == null) {
-            throw new MiniAgentException("Template 不存在");
+            throw new MiniAgentException(ILLEGAL_DATA);
         }
 
         AiPlaza aiPlaza = aiPlazaDao.queryByTemplateId(templateId);
@@ -556,13 +557,83 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .agentName(aiTemplate.getAgentName())
                 .agentType(aiTemplate.getAgentType())
                 .agentDesc(aiTemplate.getAgentDesc())
-                .apiBaseUrl(aiTemplate.getApiBaseUrl())
+                .apiUrl(aiTemplate.getApiBaseUrl())
                 .apiCompletionUrl(aiTemplate.getApiCompletionUrl())
                 .modelName(aiTemplate.getModelName())
                 .modelType(aiTemplate.getModelType())
-                .mcpInfoList(snapshotView.getMcpInfoList())
-                .systemPrompt(snapshotView.getSystemPrompt())
-                .userPrompt(snapshotView.getUserPrompt())
+                .mcpInfoList(snapshotUtil.toTemplateMcpInfoList(snapshotView.getMcps()))
+                .clientInfoList(snapshotUtil.toTemplateClientInfoList(snapshotView.getPrompts()))
+                .build();
+    }
+
+    @Override
+    @Cacheable(cachePrefix = WORKSPACE_AGENT_DETAIL_PREFIX, cacheType = CacheType.VALUE, cacheClass = AgentVO.class)
+    public AgentVO agentDetail(String agentId) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
+        if (!userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
+        }
+
+        AiModel aiModel = aiModelDao.queryByModelId(aiAgent.getModelId());
+        AiApi aiApi = aiApiDao.queryByApiId(aiModel.getApiId());
+        List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(agentId)
+                .stream()
+                .sorted(Comparator.comparing(AiFlow::getFlowSeq))
+                .toList();
+
+        List<AgentVO.ClientInfo> clientInfoList = new ArrayList<>();
+        List<AgentVO.McpInfo> mcpInfoList = new ArrayList<>();
+        for (AiFlow aiFlow : aiFlowList) {
+
+            // 拿到 userPrompt
+            String userPrompt = aiFlow.getUserPrompt();
+
+            // 拿到 systemPrompt
+            String clientId = aiFlow.getClientId();
+            String promptId = aiConfigDao.queryByClientIdAndConfigType(clientId, ConfigType.PROMPT.getType()).get(0).getConfigValue();
+            String systemPrompt = aiPromptDao.queryByPromptId(promptId).getSystenPrompt();
+
+            // 构造 clientInfo
+            AgentVO.ClientInfo clientInfo = AgentVO.ClientInfo.builder()
+                    .flowId(aiFlow.getId())
+                    .clientId(clientId)
+                    .clientRole(aiFlow.getClientRole())
+                    .promptId(promptId)
+                    .systemPrompt(systemPrompt)
+                    .userPrompt(userPrompt)
+                    .build();
+            clientInfoList.add(clientInfo);
+
+            // 构造 mcpInfo
+            List<AiConfig> mcpConfigList = aiConfigDao.queryByClientIdAndConfigType(clientId, ConfigType.MCP.getType());
+            for (AiConfig mcpConfig : mcpConfigList) {
+                String mcpId = mcpConfig.getConfigValue();
+                AiMcp aiMcp = aiMcpDao.queryByMcpId(mcpId);
+                AgentVO.McpInfo mcpInfo = AgentVO.McpInfo.builder()
+                        .mcpId(aiMcp.getMcpId())
+                        .mcpName(aiMcp.getMcpName())
+                        .mcpType(aiMcp.getMcpType())
+                        .mcpParam(aiMcp.getMcpParam())
+                        .mcpDesc(aiMcp.getMcpDesc())
+                        .mcpSecret(aiMcp.getMcpSecret())
+                        .build();
+                mcpInfoList.add(mcpInfo);
+            }
+        }
+
+        return AgentVO.builder()
+                .agentId(aiAgent.getAgentId())
+                .agentName(aiAgent.getAgentName())
+                .agentType(aiAgent.getAgentType())
+                .agentDesc(aiAgent.getAgentDesc())
+                .modelId(aiAgent.getModelId())
+                .modelName(aiModel.getModelName())
+                .modelType(aiModel.getModelType())
+                .apiBaseUrl(aiApi.getApiBaseUrl())
+                .apiCompletionUrl(aiApi.getApiCompletionsPath())
+                .mcpInfoList(mcpInfoList)
+                .clientInfoList(clientInfoList)
                 .build();
     }
 
@@ -581,8 +652,8 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         }
 
         SnapshotView snapshotView = snapshotUtil.parseSnapshot(aiTemplate.getSnapshot());
-        Map<String, String> systemPromptMap = snapshotView.getSystemPrompt();
-        if (systemPromptMap == null || systemPromptMap.isEmpty()) {
+        List<SnapshotView.PromptView> promptViewList = snapshotView.getPrompts();
+        if (promptViewList == null || promptViewList.isEmpty()) {
             throw new MiniAgentException(ILLEGAL_DATA);
         }
 
@@ -604,8 +675,8 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .build());
 
         List<String> mcpIdList = new ArrayList<>();
-        List<TemplateVO.McpInfo> mcpInfoList = snapshotView.getMcpInfoList();
-        for (TemplateVO.McpInfo mcpInfo : mcpInfoList) {
+        List<SnapshotView.McpView> mcpViewList = snapshotView.getMcps();
+        for (SnapshotView.McpView mcpInfo : mcpViewList) {
                 String mcpId = randomUtil.randomMcpId();
             LinkedHashMap<String, String> secretMap = new LinkedHashMap<>();
             for (String secretKey : mcpInfo.getRequiredSecrets()) {
@@ -619,7 +690,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .mcpId(mcpId)
                     .mcpName(mcpInfo.getMcpName())
                     .mcpType(mcpInfo.getMcpType())
-                    .mcpParam(JSON.toJSONString(mcpInfo.getMcpParamTemplate()))
+                    .mcpParam(mcpInfo.getMcpParam())
                     .mcpSecret(mcpSecret)
                     .mcpTimeout(180)
                     .mcpChat(0)
@@ -640,11 +711,12 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .agentFrom(userId)
                 .build());
 
-        List<String> userPromptList = snapshotView.getUserPrompt();
-        List<Map.Entry<String, String>> systemPromptEntryList = new ArrayList<>(systemPromptMap.entrySet());
-        for (int i = 0; i < systemPromptEntryList.size(); i++) {
-            Map.Entry<String, String> systemPromptEntry = systemPromptEntryList.get(i);
-            String clientRole = systemPromptEntry.getKey();
+        for (int i = 0; i < promptViewList.size(); i++) {
+            SnapshotView.PromptView promptView = promptViewList.get(i);
+            String clientRole = promptView.getClientRole();
+            if (!StringUtils.hasText(clientRole)) {
+                throw new MiniAgentException(ILLEGAL_DATA);
+            }
             String clientId = randomUtil.randomClientId();
             String promptId = randomUtil.randomPromptId();
 
@@ -662,7 +734,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             aiPromptDao.insert(AiPrompt.builder()
                     .promptId(promptId)
                     .promptName(clientRole + "_prompt")
-                    .systenPrompt(systemPromptEntry.getValue() == null ? "" : systemPromptEntry.getValue())
+                    .systenPrompt(promptView.getSystemPrompt())
                     .build());
 
             aiConfigDao.insert(AiConfig.builder()
@@ -681,7 +753,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                         .build());
             }
 
-            String userPrompt = userPromptList.get(i);
+            String userPrompt = promptView.getUserPrompt();
             aiFlowDao.insert(AiFlow.builder()
                     .agentId(agentId)
                     .clientId(clientId)
@@ -701,9 +773,14 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
-    public void agentBaseUpdate(AgentBaseUpdateDTO dto) {
-        AiAgent aiAgent = requireOwnedAgent(dto.getAgentId());
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
+    public void agentUpdateBase(AgentUpdateBaseDTO dto) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
+        if (!userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
+        }
+
         aiAgentDao.update(AiAgent.builder()
                 .id(aiAgent.getId())
                 .agentName(dto.getAgentName())
@@ -712,11 +789,72 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
-    public void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto) {
-        requireOwnedAgent(dto.getAgentId());
-        AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
-        if (aiFlow == null) {
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
+    public void agentUpdateModel(AgentUpdateModelDTO dto) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
+        if (!userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
+        }
+
+        String modelId = dto.getModelId();
+        AiModel aiModel = aiModelDao.queryByModelId(modelId);
+        if (aiModel == null) {
+            throw new MiniAgentException(ILLEGAL_DATA);
+        }
+
+        aiAgentDao.update(AiAgent.builder()
+                .id(aiAgent.getId())
+                .modelId(modelId)
+                .build());
+
+        List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(dto.getAgentId());
+        for (AiFlow aiFlow : aiFlowList) {
+            AiClient aiClient = aiClientDao.queryByClientId(aiFlow.getClientId());
+            aiClientDao.update(AiClient.builder()
+                    .id(aiClient.getId())
+                    .modelId(modelId)
+                    .modelName(aiModel.getModelName())
+                    .build());
+        }
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
+    public void agentUpdateMcp(AgentUpdateMcpDTO dto) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
+        if (!userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
+        }
+
+        List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(dto.getAgentId());
+        for (AiFlow aiFlow : aiFlowList) {
+            String clientId = aiFlow.getClientId();
+            aiConfigDao.deleteByClientIdAndConfigType(clientId, ConfigType.MCP.getType());
+            for (String mcpId : dto.getMcpIdList()) {
+                AiConfig aiConfig = AiConfig.builder()
+                        .clientId(clientId)
+                        .configType(ConfigType.MCP.getType())
+                        .configValue(mcpId)
+                        .configStatus(1)
+                        .build();
+                aiConfigDao.insert(aiConfig);
+            }
+        }
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
+    public void agentUpdateUserPrompt(AgentUpdateUserPromptDTO dto) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
+        if (!userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
+        }
+
+        AiFlow aiFlow = aiFlowDao.queryById(dto.getFlowId());
+        if (aiFlow == null || !dto.getAgentId().equals(aiFlow.getAgentId())) {
             throw new MiniAgentException(ILLEGAL_DATA);
         }
 
@@ -727,20 +865,15 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "workspace:"})
-    public void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto) {
-        requireOwnedAgent(dto.getAgentId());
-        AiFlow aiFlow = aiFlowDao.queryByAgentIdAndClientRole(dto.getAgentId(), dto.getClientRole());
-        if (aiFlow == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
+    public void agentUpdateSystemPrompt(AgentUpdateSystemPromptDTO dto) {
+        Long userId = userContext.getUserId();
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
+        if (!userId.equals(aiAgent.getAgentFrom())) {
+            throw new MiniAgentException(ILLEGAL_USER);
         }
 
-        List<AiConfig> promptConfigList = aiConfigDao.queryByClientIdAndConfigType(aiFlow.getClientId(), ConfigType.PROMPT.getType());
-        if (promptConfigList == null || promptConfigList.isEmpty()) {
-            throw new MiniAgentException(ILLEGAL_DATA);
-        }
-
-        AiPrompt aiPrompt = aiPromptDao.queryByPromptId(promptConfigList.get(0).getConfigValue());
+        AiPrompt aiPrompt = aiPromptDao.queryByPromptId(dto.getPromptId());
         if (aiPrompt == null) {
             throw new MiniAgentException(ILLEGAL_DATA);
         }
@@ -749,15 +882,6 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .id(aiPrompt.getId())
                 .systenPrompt(dto.getSystemPrompt())
                 .build());
-    }
-
-    private AiAgent requireOwnedAgent(String agentId) {
-        Long userId = userContext.getUserId();
-        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
-        if (aiAgent == null || !userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
-        }
-        return aiAgent;
     }
 
 }

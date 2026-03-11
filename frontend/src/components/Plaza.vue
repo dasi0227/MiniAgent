@@ -228,7 +228,7 @@ const openDetail = (item) => {
         return;
     }
     router.push({
-        path: `/detail/${encodeURIComponent(templateId)}`,
+        path: `/template/${encodeURIComponent(templateId)}`,
         query: {
             forked: item?.forked ? '1' : '0'
         }

@@ -2,6 +2,7 @@ package com.dasi.domain.workspace.service;
 
 import com.dasi.domain.workspace.model.dto.*;
 import com.dasi.domain.workspace.model.vo.CommentVO;
+import com.dasi.domain.workspace.model.vo.AgentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
@@ -32,13 +33,19 @@ public interface IWorkspaceService {
 
     void agentFork(String templateId);
 
-    void agentBaseUpdate(AgentBaseUpdateDTO dto);
+    void agentUpdateBase(AgentUpdateBaseDTO dto);
 
-    void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto);
+    void agentUpdateModel(AgentUpdateModelDTO dto);
 
-    void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto);
+    void agentUpdateMcp(AgentUpdateMcpDTO dto);
+
+    void agentUpdateUserPrompt(AgentUpdateUserPromptDTO dto);
+
+    void agentUpdateSystemPrompt(AgentUpdateSystemPromptDTO dto);
 
     TemplateVO agentTemplate(String templateId);
+
+    AgentVO agentDetail(String agentId);
 
     void agentDelete(String agentId);
 

@@ -48,9 +48,8 @@ public class SnapshotUtil implements ISnapshotUtil {
                 .sorted(Comparator.comparing(AiFlow::getFlowSeq, Comparator.nullsLast(Integer::compareTo)))
                 .toList();
 
-        List<JSONObject> mcpSnapshotList = new ArrayList<>();
-        List<JSONObject> systemPromptList = new ArrayList<>();
-        List<JSONObject> userPromptList = new ArrayList<>();
+        Map<String, JSONObject> mcpSnapshotMap = new LinkedHashMap<>();
+        List<JSONObject> promptList = new ArrayList<>();
 
         for (AiFlow aiFlow : sortedFlowList) {
             String clientId = aiFlow.getClientId();
@@ -60,16 +59,11 @@ public class SnapshotUtil implements ISnapshotUtil {
             }
             AiPrompt aiPrompt = queryPromptByClientId(clientId);
 
-            JSONObject systemPrompt = new JSONObject();
-            systemPrompt.put("clientRole", aiFlow.getClientRole());
-            systemPrompt.put("content", aiPrompt.getSystenPrompt());
-
-            JSONObject userPrompt = new JSONObject();
-            userPrompt.put("seq", aiFlow.getFlowSeq());
-            userPrompt.put("content", aiFlow.getUserPrompt());
-
-            systemPromptList.add(systemPrompt);
-            userPromptList.add(userPrompt);
+            JSONObject prompt = new JSONObject();
+            prompt.put("clientRole", aiFlow.getClientRole());
+            prompt.put("system", aiPrompt.getSystenPrompt());
+            prompt.put("user", aiFlow.getUserPrompt());
+            promptList.add(prompt);
 
             List<AiConfig> mcpConfigList = aiConfigDao.queryByClientIdAndConfigType(aiClient.getClientId(), ConfigType.MCP.getType());
             if (mcpConfigList == null || mcpConfigList.isEmpty()) {
@@ -78,6 +72,9 @@ public class SnapshotUtil implements ISnapshotUtil {
 
             for (AiConfig mcpConfig : mcpConfigList) {
                 String mcpId = mcpConfig.getConfigValue();
+                if (!StringUtils.hasText(mcpId) || mcpSnapshotMap.containsKey(mcpId)) {
+                    continue;
+                }
                 AiMcp aiMcp = aiMcpDao.queryByMcpId(mcpId);
                 if (aiMcp == null) {
                     throw new MiniAgentException(PUBLISH_MCP_MISSING);
@@ -86,17 +83,16 @@ public class SnapshotUtil implements ISnapshotUtil {
                 mcpInfo.put("mcpName", aiMcp.getMcpName());
                 mcpInfo.put("mcpType", aiMcp.getMcpType());
                 mcpInfo.put("mcpDesc", aiMcp.getMcpDesc());
-                mcpInfo.put("mcpParamTemplate", aiMcp.getMcpParam());
+                mcpInfo.put("mcpParam", normalizeMcpParam(aiMcp.getMcpParam()));
                 mcpInfo.put("requiredSecrets", extractSecretKeyList(aiMcp.getMcpSecret()));
-                mcpSnapshotList.add(mcpInfo);
+                mcpSnapshotMap.put(mcpId, mcpInfo);
             }
         }
 
         JSONObject snapshot = new JSONObject();
         snapshot.put("version", 1);
-        snapshot.put("mcps", mcpSnapshotList);
-        snapshot.put("systemPrompts", systemPromptList);
-        snapshot.put("userPrompts", userPromptList);
+        snapshot.put("mcps", mcpSnapshotMap.values());
+        snapshot.put("prompts", promptList);
 
         return JSON.toJSONString(snapshot);
     }
@@ -107,71 +103,80 @@ public class SnapshotUtil implements ISnapshotUtil {
             JSONObject snapshot = JSON.parseObject(snapshotRaw);
             return new SnapshotView(
                     parseSnapshotMcpList(snapshot.getJSONArray("mcps")),
-                    parseSnapshotSystemPrompt(snapshot.getJSONArray("systemPrompts")),
-                    parseSnapshotUserPrompt(snapshot.getJSONArray("userPrompts"))
+                    parsePromptList(snapshot.getJSONArray("prompts"))
             );
         } catch (Exception e) {
             log.warn("解析 Template 快照失败", e);
-            return SnapshotView.empty();
+            return new SnapshotView(List.of(), List.of());
         }
     }
 
-    private List<TemplateVO.McpInfo> parseSnapshotMcpList(JSONArray mcpArray) {
+    @Override
+    public List<TemplateVO.ClientInfo> toTemplateClientInfoList(List<SnapshotView.PromptView> promptViewList) {
+        if (promptViewList == null || promptViewList.isEmpty()) {
+            return List.of();
+        }
+        return promptViewList.stream()
+                .map(promptView -> TemplateVO.ClientInfo.builder()
+                        .clientRole(promptView.getClientRole())
+                        .systemPrompt(promptView.getSystemPrompt())
+                        .userPrompt(promptView.getUserPrompt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<TemplateVO.McpInfo> toTemplateMcpInfoList(List<SnapshotView.McpView> mcpViewList) {
+        if (mcpViewList == null || mcpViewList.isEmpty()) {
+            return List.of();
+        }
+        return mcpViewList.stream()
+                .map(mcpView -> TemplateVO.McpInfo.builder()
+                        .mcpName(mcpView.getMcpName())
+                        .mcpType(mcpView.getMcpType())
+                        .mcpParam(mcpView.getMcpParam())
+                        .mcpDesc(mcpView.getMcpDesc())
+                        .requiredSecrets(mcpView.getRequiredSecrets())
+                        .build())
+                .toList();
+    }
+
+    private List<SnapshotView.McpView> parseSnapshotMcpList(JSONArray mcpArray) {
         if (mcpArray == null || mcpArray.isEmpty()) {
             return List.of();
         }
-        List<TemplateVO.McpInfo> result = new ArrayList<>();
+        List<SnapshotView.McpView> result = new ArrayList<>();
         for (int i = 0; i < mcpArray.size(); i++) {
             JSONObject mcp = mcpArray.getJSONObject(i);
             if (mcp == null) {
                 continue;
             }
-            result.add(TemplateVO.McpInfo.builder()
+            result.add(SnapshotView.McpView.builder()
                     .mcpName(mcp.getString("mcpName"))
                     .mcpType(mcp.getString("mcpType"))
                     .mcpDesc(mcp.getString("mcpDesc"))
-                    .mcpParamTemplate(mcp.get("mcpParamTemplate"))
+                    .mcpParam(mcp.getString("mcpParam"))
                     .requiredSecrets(parseStringList(mcp.getJSONArray("requiredSecrets")))
                     .build());
         }
         return result;
     }
 
-    private Map<String, String> parseSnapshotSystemPrompt(JSONArray systemPromptArray) {
-        Map<String, String> systemPromptMap = new LinkedHashMap<>();
-        if (systemPromptArray == null) {
-            return systemPromptMap;
+    private List<SnapshotView.PromptView> parsePromptList(JSONArray promptArray) {
+        if (promptArray == null || promptArray.isEmpty()) {
+            return List.of();
         }
-        for (int i = 0; i < systemPromptArray.size(); i++) {
-            JSONObject item = systemPromptArray.getJSONObject(i);
+        List<SnapshotView.PromptView> result = new ArrayList<>();
+        for (int i = 0; i < promptArray.size(); i++) {
+            JSONObject item = promptArray.getJSONObject(i);
             if (item == null) {
                 continue;
             }
-            String clientRole = item.getString("clientRole");
-            if (!StringUtils.hasText(clientRole)) {
-                continue;
-            }
-            systemPromptMap.put(clientRole, item.getString("content"));
-        }
-        return systemPromptMap;
-    }
-
-    private List<String> parseSnapshotUserPrompt(JSONArray userPromptArray) {
-        if (userPromptArray == null) {
-            return List.of();
-        }
-        List<JSONObject> tempList = new ArrayList<>();
-        for (int i = 0; i < userPromptArray.size(); i++) {
-            JSONObject item = userPromptArray.getJSONObject(i);
-            if (item != null) {
-                tempList.add(item);
-            }
-        }
-        tempList.sort(Comparator.comparing(item -> item.getInteger("seq"), Comparator.nullsLast(Integer::compareTo)));
-
-        List<String> result = new ArrayList<>();
-        for (JSONObject item : tempList) {
-            result.add(item.getString("content"));
+            result.add(SnapshotView.PromptView.builder()
+                    .clientRole(item.getString("clientRole"))
+                    .systemPrompt(item.getString("system"))
+                    .userPrompt(item.getString("user"))
+                    .build());
         }
         return result;
     }
@@ -203,6 +208,19 @@ public class SnapshotUtil implements ISnapshotUtil {
             return List.of();
         }
         return values.stream().filter(StringUtils::hasText).toList();
+    }
+
+    private String normalizeMcpParam(String raw) {
+        if (!StringUtils.hasText(raw)) {
+            return "{}";
+        }
+        try {
+            Object parsed = JSON.parse(raw);
+            return JSON.toJSONString(parsed);
+        } catch (Exception e) {
+            log.warn("解析 mcpParam 失败，按字符串原样返回");
+            return raw;
+        }
     }
 
     private AiPrompt queryPromptByClientId(String clientId) {

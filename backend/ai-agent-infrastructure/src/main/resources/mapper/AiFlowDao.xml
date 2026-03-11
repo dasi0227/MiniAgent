@@ -27,6 +27,20 @@
         ORDER BY flow_seq DESC, update_time DESC, id DESC
     </select>
 
+    <select id="queryById" resultMap="dataMap">
+        SELECT id,
+               agent_id,
+               client_id,
+               client_role,
+               user_prompt,
+               flow_seq,
+               create_time,
+               update_time
+        FROM ai_flow
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
     <select id="queryAgentIdByClientId" resultType="java.lang.String">
         SELECT agent_id
         FROM ai_flow

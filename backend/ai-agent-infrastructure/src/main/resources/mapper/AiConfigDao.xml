@@ -157,4 +157,11 @@
         WHERE client_id = #{clientId}
     </delete>
 
+    <delete id="deleteByClientIdAndConfigType">
+        DELETE
+        FROM ai_config
+        WHERE client_id = #{clientId}
+          AND config_type = #{configType}
+    </delete>
+
 </mapper>

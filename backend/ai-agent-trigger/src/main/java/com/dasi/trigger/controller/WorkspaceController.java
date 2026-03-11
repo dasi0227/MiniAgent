@@ -1,10 +1,7 @@
 package com.dasi.trigger.controller;
 
 import com.dasi.domain.workspace.model.dto.*;
-import com.dasi.domain.workspace.model.vo.CommentVO;
-import com.dasi.domain.workspace.model.vo.PlazaVO;
-import com.dasi.domain.workspace.model.vo.RepoVO;
-import com.dasi.domain.workspace.model.vo.TemplateVO;
+import com.dasi.domain.workspace.model.vo.*;
 import com.dasi.domain.workspace.service.IWorkspaceService;
 import com.dasi.types.result.PageResult;
 import com.dasi.types.result.Result;
@@ -94,33 +91,44 @@ public class WorkspaceController {
         return Result.success(workspaceService.agentTemplate(templateId));
     }
 
-    @PostMapping("/agent/fork")
-    public Result<Void> agentFork(@NotBlank @RequestParam String templateId) {
-        workspaceService.agentFork(templateId);
+    @PostMapping("/agent/detail")
+    public Result<AgentVO> agentDetail(@NotBlank @RequestParam String agentId) {
+        return Result.success(workspaceService.agentDetail(agentId));
+    }
+
+    @PostMapping("/agent/update/model")
+    public Result<Void> agentUpdateModel(@Valid @RequestBody AgentUpdateModelDTO dto) {
+        workspaceService.agentUpdateModel(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/agent/update/mcp")
+    public Result<Void> agentUpdateMcp(@Valid @RequestBody AgentUpdateMcpDTO dto) {
+        workspaceService.agentUpdateMcp(dto);
         return Result.success();
     }
 
     @PostMapping("/agent/update/base")
-    public Result<Void> agentBaseUpdate(@Valid @RequestBody AgentBaseUpdateDTO dto) {
-        workspaceService.agentBaseUpdate(dto);
+    public Result<Void> agentUpdateBase(@Valid @RequestBody AgentUpdateBaseDTO dto) {
+        workspaceService.agentUpdateBase(dto);
         return Result.success();
     }
 
     @PostMapping("/agent/update/userprompt")
-    public Result<Void> agentUserPromptUpdate(@Valid @RequestBody AgentUserPromptUpdateDTO dto) {
-        workspaceService.agentUserPromptUpdate(dto);
+    public Result<Void> agentUpdateUserPrompt(@Valid @RequestBody AgentUpdateUserPromptDTO dto) {
+        workspaceService.agentUpdateUserPrompt(dto);
         return Result.success();
     }
 
     @PostMapping("/agent/update/systemprompt")
-    public Result<Void> agentSystemPromptUpdate(@Valid @RequestBody AgentSystemPromptUpdateDTO dto) {
-        workspaceService.agentSystemPromptUpdate(dto);
+    public Result<Void> agentUpdateSystemPrompt(@Valid @RequestBody AgentUpdateSystemPromptDTO dto) {
+        workspaceService.agentUpdateSystemPrompt(dto);
         return Result.success();
     }
 
-    @PostMapping("/agent/delete")
-    public Result<Void> agentDelete(@NotBlank @RequestParam String agentId) {
-        workspaceService.agentDelete(agentId);
+    @PostMapping("/agent/fork")
+    public Result<Void> agentFork(@NotBlank @RequestParam String templateId) {
+        workspaceService.agentFork(templateId);
         return Result.success();
     }
 
@@ -130,4 +138,11 @@ public class WorkspaceController {
         return Result.success();
     }
 
+    @PostMapping("/agent/delete")
+    public Result<Void> agentDelete(@NotBlank @RequestParam String agentId) {
+        workspaceService.agentDelete(agentId);
+        return Result.success();
+    }
+
 }
+

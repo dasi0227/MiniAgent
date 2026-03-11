@@ -145,7 +145,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void apiInsert(SettingApiDTO dto, String apiId, String modelId) {
         Long userId = userContext.getUserId();
 
@@ -184,7 +184,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void apiUpdate(SettingApiDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getApiId() == null) {
@@ -236,7 +236,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void apiDelete(String apiId) {
         Long userId = userContext.getUserId();
 
@@ -286,7 +286,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void mcpInsert(SettingMcpDTO dto, String mcpId) {
         Long userId = userContext.getUserId();
 
@@ -305,7 +305,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void mcpUpdate(SettingMcpDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getMcpId() == null) {
@@ -325,7 +325,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void mcpDelete(String mcpId) {
         Long userId = userContext.getUserId();
 
@@ -353,7 +353,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void taskInsert(SettingTaskDTO dto, String taskId) {
         Long userId = userContext.getUserId();
         validateOwnedAgent(dto.getAgentId(), userId);
@@ -371,7 +371,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void taskUpdate(SettingTaskDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getTaskId() == null) {
@@ -393,7 +393,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void taskDelete(String taskId) {
         Long userId = userContext.getUserId();
         AiTask aiTask = taskDao.queryByTaskIdAndFrom(taskId, userId);
@@ -404,7 +404,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "user:"})
+    @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
     public void taskToggle(String taskId, Integer taskStatus) {
         Long userId = userContext.getUserId();
         AiTask aiTask = taskDao.queryByTaskIdAndFrom(taskId, userId);

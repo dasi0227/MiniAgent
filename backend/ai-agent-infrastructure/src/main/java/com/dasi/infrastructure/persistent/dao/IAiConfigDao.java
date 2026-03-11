@@ -41,6 +41,9 @@ public interface IAiConfigDao {
 
     Integer deleteByClientId(@Param("clientId") String clientId);
 
+    Integer deleteByClientIdAndConfigType(@Param("clientId") String clientId,
+                                          @Param("configType") String configType);
+
     void toggle(@Param("id") Long id, @Param("status") Integer status);
 
 }

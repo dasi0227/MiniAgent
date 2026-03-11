@@ -10,6 +10,7 @@ import com.dasi.domain.workspace.model.enumeration.RepoType;
 import com.dasi.domain.workspace.model.enumeration.RoleType;
 import com.dasi.domain.workspace.model.enumeration.StrategyType;
 import com.dasi.domain.workspace.model.vo.CommentVO;
+import com.dasi.domain.workspace.model.vo.AgentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
@@ -167,25 +168,42 @@ public class WorkspaceService implements IWorkspaceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void agentBaseUpdate(AgentBaseUpdateDTO dto) {
-        workspaceRepository.agentBaseUpdate(dto);
+    public void agentUpdateBase(AgentUpdateBaseDTO dto) {
+        workspaceRepository.agentUpdateBase(dto);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto) {
-        workspaceRepository.agentUserPromptUpdate(dto);
+    public void agentUpdateModel(AgentUpdateModelDTO dto) {
+        workspaceRepository.agentUpdateModel(dto);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto) {
-        workspaceRepository.agentSystemPromptUpdate(dto);
+    public void agentUpdateMcp(AgentUpdateMcpDTO dto) {
+        workspaceRepository.agentUpdateMcp(dto);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void agentUpdateUserPrompt(AgentUpdateUserPromptDTO dto) {
+        workspaceRepository.agentUpdateUserPrompt(dto);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void agentUpdateSystemPrompt(AgentUpdateSystemPromptDTO dto) {
+        workspaceRepository.agentUpdateSystemPrompt(dto);
     }
 
     @Override
     public TemplateVO agentTemplate(String templateId) {
         return workspaceRepository.agentTemplate(templateId);
+    }
+
+    @Override
+    public AgentVO agentDetail(String agentId) {
+        return workspaceRepository.agentDetail(agentId);
     }
 
     @Override

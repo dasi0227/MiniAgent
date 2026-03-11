@@ -1,15 +1,18 @@
 package com.dasi.domain.workspace.repository;
 
 import com.dasi.domain.workspace.model.vo.CommentVO;
+import com.dasi.domain.workspace.model.vo.AgentVO;
 import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
-import com.dasi.domain.workspace.model.dto.AgentBaseUpdateDTO;
+import com.dasi.domain.workspace.model.dto.AgentUpdateBaseDTO;
+import com.dasi.domain.workspace.model.dto.AgentUpdateMcpDTO;
+import com.dasi.domain.workspace.model.dto.AgentUpdateModelDTO;
 import com.dasi.domain.workspace.model.dto.AgentCreateDTO;
 import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
 import com.dasi.domain.workspace.model.entity.RolePromptEntity;
-import com.dasi.domain.workspace.model.dto.AgentSystemPromptUpdateDTO;
-import com.dasi.domain.workspace.model.dto.AgentUserPromptUpdateDTO;
+import com.dasi.domain.workspace.model.dto.AgentUpdateSystemPromptDTO;
+import com.dasi.domain.workspace.model.dto.AgentUpdateUserPromptDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentAreaDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.model.dto.PlazaPageDTO;
@@ -42,13 +45,19 @@ public interface IWorkspaceRepository {
 
     void agentFork(String templateId);
 
-    void agentBaseUpdate(AgentBaseUpdateDTO dto);
+    void agentUpdateBase(AgentUpdateBaseDTO dto);
 
-    void agentUserPromptUpdate(AgentUserPromptUpdateDTO dto);
+    void agentUpdateModel(AgentUpdateModelDTO dto);
 
-    void agentSystemPromptUpdate(AgentSystemPromptUpdateDTO dto);
+    void agentUpdateMcp(AgentUpdateMcpDTO dto);
+
+    void agentUpdateUserPrompt(AgentUpdateUserPromptDTO dto);
+
+    void agentUpdateSystemPrompt(AgentUpdateSystemPromptDTO dto);
 
     TemplateVO agentTemplate(String templateId);
+
+    AgentVO agentDetail(String agentId);
 
     void agentDelete(String agentId);
 
