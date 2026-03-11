@@ -57,13 +57,11 @@ const strategy = computed(() => normalizeStrategyType(detail.value?.agentType ||
 const detailTone = computed(() => getStrategyTone(strategy.value, isDarkTheme.value));
 
 const detailThemeVars = computed(() => ({
-    '--detail-glow-primary': detailTone.value.glowPrimary || 'rgba(59,130,246,0.22)',
-    '--detail-glow-secondary': detailTone.value.glowSecondary || 'rgba(37,99,235,0.14)',
     '--detail-page-bg': detailTone.value.sectionTintBg || 'var(--bg-page)',
     '--detail-card-bg': 'var(--surface-1)',
-    '--detail-section-border': detailTone.value.sectionBorder || 'var(--border-color)',
-    '--detail-divider': detailTone.value.divider || 'var(--border-color)',
-    '--detail-focus': detailTone.value.focus || 'var(--accent-color)'
+    '--detail-section-border': detailTone.value.detailSectionBorder || detailTone.value.sectionBorder || 'var(--border-color)',
+    '--detail-divider': detailTone.value.detailDivider || detailTone.value.divider || 'var(--border-color)',
+    '--detail-focus': detailTone.value.detailFocus || detailTone.value.focus || 'var(--accent-color)'
 }));
 
 const resolvedAgentType = computed(() => (detail.value?.agentType || '--').toString().toUpperCase());
@@ -257,17 +255,8 @@ onBeforeUnmount(() => {
 
 <template>
     <section class="relative grid h-screen grid-rows-[1fr_var(--footer-height)] overflow-x-hidden" :style="detailThemeVars">
-        <div class="h-full overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] pt-[8px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
+        <div class="h-full overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] pt-[24px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
             <div class="relative mx-auto max-w-[1180px]">
-                <div
-                    class="pointer-events-none absolute right-[-28px] top-[-28px] z-0 h-[260px] w-[380px] rounded-full blur-[72px]"
-                    :style="{ backgroundImage: 'radial-gradient(closest-side, var(--detail-glow-primary), transparent 70%)' }"
-                />
-                <div
-                    class="pointer-events-none absolute right-[130px] top-[22px] z-0 h-[170px] w-[260px] rounded-full blur-[60px]"
-                    :style="{ backgroundImage: 'radial-gradient(closest-side, var(--detail-glow-secondary), transparent 72%)' }"
-                />
-
                 <div v-if="detail" class="relative z-[1] space-y-[18px]">
                     <header class="relative">
                         <button
@@ -324,11 +313,11 @@ onBeforeUnmount(() => {
                                 <button
                                     v-for="(item, index) in mcpInfoList"
                                     :key="`${item.mcpName || 'mcp'}-${index}`"
-                                    class="flex w-full items-center gap-[10px] rounded-[10px] border border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
+                                    class="flex w-full items-center gap-[10px] rounded-[10px] border-[1.5px] border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
                                     @click="openMcpInfo(item)"
                                 >
                                     <span class="min-w-0 flex-1 truncate text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName || '--' }}</span>
-                                    <span class="shrink-0 rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
+                                    <span class="shrink-0 rounded-full border-[1.5px] border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
                                         {{ (item.mcpType || '--').toUpperCase() }}
                                     </span>
                                 </button>
@@ -342,14 +331,14 @@ onBeforeUnmount(() => {
                         <div class="grid grid-cols-[40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)] items-stretch gap-[8px]">
                             <template v-for="row in orderedRoleRows" :key="row.roleKey">
                                 <button
-                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border border-[var(--detail-divider)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border-[1.5px] border-[var(--detail-divider)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
                                     :title="`查看第 ${row.flowIndex} 步 User Prompt`"
                                     @click="openUserPrompt(row)"
                                 >
                                     <span class="text-[24px] font-bold leading-none">{{ row.flowIndex }}</span>
                                 </button>
                                 <button
-                                    class="flex min-w-0 flex-col rounded-[14px] border border-[var(--detail-divider)] px-[12px] py-[12px] text-left transition hover:border-[var(--detail-focus)] min-h-[160px]"
+                                    class="flex min-w-0 flex-col rounded-[14px] border-[1.5px] border-[var(--detail-divider)] px-[12px] py-[12px] text-left transition hover:border-[var(--detail-focus)] min-h-[160px]"
                                     @click="openSystemPrompt(row)"
                                 >
                                     <div class="text-center text-[28px] font-bold leading-none text-[var(--text-primary)] max-[1280px]:text-[24px]">{{ row.roleName }}</div>
@@ -449,7 +438,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .detail-section-panel {
-    border: 1.5px solid var(--detail-section-border);
+    border: 2px solid var(--detail-section-border);
     background: var(--detail-card-bg);
     border-radius: 14px;
     padding: 12px;
@@ -476,7 +465,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     min-height: 46px;
-    border: 1.5px solid var(--detail-divider);
+    border: 2px solid var(--detail-divider);
     border-radius: 10px;
     padding: 0 12px;
     font-size: 15px;

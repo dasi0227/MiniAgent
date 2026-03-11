@@ -591,6 +591,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
 
         List<AgentVO.ClientInfo> clientInfoList = new ArrayList<>();
         List<AgentVO.McpInfo> mcpInfoList = new ArrayList<>();
+        Set<String> mcpIdSet = new HashSet<>();
         for (AiFlow aiFlow : aiFlowList) {
 
             // 拿到 userPrompt
@@ -616,6 +617,9 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             List<AiConfig> mcpConfigList = aiConfigDao.queryByClientIdAndConfigType(clientId, ConfigType.MCP.getType());
             for (AiConfig mcpConfig : mcpConfigList) {
                 String mcpId = mcpConfig.getConfigValue();
+                if (mcpIdSet.contains(mcpId)) {
+                    continue;
+                }
                 AiMcp aiMcp = aiMcpDao.queryByMcpId(mcpId);
                 AgentVO.McpInfo mcpInfo = AgentVO.McpInfo.builder()
                         .mcpId(aiMcp.getMcpId())
@@ -626,6 +630,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                         .mcpSecret(aiMcp.getMcpSecret())
                         .build();
                 mcpInfoList.add(mcpInfo);
+                mcpIdSet.add(mcpId);
             }
         }
 

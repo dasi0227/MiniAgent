@@ -88,13 +88,11 @@ const strategy = computed(() => normalizeStrategyType(detail.value?.agentType ||
 const tone = computed(() => getStrategyTone(strategy.value, isDarkTheme.value));
 
 const themeVars = computed(() => ({
-    '--detail-glow-primary': tone.value.glowPrimary || 'rgba(59,130,246,0.22)',
-    '--detail-glow-secondary': tone.value.glowSecondary || 'rgba(37,99,235,0.14)',
     '--detail-page-bg': tone.value.sectionTintBg || 'var(--bg-page)',
     '--detail-card-bg': 'var(--surface-1)',
-    '--detail-section-border': tone.value.sectionBorder || 'var(--border-color)',
-    '--detail-divider': tone.value.divider || 'var(--border-color)',
-    '--detail-focus': tone.value.focus || 'var(--accent-color)'
+    '--detail-section-border': tone.value.detailSectionBorder || tone.value.sectionBorder || 'var(--border-color)',
+    '--detail-divider': tone.value.detailDivider || tone.value.divider || 'var(--border-color)',
+    '--detail-focus': tone.value.detailFocus || tone.value.focus || 'var(--accent-color)'
 }));
 
 const resolvedAgentType = computed(() => (detail.value?.agentType || '--').toString().toUpperCase());
@@ -474,17 +472,8 @@ onMounted(async () => {
 
 <template>
     <section class="relative grid h-screen grid-rows-[1fr_var(--footer-height)] overflow-x-hidden" :style="themeVars">
-        <div class="h-full overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] pt-[8px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
+        <div class="h-full overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] pt-[24px] pb-[24px] pl-[24px] pr-[calc(24px+var(--scrollbar-w))]">
             <div class="relative mx-auto max-w-[1180px]">
-                <div
-                    class="pointer-events-none absolute right-[-28px] top-[-28px] z-0 h-[260px] w-[380px] rounded-full blur-[72px]"
-                    :style="{ backgroundImage: 'radial-gradient(closest-side, var(--detail-glow-primary), transparent 70%)' }"
-                />
-                <div
-                    class="pointer-events-none absolute right-[130px] top-[22px] z-0 h-[170px] w-[260px] rounded-full blur-[60px]"
-                    :style="{ backgroundImage: 'radial-gradient(closest-side, var(--detail-glow-secondary), transparent 72%)' }"
-                />
-
                 <div v-if="detail" class="relative z-[1] space-y-[18px]">
                     <header class="relative">
                         <button
@@ -511,11 +500,14 @@ onMounted(async () => {
                             <div class="group relative justify-self-center">
                                 <h1 class="text-center text-[42px] font-bold leading-[1.08] text-[var(--text-primary)] max-[980px]:text-[34px]">{{ resolvedAgentName }}</h1>
                                 <button
-                                    class="absolute -right-[34px] top-[8px] hidden h-[26px] w-[26px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition group-hover:inline-flex hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="absolute -right-[38px] top-[6px] hidden h-[30px] w-[30px] items-center justify-center rounded-full border-[1.5px] border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition group-hover:inline-flex hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
                                     title="编辑智能体"
                                     @click="openBaseEdit"
                                 >
-                                    <svg viewBox="0 0 20 20" class="h-[13px] w-[13px]" fill="currentColor" aria-hidden="true"><path d="M13.9 2.7a2.1 2.1 0 0 1 3 3l-8.4 8.4-3.7.8.8-3.7 8.3-8.5zm-9.1 9.8-.3 1.6 1.6-.3 7.8-7.9-1.3-1.3-7.8 7.9z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                    </svg>
                                 </button>
                             </div>
                             <div class="flex flex-wrap items-end justify-self-start gap-x-[14px] text-[14px] text-[var(--text-secondary)] max-[980px]:justify-self-center">
@@ -526,28 +518,36 @@ onMounted(async () => {
 
                     <div class="h-px w-full bg-[var(--detail-divider)]" />
 
-                    <section class="detail-section-panel space-y-[10px] group relative">
-                        <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">智能体概述</h2>
-                        <button
-                            class="absolute right-[10px] top-[10px] hidden h-[26px] w-[26px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition group-hover:inline-flex hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
-                            title="编辑智能体"
-                            @click="openBaseEdit"
-                        >
-                            <svg viewBox="0 0 20 20" class="h-[13px] w-[13px]" fill="currentColor" aria-hidden="true"><path d="M13.9 2.7a2.1 2.1 0 0 1 3 3l-8.4 8.4-3.7.8.8-3.7 8.3-8.5zm-9.1 9.8-.3 1.6 1.6-.3 7.8-7.9-1.3-1.3-7.8 7.9z"/></svg>
-                        </button>
+                    <section class="detail-section-panel space-y-[10px]">
+                        <div class="flex items-center gap-[8px]">
+                            <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">智能体概述</h2>
+                            <button
+                                class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border-[1.5px] border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                title="编辑智能体"
+                                @click="openBaseEdit"
+                            >
+                                <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 20h9" />
+                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                </svg>
+                            </button>
+                        </div>
                         <p class="whitespace-pre-wrap text-[15px] leading-[1.7] text-[var(--text-secondary)]">{{ detail.agentDesc || '暂无描述' }}</p>
                     </section>
 
                     <section class="grid items-stretch gap-[18px] min-[980px]:grid-cols-2">
                         <div class="detail-section-panel flex h-full flex-col space-y-[8px]">
-                            <div class="flex items-center justify-between gap-[8px]">
+                            <div class="flex items-center gap-[8px]">
                                 <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
                                 <button
-                                    class="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border-[1.5px] border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
                                     title="编辑模型"
                                     @click="openModelEdit"
                                 >
-                                    <svg viewBox="0 0 20 20" class="h-[14px] w-[14px]" fill="currentColor" aria-hidden="true"><path d="M13.9 2.7a2.1 2.1 0 0 1 3 3l-8.4 8.4-3.7.8.8-3.7 8.3-8.5zm-9.1 9.8-.3 1.6 1.6-.3 7.8-7.9-1.3-1.3-7.8 7.9z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                    </svg>
                                 </button>
                             </div>
                             <div class="flex h-full flex-col gap-[6px]">
@@ -558,25 +558,28 @@ onMounted(async () => {
                         </div>
 
                         <div class="detail-section-panel flex h-full flex-col space-y-[8px]">
-                            <div class="flex items-center justify-between gap-[8px]">
+                            <div class="flex items-center gap-[8px]">
                                 <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
                                 <button
-                                    class="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border-[1.5px] border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
                                     title="编辑 MCP"
                                     @click="openMcpEdit"
                                 >
-                                    <svg viewBox="0 0 20 20" class="h-[14px] w-[14px]" fill="currentColor" aria-hidden="true"><path d="M13.9 2.7a2.1 2.1 0 0 1 3 3l-8.4 8.4-3.7.8.8-3.7 8.3-8.5zm-9.1 9.8-.3 1.6 1.6-.3 7.8-7.9-1.3-1.3-7.8 7.9z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                    </svg>
                                 </button>
                             </div>
                             <div v-if="mcpInfoList.length > 0" class="h-full max-h-[160px] w-full space-y-[6px] overflow-y-auto pr-[2px]">
                                 <button
                                     v-for="(item, index) in mcpInfoList"
                                     :key="`${item.mcpId || item.mcpName || 'mcp'}-${index}`"
-                                    class="flex w-full items-center gap-[10px] rounded-[10px] border border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
+                                    class="flex w-full items-center gap-[10px] rounded-[10px] border-[1.5px] border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
                                     @click="openMcpInfo(item)"
                                 >
                                     <span class="min-w-0 flex-1 truncate text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName || '--' }}</span>
-                                    <span class="shrink-0 rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
+                                    <span class="shrink-0 rounded-full border-[1.5px] border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
                                         {{ (item.mcpType || '--').toUpperCase() }}
                                     </span>
                                 </button>
@@ -590,14 +593,14 @@ onMounted(async () => {
                         <div class="grid grid-cols-[40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)_40px_minmax(0,1fr)] items-stretch gap-[8px]">
                             <template v-for="row in orderedRoleRows" :key="row.roleKey">
                                 <button
-                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border border-[var(--detail-divider)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="inline-flex min-w-0 items-center justify-center rounded-[10px] border-[1.5px] border-[var(--detail-divider)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
                                     :title="`编辑第 ${row.flowIndex} 步 User Prompt`"
                                     @click="openPromptEdit(row, 'user')"
                                 >
                                     <span class="text-[24px] font-bold leading-none">{{ row.flowIndex }}</span>
                                 </button>
                                 <button
-                                    class="flex min-w-0 flex-col rounded-[14px] border border-[var(--detail-divider)] px-[12px] py-[12px] text-left transition hover:border-[var(--detail-focus)] min-h-[160px]"
+                                    class="flex min-w-0 flex-col rounded-[14px] border-[1.5px] border-[var(--detail-divider)] px-[12px] py-[12px] text-left transition hover:border-[var(--detail-focus)] min-h-[160px]"
                                     @click="openPromptEdit(row, 'system')"
                                 >
                                     <div class="text-center text-[28px] font-bold leading-none text-[var(--text-primary)] max-[1280px]:text-[24px]">{{ row.roleName }}</div>
@@ -770,7 +773,7 @@ onMounted(async () => {
 
 <style scoped>
 .detail-section-panel {
-    border: 1.5px solid var(--detail-section-border);
+    border: 2px solid var(--detail-section-border);
     background: var(--detail-card-bg);
     border-radius: 14px;
     padding: 12px;
@@ -797,7 +800,7 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     min-height: 46px;
-    border: 1.5px solid var(--detail-divider);
+    border: 2px solid var(--detail-divider);
     border-radius: 10px;
     padding: 0 12px;
     font-size: 15px;
@@ -830,7 +833,7 @@ onMounted(async () => {
     max-height: calc(100% - 48px);
     flex-direction: column;
     border-radius: 14px;
-    border: 1.5px solid var(--detail-section-border);
+    border: 2px solid var(--detail-section-border);
     background: var(--surface-1);
     padding: 16px;
     box-shadow: 0 20px 50px rgba(15, 23, 42, 0.24);
@@ -842,7 +845,7 @@ onMounted(async () => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    border-bottom: 1.5px solid var(--detail-divider);
+    border-bottom: 2px solid var(--detail-divider);
     padding-bottom: 10px;
 }
 
@@ -863,7 +866,7 @@ onMounted(async () => {
     height: 36px;
     min-width: 82px;
     border-radius: 10px;
-    border: 1.5px solid var(--detail-divider);
+    border: 2px solid var(--detail-divider);
     padding: 0 14px;
     font-size: 14px;
     font-weight: 600;
@@ -883,7 +886,7 @@ onMounted(async () => {
 
 .detail-input,
 .detail-textarea {
-    border: 1.5px solid var(--detail-divider);
+    border: 2px solid var(--detail-divider);
     border-radius: 10px;
     background: var(--surface-1);
     color: var(--text-primary);

@@ -29,7 +29,10 @@ const STRATEGY_TONES = {
             sectionTintBg: 'rgba(255,251,235,0.5)',
             sectionBorder: 'rgba(245,158,11,0.2)',
             divider: 'rgba(245,158,11,0.18)',
-            focus: 'rgba(217,119,6,0.48)'
+            focus: 'rgba(217,119,6,0.48)',
+            detailSectionBorder: 'rgba(217,119,6,0.34)',
+            detailDivider: 'rgba(217,119,6,0.3)',
+            detailFocus: 'rgba(180,83,9,0.7)'
         },
         dark: {
             overlay:
@@ -58,7 +61,10 @@ const STRATEGY_TONES = {
             sectionTintBg: 'rgba(236,201,75,0.06)',
             sectionBorder: 'rgba(236,201,75,0.22)',
             divider: 'rgba(236,201,75,0.2)',
-            focus: 'rgba(236,201,75,0.42)'
+            focus: 'rgba(236,201,75,0.42)',
+            detailSectionBorder: 'rgba(236,201,75,0.34)',
+            detailDivider: 'rgba(236,201,75,0.3)',
+            detailFocus: 'rgba(236,201,75,0.62)'
         }
     },
     loop: {
@@ -89,7 +95,10 @@ const STRATEGY_TONES = {
             sectionTintBg: 'rgba(239,246,255,0.48)',
             sectionBorder: 'rgba(59,130,246,0.18)',
             divider: 'rgba(59,130,246,0.16)',
-            focus: 'rgba(37,99,235,0.46)'
+            focus: 'rgba(37,99,235,0.46)',
+            detailSectionBorder: 'rgba(37,99,235,0.3)',
+            detailDivider: 'rgba(37,99,235,0.26)',
+            detailFocus: 'rgba(29,78,216,0.68)'
         },
         dark: {
             overlay:
@@ -118,7 +127,10 @@ const STRATEGY_TONES = {
             sectionTintBg: 'rgba(113,162,243,0.06)',
             sectionBorder: 'rgba(113,162,243,0.22)',
             divider: 'rgba(113,162,243,0.2)',
-            focus: 'rgba(113,162,243,0.42)'
+            focus: 'rgba(113,162,243,0.42)',
+            detailSectionBorder: 'rgba(113,162,243,0.34)',
+            detailDivider: 'rgba(113,162,243,0.3)',
+            detailFocus: 'rgba(113,162,243,0.62)'
         }
     },
     react: {
@@ -149,7 +161,10 @@ const STRATEGY_TONES = {
             sectionTintBg: 'rgba(236,253,245,0.48)',
             sectionBorder: 'rgba(16,185,129,0.18)',
             divider: 'rgba(16,185,129,0.16)',
-            focus: 'rgba(5,150,105,0.44)'
+            focus: 'rgba(5,150,105,0.44)',
+            detailSectionBorder: 'rgba(5,150,105,0.3)',
+            detailDivider: 'rgba(5,150,105,0.26)',
+            detailFocus: 'rgba(4,120,87,0.68)'
         },
         dark: {
             overlay:
@@ -178,7 +193,10 @@ const STRATEGY_TONES = {
             sectionTintBg: 'rgba(72,181,146,0.06)',
             sectionBorder: 'rgba(72,181,146,0.22)',
             divider: 'rgba(72,181,146,0.2)',
-            focus: 'rgba(72,181,146,0.42)'
+            focus: 'rgba(72,181,146,0.42)',
+            detailSectionBorder: 'rgba(72,181,146,0.34)',
+            detailDivider: 'rgba(72,181,146,0.3)',
+            detailFocus: 'rgba(72,181,146,0.62)'
         }
     }
 };
