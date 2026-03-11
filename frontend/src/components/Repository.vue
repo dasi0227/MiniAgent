@@ -73,19 +73,27 @@ const doRemove = () => {
 };
 
 const viewDetail = (item, sectionKey = '') => {
-    const templateId = (item?.templateId || '').toString().trim();
-    if (!templateId) {
-        message.value = '该条数据缺少 templateId，暂时无法查看详情';
+    if (sectionKey === 'favor') {
+        const templateId = (item?.templateId || '').toString().trim();
+        if (!templateId) {
+            message.value = '该条数据缺少 templateId，暂时无法查看模板';
+            return;
+        }
+        router.push({
+            path: `/template/${encodeURIComponent(templateId)}`,
+            query: {
+                forked: item?.forked ? '1' : '0'
+            }
+        });
         return;
     }
-    const hasExplicitForked = typeof item?.forked === 'boolean';
-    const inferredForked = hasExplicitForked ? item.forked : sectionKey === 'mine' || sectionKey === 'added';
-    router.push({
-        path: `/template/${encodeURIComponent(templateId)}`,
-        query: {
-            forked: inferredForked ? '1' : '0'
-        }
-    });
+
+    const agentId = (item?.agentId || '').toString().trim();
+    if (!agentId) {
+        message.value = '该条数据缺少 agentId，暂时无法查看详情';
+        return;
+    }
+    router.push(`/detail/${encodeURIComponent(agentId)}`);
 };
 
 const deleteMineAgent = async (item) => {

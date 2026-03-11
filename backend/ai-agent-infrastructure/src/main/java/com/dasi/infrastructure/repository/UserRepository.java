@@ -134,6 +134,7 @@ public class UserRepository implements IUserRepository {
         for (AiUserApi userApi : userApiList) {
             userApiVOList.add(UserApiVO.builder()
                     .apiId(userApi.getApiId())
+                    .modelId(userApi.getModelId())
                     .modelName(userApi.getModelName())
                     .modelType(userApi.getModelType())
                     .apiBaseUrl(userApi.getApiBaseUrl())

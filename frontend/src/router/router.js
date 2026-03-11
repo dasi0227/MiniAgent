@@ -7,6 +7,7 @@ import Plaza from '../components/Plaza.vue';
 import Repository from '../components/Repository.vue';
 import Setting from '../components/Setting.vue';
 import Template from '../components/Template.vue';
+import Detail from '../components/Detail.vue';
 import Auth from '../components/Auth.vue';
 import AdminAuth from '../components/AdminAuth.vue';
 import AdminTable from '../components/AdminTable.vue';
@@ -57,6 +58,11 @@ const routes = [
         path: '/template/:templateId',
         name: 'template',
         component: Template
+    },
+    {
+        path: '/detail/:agentId',
+        name: 'detail',
+        component: Detail
     },
     {
         path: '/setting',

@@ -87,10 +87,13 @@ const PLAZA_DELETE_PATH = `${PLAZA_BASE_PATH}/delete`;
 const REPO_LIST_PATH = `${WORKSPACE_BASE_PATH}/repo/map`;
 const WORKSPACE_AGENT_PUBLISH_PATH = `${WORKSPACE_BASE_PATH}/agent/publish`;
 const WORKSPACE_AGENT_TEMPLATE_PATH = `${WORKSPACE_BASE_PATH}/agent/template`;
+const WORKSPACE_AGENT_DETAIL_PATH = `${WORKSPACE_BASE_PATH}/agent/detail`;
 const WORKSPACE_AGENT_DELETE_PATH = `${WORKSPACE_BASE_PATH}/agent/delete`;
 const WORKSPACE_AGENT_FORK_PATH = `${WORKSPACE_BASE_PATH}/agent/fork`;
 const WORKSPACE_AGENT_CREATE_PATH = `${WORKSPACE_BASE_PATH}/agent/create`;
 const WORKSPACE_AGENT_UPDATE_BASE_PATH = `${WORKSPACE_BASE_PATH}/agent/update/base`;
+const WORKSPACE_AGENT_UPDATE_MODEL_PATH = `${WORKSPACE_BASE_PATH}/agent/update/model`;
+const WORKSPACE_AGENT_UPDATE_MCP_PATH = `${WORKSPACE_BASE_PATH}/agent/update/mcp`;
 const WORKSPACE_AGENT_UPDATE_USERPROMPT_PATH = `${WORKSPACE_BASE_PATH}/agent/update/userprompt`;
 const WORKSPACE_AGENT_UPDATE_SYSTEMPROMPT_PATH = `${WORKSPACE_BASE_PATH}/agent/update/systemprompt`;
 
@@ -658,10 +661,16 @@ export const workspaceAgentCreate = async (payload = {}) =>
     http.post(WORKSPACE_AGENT_CREATE_PATH, trimStrings(payload));
 export const workspaceAgentBaseUpdate = async (payload = {}) =>
     http.post(WORKSPACE_AGENT_UPDATE_BASE_PATH, trimStrings(payload));
+export const workspaceAgentModelUpdate = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_UPDATE_MODEL_PATH, trimStrings(payload));
+export const workspaceAgentMcpUpdate = async (payload = {}) =>
+    http.post(WORKSPACE_AGENT_UPDATE_MCP_PATH, trimStrings(payload));
 export const workspaceAgentUserPromptUpdate = async (payload = {}) =>
     http.post(WORKSPACE_AGENT_UPDATE_USERPROMPT_PATH, trimStrings(payload));
 export const workspaceAgentSystemPromptUpdate = async (payload = {}) =>
     http.post(WORKSPACE_AGENT_UPDATE_SYSTEMPROMPT_PATH, trimStrings(payload));
+export const workspaceAgentDetail = async ({ agentId }) =>
+    http.post(WORKSPACE_AGENT_DETAIL_PATH, null, { params: { agentId } });
 
 // 兼容历史命名，实际复用 workspace/agent 接口
 export const studioCreate = async (payload = {}) => workspaceAgentCreate(payload);

@@ -15,6 +15,8 @@ public class AiUserApi {
 
     private String apiId;
 
+    private String modelId;
+
     private String modelName;
 
     private String modelType;

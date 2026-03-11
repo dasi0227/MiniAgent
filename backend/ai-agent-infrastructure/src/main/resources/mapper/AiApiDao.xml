@@ -111,6 +111,7 @@
         SELECT
         a.id AS id,
         a.api_id AS apiId,
+        m.model_id AS modelId,
         m.model_name AS modelName,
         m.model_type AS modelType,
         a.api_base_url AS apiBaseUrl,
