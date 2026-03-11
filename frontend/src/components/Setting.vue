@@ -84,6 +84,11 @@ const mcpSaving = ref(false);
 const mcpError = ref('');
 const mcpKeyword = ref('');
 const mcpList = ref([]);
+const MCP_TYPE_OPTIONS = [
+    { value: 'sse', label: 'SSE' },
+    { value: 'stdio', label: 'STDIO' }
+];
+const MCP_TYPE_SET = new Set(MCP_TYPE_OPTIONS.map((item) => item.value));
 const mcpForm = reactive({
     mcpName: '',
     mcpType: '',
@@ -91,6 +96,9 @@ const mcpForm = reactive({
     mcpParam: '{}',
     mcpSecret: '{}'
 });
+const mcpCreateDialogOpen = ref(false);
+const mcpParamFormatError = ref('');
+const mcpSecretTableError = ref('');
 
 const mcpDialogOpen = ref(false);
 const mcpDialogSaving = ref(false);
@@ -103,6 +111,11 @@ const mcpDialogForm = reactive({
     mcpParam: '{}',
     mcpSecret: '{}'
 });
+const mcpDialogParamFormatError = ref('');
+const mcpDialogSecretTableError = ref('');
+let mcpSecretRowIdSeed = 0;
+const mcpSecretRows = ref([]);
+const mcpDialogSecretRows = ref([]);
 
 const apiLoading = ref(false);
 const apiSaving = ref(false);
@@ -110,17 +123,20 @@ const apiError = ref('');
 const apiKeyword = ref('');
 const apiList = ref([]);
 const apiForm = reactive({
+    modelType: '',
     modelName: '',
     apiBaseUrl: '',
     apiCompletionPath: '/v1/chat/completions',
     apiKey: ''
 });
+const apiCreateDialogOpen = ref(false);
 
 const apiDialogOpen = ref(false);
 const apiDialogSaving = ref(false);
 const apiDialogError = ref('');
 const apiDialogForm = reactive({
     apiId: '',
+    modelType: '',
     modelName: '',
     apiBaseUrl: '',
     apiCompletionPath: '/v1/chat/completions',
@@ -134,6 +150,7 @@ const taskKeyword = ref('');
 const taskList = ref([]);
 const taskAgents = ref([]);
 const taskEditing = ref(false);
+const taskFormDialogOpen = ref(false);
 const taskForm = reactive({
     taskId: '',
     agentId: '',
@@ -365,19 +382,154 @@ const optionalJsonText = (value, fieldLabel) => {
     }
 };
 
+const normalizeMcpTypeValue = (value) => {
+    const normalized = String(value || '')
+        .trim()
+        .toLowerCase();
+    return MCP_TYPE_SET.has(normalized) ? normalized : '';
+};
+
+const createMcpSecretRow = (key = '', value = '') => {
+    const rowId = `mcp-secret-${Date.now()}-${mcpSecretRowIdSeed}`;
+    mcpSecretRowIdSeed += 1;
+    return {
+        rowId,
+        key: String(key ?? ''),
+        value: String(value ?? '')
+    };
+};
+
+const resetMcpSecretRows = (scope = 'form') => {
+    const targetRows = scope === 'dialog' ? mcpDialogSecretRows : mcpSecretRows;
+    targetRows.value = [];
+};
+
+const prettifyJsonForEditor = (value, fallback = '') => {
+    const normalized = String(value || '').trim();
+    if (!normalized) {
+        return fallback;
+    }
+    try {
+        return JSON.stringify(JSON.parse(normalized), null, 2);
+    } catch (_) {
+        return normalized;
+    }
+};
+
+const prettifyMcpParam = (scope = 'form') => {
+    const targetForm = scope === 'dialog' ? mcpDialogForm : mcpForm;
+    const targetError = scope === 'dialog' ? mcpDialogParamFormatError : mcpParamFormatError;
+    targetError.value = '';
+    const normalized = String(targetForm.mcpParam || '').trim();
+    if (!normalized) {
+        return;
+    }
+    try {
+        targetForm.mcpParam = JSON.stringify(JSON.parse(normalized), null, 2);
+    } catch (_) {
+        targetError.value = 'MCP 配置必须是合法 JSON';
+    }
+};
+
+const parseMcpSecretRows = (value) => {
+    const normalized = String(value || '').trim();
+    if (!normalized) {
+        return [];
+    }
+    try {
+        const parsed = JSON.parse(normalized);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            const entries = Object.entries(parsed);
+            if (entries.length === 0) {
+                return [];
+            }
+            return entries.map(([key, rowValue]) =>
+                createMcpSecretRow(
+                    key,
+                    rowValue === null || rowValue === undefined
+                        ? ''
+                        : typeof rowValue === 'string'
+                          ? rowValue
+                          : JSON.stringify(rowValue)
+                )
+            );
+        }
+        return [
+            createMcpSecretRow(
+                'value',
+                typeof parsed === 'string' ? parsed : JSON.stringify(parsed)
+            )
+        ];
+    } catch (_) {
+        return [createMcpSecretRow('value', normalized)];
+    }
+};
+
+const buildMcpSecretJson = (rows, fieldLabel = 'MCP 密钥配置') => {
+    const result = {};
+    const keySet = new Set();
+    rows.forEach((row) => {
+        const rowKey = String(row?.key || '').trim();
+        const rowValue = String(row?.value || '');
+        const hasKey = rowKey.length > 0;
+        const hasValue = rowValue.trim().length > 0;
+        if (!hasKey && !hasValue) {
+            return;
+        }
+        if (!hasKey && hasValue) {
+            throw new Error(`${fieldLabel} 的 Key 不能为空`);
+        }
+        if (keySet.has(rowKey)) {
+            throw new Error(`${fieldLabel} 的 Key 不能重复：${rowKey}`);
+        }
+        keySet.add(rowKey);
+        result[rowKey] = rowValue;
+    });
+    if (keySet.size === 0) {
+        return null;
+    }
+    return JSON.stringify(result);
+};
+
+const addMcpSecretRow = (scope = 'form') => {
+    const targetRows = scope === 'dialog' ? mcpDialogSecretRows : mcpSecretRows;
+    targetRows.value.push(createMcpSecretRow());
+};
+
+const removeMcpSecretRow = (scope, rowId) => {
+    const targetRows = scope === 'dialog' ? mcpDialogSecretRows : mcpSecretRows;
+    targetRows.value = targetRows.value.filter((row) => row.rowId !== rowId);
+};
+
 const resetMcpForm = () => {
     mcpForm.mcpName = '';
     mcpForm.mcpType = '';
     mcpForm.mcpDesc = '';
     mcpForm.mcpParam = '{}';
     mcpForm.mcpSecret = '{}';
+    mcpParamFormatError.value = '';
+    mcpSecretTableError.value = '';
+    resetMcpSecretRows('form');
+};
+
+const openMcpCreateDialog = () => {
+    mcpError.value = '';
+    resetMcpForm();
+    mcpCreateDialogOpen.value = true;
 };
 
 const resetApiForm = () => {
+    apiForm.modelType = '';
     apiForm.modelName = '';
     apiForm.apiBaseUrl = '';
     apiForm.apiCompletionPath = '/v1/chat/completions';
     apiForm.apiKey = '';
+};
+
+const openApiCreateDialog = () => {
+    apiError.value = '';
+    resetApiForm();
+    apiCreateDialogOpen.value = true;
 };
 
 const loadUserProfile = async () => {
@@ -446,26 +598,40 @@ const loadMcpList = async (keyword = '') => {
 
 const submitMcpInsert = async () => {
     mcpError.value = '';
+    mcpParamFormatError.value = '';
+    mcpSecretTableError.value = '';
     let payload = null;
     try {
+        const mcpType = normalizeMcpTypeValue(mcpForm.mcpType);
         payload = {
             mcpName: (mcpForm.mcpName || '').trim(),
-            mcpType: (mcpForm.mcpType || '').trim(),
+            mcpType,
             mcpDesc: (mcpForm.mcpDesc || '').trim(),
             mcpParam: optionalJsonText(mcpForm.mcpParam, 'MCP 配置'),
-            mcpSecret: optionalJsonText(mcpForm.mcpSecret, 'MCP 密钥配置')
+            mcpSecret: buildMcpSecretJson(mcpSecretRows.value, 'MCP 密钥配置')
         };
-        if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
+        if (!payload.mcpType) {
+            throw new Error('请选择 MCP 类型（SSE / STDIO）');
+        }
+        if (!payload.mcpName || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
         }
     } catch (error) {
-        mcpError.value = normalizeError(error).message || '新增 MCP 失败';
+        const errorMessage = normalizeError(error).message || '新增 MCP 失败';
+        if (errorMessage.includes('MCP 配置')) {
+            mcpParamFormatError.value = errorMessage;
+        } else if (errorMessage.includes('MCP 密钥配置')) {
+            mcpSecretTableError.value = errorMessage;
+        } else {
+            mcpError.value = errorMessage;
+        }
         return;
     }
     mcpSaving.value = true;
     try {
         await userMcpInsert(payload);
         resetMcpForm();
+        mcpCreateDialogOpen.value = false;
         await loadMcpList(mcpKeyword.value);
     } catch (error) {
         notifyAppError(error, '新增 MCP 失败');
@@ -477,35 +643,55 @@ const submitMcpInsert = async () => {
 const openMcpDialog = (item) => {
     if (!item) return;
     mcpDialogError.value = '';
+    mcpDialogParamFormatError.value = '';
+    mcpDialogSecretTableError.value = '';
     mcpDialogForm.mcpId = (item.mcpId || '').trim();
     mcpDialogForm.mcpName = item.mcpName || '';
-    mcpDialogForm.mcpType = item.mcpType || '';
+    const normalizedType = normalizeMcpTypeValue(item.mcpType);
+    mcpDialogForm.mcpType = normalizedType;
     mcpDialogForm.mcpDesc = item.mcpDesc || '';
-    mcpDialogForm.mcpParam = item.mcpParam || '{}';
+    mcpDialogForm.mcpParam = prettifyJsonForEditor(item.mcpParam, '{}');
     mcpDialogForm.mcpSecret = item.mcpSecret || '{}';
+    mcpDialogSecretRows.value = parseMcpSecretRows(item.mcpSecret);
+    if (!normalizedType && String(item.mcpType || '').trim()) {
+        mcpDialogError.value = '当前 MCP 类型无效，请重新选择 SSE / STDIO';
+    }
     mcpDialogOpen.value = true;
 };
 
 const saveMcpDialog = async () => {
     mcpDialogError.value = '';
+    mcpDialogParamFormatError.value = '';
+    mcpDialogSecretTableError.value = '';
     let payload = null;
     try {
         if (!mcpDialogForm.mcpId.trim()) {
             throw new Error('MCP 配置标识缺失，请刷新后重试');
         }
+        const mcpType = normalizeMcpTypeValue(mcpDialogForm.mcpType);
         payload = {
             mcpId: mcpDialogForm.mcpId.trim(),
             mcpName: (mcpDialogForm.mcpName || '').trim(),
-            mcpType: (mcpDialogForm.mcpType || '').trim(),
+            mcpType,
             mcpDesc: (mcpDialogForm.mcpDesc || '').trim(),
             mcpParam: optionalJsonText(mcpDialogForm.mcpParam, 'MCP 配置'),
-            mcpSecret: optionalJsonText(mcpDialogForm.mcpSecret, 'MCP 密钥配置')
+            mcpSecret: buildMcpSecretJson(mcpDialogSecretRows.value, 'MCP 密钥配置')
         };
-        if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
+        if (!payload.mcpType) {
+            throw new Error('请选择 MCP 类型（SSE / STDIO）');
+        }
+        if (!payload.mcpName || !payload.mcpDesc) {
             throw new Error('请完整填写 MCP 必填项');
         }
     } catch (error) {
-        mcpDialogError.value = normalizeError(error).message || '更新 MCP 失败';
+        const errorMessage = normalizeError(error).message || '更新 MCP 失败';
+        if (errorMessage.includes('MCP 配置')) {
+            mcpDialogParamFormatError.value = errorMessage;
+        } else if (errorMessage.includes('MCP 密钥配置')) {
+            mcpDialogSecretTableError.value = errorMessage;
+        } else {
+            mcpDialogError.value = errorMessage;
+        }
         return;
     }
     mcpDialogSaving.value = true;
@@ -536,16 +722,17 @@ const loadApiList = async (keyword = '') => {
 };
 
 const buildApiPayload = (form, apiId = '') => {
+    const modelType = (form.modelType || '').trim();
     const modelName = (form.modelName || '').trim();
     const apiBaseUrl = (form.apiBaseUrl || '').trim();
     const apiCompletionPath = (form.apiCompletionPath || '').trim();
     const apiKey = (form.apiKey || '').trim();
-    if (!modelName || !apiBaseUrl || !apiCompletionPath || !apiKey) {
+    if (!modelType || !modelName || !apiBaseUrl || !apiCompletionPath || !apiKey) {
         throw new Error('请完整填写 API 必填项');
     }
     const payload = {
         modelName,
-        modelType: 'chat',
+        modelType,
         apiBaseUrl,
         apiCompletionPath,
         apiKey
@@ -569,6 +756,7 @@ const submitApiInsert = async () => {
     try {
         await userApiInsert(payload);
         resetApiForm();
+        apiCreateDialogOpen.value = false;
         await loadApiList(apiKeyword.value);
     } catch (error) {
         notifyAppError(error, '新增 API 失败');
@@ -581,6 +769,7 @@ const openApiDialog = (item) => {
     if (!item) return;
     apiDialogError.value = '';
     apiDialogForm.apiId = (item.apiId || '').trim();
+    apiDialogForm.modelType = item.modelType || '';
     apiDialogForm.modelName = item.modelName || '';
     apiDialogForm.apiBaseUrl = item.apiBaseUrl || '';
     apiDialogForm.apiCompletionPath = item.apiCompletionPath || '/v1/chat/completions';
@@ -768,6 +957,13 @@ const editTask = (item) => {
     taskForm.taskParam = item.taskParam || '{"maxRetry":2,"maxRound":2,"userMessage":""}';
     taskForm.taskStatus = Number(item.taskStatus) === 0 ? 0 : 1;
     closeTaskDropdowns();
+    taskFormDialogOpen.value = true;
+};
+
+const openTaskCreateDialog = () => {
+    taskError.value = '';
+    resetTaskForm();
+    taskFormDialogOpen.value = true;
 };
 
 const submitTask = async () => {
@@ -790,6 +986,7 @@ const submitTask = async () => {
             await userTaskInsert(payload);
         }
         resetTaskForm();
+        taskFormDialogOpen.value = false;
         await loadTaskList();
     } catch (error) {
         notifyAppError(error, taskEditing.value ? '更新 Task 失败' : '新增 Task 失败');
@@ -924,12 +1121,14 @@ onBeforeUnmount(() => {
                         <div class="mb-[10px] text-[13px] font-semibold text-[var(--text-secondary)]">头像设置</div>
                         <div class="flex flex-wrap items-center gap-[12px]">
                             <div
-                                class="grid h-[84px] w-[84px] shrink-0 place-items-center overflow-hidden rounded-full border text-[24px] font-bold"
+                                class="grid h-[84px] w-[84px] shrink-0 cursor-pointer place-items-center overflow-hidden rounded-full border text-[24px] font-bold transition hover:brightness-95"
                                 :class="
                                     canShowProfileAvatarImage
                                         ? 'border-[rgba(15,23,42,0.12)] bg-transparent'
                                         : profileAvatarFallbackClass
                                 "
+                                title="点击上传头像"
+                                @click="triggerProfileAvatarUpload"
                             >
                                 <img
                                     v-if="canShowProfileAvatarImage"
@@ -942,13 +1141,6 @@ onBeforeUnmount(() => {
                             </div>
                             <div class="flex min-w-0 flex-1 flex-col gap-[8px]">
                                 <div class="flex flex-wrap gap-[8px]">
-                                    <button
-                                        class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[12px] text-white transition hover:brightness-95"
-                                        type="button"
-                                        @click="triggerProfileAvatarUpload"
-                                    >
-                                        上传并裁剪
-                                    </button>
                                     <button
                                         v-if="profileAvatarFile"
                                         class="rounded-[10px] border border-[var(--border-color)] bg-white px-[12px] py-[8px] text-[12px] text-[var(--text-primary)] transition hover:bg-[#eef2f7]"
@@ -1015,9 +1207,9 @@ onBeforeUnmount(() => {
 
                 <div v-else-if="activeTab === 'mcp'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
-                        <div class="flex flex-wrap items-center justify-between gap-[10px]">
-                            <div class="text-[16px] font-semibold">我配置过的 MCP 列表</div>
-                            <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
+                        <div class="flex flex-wrap items-center gap-[10px]">
+                            <div class="w-full whitespace-nowrap text-[16px] font-semibold md:w-[220px] md:shrink-0">我配置过的 MCP 列表</div>
+                            <div class="flex w-full items-center gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="mcpKeyword"
                                     class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
@@ -1036,70 +1228,49 @@ onBeforeUnmount(() => {
                                         <path d="m20 20-3.6-3.6" />
                                     </svg>
                                 </button>
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="新增 MCP"
+                                    title="新增 MCP"
+                                    @click="openMcpCreateDialog"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                         <div v-if="mcpLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
                         <div v-else-if="mcpList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
-                        <button
-                            v-for="item in mcpList"
-                            :key="item.mcpId"
-                            class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                            @click="openMcpDialog(item)"
-                        >
-                            <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
-                                <div class="text-[15px] font-semibold text-[var(--text-primary)]">
-                                    {{ item.mcpName || '-' }}
+                        <div v-else class="grid gap-[10px] lg:grid-cols-3">
+                            <button
+                                v-for="item in mcpList"
+                                :key="item.mcpId"
+                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                @click="openMcpDialog(item)"
+                            >
+                                <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                                    <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                        {{ item.mcpName || '-' }}
+                                    </div>
+                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
+                                        {{ formatMcpTypeLabel(item.mcpType) }}
+                                    </span>
                                 </div>
-                                <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
-                                    {{ formatMcpTypeLabel(item.mcpType) }}
-                                </span>
-                            </div>
-                            <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)]">
-                                {{ item.mcpDesc || '暂无描述' }}
-                            </div>
-                        </button>
+                                <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)]">
+                                    {{ item.mcpDesc || '暂无描述' }}
+                                </div>
+                            </button>
+                        </div>
                     </div>
-                    <div class="pt-[6px] text-[16px] font-semibold">新增个人 MCP</div>
-                    <div class="space-y-[10px]">
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 名称</span>
-                            <input v-model="mcpForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 名称" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
-                            <input v-model="mcpForm.mcpType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 类型（例如 sse / stdio）" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 描述</span>
-                            <input v-model="mcpForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 描述" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
-                            <textarea v-model="mcpForm.mcpParam" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='可选，JSON 格式；例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'></textarea>
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
-                            <textarea v-model="mcpForm.mcpSecret" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder='可选，JSON 格式；例如 {"token":"xxx"}'></textarea>
-                        </label>
-                    </div>
-                    <div class="flex items-center gap-[10px]">
-                        <button
-                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:brightness-95 disabled:opacity-70"
-                            :disabled="mcpSaving"
-                            @click="submitMcpInsert"
-                        >
-                            {{ mcpSaving ? '保存中...' : '新增 MCP' }}
-                        </button>
-                        <button class="rounded-[10px] border border-[var(--border-color)] px-[14px] py-[8px] text-[13px]" @click="resetMcpForm">重置</button>
-                    </div>
-                    <div v-if="mcpError" class="text-[12px] text-[#ef4444]">{{ mcpError }}</div>
                 </div>
 
                 <div v-else-if="activeTab === 'api'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
-                        <div class="flex flex-wrap items-center justify-between gap-[10px]">
-                            <div class="text-[16px] font-semibold">我配置过的 API 列表</div>
-                            <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
+                        <div class="flex flex-wrap items-center gap-[10px]">
+                            <div class="w-full whitespace-nowrap text-[16px] font-semibold md:w-[220px] md:shrink-0">我配置过的 API 列表</div>
+                            <div class="flex w-full items-center gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="apiKeyword"
                                     class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
@@ -1118,63 +1289,49 @@ onBeforeUnmount(() => {
                                         <path d="m20 20-3.6-3.6" />
                                     </svg>
                                 </button>
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="新增 API"
+                                    title="新增 API"
+                                    @click="openApiCreateDialog"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                         <div v-if="apiLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
                         <div v-else-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 API 配置</div>
-                        <button
-                            v-for="item in apiList"
-                            :key="item.apiId"
-                            class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                            @click="openApiDialog(item)"
-                        >
-                            <div class="flex min-w-0 flex-wrap items-center gap-x-[12px] gap-y-[6px]">
-                                <div class="text-[15px] font-semibold text-[var(--text-primary)]">
-                                    {{ item.modelName || '-' }}
+                        <div v-else class="grid gap-[10px] lg:grid-cols-3">
+                            <button
+                                v-for="item in apiList"
+                                :key="item.apiId"
+                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                @click="openApiDialog(item)"
+                            >
+                                <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                                    <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                        {{ item.modelName || '-' }}
+                                    </div>
+                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
+                                        {{ formatMcpTypeLabel(item.modelType || 'chat') }}
+                                    </span>
                                 </div>
-                                <div class="min-w-0 text-[12px] text-[var(--text-secondary)]">
+                                <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)] break-all">
                                     {{ formatApiDisplayUrl(item) }}
                                 </div>
-                            </div>
-                        </button>
+                            </button>
+                        </div>
                     </div>
-                    <div class="pt-[6px] text-[16px] font-semibold">新增个人 API</div>
-                    <div class="space-y-[10px]">
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">API 地址</span>
-                            <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 地址，例如 https://api.openai.com" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">补全路径</span>
-                            <input v-model="apiForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入补全路径，例如 /v1/chat/completions" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">模型名称</span>
-                            <input v-model="apiForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入模型名称，例如 qwen-plus" />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">API 密钥</span>
-                            <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 密钥" />
-                        </label>
-                    </div>
-                    <div class="flex items-center gap-[10px]">
-                        <button
-                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:brightness-95 disabled:opacity-70"
-                            :disabled="apiSaving"
-                            @click="submitApiInsert"
-                        >
-                            {{ apiSaving ? '保存中...' : '新增 API' }}
-                        </button>
-                        <button class="rounded-[10px] border border-[var(--border-color)] px-[14px] py-[8px] text-[13px]" @click="resetApiForm">重置</button>
-                    </div>
-                    <div v-if="apiError" class="text-[12px] text-[#ef4444]">{{ apiError }}</div>
                 </div>
 
                 <div v-else class="space-y-[14px]">
                     <div class="space-y-[10px]">
-                        <div class="flex flex-wrap items-center justify-between gap-[10px]">
-                            <div class="text-[16px] font-semibold">我配置过的 Task 列表</div>
-                            <div class="ml-auto flex w-full items-center justify-end gap-[8px] md:w-[360px]">
+                        <div class="flex flex-wrap items-center gap-[10px]">
+                            <div class="w-full whitespace-nowrap text-[16px] font-semibold md:w-[220px] md:shrink-0">我配置过的 Task 列表</div>
+                            <div class="flex w-full items-center gap-[8px] md:w-[360px]">
                                 <input
                                     v-model="taskKeyword"
                                     class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
@@ -1190,6 +1347,17 @@ onBeforeUnmount(() => {
                                     <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                         <path d="M21 12a9 9 0 1 1-2.64-6.36" />
                                         <path d="M21 3v6h-6" />
+                                    </svg>
+                                </button>
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="新增 Task"
+                                    title="新增 Task"
+                                    @click="openTaskCreateDialog"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" />
                                     </svg>
                                 </button>
                             </div>
@@ -1241,128 +1409,6 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="pt-[6px] text-[16px] font-semibold">{{ taskEditing ? '编辑 Task' : '新增 Task' }}</div>
-                    <div class="space-y-[10px]">
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">MiniAgent</span>
-                            <div ref="taskAgentDropdownRef" class="relative">
-                                <button
-                                    class="flex w-full items-center justify-between rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-left text-[13px] text-[var(--text-primary)] outline-none transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                                    type="button"
-                                    :class="taskAgentDropdownOpen ? 'border-[var(--accent-color)] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]' : ''"
-                                    @click="toggleTaskDropdown('agent')"
-                                >
-                                    <span class="truncate">{{ selectedTaskAgentLabel }}</span>
-                                    <svg
-                                        viewBox="0 0 20 20"
-                                        class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)] transition-transform duration-200"
-                                        :class="taskAgentDropdownOpen ? 'rotate-180' : ''"
-                                        fill="currentColor"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M5.5 7.5 10 12l4.5-4.5H5.5z" />
-                                    </svg>
-                                </button>
-                                <div
-                                    v-if="taskAgentDropdownOpen"
-                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-[20] max-h-[240px] overflow-y-auto rounded-[14px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
-                                >
-                                    <button
-                                        class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
-                                        :class="!taskForm.agentId ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
-                                        type="button"
-                                        @click="selectTaskAgent('')"
-                                    >
-                                        请选择 MiniAgent
-                                    </button>
-                                    <button
-                                        v-for="item in taskAgents"
-                                        :key="item.agentId"
-                                        class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
-                                        :class="taskForm.agentId === item.agentId ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
-                                        type="button"
-                                        @click="selectTaskAgent(item.agentId)"
-                                    >
-                                        <span class="truncate">{{ item.agentName }}</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">执行周期</span>
-                            <input
-                                v-model="taskForm.taskCron"
-                                class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
-                                placeholder="请输入 Cron 表达式，例如 0 0/30 * * * ?"
-                            />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">任务描述（必填）</span>
-                            <input
-                                v-model="taskForm.taskDesc"
-                                class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
-                                placeholder="请输入任务描述，便于后续识别"
-                            />
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">任务参数</span>
-                            <textarea
-                                v-model="taskForm.taskParam"
-                                class="min-h-[108px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
-                                placeholder='请输入 JSON，例如 {"maxRetry":2,"maxRound":2,"userMessage":"请汇总今天的关键数据"}'
-                            ></textarea>
-                        </label>
-                        <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                            <span class="pt-[10px] text-[var(--text-secondary)]">状态</span>
-                            <div ref="taskStatusDropdownRef" class="relative">
-                                <button
-                                    class="flex w-full items-center justify-between rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-left text-[13px] text-[var(--text-primary)] outline-none transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                                    type="button"
-                                    :class="taskStatusDropdownOpen ? 'border-[var(--accent-color)] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]' : ''"
-                                    @click="toggleTaskDropdown('status')"
-                                >
-                                    <span>{{ selectedTaskStatusLabel }}</span>
-                                    <svg
-                                        viewBox="0 0 20 20"
-                                        class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)] transition-transform duration-200"
-                                        :class="taskStatusDropdownOpen ? 'rotate-180' : ''"
-                                        fill="currentColor"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M5.5 7.5 10 12l4.5-4.5H5.5z" />
-                                    </svg>
-                                </button>
-                                <div
-                                    v-if="taskStatusDropdownOpen"
-                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-[20] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
-                                >
-                                    <button
-                                        v-for="item in taskStatusOptions"
-                                        :key="item.value"
-                                        class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
-                                        :class="Number(taskForm.taskStatus) === item.value ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
-                                        type="button"
-                                        @click="selectTaskStatus(item.value)"
-                                    >
-                                        {{ item.label }}
-                                    </button>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="flex items-center gap-[10px]">
-                        <button
-                            class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:brightness-95 disabled:opacity-70"
-                            :disabled="taskSaving"
-                            @click="submitTask"
-                        >
-                            {{ taskSaving ? '保存中...' : taskEditing ? '保存 Task' : '新增 Task' }}
-                        </button>
-                        <button class="rounded-[10px] border border-[var(--border-color)] px-[14px] py-[8px] text-[13px]" @click="resetTaskForm">
-                            {{ taskEditing ? '取消编辑' : '重置' }}
-                        </button>
-                    </div>
-                    <div v-if="taskError" class="text-[12px] text-[#ef4444]">{{ taskError }}</div>
                 </div>
             </div>
         </div>
@@ -1411,6 +1457,306 @@ onBeforeUnmount(() => {
         </div>
 
         <div
+            v-if="mcpCreateDialogOpen"
+            class="fixed inset-0 z-[41] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
+            @click.self="mcpCreateDialogOpen = false"
+        >
+            <div class="w-full max-w-[760px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="mb-[12px] flex items-center justify-between">
+                    <div class="text-[16px] font-semibold">新增个人 MCP</div>
+                    <button class="text-[20px] text-[var(--text-secondary)]" @click="mcpCreateDialogOpen = false">×</button>
+                </div>
+                <div class="space-y-[10px]">
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 名称</span>
+                        <input v-model="mcpForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 名称" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 描述</span>
+                        <input v-model="mcpForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 MCP 描述" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
+                        <div class="relative">
+                            <select
+                                v-model="mcpForm.mcpType"
+                                class="w-full appearance-none rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] pr-[34px] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                            >
+                                <option value="" disabled>请选择 MCP 类型</option>
+                                <option v-for="option in MCP_TYPE_OPTIONS" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                            <svg class="pointer-events-none absolute right-[10px] top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--text-secondary)]" viewBox="0 0 20 20" fill="currentColor">
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.113l3.71-3.884a.75.75 0 1 1 1.08 1.04l-4.25 4.45a.75.75 0 0 1-1.08 0l-4.25-4.45a.75.75 0 0 1 .02-1.06Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </div>
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
+                        <textarea
+                            v-model="mcpForm.mcpParam"
+                            class="min-h-[110px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] font-mono text-[12px] leading-[1.6]"
+                            placeholder='可选，JSON 格式；例如 {"baseUri":"http://127.0.0.1:9002","sseEndPoint":"/sse"}'
+                            @blur="prettifyMcpParam('form')"
+                        ></textarea>
+                    </label>
+                    <div v-if="mcpParamFormatError" class="text-[12px] text-[#ef4444]">{{ mcpParamFormatError }}</div>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
+                        <div class="space-y-[8px]">
+                            <div class="overflow-hidden rounded-[10px] border border-[var(--border-color)]">
+                                <div class="grid grid-cols-[1fr_1fr_68px] bg-[#f8fafc] px-[10px] py-[8px] text-[12px] font-semibold text-[var(--text-secondary)]">
+                                    <span>Key</span>
+                                    <span>Value</span>
+                                    <span class="text-center">操作</span>
+                                </div>
+                                <div class="max-h-[220px] overflow-y-auto">
+                                    <div
+                                        v-for="row in mcpSecretRows"
+                                        :key="row.rowId"
+                                        class="grid grid-cols-[1fr_1fr_68px] items-center gap-[8px] border-t border-[var(--border-color)] px-[10px] py-[8px]"
+                                    >
+                                        <input
+                                            v-model="row.key"
+                                            class="min-w-0 rounded-[8px] border border-[var(--border-color)] px-[8px] py-[7px] text-[12px] outline-none focus:border-[var(--accent-color)]"
+                                            placeholder="请输入 key"
+                                        />
+                                        <input
+                                            v-model="row.value"
+                                            class="min-w-0 rounded-[8px] border border-[var(--border-color)] px-[8px] py-[7px] text-[12px] outline-none focus:border-[var(--accent-color)]"
+                                            placeholder="请输入 value"
+                                        />
+                                        <button
+                                            type="button"
+                                            class="rounded-[8px] border border-[var(--border-color)] px-[6px] py-[6px] text-[12px] text-[var(--text-secondary)] transition hover:border-[rgba(248,113,113,0.35)] hover:text-[#dc2626]"
+                                            @click="removeMcpSecretRow('form', row.rowId)"
+                                        >
+                                            删除
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-[1fr_1fr_68px] items-center border-t border-[var(--border-color)] px-[10px] py-[8px]">
+                                        <div class="col-span-3 flex justify-center">
+                                            <button
+                                                type="button"
+                                                class="rounded-[8px] border border-[var(--border-color)] px-[12px] py-[4px] text-[12px] font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                                                @click="addMcpSecretRow('form')"
+                                            >
+                                                + 添加
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="mcpSecretTableError" class="text-[12px] text-[#ef4444]">{{ mcpSecretTableError }}</div>
+                        </div>
+                    </label>
+                </div>
+                <div v-if="mcpError" class="mt-[10px] text-[12px] text-[#ef4444]">{{ mcpError }}</div>
+                <div class="mt-[12px] flex justify-end gap-[8px]">
+                    <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[13px]" @click="mcpCreateDialogOpen = false">取消</button>
+                    <button
+                        class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[13px] font-semibold text-white disabled:opacity-70"
+                        :disabled="mcpSaving"
+                        @click="submitMcpInsert"
+                    >
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="apiCreateDialogOpen"
+            class="fixed inset-0 z-[41] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
+            @click.self="apiCreateDialogOpen = false"
+        >
+            <div class="w-full max-w-[760px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="mb-[12px] flex items-center justify-between">
+                    <div class="text-[16px] font-semibold">新增个人 API</div>
+                    <button class="text-[20px] text-[var(--text-secondary)]" @click="apiCreateDialogOpen = false">×</button>
+                </div>
+                <div class="space-y-[10px]">
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">API 地址</span>
+                        <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 地址，例如 https://api.openai.com" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">补全路径</span>
+                        <input v-model="apiForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入补全路径，例如 /v1/chat/completions" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">模型类别</span>
+                        <input v-model="apiForm.modelType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入模型类别，例如 chat" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">模型名称</span>
+                        <input v-model="apiForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入模型名称，例如 qwen-plus" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">API 密钥</span>
+                        <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 密钥" />
+                    </label>
+                </div>
+                <div v-if="apiError" class="mt-[10px] text-[12px] text-[#ef4444]">{{ apiError }}</div>
+                <div class="mt-[12px] flex justify-end gap-[8px]">
+                    <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[13px]" @click="apiCreateDialogOpen = false">取消</button>
+                    <button
+                        class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[13px] font-semibold text-white disabled:opacity-70"
+                        :disabled="apiSaving"
+                        @click="submitApiInsert"
+                    >
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="taskFormDialogOpen"
+            class="fixed inset-0 z-[41] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
+            @click.self="taskFormDialogOpen = false"
+        >
+            <div class="w-full max-w-[820px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="mb-[12px] flex items-center justify-between">
+                    <div class="text-[16px] font-semibold">{{ taskEditing ? '编辑 Task' : '新增 Task' }}</div>
+                    <button class="text-[20px] text-[var(--text-secondary)]" @click="taskFormDialogOpen = false">×</button>
+                </div>
+                <div class="space-y-[10px]">
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MiniAgent</span>
+                        <div ref="taskAgentDropdownRef" class="relative">
+                            <button
+                                class="flex w-full items-center justify-between rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-left text-[13px] text-[var(--text-primary)] outline-none transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                type="button"
+                                :class="taskAgentDropdownOpen ? 'border-[var(--accent-color)] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]' : ''"
+                                @click="toggleTaskDropdown('agent')"
+                            >
+                                <span class="truncate">{{ selectedTaskAgentLabel }}</span>
+                                <svg
+                                    viewBox="0 0 20 20"
+                                    class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)] transition-transform duration-200"
+                                    :class="taskAgentDropdownOpen ? 'rotate-180' : ''"
+                                    fill="currentColor"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M5.5 7.5 10 12l4.5-4.5H5.5z" />
+                                </svg>
+                            </button>
+                            <div
+                                v-if="taskAgentDropdownOpen"
+                                class="absolute left-0 right-0 top-[calc(100%+8px)] z-[20] max-h-[240px] overflow-y-auto rounded-[14px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
+                            >
+                                <button
+                                    class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
+                                    :class="!taskForm.agentId ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
+                                    type="button"
+                                    @click="selectTaskAgent('')"
+                                >
+                                    请选择 MiniAgent
+                                </button>
+                                <button
+                                    v-for="item in taskAgents"
+                                    :key="item.agentId"
+                                    class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
+                                    :class="taskForm.agentId === item.agentId ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
+                                    type="button"
+                                    @click="selectTaskAgent(item.agentId)"
+                                >
+                                    <span class="truncate">{{ item.agentName }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">执行周期</span>
+                        <input
+                            v-model="taskForm.taskCron"
+                            class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
+                            placeholder="请输入 Cron 表达式，例如 0 0/30 * * * ?"
+                        />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">任务描述</span>
+                        <input
+                            v-model="taskForm.taskDesc"
+                            class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
+                            placeholder="请输入任务描述，便于后续识别"
+                        />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">任务参数</span>
+                        <textarea
+                            v-model="taskForm.taskParam"
+                            class="min-h-[108px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"
+                            placeholder='请输入 JSON，例如 {"maxRetry":2,"maxRound":2,"userMessage":"请汇总今天的关键数据"}'
+                        ></textarea>
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">状态</span>
+                        <div ref="taskStatusDropdownRef" class="relative">
+                            <button
+                                class="flex w-full items-center justify-between rounded-[12px] border border-[var(--border-color)] bg-white px-[12px] py-[10px] text-left text-[13px] text-[var(--text-primary)] outline-none transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                type="button"
+                                :class="taskStatusDropdownOpen ? 'border-[var(--accent-color)] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]' : ''"
+                                @click="toggleTaskDropdown('status')"
+                            >
+                                <span>{{ selectedTaskStatusLabel }}</span>
+                                <svg
+                                    viewBox="0 0 20 20"
+                                    class="h-[14px] w-[14px] shrink-0 text-[var(--text-secondary)] transition-transform duration-200"
+                                    :class="taskStatusDropdownOpen ? 'rotate-180' : ''"
+                                    fill="currentColor"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M5.5 7.5 10 12l4.5-4.5H5.5z" />
+                                </svg>
+                            </button>
+                            <div
+                                v-if="taskStatusDropdownOpen"
+                                class="absolute left-0 right-0 top-[calc(100%+8px)] z-[20] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-white p-[6px] shadow-[0_18px_38px_rgba(15,23,42,0.14)]"
+                            >
+                                <button
+                                    v-for="item in taskStatusOptions"
+                                    :key="item.value"
+                                    class="flex w-full items-center rounded-[10px] px-[10px] py-[9px] text-left text-[13px] text-[var(--text-primary)] transition hover:bg-[#f8fafc]"
+                                    :class="Number(taskForm.taskStatus) === item.value ? 'bg-[rgba(59,130,246,0.08)] text-[var(--accent-color)]' : ''"
+                                    type="button"
+                                    @click="selectTaskStatus(item.value)"
+                                >
+                                    {{ item.label }}
+                                </button>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div v-if="taskError" class="mt-[10px] text-[12px] text-[#ef4444]">{{ taskError }}</div>
+                <div class="mt-[12px] flex justify-end gap-[8px]">
+                    <button
+                        class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[13px]"
+                        @click="
+                            taskFormDialogOpen = false;
+                            if (taskEditing) resetTaskForm();
+                        "
+                    >
+                        取消
+                    </button>
+                    <button
+                        class="rounded-[10px] border border-[var(--accent-color)] bg-[var(--accent-color)] px-[12px] py-[8px] text-[13px] font-semibold text-white disabled:opacity-70"
+                        :disabled="taskSaving"
+                        @click="submitTask"
+                    >
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
             v-if="mcpDialogOpen"
             class="fixed inset-0 z-[41] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
             @click.self="mcpDialogOpen = false"
@@ -1426,20 +1772,87 @@ onBeforeUnmount(() => {
                         <input v-model="mcpDialogForm.mcpName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
-                        <input v-model="mcpDialogForm.mcpType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
-                    </label>
-                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">MCP 描述</span>
                         <input v-model="mcpDialogForm.mcpDesc" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
-                        <textarea v-model="mcpDialogForm.mcpParam" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"></textarea>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
+                        <div class="relative">
+                            <select
+                                v-model="mcpDialogForm.mcpType"
+                                class="w-full appearance-none rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] pr-[34px] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                            >
+                                <option value="" disabled>请选择 MCP 类型</option>
+                                <option v-for="option in MCP_TYPE_OPTIONS" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                            <svg class="pointer-events-none absolute right-[10px] top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--text-secondary)]" viewBox="0 0 20 20" fill="currentColor">
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.113l3.71-3.884a.75.75 0 1 1 1.08 1.04l-4.25 4.45a.75.75 0 0 1-1.08 0l-4.25-4.45a.75.75 0 0 1 .02-1.06Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </div>
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">MCP 配置</span>
+                        <textarea
+                            v-model="mcpDialogForm.mcpParam"
+                            class="min-h-[110px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px] font-mono text-[12px] leading-[1.6]"
+                            @blur="prettifyMcpParam('dialog')"
+                        ></textarea>
+                    </label>
+                    <div v-if="mcpDialogParamFormatError" class="text-[12px] text-[#ef4444]">{{ mcpDialogParamFormatError }}</div>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">MCP 密钥配置</span>
-                        <textarea v-model="mcpDialogForm.mcpSecret" class="min-h-[88px] rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]"></textarea>
+                        <div class="space-y-[8px]">
+                            <div class="overflow-hidden rounded-[10px] border border-[var(--border-color)]">
+                                <div class="grid grid-cols-[1fr_1fr_68px] bg-[#f8fafc] px-[10px] py-[8px] text-[12px] font-semibold text-[var(--text-secondary)]">
+                                    <span>Key</span>
+                                    <span>Value</span>
+                                    <span class="text-center">操作</span>
+                                </div>
+                                <div class="max-h-[220px] overflow-y-auto">
+                                    <div
+                                        v-for="row in mcpDialogSecretRows"
+                                        :key="row.rowId"
+                                        class="grid grid-cols-[1fr_1fr_68px] items-center gap-[8px] border-t border-[var(--border-color)] px-[10px] py-[8px]"
+                                    >
+                                        <input
+                                            v-model="row.key"
+                                            class="min-w-0 rounded-[8px] border border-[var(--border-color)] px-[8px] py-[7px] text-[12px] outline-none focus:border-[var(--accent-color)]"
+                                            placeholder="请输入 key"
+                                        />
+                                        <input
+                                            v-model="row.value"
+                                            class="min-w-0 rounded-[8px] border border-[var(--border-color)] px-[8px] py-[7px] text-[12px] outline-none focus:border-[var(--accent-color)]"
+                                            placeholder="请输入 value"
+                                        />
+                                        <button
+                                            type="button"
+                                            class="rounded-[8px] border border-[var(--border-color)] px-[6px] py-[6px] text-[12px] text-[var(--text-secondary)] transition hover:border-[rgba(248,113,113,0.35)] hover:text-[#dc2626]"
+                                            @click="removeMcpSecretRow('dialog', row.rowId)"
+                                        >
+                                            删除
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-[1fr_1fr_68px] items-center border-t border-[var(--border-color)] px-[10px] py-[8px]">
+                                        <div class="col-span-3 flex justify-center">
+                                            <button
+                                                type="button"
+                                                class="rounded-[8px] border border-[var(--border-color)] px-[12px] py-[4px] text-[12px] font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]"
+                                                @click="addMcpSecretRow('dialog')"
+                                            >
+                                                + 添加
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="mcpDialogSecretTableError" class="text-[12px] text-[#ef4444]">{{ mcpDialogSecretTableError }}</div>
+                        </div>
                     </label>
                 </div>
                 <div v-if="mcpDialogError" class="mt-[10px] text-[12px] text-[#ef4444]">{{ mcpDialogError }}</div>
@@ -1474,6 +1887,10 @@ onBeforeUnmount(() => {
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">补全路径</span>
                         <input v-model="apiDialogForm.apiCompletionPath" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
+                    </label>
+                    <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
+                        <span class="pt-[10px] text-[var(--text-secondary)]">模型类别</span>
+                        <input v-model="apiDialogForm.modelType" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">模型名称</span>

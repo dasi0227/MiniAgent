@@ -13,7 +13,6 @@ const router = useRouter();
 const settingsStore = useSettingsStore();
 const isDarkTheme = computed(() => settingsStore.theme === 'dark');
 
-const loading = ref(false);
 const message = ref('');
 const detail = ref(null);
 const roleMap = ref({});
@@ -46,8 +45,25 @@ const pickData = (resp) => {
 };
 
 const templateId = computed(() => (route.params.templateId || '').toString().trim());
+const routeForked = computed(() => {
+    const raw = Array.isArray(route.query?.forked) ? route.query.forked[0] : route.query?.forked;
+    if (raw === undefined || raw === null || raw === '') return null;
+    const normalized = raw.toString().trim().toLowerCase();
+    if (['1', 'true', 'yes'].includes(normalized)) return true;
+    if (['0', 'false', 'no'].includes(normalized)) return false;
+    return null;
+});
 const strategy = computed(() => (detail.value?.agentType || '').toString().toLowerCase());
 const detailTone = computed(() => getStrategyTone(strategy.value, isDarkTheme.value));
+const isAlreadyForked = computed(() => {
+    if (typeof detail.value?.forked === 'boolean') {
+        return detail.value.forked;
+    }
+    if (routeForked.value !== null) {
+        return routeForked.value;
+    }
+    return false;
+});
 const detailThemeVars = computed(() => ({
     '--detail-glow-primary': detailTone.value.glowPrimary || 'rgba(59,130,246,0.22)',
     '--detail-glow-secondary': detailTone.value.glowSecondary || 'rgba(37,99,235,0.14)',
@@ -166,7 +182,6 @@ const loadDetail = async () => {
         detail.value = null;
         return;
     }
-    loading.value = true;
     message.value = '';
     try {
         const [detailResp, roleResp] = await Promise.all([plazaDetail({ templateId: templateId.value }), queryRoleMapApi()]);
@@ -178,8 +193,6 @@ const loadDetail = async () => {
         roleMap.value = {};
         notifyAppError(error, '加载详情失败');
         message.value = '详情加载失败';
-    } finally {
-        loading.value = false;
     }
 };
 
@@ -192,7 +205,12 @@ const goBack = () => {
 };
 
 const doFork = async () => {
-    if (!templateId.value || forkState.value === 'loading' || forkState.value === 'done') return;
+    if (!templateId.value) return;
+    if (isAlreadyForked.value) {
+        router.push('/repository');
+        return;
+    }
+    if (forkState.value === 'loading' || forkState.value === 'done') return;
     forkState.value = 'loading';
     try {
         await repoFork({ templateId: templateId.value });
@@ -248,8 +266,7 @@ onBeforeUnmount(() => {
                     </svg>
                 </button>
 
-                <div v-if="loading" class="text-[13px] text-[var(--text-secondary)]">加载中...</div>
-                <div v-else-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
+                <div v-if="message" class="text-[13px] text-[var(--text-secondary)]">{{ message }}</div>
                 <template v-else-if="detail">
                     <header class="pt-0">
                         <div class="grid grid-cols-[1fr_auto_1fr] items-end gap-x-[26px] gap-y-[8px] max-[980px]:grid-cols-1">
@@ -348,17 +365,20 @@ onBeforeUnmount(() => {
                         <button
                             class="inline-flex h-[42px] items-center justify-center gap-[8px] rounded-[12px] border px-[22px] text-[15px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
                             :class="
-                                forkState === 'done'
-                                    ? 'border-[rgba(16,185,129,0.28)] bg-[rgba(16,185,129,0.08)] text-[#047857]'
+                                isAlreadyForked || forkState === 'done'
+                                    ? 'border-[var(--detail-fork-done-border)] bg-[var(--detail-fork-done-bg)] text-[var(--detail-fork-done-text)] hover:border-[var(--detail-fork-hover-bg)] hover:bg-[var(--detail-fork-hover-bg)] hover:text-white'
                                     : 'border-[var(--detail-fork-border)] bg-[var(--detail-fork-bg)] text-[var(--detail-fork-text)] hover:border-[var(--detail-fork-hover-bg)] hover:bg-[var(--detail-fork-hover-bg)] hover:text-white'
                             "
                             :style="{
                                 '--detail-fork-border': detailTone.forkBorder,
                                 '--detail-fork-bg': detailTone.forkBg,
                                 '--detail-fork-text': detailTone.forkText,
-                                '--detail-fork-hover-bg': detailTone.forkHoverBg
+                                '--detail-fork-hover-bg': detailTone.forkHoverBg,
+                                '--detail-fork-done-border': detailTone.forkBorder,
+                                '--detail-fork-done-bg': detailTone.forkBg,
+                                '--detail-fork-done-text': detailTone.forkText
                             }"
-                            :disabled="forkState !== 'idle'"
+                            :disabled="!isAlreadyForked && forkState !== 'idle'"
                             @click="doFork"
                         >
                             <svg
@@ -378,7 +398,9 @@ onBeforeUnmount(() => {
                                 <path d="M15.8 7.8L13.7 15.1" />
                             </svg>
                             {{
-                                forkState === 'loading'
+                                isAlreadyForked
+                                    ? '已 Fork，请前往仓库查看'
+                                    : forkState === 'loading'
                                     ? 'FORK 中...'
                                     : forkState === 'done'
                                         ? '已 FORK'
@@ -406,7 +428,7 @@ onBeforeUnmount(() => {
                     <h3 class="detail-section-title text-[16px] font-semibold text-[var(--text-primary)]">{{ modal.title }}</h3>
                     <button class="text-[20px] text-[var(--text-secondary)]" @click="closeModal">×</button>
                 </div>
-                <div class="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--detail-divider)] bg-[var(--surface-2)] px-[14px] py-[12px]">
+                <div class="min-h-0 flex-1 overflow-y-auto rounded-[10px] border border-[var(--detail-divider)] px-[14px] py-[12px]">
                     <div v-if="modal.kind === 'mcp'" class="space-y-[10px]">
                         <div
                             v-for="(row, idx) in modal.mcpRows"
@@ -421,7 +443,7 @@ onBeforeUnmount(() => {
                                     <span
                                         v-for="secret in row.value"
                                         :key="secret"
-                                        class="inline-flex items-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] px-[9px] py-[3px] text-[13px] text-[var(--text-secondary)]"
+                                        class="inline-flex items-center rounded-full border border-[var(--detail-divider)] px-[9px] py-[3px] text-[13px] text-[var(--text-primary)]"
                                     >
                                         {{ secret }}
                                     </span>

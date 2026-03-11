@@ -227,7 +227,12 @@ const openDetail = (item) => {
         message.value = '该条数据缺少 templateId，暂时无法查看详情';
         return;
     }
-    router.push(`/detail/${encodeURIComponent(templateId)}`);
+    router.push({
+        path: `/detail/${encodeURIComponent(templateId)}`,
+        query: {
+            forked: item?.forked ? '1' : '0'
+        }
+    });
 };
 
 const doComment = async () => {

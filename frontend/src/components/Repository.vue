@@ -72,13 +72,20 @@ const doRemove = () => {
     message.value = '当前后端未提供仓库移除接口';
 };
 
-const viewDetail = (item) => {
+const viewDetail = (item, sectionKey = '') => {
     const templateId = (item?.templateId || '').toString().trim();
     if (!templateId) {
         message.value = '该条数据缺少 templateId，暂时无法查看详情';
         return;
     }
-    router.push(`/detail/${encodeURIComponent(templateId)}`);
+    const hasExplicitForked = typeof item?.forked === 'boolean';
+    const inferredForked = hasExplicitForked ? item.forked : sectionKey === 'mine' || sectionKey === 'added';
+    router.push({
+        path: `/detail/${encodeURIComponent(templateId)}`,
+        query: {
+            forked: inferredForked ? '1' : '0'
+        }
+    });
 };
 
 const deleteMineAgent = async (item) => {
@@ -159,8 +166,14 @@ onMounted(loadRepository);
                             </div>
                         </button>
 
-                        <div :class="getCollapseClasses(sectionOpen[section.key], { disablePointerWhenClosed: true })">
-                            <div :class="[COLLAPSE_INNER_CLASS, 'pt-[6px] pb-[8px]']">
+                        <div :class="[getCollapseClasses(sectionOpen[section.key], { disablePointerWhenClosed: true }), 'repo-collapse']">
+                            <div
+                                :class="[
+                                    COLLAPSE_INNER_CLASS,
+                                    'pt-[6px] pb-[8px]',
+                                    sectionOpen[section.key] ? 'repo-collapse__inner--open' : ''
+                                ]"
+                            >
                                 <div
                                     v-if="loading"
                                     class="rounded-[20px] border border-dashed border-[var(--border-color)] px-[16px] py-[22px] text-center text-[13px] text-[var(--text-secondary)]"
@@ -179,13 +192,13 @@ onMounted(loadRepository);
                                     <article
                                         v-for="item in section.items"
                                         :key="item.repoId || item.agentId || item.templateId || resolveAgentName(item)"
-                                        class="group relative flex min-h-[208px] flex-col overflow-hidden rounded-[30px] border p-[18px] shadow-[0_14px_30px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.32)] transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_22px_42px_rgba(15,23,42,0.14)]"
+                                        class="group relative flex min-h-[208px] flex-col overflow-hidden rounded-[30px] border p-[18px] shadow-[0_14px_30px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.32)] transition-all duration-300 hover:-translate-y-[3px] hover:shadow-[0_22px_42px_rgba(15,23,42,0.14)]"
                                         :style="{
                                             borderColor: resolveCardTone(item).cardBorder,
                                             backgroundColor: resolveCardTone(item).cardBg
                                         }"
                                     >
-                                        <div class="pointer-events-none absolute inset-0 opacity-[0.72]" :style="{ backgroundImage: resolveCardTone(item).overlay }" />
+                                        <div class="pointer-events-none absolute inset-0" :style="{ backgroundImage: resolveCardTone(item).overlay }" />
 
                                         <div class="relative flex items-start justify-between gap-[12px]">
                                             <span
@@ -220,7 +233,7 @@ onMounted(loadRepository);
                                                 }"
                                                 :class="'border-[var(--repo-primary-border)] bg-[var(--repo-primary-bg)] text-[var(--repo-primary-text)] hover:bg-[var(--repo-primary-hover-bg)]'"
                                                 type="button"
-                                                @click="viewDetail(item)"
+                                                @click="viewDetail(item, section.key)"
                                             >
                                                 查看
                                             </button>
@@ -269,5 +282,13 @@ onMounted(loadRepository);
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+}
+
+.repo-collapse {
+    contain: layout !important;
+}
+
+.repo-collapse__inner--open {
+    overflow: visible !important;
 }
 </style>

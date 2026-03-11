@@ -16,9 +16,9 @@ public class UserApiVO {
 
     private String modelType;
 
-    private String apiBaseUrl;
-
     private String apiKey;
+
+    private String apiBaseUrl;
 
     private String apiCompletionPath;
 
