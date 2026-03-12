@@ -1,10 +1,10 @@
 package com.dasi.domain.user.repository;
 
-import com.dasi.domain.user.model.vo.UserApiVO;
+import com.dasi.domain.user.model.vo.UserApiModelVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.vo.UserVO;
-import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingApiModelDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
 import com.dasi.domain.user.model.dto.SettingTaskDTO;
 
@@ -20,13 +20,13 @@ public interface IUserRepository {
 
     UserVO updateUser(Long userId, String userName, String password, String userAvatar);
 
-    List<UserApiVO> apiList(String keyword);
+    List<UserApiModelVO> apiModelList(String keyword);
 
-    void apiInsert(SettingApiDTO dto, String apiId, String modelId);
+    void apiModelInsert(SettingApiModelDTO dto, String apiId, String modelId);
 
-    void apiUpdate(SettingApiDTO dto);
+    void apiModelUpdate(SettingApiModelDTO dto);
 
-    void apiDelete(String apiId);
+    void apiModelDelete(String apiId);
 
     List<UserMcpVO> mcpList(String keyword);
 

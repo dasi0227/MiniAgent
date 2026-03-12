@@ -2,10 +2,14 @@ package com.dasi.domain.workspace.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -42,9 +46,10 @@ public class PromptGenerator {
     public String generateRoleConstraint(String strategyDesc, String clientRole, String roleDesc, String agentDesc) {
 
         try {
-            Prompt prompt = new Prompt()
-                    .augmentSystemMessage(GENERATOR_SYSTEM)
-                    .augmentUserMessage(GENERATOR_USER.formatted(strategyDesc, clientRole, roleDesc, agentDesc));
+            Prompt prompt = new Prompt(List.of(
+                    new SystemMessage(GENERATOR_SYSTEM),
+                    new UserMessage(GENERATOR_USER.formatted(strategyDesc, clientRole, roleDesc, agentDesc))
+            ));
             return generatorClient
                     .prompt(prompt)
                     .call()

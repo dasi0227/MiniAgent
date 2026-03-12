@@ -3,7 +3,7 @@ package com.dasi.api;
 import com.dasi.domain.user.model.vo.*;
 import com.dasi.domain.user.model.dto.AuthDTO;
 import com.dasi.domain.user.model.dto.ProfileEditDTO;
-import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingApiModelDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
 import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.result.Result;
@@ -32,13 +32,13 @@ public interface IUserApi {
 
     Result<AuthVO> profileEdit(ProfileEditDTO dto, MultipartFile avatar);
 
-    Result<List<UserApiVO>> apiList(String keyword);
+    Result<List<UserApiModelVO>> apiModelList(String keyword);
 
-    Result<Void> apiInsert(SettingApiDTO dto);
+    Result<Void> apiModelInsert(SettingApiModelDTO dto);
 
-    Result<Void> apiUpdate(SettingApiDTO dto);
+    Result<Void> apiModelUpdate(SettingApiModelDTO dto);
 
-    Result<Void> apiDelete(String apiId);
+    Result<Void> apiModelDelete(String apiId);
 
     Result<List<UserMcpVO>> mcpList(String keyword);
 

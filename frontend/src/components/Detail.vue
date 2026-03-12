@@ -658,7 +658,7 @@ onMounted(async () => {
                                 option.disabled
                                     ? 'cursor-not-allowed border-[var(--detail-divider)] text-[var(--text-muted-2)] opacity-70'
                                     : modelModal.selectedApiId === option.apiId
-                                    ? 'border-[var(--detail-focus)] bg-[rgba(148,163,184,0.08)]'
+                                    ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] ring-1 ring-[var(--detail-action-border)]'
                                     : 'border-[var(--detail-divider)] hover:border-[var(--detail-focus)]'
                             "
                             :disabled="option.disabled"
@@ -666,7 +666,16 @@ onMounted(async () => {
                         >
                             <div class="flex items-center gap-[8px]">
                                 <div class="text-[15px] font-semibold text-[var(--text-primary)]">{{ option.modelName }}</div>
-                                <span class="rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] text-[var(--text-secondary)]">{{ option.modelType }}</span>
+                                <span
+                                    class="rounded-full border px-[8px] py-[2px] text-[11px]"
+                                    :class="
+                                        modelModal.selectedApiId === option.apiId
+                                            ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] text-[var(--detail-action-text)]'
+                                            : 'border-[var(--detail-divider)] text-[var(--text-secondary)]'
+                                    "
+                                >
+                                    {{ option.modelType }}
+                                </span>
                             </div>
                             <div class="mt-[4px] text-[13px] text-[var(--text-secondary)]">{{ option.apiAddress }}</div>
                             <div v-if="option.disabled" class="mt-[3px] text-[12px] text-[#f97316]">未找到可用 modelId</div>
@@ -696,7 +705,7 @@ onMounted(async () => {
                         >
                             <div class="flex items-center gap-[8px]">
                                 <span class="inline-flex h-[16px] w-[16px] items-center justify-center rounded-[4px] border text-[11px]"
-                                      :class="mcpEditModal.selectedIds.includes(item.mcpId) ? 'border-[var(--detail-focus)] bg-[var(--detail-focus)] text-white' : 'border-[var(--detail-divider)] text-transparent'">✓</span>
+                                      :class="mcpEditModal.selectedIds.includes(item.mcpId) ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] text-[var(--detail-action-text)]' : 'border-[var(--detail-divider)] text-transparent'">✓</span>
                                 <span class="text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName }}</span>
                                 <span class="rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] uppercase text-[var(--text-secondary)]">{{ item.mcpType || '--' }}</span>
                             </div>
@@ -896,6 +905,7 @@ onMounted(async () => {
 
 .detail-input,
 .detail-textarea {
+    width: 100%;
     border: 1.5px solid var(--detail-divider);
     border-radius: 10px;
     background: var(--surface-1);

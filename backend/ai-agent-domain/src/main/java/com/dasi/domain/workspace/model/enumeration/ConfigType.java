@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 public enum ConfigType {
 
     PROMPT("提示词", "prompt"),
-    MCP("工具", "mcp");
+    MCP("工具", "mcp"),
+    ADVISOR("顾问", "advisor");
 
     private String name;
 

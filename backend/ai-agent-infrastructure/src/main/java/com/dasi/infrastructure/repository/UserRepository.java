@@ -1,6 +1,6 @@
 package com.dasi.infrastructure.repository;
 
-import com.dasi.domain.user.model.vo.UserApiVO;
+import com.dasi.domain.user.model.vo.UserApiModelVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.vo.UserVO;
@@ -21,8 +21,8 @@ import com.dasi.infrastructure.persistent.po.AiMcp;
 import com.dasi.infrastructure.persistent.po.AiModel;
 import com.dasi.infrastructure.persistent.po.AiTask;
 import com.dasi.infrastructure.persistent.po.AiUser;
-import com.dasi.infrastructure.persistent.po.AiUserApi;
-import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.infrastructure.persistent.po.AiApiModel;
+import com.dasi.domain.user.model.dto.SettingApiModelDTO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
 import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.annotation.CacheEvict;
@@ -121,33 +121,33 @@ public class UserRepository implements IUserRepository {
                 .build();
     }
 
-    // -------------------- API --------------------
+    // -------------------- API/Model --------------------
     @Override
-    @Cacheable(cachePrefix = USER_API_PREFIX, cacheClass = UserApiVO.class, cacheType = CacheType.LIST)
-    public List<UserApiVO> apiList(String keyword) {
+    @Cacheable(cachePrefix = USER_API_PREFIX, cacheClass = UserApiModelVO.class, cacheType = CacheType.LIST)
+    public List<UserApiModelVO> apiModelList(String keyword) {
         Long userId = userContext.getUserId();
-        List<AiUserApi> userApiList = apiDao.listUserApi(keyword, userId);
-        List<UserApiVO> userApiVOList = new ArrayList<>();
-        if (userApiList == null || userApiList.isEmpty()) {
-            return userApiVOList;
+        List<AiApiModel> aiApiModelList = apiDao.listUserApi(keyword, userId);
+        List<UserApiModelVO> userApiModelVOList = new ArrayList<>();
+        if (aiApiModelList == null || aiApiModelList.isEmpty()) {
+            return userApiModelVOList;
         }
-        for (AiUserApi userApi : userApiList) {
-            userApiVOList.add(UserApiVO.builder()
-                    .apiId(userApi.getApiId())
-                    .modelId(userApi.getModelId())
-                    .modelName(userApi.getModelName())
-                    .modelType(userApi.getModelType())
-                    .apiBaseUrl(userApi.getApiBaseUrl())
-                    .apiKey(userApi.getApiKey())
-                    .apiCompletionPath(userApi.getApiCompletionPath())
+        for (AiApiModel aiApiModel : aiApiModelList) {
+            userApiModelVOList.add(UserApiModelVO.builder()
+                    .apiId(aiApiModel.getApiId())
+                    .modelId(aiApiModel.getModelId())
+                    .modelName(aiApiModel.getModelName())
+                    .modelType(aiApiModel.getModelType())
+                    .apiBaseUrl(aiApiModel.getApiBaseUrl())
+                    .apiKey(aiApiModel.getApiKey())
+                    .apiCompletionPath(aiApiModel.getApiCompletionPath())
                     .build());
         }
-        return userApiVOList;
+        return userApiModelVOList;
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
-    public void apiInsert(SettingApiDTO dto, String apiId, String modelId) {
+    public void apiModelInsert(SettingApiModelDTO dto, String apiId, String modelId) {
         Long userId = userContext.getUserId();
 
         // 新增 api
@@ -186,7 +186,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
-    public void apiUpdate(SettingApiDTO dto) {
+    public void apiModelUpdate(SettingApiModelDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getApiId() == null) {
             throw new MiniAgentException(LACK_PARAM);
@@ -238,7 +238,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "user:", "workspace:"})
-    public void apiDelete(String apiId) {
+    public void apiModelDelete(String apiId) {
         Long userId = userContext.getUserId();
 
         AiApi aiApi = apiDao.queryByApiId(apiId);

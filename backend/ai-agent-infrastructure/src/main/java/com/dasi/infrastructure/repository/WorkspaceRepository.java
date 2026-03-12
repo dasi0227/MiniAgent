@@ -38,6 +38,8 @@ import static com.dasi.types.constant.RedisConstant.*;
 @Repository
 public class WorkspaceRepository implements IWorkspaceRepository {
 
+    private static final String DEFAULT_ADVISOR_ID = "advisor_work_memory";
+
     @Resource
     private UserContext userContext;
 
@@ -365,6 +367,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         Set<String> mcpIdSet = dto.getMcpIdSet();
 
+        // 新建 agent
         aiAgentDao.insert(AiAgent.builder()
                 .agentId(agentId)
                 .agentName(dto.getAgentName())
@@ -379,7 +382,11 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             String clientId = randomUtil.randomClientId();
             String promptId = randomUtil.randomPromptId();
             String clientRole = rolePrompt.getClientRole();
+            String systemPrompt = rolePrompt.getSystemPrompt();
+            String userPrompt = rolePrompt.getUserPrompt();
+            Integer flowSeq = rolePrompt.getFlowSeq();
 
+            // 新建 client
             aiClientDao.insert(AiClient.builder()
                     .clientId(clientId)
                     .clientType("work")
@@ -391,12 +398,14 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .clientFrom(userId)
                     .build());
 
+            // 新建 prompt
             aiPromptDao.insert(AiPrompt.builder()
                     .promptId(promptId)
                     .promptName(clientRole + "_prompt")
-                    .systenPrompt(rolePrompt.getSystemPrompt())
+                    .systenPrompt(systemPrompt)
                     .build());
 
+            // 新建 config-client
             aiConfigDao.insert(AiConfig.builder()
                     .clientId(clientId)
                     .configType(ConfigType.PROMPT.getType())
@@ -404,6 +413,15 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .configStatus(1)
                     .build());
 
+            // 新建 config-advisor
+            aiConfigDao.insert(AiConfig.builder()
+                    .clientId(clientId)
+                    .configType(ConfigType.ADVISOR.getType())
+                    .configValue(DEFAULT_ADVISOR_ID)
+                    .configStatus(1)
+                    .build());
+
+            // 新建 config-mcp
             if (mcpIdSet != null && !mcpIdSet.isEmpty()) {
                 for (String mcpId : mcpIdSet) {
                     aiConfigDao.insert(AiConfig.builder()
@@ -415,15 +433,17 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 }
             }
 
+            // 新建 flow
             aiFlowDao.insert(AiFlow.builder()
                     .agentId(agentId)
                     .clientId(clientId)
                     .clientRole(clientRole)
-                    .userPrompt(rolePrompt.getUserPrompt())
-                    .flowSeq(rolePrompt.getFlowSeq())
+                    .userPrompt(userPrompt)
+                    .flowSeq(flowSeq)
                     .build());
         }
 
+        // 新建 repo
         aiRepoDao.insert(AiRepo.builder()
                 .repoId(randomUtil.randomRepoId())
                 .userId(userId)
@@ -670,6 +690,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             throw new MiniAgentException(ILLEGAL_DATA);
         }
 
+        // 新建 api
         String apiId = randomUtil.randomApiId();
         aiApiDao.insert(AiApi.builder()
                 .apiId(apiId)
@@ -678,6 +699,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .apiFrom(userId)
                 .build());
 
+        // 新建 model
         String modelId = randomUtil.randomModelId();
         aiModelDao.insert(AiModel.builder()
                 .modelId(modelId)
@@ -687,6 +709,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .modelFrom(userId)
                 .build());
 
+        // 新建 mcp
         List<String> mcpIdList = new ArrayList<>();
         List<SnapshotView.McpView> mcpViewList = snapshotView.getMcps();
         for (SnapshotView.McpView mcpInfo : mcpViewList) {
@@ -713,6 +736,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             mcpIdList.add(mcpId);
         }
 
+        // 新建 agent
         String agentId = randomUtil.randomAgentId();
         aiAgentDao.insert(AiAgent.builder()
                 .agentId(agentId)
@@ -727,12 +751,11 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         for (int i = 0; i < promptViewList.size(); i++) {
             SnapshotView.PromptView promptView = promptViewList.get(i);
             String clientRole = promptView.getClientRole();
-            if (!StringUtils.hasText(clientRole)) {
-                throw new MiniAgentException(ILLEGAL_DATA);
-            }
-            String clientId = randomUtil.randomClientId();
-            String promptId = randomUtil.randomPromptId();
+            String systemPrompt = promptView.getSystemPrompt();
+            String userPrompt = promptView.getUserPrompt();
 
+            // 新建 client
+            String clientId = randomUtil.randomClientId();
             aiClientDao.insert(AiClient.builder()
                     .clientId(clientId)
                     .clientType("work")
@@ -744,12 +767,24 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .clientFrom(userId)
                     .build());
 
+            // 新建 flow
+            aiFlowDao.insert(AiFlow.builder()
+                    .agentId(agentId)
+                    .clientId(clientId)
+                    .clientRole(clientRole)
+                    .userPrompt(userPrompt)
+                    .flowSeq(i + 1)
+                    .build());
+
+            // 新建 prompt
+            String promptId = randomUtil.randomPromptId();
             aiPromptDao.insert(AiPrompt.builder()
                     .promptId(promptId)
                     .promptName(clientRole + "_prompt")
-                    .systenPrompt(promptView.getSystemPrompt())
+                    .systenPrompt(systemPrompt)
                     .build());
 
+            // 新建 config-prompt
             aiConfigDao.insert(AiConfig.builder()
                     .clientId(clientId)
                     .configType(ConfigType.PROMPT.getType())
@@ -757,6 +792,15 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .configStatus(1)
                     .build());
 
+            // 新建 config-advisor
+            aiConfigDao.insert(AiConfig.builder()
+                    .clientId(clientId)
+                    .configType(ConfigType.ADVISOR.getType())
+                    .configValue(DEFAULT_ADVISOR_ID)
+                    .configStatus(1)
+                    .build());
+
+            // 新建 config-mcp
             for (String mcpId : mcpIdList) {
                 aiConfigDao.insert(AiConfig.builder()
                         .clientId(clientId)
@@ -765,17 +809,9 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                         .configStatus(1)
                         .build());
             }
-
-            String userPrompt = promptView.getUserPrompt();
-            aiFlowDao.insert(AiFlow.builder()
-                    .agentId(agentId)
-                    .clientId(clientId)
-                    .clientRole(clientRole)
-                    .userPrompt(userPrompt)
-                    .flowSeq(i + 1)
-                    .build());
         }
 
+        // 新建 repo
         aiRepoDao.insert(AiRepo.builder()
                 .repoId(randomUtil.randomRepoId())
                 .userId(userId)

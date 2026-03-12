@@ -1,6 +1,6 @@
 package com.dasi.domain.user.service.setting;
 
-import com.dasi.domain.user.model.vo.UserApiVO;
+import com.dasi.domain.user.model.vo.UserApiModelVO;
 import com.dasi.domain.user.model.vo.UserMcpVO;
 import com.dasi.domain.user.model.vo.UserTaskVO;
 import com.dasi.domain.user.model.vo.UserVO;
@@ -9,7 +9,7 @@ import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.jwt.IJwtUtil;
 import com.dasi.domain.util.oss.IOssUtil;
 import com.dasi.domain.util.random.IRandomUtil;
-import com.dasi.domain.user.model.dto.SettingApiDTO;
+import com.dasi.domain.user.model.dto.SettingApiModelDTO;
 import com.dasi.domain.user.model.dto.ProfileEditDTO;
 import com.dasi.domain.user.model.vo.AuthVO;
 import com.dasi.domain.user.model.dto.SettingMcpDTO;
@@ -105,28 +105,28 @@ public class SettingService implements ISettingService {
     }
 
     @Override
-    public List<UserApiVO> apiList(String keyword) {
-        return userRepository.apiList(keyword);
+    public List<UserApiModelVO> apiModelList(String keyword) {
+        return userRepository.apiModelList(keyword);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiInsert(SettingApiDTO dto) {
+    public void apiModelInsert(SettingApiModelDTO dto) {
         String apiId = randomUtil.randomApiId();
         String modelId = randomUtil.randomModelId();
-        userRepository.apiInsert(dto, apiId, modelId);
+        userRepository.apiModelInsert(dto, apiId, modelId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiUpdate(SettingApiDTO dto) {
-        userRepository.apiUpdate(dto);
+    public void apiModelUpdate(SettingApiModelDTO dto) {
+        userRepository.apiModelUpdate(dto);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void apiDelete(String apiId) {
-        userRepository.apiDelete(apiId);
+    public void apiModelDelete(String apiId) {
+        userRepository.apiModelDelete(apiId);
     }
 
 

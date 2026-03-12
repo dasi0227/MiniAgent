@@ -1,4 +1,4 @@
-package com.dasi.domain.user.model.vo;
+package com.dasi.infrastructure.persistent.po;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserApiVO {
+public class AiApiModel {
+
+    private Long id;
 
     private String apiId;
 
@@ -19,9 +21,9 @@ public class UserApiVO {
 
     private String modelType;
 
-    private String apiKey;
-
     private String apiBaseUrl;
+
+    private String apiKey;
 
     private String apiCompletionPath;
 

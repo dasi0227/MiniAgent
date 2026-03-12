@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SettingApiDTO {
+public class SettingApiModelDTO {
 
     private String apiId;
 

@@ -91,30 +91,30 @@ public class UserController implements IUserApi {
         return Result.success(settingService.profileEdit(dto, avatar));
     }
 
-    @PostMapping(value = "/api/list")
+    @PostMapping(value = "/model/list")
     @Override
-    public Result<List<UserApiVO>> apiList(@RequestParam(required=false, defaultValue = "") String keyword) {
-        return Result.success(settingService.apiList(keyword));
+    public Result<List<UserApiModelVO>> apiModelList(@RequestParam(required=false, defaultValue = "") String keyword) {
+        return Result.success(settingService.apiModelList(keyword));
     }
 
-    @PostMapping(value = "/api/insert")
+    @PostMapping(value = "/model/insert")
     @Override
-    public Result<Void> apiInsert(@Valid @RequestBody SettingApiDTO dto) {
-        settingService.apiInsert(dto);
+    public Result<Void> apiModelInsert(@Valid @RequestBody SettingApiModelDTO dto) {
+        settingService.apiModelInsert(dto);
         return Result.success();
     }
 
-    @PostMapping(value = "/api/update")
+    @PostMapping(value = "/model/update")
     @Override
-    public Result<Void> apiUpdate(@Valid @RequestBody SettingApiDTO dto) {
-        settingService.apiUpdate(dto);
+    public Result<Void> apiModelUpdate(@Valid @RequestBody SettingApiModelDTO dto) {
+        settingService.apiModelUpdate(dto);
         return Result.success();
     }
 
-    @PostMapping(value = "/api/delete")
+    @PostMapping(value = "/model/delete")
     @Override
-    public Result<Void> apiDelete(@RequestParam String apiId) {
-        settingService.apiDelete(apiId);
+    public Result<Void> apiModelDelete(@RequestParam String apiId) {
+        settingService.apiModelDelete(apiId);
         return Result.success();
     }
 

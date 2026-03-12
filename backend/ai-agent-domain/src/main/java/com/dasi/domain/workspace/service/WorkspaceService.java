@@ -52,7 +52,7 @@ public class WorkspaceService implements IWorkspaceService {
     @Resource
     private UserContext userContext;
 
-    private static final PathMatchingResourcePatternResolver RESOURCE_RESOLVER = new PathMatchingResourcePatternResolver();
+    private final PathMatchingResourcePatternResolver RESOURCE_RESOLVER = new PathMatchingResourcePatternResolver();
 
     @Override
     public PageResult<PlazaVO> pagePlaza(PlazaPageDTO dto) {

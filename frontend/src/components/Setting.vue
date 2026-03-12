@@ -870,6 +870,11 @@ const formatMcpTypeLabel = (value) => {
     return text ? text.toUpperCase() : 'UNKNOWN';
 };
 
+const formatModelTypeLabel = (value) => {
+    const text = String(value || '').trim();
+    return text || 'chat';
+};
+
 const closeTaskDropdowns = () => {
     taskAgentDropdownOpen.value = false;
     taskStatusDropdownOpen.value = false;
@@ -1313,8 +1318,8 @@ onBeforeUnmount(() => {
                                     <div class="text-[15px] font-semibold text-[var(--text-primary)]">
                                         {{ item.modelName || '-' }}
                                     </div>
-                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
-                                        {{ formatMcpTypeLabel(item.modelType || 'chat') }}
+                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold text-[#4f6f95]">
+                                        {{ formatModelTypeLabel(item.modelType || 'chat') }}
                                     </span>
                                 </div>
                                 <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)] break-all">
