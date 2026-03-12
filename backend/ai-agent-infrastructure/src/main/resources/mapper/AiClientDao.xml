@@ -82,7 +82,6 @@
                update_time
         FROM ai_client
         WHERE client_type = 'work'
-          AND client_from = 0
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -99,12 +98,15 @@
                update_time
         FROM ai_client
         <where>
-            AND client_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND client_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    client_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR client_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR client_role LIKE CONCAT('%', #{keyword}, '%')
+                    OR client_type LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="modelId != null and modelId != ''">
                 AND model_id = #{modelId}
@@ -126,12 +128,15 @@
         SELECT COUNT(1)
         FROM ai_client
         <where>
-            AND client_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND client_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    client_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR client_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR client_role LIKE CONCAT('%', #{keyword}, '%')
+                    OR client_type LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="modelId != null and modelId != ''">
                 AND model_id = #{modelId}
@@ -148,7 +153,6 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_client
-        WHERE client_from = 0
     </select>
 
     <select id="queryClientIdByModelId" resultType="java.lang.String">

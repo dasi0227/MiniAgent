@@ -37,11 +37,11 @@
                update_time
         FROM ai_prompt
         <where>
-            <if test="idKeyword != null and idKeyword != ''">
-                AND prompt_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND prompt_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    prompt_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR prompt_name LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
         ORDER BY update_time DESC, id DESC
@@ -54,11 +54,11 @@
         SELECT COUNT(1)
         FROM ai_prompt
         <where>
-            <if test="idKeyword != null and idKeyword != ''">
-                AND prompt_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND prompt_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    prompt_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR prompt_name LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
     </select>

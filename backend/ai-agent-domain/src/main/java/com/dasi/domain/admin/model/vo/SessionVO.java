@@ -9,14 +9,12 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class ModelVO {
-    private String modelId;
-    private String apiId;
-    private String modelName;
-    private String modelType;
-    private Long modelFrom;
+@NoArgsConstructor
+public class SessionVO {
+    private String sessionId;
+    private String userName;
+    private String sessionTitle;
+    private String sessionType;
     private LocalDateTime createTime;
-    private LocalDateTime updateTime;
 }

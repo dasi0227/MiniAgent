@@ -2,7 +2,6 @@ package com.dasi.domain.admin.repository;
 
 import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.vo.*;
-import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 
 import java.util.List;
@@ -109,6 +108,22 @@ public interface IAdminRepository {
     // Session
     List<SessionVO> listSession();
 
+    // Template
+    List<TemplateVO> templatePage(TemplatePageDTO dto);
+    Integer templateCount(TemplatePageDTO dto);
+    TemplateVO templateQuery(String templateId);
+    void templateInsert(TemplateManageDTO dto);
+    void templateUpdate(TemplateManageDTO dto);
+    void templateDelete(String templateId);
+
+    // Plaza
+    List<PlazaVO> plazaPage(PlazaPageDTO dto);
+    Integer plazaCount(PlazaPageDTO dto);
+    PlazaVO plazaQuery(String plazaId);
+    void plazaInsert(PlazaManageDTO dto);
+    void plazaUpdate(PlazaManageDTO dto);
+    void plazaDelete(String plazaId);
+
     // Depend
     List<String> queryClientDependOnPrompt(String promptId);
     List<String> queryClientDependOnAdvisor(String advisorId);
@@ -116,6 +131,7 @@ public interface IAdminRepository {
     List<String> queryModelDependOnApi(String apiId);
     List<String> queryClientDependOnModel(String modelId);
     List<String> queryAgentDependOnClient(String clientId);
+    List<String> queryPlazaDependOnTemplate(String templateId);
 
     // Option
     List<String> listApiId();

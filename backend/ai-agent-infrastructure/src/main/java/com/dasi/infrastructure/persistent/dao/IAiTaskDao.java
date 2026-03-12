@@ -13,12 +13,12 @@ public interface IAiTaskDao {
 
     int updateTaskStatus(@Param("taskId") String taskId, @Param("taskStatus") Integer taskStatus);
 
-    List<AiTask> page(@Param("idKeyword") String idKeyword,
+    List<AiTask> page(@Param("keyword") String keyword,
                       @Param("agentId") String agentId,
                       @Param("offset") Integer offset,
                       @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword,
+    Integer count(@Param("keyword") String keyword,
                   @Param("agentId") String agentId);
 
     Integer countAll();

@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AgentListDTO {
 
-    private String idKeyword;
-
-    private String nameKeyword;
+    private String keyword;
 
     private String agentType;
 

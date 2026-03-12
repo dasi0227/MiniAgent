@@ -14,9 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdvisorPageDTO {
 
-    private String idKeyword;
-
-    private String nameKeyword;
+    private String keyword;
 
     @NotNull
     @Min(1)

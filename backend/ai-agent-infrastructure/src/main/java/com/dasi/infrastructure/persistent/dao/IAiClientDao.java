@@ -16,16 +16,14 @@ public interface IAiClientDao {
 
     List<AiClient> queryWorkClientList();
 
-    List<AiClient> page(@Param("idKeyword") String idKeyword,
-                        @Param("nameKeyword") String nameKeyword,
+    List<AiClient> page(@Param("keyword") String keyword,
                         @Param("modelId") String modelId,
                         @Param("clientType") String clientType,
                         @Param("clientRole") String clientRole,
                         @Param("offset") Integer offset,
                         @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("nameKeyword") String nameKeyword,
+    Integer count(@Param("keyword") String keyword,
                   @Param("modelId") String modelId,
                   @Param("clientType") String clientType,
                   @Param("clientRole") String clientRole);

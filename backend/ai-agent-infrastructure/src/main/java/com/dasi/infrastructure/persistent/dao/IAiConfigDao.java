@@ -19,12 +19,10 @@ public interface IAiConfigDao {
     List<String> queryClientIdListByConfigTypeAndValue(@Param("configType") String configType,
                                                        @Param("configValue") String configValue);
 
-    List<AiConfig> list(@Param("idKeyword") String idKeyword,
-                        @Param("valueKeyword") String valueKeyword,
+    List<AiConfig> list(@Param("keyword") String keyword,
                         @Param("configType") String configType);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("valueKeyword") String valueKeyword,
+    Integer count(@Param("keyword") String keyword,
                   @Param("configType") String configType);
 
     Integer countAll();

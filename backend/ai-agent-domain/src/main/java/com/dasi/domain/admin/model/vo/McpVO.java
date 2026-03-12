@@ -16,8 +16,11 @@ public class McpVO {
     private String mcpName;
     private String mcpType;
     private String mcpParam;
+    private String mcpSecret;
     private String mcpDesc;
     private Integer mcpTimeout;
     private Integer mcpChat;
+    private Long mcpFrom;
+    private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

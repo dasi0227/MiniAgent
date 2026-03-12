@@ -17,5 +17,6 @@ public class ConfigVO {
     private String configValue;
     private String configParam;
     private Integer configStatus;
+    private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

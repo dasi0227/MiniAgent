@@ -30,4 +30,6 @@ public interface IAiFlowDao {
     void delete(@Param("id") Long id);
 
     Integer deleteByAgentId(@Param("agentId") String agentId);
+
+    Integer deleteByClientId(@Param("clientId") String clientId);
 }

@@ -12,9 +12,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromptPageDTO {
+public class PlazaPageDTO {
 
     private String keyword;
+
+    private String sortBy;
+
+    private String sortOrder;
 
     @NotNull
     @Min(1)
@@ -24,4 +28,5 @@ public class PromptPageDTO {
     @Min(1)
     @Max(10)
     private Integer pageSize;
+
 }

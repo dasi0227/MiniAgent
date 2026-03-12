@@ -32,8 +32,8 @@
         update_time
         FROM ai_user
         <where>
-            <if test="userName != null and userName != ''">
-                AND user_name LIKE CONCAT('%', #{userName}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND user_name LIKE CONCAT('%', #{keyword}, '%')
             </if>
             <if test="userRole != null and userRole != ''">
                 AND user_role = #{userRole}
@@ -49,8 +49,8 @@
         SELECT COUNT(1)
         FROM ai_user
         <where>
-            <if test="userName != null and userName != ''">
-                AND user_name LIKE CONCAT('%', #{userName}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND user_name LIKE CONCAT('%', #{keyword}, '%')
             </if>
             <if test="userRole != null and userRole != ''">
                 AND user_role = #{userRole}

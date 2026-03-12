@@ -87,12 +87,13 @@
                update_time
         FROM ai_mcp
         <where>
-            AND mcp_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND mcp_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND mcp_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    mcp_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR mcp_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR mcp_type LIKE CONCAT('%', #{keyword}, '%')
+                    OR mcp_desc LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
         ORDER BY update_time DESC, id DESC
@@ -105,12 +106,13 @@
         SELECT COUNT(1)
         FROM ai_mcp
         <where>
-            AND mcp_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND mcp_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND mcp_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    mcp_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR mcp_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR mcp_type LIKE CONCAT('%', #{keyword}, '%')
+                    OR mcp_desc LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
     </select>
@@ -118,7 +120,6 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_mcp
-        WHERE mcp_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiMcp">

@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ConfigListDTO {
 
-    private String idKeyword;
-
-    private String valueKeyword;
+    private String keyword;
 
     private String configType;
 

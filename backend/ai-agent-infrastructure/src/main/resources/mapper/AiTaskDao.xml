@@ -43,9 +43,11 @@
                update_time
         FROM ai_task
         <where>
-            AND task_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND task_id LIKE CONCAT('%', #{idKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    task_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR task_desc LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="agentId != null and agentId != ''">
                 AND agent_id = #{agentId}
@@ -61,9 +63,11 @@
         SELECT COUNT(1)
         FROM ai_task
         <where>
-            AND task_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND task_id LIKE CONCAT('%', #{idKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    task_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR task_desc LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="agentId != null and agentId != ''">
                 AND agent_id = #{agentId}
@@ -74,7 +78,6 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_task
-        WHERE task_from = 0
     </select>
 
     <select id="queryByTaskId" resultMap="dataMap">

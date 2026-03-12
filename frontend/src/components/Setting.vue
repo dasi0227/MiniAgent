@@ -6,9 +6,9 @@ import {
     fetchProfile,
     queryAgentList,
     updatePassword,
-    userApiInsert,
-    userApiList,
-    userApiUpdate,
+    userModelInsert,
+    userModelList,
+    userModelUpdate,
     userMcpInsert,
     userMcpList,
     userMcpUpdate,
@@ -710,12 +710,12 @@ const loadApiList = async (keyword = '') => {
     apiLoading.value = true;
     apiError.value = '';
     try {
-        const resp = await userApiList(keyword);
-        const list = pickData(resp, '获取 API 失败') || [];
+        const resp = await userModelList(keyword);
+        const list = pickData(resp, '获取 MODEL 失败') || [];
         apiList.value = Array.isArray(list) ? list : [];
     } catch (error) {
         apiList.value = [];
-        notifyAppError(error, '获取 API 失败');
+        notifyAppError(error, '获取 MODEL 失败');
     } finally {
         apiLoading.value = false;
     }
@@ -728,7 +728,7 @@ const buildApiPayload = (form, apiId = '') => {
     const apiCompletionPath = (form.apiCompletionPath || '').trim();
     const apiKey = (form.apiKey || '').trim();
     if (!modelType || !modelName || !apiBaseUrl || !apiCompletionPath || !apiKey) {
-        throw new Error('请完整填写 API 必填项');
+        throw new Error('请完整填写 MODEL 必填项');
     }
     const payload = {
         modelName,
@@ -749,17 +749,17 @@ const submitApiInsert = async () => {
     try {
         payload = buildApiPayload(apiForm);
     } catch (error) {
-        apiError.value = normalizeError(error).message || '新增 API 失败';
+        apiError.value = normalizeError(error).message || '新增 MODEL 失败';
         return;
     }
     apiSaving.value = true;
     try {
-        await userApiInsert(payload);
+        await userModelInsert(payload);
         resetApiForm();
         apiCreateDialogOpen.value = false;
         await loadApiList(apiKeyword.value);
     } catch (error) {
-        notifyAppError(error, '新增 API 失败');
+        notifyAppError(error, '新增 MODEL 失败');
     } finally {
         apiSaving.value = false;
     }
@@ -782,20 +782,20 @@ const saveApiDialog = async () => {
     let payload = null;
     try {
         if (!apiDialogForm.apiId.trim()) {
-            throw new Error('API 配置标识缺失，请刷新后重试');
+            throw new Error('MODEL 配置标识缺失，请刷新后重试');
         }
         payload = buildApiPayload(apiDialogForm, apiDialogForm.apiId.trim());
     } catch (error) {
-        apiDialogError.value = normalizeError(error).message || '更新 API 失败';
+        apiDialogError.value = normalizeError(error).message || '更新 MODEL 失败';
         return;
     }
     apiDialogSaving.value = true;
     try {
-        await userApiUpdate(payload);
+        await userModelUpdate(payload);
         apiDialogOpen.value = false;
         await loadApiList(apiKeyword.value);
     } catch (error) {
-        notifyAppError(error, '更新 API 失败');
+        notifyAppError(error, '更新 MODEL 失败');
     } finally {
         apiDialogSaving.value = false;
     }
@@ -1097,6 +1097,13 @@ onBeforeUnmount(() => {
                             </button>
                             <button
                                 class="border-b-2 px-[2px] pb-[10px] pt-[2px] text-[14px] font-semibold transition"
+                                :class="activeTab === 'model' ? 'border-[var(--accent-color)] text-[var(--accent-color)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+                                @click="activeTab = 'model'"
+                            >
+                                MODEL
+                            </button>
+                            <button
+                                class="border-b-2 px-[2px] pb-[10px] pt-[2px] text-[14px] font-semibold transition"
                                 :class="activeTab === 'mcp' ? 'border-[var(--accent-color)] text-[var(--accent-color)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
                                 @click="activeTab = 'mcp'"
                             >
@@ -1104,17 +1111,10 @@ onBeforeUnmount(() => {
                             </button>
                             <button
                                 class="border-b-2 px-[2px] pb-[10px] pt-[2px] text-[14px] font-semibold transition"
-                                :class="activeTab === 'api' ? 'border-[var(--accent-color)] text-[var(--accent-color)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
-                                @click="activeTab = 'api'"
-                            >
-                                API
-                            </button>
-                            <button
-                                class="border-b-2 px-[2px] pb-[10px] pt-[2px] text-[14px] font-semibold transition"
                                 :class="activeTab === 'task' ? 'border-[var(--accent-color)] text-[var(--accent-color)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
                                 @click="activeTab = 'task'"
                             >
-                                Task
+                                TASK
                             </button>
                         </nav>
                     </div>
@@ -1210,6 +1210,66 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
+                <div v-else-if="activeTab === 'model'" class="space-y-[14px]">
+                    <div class="space-y-[10px]">
+                        <div class="flex flex-wrap items-center gap-[10px]">
+                            <div class="flex w-full items-center gap-[8px] md:w-[360px]">
+                                <input
+                                    v-model="apiKeyword"
+                                    class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
+                                    placeholder="输入关键字查询 MODEL"
+                                    @keydown.enter.prevent="loadApiList(apiKeyword)"
+                                />
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="查询 MODEL"
+                                    title="查询 MODEL"
+                                    @click="loadApiList(apiKeyword)"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <circle cx="11" cy="11" r="7" />
+                                        <path d="m20 20-3.6-3.6" />
+                                    </svg>
+                                </button>
+                                <button
+                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    aria-label="新增 MODEL"
+                                    title="新增 MODEL"
+                                    @click="openApiCreateDialog"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div v-if="apiLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
+                        <div v-else-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 MODEL 配置</div>
+                        <div v-else class="grid gap-[10px] lg:grid-cols-3">
+                            <button
+                                v-for="item in apiList"
+                                :key="item.apiId"
+                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
+                                @click="openApiDialog(item)"
+                            >
+                                <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                                    <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                        {{ item.modelName || '-' }}
+                                    </div>
+                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold text-[#4f6f95]">
+                                        {{ formatModelTypeLabel(item.modelType || 'chat') }}
+                                    </span>
+                                </div>
+                                <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)] break-all">
+                                    {{ formatApiDisplayUrl(item) }}
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div v-else-if="activeTab === 'mcp'" class="space-y-[14px]">
                     <div class="space-y-[10px]">
                         <div class="flex flex-wrap items-center gap-[10px]">
@@ -1264,66 +1324,6 @@ onBeforeUnmount(() => {
                                 </div>
                                 <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)]">
                                     {{ item.mcpDesc || '暂无描述' }}
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-else-if="activeTab === 'api'" class="space-y-[14px]">
-                    <div class="space-y-[10px]">
-                        <div class="flex flex-wrap items-center gap-[10px]">
-                            <div class="flex w-full items-center gap-[8px] md:w-[360px]">
-                                <input
-                                    v-model="apiKeyword"
-                                    class="min-w-0 flex-1 rounded-[10px] border border-[var(--border-color)] px-[10px] py-[9px] text-[13px]"
-                                    placeholder="输入关键字查询 API"
-                                    @keydown.enter.prevent="loadApiList(apiKeyword)"
-                                />
-                                <button
-                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
-                                    type="button"
-                                    aria-label="查询 API"
-                                    title="查询 API"
-                                    @click="loadApiList(apiKeyword)"
-                                >
-                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <circle cx="11" cy="11" r="7" />
-                                        <path d="m20 20-3.6-3.6" />
-                                    </svg>
-                                </button>
-                                <button
-                                    class="inline-flex h-[37px] w-[37px] items-center justify-center rounded-[10px] border border-[var(--border-color)] text-[var(--text-secondary)] transition hover:bg-[#eef2f7] hover:text-[var(--text-primary)]"
-                                    type="button"
-                                    aria-label="新增 API"
-                                    title="新增 API"
-                                    @click="openApiCreateDialog"
-                                >
-                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div v-if="apiLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
-                        <div v-else-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 API 配置</div>
-                        <div v-else class="grid gap-[10px] lg:grid-cols-3">
-                            <button
-                                v-for="item in apiList"
-                                :key="item.apiId"
-                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                                @click="openApiDialog(item)"
-                            >
-                                <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
-                                    <div class="text-[15px] font-semibold text-[var(--text-primary)]">
-                                        {{ item.modelName || '-' }}
-                                    </div>
-                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold text-[#4f6f95]">
-                                        {{ formatModelTypeLabel(item.modelType || 'chat') }}
-                                    </span>
-                                </div>
-                                <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)] break-all">
-                                    {{ formatApiDisplayUrl(item) }}
                                 </div>
                             </button>
                         </div>
@@ -1579,13 +1579,13 @@ onBeforeUnmount(() => {
         >
             <div class="w-full max-w-[760px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
                 <div class="mb-[12px] flex items-center justify-between">
-                    <div class="text-[16px] font-semibold">新增个人 API</div>
+                    <div class="text-[16px] font-semibold">新增个人 MODEL</div>
                     <button class="text-[20px] text-[var(--text-secondary)]" @click="apiCreateDialogOpen = false">×</button>
                 </div>
                 <div class="space-y-[10px]">
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">API 地址</span>
-                        <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 地址，例如 https://api.openai.com" />
+                        <span class="pt-[10px] text-[var(--text-secondary)]">接口地址</span>
+                        <input v-model="apiForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入接口地址，例如 https://api.openai.com" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">补全路径</span>
@@ -1600,8 +1600,8 @@ onBeforeUnmount(() => {
                         <input v-model="apiForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入模型名称，例如 qwen-plus" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">API 密钥</span>
-                        <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入 API 密钥" />
+                        <span class="pt-[10px] text-[var(--text-secondary)]">接口密钥</span>
+                        <input v-model="apiForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" placeholder="请输入接口密钥" />
                     </label>
                 </div>
                 <div v-if="apiError" class="mt-[10px] text-[12px] text-[#ef4444]">{{ apiError }}</div>
@@ -1878,12 +1878,12 @@ onBeforeUnmount(() => {
         >
             <div class="w-full max-w-[760px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
                 <div class="mb-[12px] flex items-center justify-between">
-                    <div class="text-[16px] font-semibold">API 配置详情</div>
+                    <div class="text-[16px] font-semibold">MODEL 配置详情</div>
                     <button class="text-[20px] text-[var(--text-secondary)]" @click="apiDialogOpen = false">×</button>
                 </div>
                 <div class="space-y-[10px]">
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">API 地址</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">接口地址</span>
                         <input v-model="apiDialogForm.apiBaseUrl" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
@@ -1899,7 +1899,7 @@ onBeforeUnmount(() => {
                         <input v-model="apiDialogForm.modelName" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
-                        <span class="pt-[10px] text-[var(--text-secondary)]">API 密钥</span>
+                        <span class="pt-[10px] text-[var(--text-secondary)]">接口密钥</span>
                         <input v-model="apiDialogForm.apiKey" class="rounded-[10px] border border-[var(--border-color)] px-[10px] py-[10px]" />
                     </label>
                 </div>

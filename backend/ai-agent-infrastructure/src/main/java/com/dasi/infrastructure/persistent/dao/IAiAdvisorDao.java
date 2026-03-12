@@ -11,13 +11,11 @@ public interface IAiAdvisorDao {
 
     AiAdvisor queryByAdvisorId(@Param("advisorId") String advisorId);
 
-    List<AiAdvisor> page(@Param("idKeyword") String idKeyword,
-                         @Param("nameKeyword") String nameKeyword,
+    List<AiAdvisor> page(@Param("keyword") String keyword,
                          @Param("offset") Integer offset,
                          @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("nameKeyword") String nameKeyword);
+    Integer count(@Param("keyword") String keyword);
 
     Integer countAll();
 

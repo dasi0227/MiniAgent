@@ -14,9 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ClientPageDTO {
 
-    private String idKeyword;
-
-    private String nameKeyword;
+    private String keyword;
 
     private String modelId;
 

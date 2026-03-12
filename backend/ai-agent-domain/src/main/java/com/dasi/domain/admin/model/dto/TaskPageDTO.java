@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TaskPageDTO {
 
-    private String idKeyword;
+    private String keyword;
 
     private String agentId;
 

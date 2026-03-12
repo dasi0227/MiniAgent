@@ -37,15 +37,16 @@
                update_time
         FROM ai_model
         <where>
-            AND model_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND model_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND model_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    model_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_type LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_id LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="apiId != null and apiId != ''">
-                AND model_name LIKE CONCAT('%', #{apiId}, '%')
+                AND api_id = #{apiId}
             </if>
         </where>
         ORDER BY update_time DESC, id DESC
@@ -58,12 +59,16 @@
         SELECT COUNT(1)
         FROM ai_model
         <where>
-            AND model_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND model_id LIKE CONCAT('%', #{idKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    model_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_type LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_id LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND model_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="apiId != null and apiId != ''">
+                AND api_id = #{apiId}
             </if>
         </where>
     </select>
@@ -71,7 +76,6 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_model
-        WHERE model_from = 0
     </select>
 
     <select id="queryModelIdByApiId" resultType="java.lang.String">
@@ -83,7 +87,6 @@
     <select id="listModelId" resultType="java.lang.String">
         SELECT model_id
         FROM ai_model
-        WHERE model_from = 0
     </select>
 
     <select id="queryModelByUserId" resultMap="dataMap">

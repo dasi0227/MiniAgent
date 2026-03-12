@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromptPageDTO {
+public class TemplatePageDTO {
 
     private String keyword;
 

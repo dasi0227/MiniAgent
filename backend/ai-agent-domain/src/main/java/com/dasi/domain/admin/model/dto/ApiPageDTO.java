@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ApiPageDTO {
 
-    private String idKeyword;
+    private String keyword;
 
     @NotNull
     @Min(1)

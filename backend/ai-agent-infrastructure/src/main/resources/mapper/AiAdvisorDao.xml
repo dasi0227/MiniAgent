@@ -35,11 +35,11 @@
                update_time
         FROM ai_advisor
         <where>
-            <if test="idKeyword != null and idKeyword != ''">
-                AND advisor_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND advisor_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    advisor_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR advisor_name LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
         ORDER BY update_time DESC, id DESC
@@ -52,11 +52,11 @@
         SELECT COUNT(1)
         FROM ai_advisor
         <where>
-            <if test="idKeyword != null and idKeyword != ''">
-                AND advisor_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="nameKeyword != null and nameKeyword != ''">
-                AND advisor_name LIKE CONCAT('%', #{nameKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    advisor_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR advisor_name LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
     </select>

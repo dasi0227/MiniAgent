@@ -15,13 +15,11 @@ public interface IAiMcpDao {
 
     List<AiMcp> queryByMcpIdList(@Param("mcpIdList") List<String> mcpIdList);
 
-    List<AiMcp> page(@Param("idKeyword") String idKeyword,
-                     @Param("nameKeyword") String nameKeyword,
+    List<AiMcp> page(@Param("keyword") String keyword,
                      @Param("offset") Integer offset,
                      @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("nameKeyword") String nameKeyword);
+    Integer count(@Param("keyword") String keyword);
 
     Integer countAll();
 

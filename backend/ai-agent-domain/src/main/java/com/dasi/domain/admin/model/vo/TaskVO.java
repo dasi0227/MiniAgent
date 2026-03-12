@@ -24,5 +24,9 @@ public class TaskVO {
 
     private Integer taskStatus;
 
+    private Long taskFrom;
+
+    private LocalDateTime createTime;
+
     private LocalDateTime updateTime;
 }

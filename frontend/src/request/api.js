@@ -60,11 +60,11 @@ const USER_MCP_INSERT_PATH = `${USER_MCP_BASE_PATH}/insert`;
 const USER_MCP_UPDATE_PATH = `${USER_MCP_BASE_PATH}/update`;
 const USER_MCP_DELETE_PATH = `${USER_MCP_BASE_PATH}/delete`;
 
-const USER_API_BASE_PATH = `${USER_BASE_PATH}/api`;
-const USER_API_LIST_PATH = `${USER_API_BASE_PATH}/list`;
-const USER_API_INSERT_PATH = `${USER_API_BASE_PATH}/insert`;
-const USER_API_UPDATE_PATH = `${USER_API_BASE_PATH}/update`;
-const USER_API_DELETE_PATH = `${USER_API_BASE_PATH}/delete`;
+const USER_MODEL_BASE_PATH = `${USER_BASE_PATH}/model`;
+const USER_MODEL_LIST_PATH = `${USER_MODEL_BASE_PATH}/list`;
+const USER_MODEL_INSERT_PATH = `${USER_MODEL_BASE_PATH}/insert`;
+const USER_MODEL_UPDATE_PATH = `${USER_MODEL_BASE_PATH}/update`;
+const USER_MODEL_DELETE_PATH = `${USER_MODEL_BASE_PATH}/delete`;
 
 const USER_TASK_BASE_PATH = `${USER_BASE_PATH}/task`;
 const USER_TASK_LIST_PATH = `${USER_TASK_BASE_PATH}/list`;
@@ -636,10 +636,14 @@ export const listClientRole = async () => http.post(`${ADMIN_LIST_BASE}/clientRo
 
 // -------------------- User API/MCP --------------------
 export const userApiList = async (keyword = '') =>
-    http.post(USER_API_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
-export const userApiInsert = async (payload = {}) => http.post(USER_API_INSERT_PATH, normalizeUserApiPayload(payload));
-export const userApiUpdate = async (payload = {}) => http.post(USER_API_UPDATE_PATH, normalizeUserApiPayload(payload));
-export const userApiDelete = async (apiId) => http.post(USER_API_DELETE_PATH, null, { params: { apiId } });
+    http.post(USER_MODEL_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } });
+export const userApiInsert = async (payload = {}) => http.post(USER_MODEL_INSERT_PATH, normalizeUserApiPayload(payload));
+export const userApiUpdate = async (payload = {}) => http.post(USER_MODEL_UPDATE_PATH, normalizeUserApiPayload(payload));
+export const userApiDelete = async (apiId) => http.post(USER_MODEL_DELETE_PATH, null, { params: { apiId } });
+export const userModelList = userApiList;
+export const userModelInsert = userApiInsert;
+export const userModelUpdate = userApiUpdate;
+export const userModelDelete = userApiDelete;
 
 export const userMcpList = async (keyword = '') =>
     normalizeUserMcpResponse(await http.post(USER_MCP_LIST_PATH, null, { params: { keyword: (keyword || '').trim() } }));

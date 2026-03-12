@@ -4,7 +4,6 @@ import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.enumeration.AiConfigType;
 import com.dasi.domain.admin.model.vo.*;
 import com.dasi.domain.admin.repository.IAdminRepository;
-import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.infrastructure.persistent.dao.*;
 import com.dasi.infrastructure.persistent.po.*;
 import com.dasi.infrastructure.persistent.vo.MessageDailyCount;
@@ -20,9 +19,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.dasi.domain.admin.model.enumeration.AiConfigType.*;
@@ -68,6 +69,12 @@ public class AdminRepository implements IAdminRepository {
     private IAiTaskDao aiTaskDao;
 
     @Resource
+    private IAiTemplateDao aiTemplateDao;
+
+    @Resource
+    private IAiRepoDao aiRepoDao;
+
+    @Resource
     private IAiSessionDao sessionDao;
 
     @Resource
@@ -75,6 +82,18 @@ public class AdminRepository implements IAdminRepository {
 
     @Resource
     private IAiStatDao aiStatDao;
+
+    @Resource
+    private IAiPlazaDao aiPlazaDao;
+
+    @Resource
+    private IAiPlazaLikeDao aiPlazaLikeDao;
+
+    @Resource
+    private IAiPlazaFavorDao aiPlazaFavorDao;
+
+    @Resource
+    private IAiPlazaCommentDao aiPlazaCommentDao;
 
     // -------------------- Dashboard --------------------
     @Override
@@ -93,6 +112,7 @@ public class AdminRepository implements IAdminRepository {
                 .sessionCount(safeInt(sessionDao.countAll()))
                 .messageCount(safeInt(messageDao.countAll()))
                 .taskCount(safeInt(aiTaskDao.countAll()))
+                .plazaCount(safeInt(aiPlazaDao.countAll()))
                 .build();
     }
 
@@ -169,7 +189,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_API_PREFIX, cacheClass = ApiVO.class, cacheType = CacheType.LIST)
     public List<ApiVO> apiPage(ApiPageDTO apiPageDTO) {
 
-        String idKeyword = apiPageDTO.getIdKeyword();
+        String idKeyword = apiPageDTO.getKeyword();
         Integer pageNum = apiPageDTO.getPageNum();
         Integer pageSize = apiPageDTO.getPageSize();
 
@@ -185,7 +205,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_API_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer apiCount(ApiPageDTO apiPageDTO) {
-        return aiApiDao.count(apiPageDTO.getIdKeyword());
+        return aiApiDao.count(apiPageDTO.getKeyword());
     }
 
     @Override
@@ -223,15 +243,13 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_MODEL_PREFIX, cacheClass = ModelVO.class, cacheType = CacheType.LIST)
     public List<ModelVO> modelPage(ModelPageDTO dto) {
-
-        String idKeyword = dto.getIdKeyword();
-        String nameKeyword = dto.getNameKeyword();
+        String keyword = dto.getKeyword();
         String apiId = dto.getApiId();
         Integer pageNum = dto.getPageNum();
         Integer pageSize = dto.getPageSize();
         Integer offset = (pageNum - 1) * pageSize;
 
-        List<AiModel> poList = aiModelDao.page(idKeyword, nameKeyword, apiId, offset, pageSize);
+        List<AiModel> poList = aiModelDao.page(keyword, apiId, offset, pageSize);
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -242,7 +260,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_MODEL_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer modelCount(ModelPageDTO dto) {
-        return aiModelDao.count(dto.getIdKeyword(), dto.getNameKeyword());
+        return aiModelDao.count(dto.getKeyword(), dto.getApiId());
     }
 
     @Override
@@ -280,7 +298,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_MCP_PREFIX, cacheClass = McpVO.class, cacheType = CacheType.LIST)
     public List<McpVO> mcpPage(McpPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiMcp> poList = aiMcpDao.page(dto.getIdKeyword(), dto.getNameKeyword(), offset, dto.getPageSize());
+        List<AiMcp> poList = aiMcpDao.page(dto.getKeyword(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -290,7 +308,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_MCP_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer mcpCount(McpPageDTO dto) {
-        return aiMcpDao.count(dto.getIdKeyword(), dto.getNameKeyword());
+        return aiMcpDao.count(dto.getKeyword());
     }
 
     @Override
@@ -328,7 +346,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_ADVISOR_PREFIX, cacheClass = AdvisorVO.class, cacheType = CacheType.LIST)
     public List<AdvisorVO> advisorPage(AdvisorPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiAdvisor> poList = aiAdvisorDao.page(dto.getIdKeyword(), dto.getNameKeyword(), offset, dto.getPageSize());
+        List<AiAdvisor> poList = aiAdvisorDao.page(dto.getKeyword(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -338,7 +356,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_ADVISOR_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer advisorCount(AdvisorPageDTO dto) {
-        return aiAdvisorDao.count(dto.getIdKeyword(), dto.getNameKeyword());
+        return aiAdvisorDao.count(dto.getKeyword());
     }
 
     @Override
@@ -379,7 +397,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_PROMPT_PREFIX, cacheClass = PromptVO.class, cacheType = CacheType.LIST)
     public List<PromptVO> promptPage(PromptPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiPrompt> poList = aiPromptDao.page(dto.getIdKeyword(), dto.getNameKeyword(), offset, dto.getPageSize());
+        List<AiPrompt> poList = aiPromptDao.page(dto.getKeyword(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -389,7 +407,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_PROMPT_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer promptCount(PromptPageDTO dto) {
-        return aiPromptDao.count(dto.getIdKeyword(), dto.getNameKeyword());
+        return aiPromptDao.count(dto.getKeyword());
     }
 
     @Override
@@ -430,7 +448,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_CLIENT_PREFIX, cacheClass = ClientVO.class, cacheType = CacheType.LIST)
     public List<ClientVO> clientPage(ClientPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiClient> poList = aiClientDao.page(dto.getIdKeyword(), dto.getNameKeyword(), dto.getModelId(), dto.getClientType(), dto.getClientRole(), offset, dto.getPageSize());
+        List<AiClient> poList = aiClientDao.page(dto.getKeyword(), dto.getModelId(), "chat", dto.getClientRole(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -440,7 +458,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_CLIENT_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer clientCount(ClientPageDTO dto) {
-        return aiClientDao.count(dto.getIdKeyword(), dto.getNameKeyword(), dto.getModelId(), dto.getClientType(), dto.getClientRole());
+        return aiClientDao.count(dto.getKeyword(), dto.getModelId(), "chat", dto.getClientRole());
     }
 
     @Override
@@ -470,6 +488,8 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void clientDelete(String clientId) {
+        aiConfigDao.deleteByClientId(clientId);
+        aiFlowDao.deleteByClientId(clientId);
         aiClientDao.deleteByClientId(clientId);
     }
 
@@ -492,7 +512,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = AgentVO.class, cacheType = CacheType.LIST)
     public List<AgentVO> agentPage(AgentPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiAgent> poList = aiAgentDao.page(dto.getIdKeyword(), dto.getNameKeyword(), dto.getAgentType(), offset, dto.getPageSize());
+        List<AiAgent> poList = aiAgentDao.page(dto.getKeyword(), dto.getAgentType(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -502,14 +522,14 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = AgentVO.class, cacheType = CacheType.LIST)
     public List<AgentVO> agentList(AgentListDTO dto) {
-        List<AiAgent> poList = aiAgentDao.list(dto.getIdKeyword(), dto.getNameKeyword(), dto.getAgentType());
+        List<AiAgent> poList = aiAgentDao.list(dto.getKeyword(), dto.getAgentType());
         return poList.stream().map(this::toAgentVO).toList();
     }
 
     @Override
     @Cacheable(cachePrefix = ADMIN_AGENT_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer agentCount(AgentPageDTO dto) {
-        return aiAgentDao.count(dto.getIdKeyword(), dto.getNameKeyword(), dto.getAgentType());
+        return aiAgentDao.count(dto.getKeyword(), dto.getAgentType());
     }
 
     @Override
@@ -539,7 +559,39 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void agentDelete(String agentId) {
+        AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
+        if (aiAgent == null) {
+            return;
+        }
+
+        List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(agentId);
+        Set<String> clientIdSet = aiFlowList.stream()
+                .map(AiFlow::getClientId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        for (String clientId : clientIdSet) {
+            aiConfigDao.deleteByClientId(clientId);
+            aiFlowDao.deleteByClientId(clientId);
+            aiClientDao.deleteByClientId(clientId);
+        }
+
+        aiTaskDao.deleteByAgentId(agentId);
+        aiFlowDao.deleteByAgentId(agentId);
+        aiRepoDao.deleteByAgentId(agentId);
         aiAgentDao.deleteByAgentId(agentId);
+
+        String templateId = aiAgent.getTemplateId();
+        if (templateId != null && !templateId.isBlank()) {
+            List<AiPlaza> aiPlazaList = aiPlazaDao.listByTemplateId(templateId);
+            for (AiPlaza aiPlaza : aiPlazaList) {
+                String plazaId = aiPlaza.getPlazaId();
+                aiPlazaLikeDao.deleteByPlazaId(plazaId);
+                aiPlazaFavorDao.deleteByPlazaId(plazaId);
+                aiPlazaCommentDao.deleteByPlazaId(plazaId);
+                aiPlazaDao.deleteByPlazaId(plazaId);
+            }
+            aiRepoDao.deleteByTemplateId(templateId);
+            aiTemplateDao.deleteByTemplateId(templateId);
+        }
     }
 
     @Override
@@ -561,7 +613,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.LIST)
     public List<UserVO> userPage(UserPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiUser> poList = userDao.page(dto.getUserNameKeyWord(), dto.getUserRole(), offset, dto.getPageSize());
+        List<AiUser> poList = userDao.page(dto.getKeyword(), dto.getUserRole(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -571,7 +623,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer userCount(UserPageDTO dto) {
-        Long count = userDao.count(dto.getUserNameKeyWord(), dto.getUserRole());
+        Long count = userDao.count(dto.getKeyword(), dto.getUserRole());
         return count == null ? 0 : count.intValue();
     }
 
@@ -622,7 +674,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_CONFIG_PREFIX, cacheType = CacheType.LIST, cacheClass = ConfigVO.class)
     public List<ConfigVO> configList(ConfigListDTO dto) {
-        List<AiConfig> poList = aiConfigDao.list(dto.getIdKeyword(), dto.getValueKeyword(), dto.getConfigType());
+        List<AiConfig> poList = aiConfigDao.list(dto.getKeyword(), dto.getConfigType());
         return poList.stream().map(this::toConfigVO).toList();
     }
 
@@ -784,7 +836,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_TASK_PREFIX, cacheType = CacheType.LIST, cacheClass = TaskVO.class)
     public List<TaskVO> taskPage(TaskPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiTask> poList = aiTaskDao.page(dto.getIdKeyword(), dto.getAgentId(), offset, dto.getPageSize());
+        List<AiTask> poList = aiTaskDao.page(dto.getKeyword(), dto.getAgentId(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -794,7 +846,7 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_TASK_PREFIX, cacheType = CacheType.VALUE, cacheClass = Integer.class)
     public Integer taskCount(TaskPageDTO dto) {
-        return aiTaskDao.count(dto.getIdKeyword(), dto.getAgentId());
+        return aiTaskDao.count(dto.getKeyword(), dto.getAgentId());
     }
 
     @Override
@@ -851,6 +903,106 @@ public class AdminRepository implements IAdminRepository {
         return list.stream().map(this::toSessionVO).toList();
     }
 
+    // -------------------- Template --------------------
+    @Override
+    @Cacheable(cachePrefix = ADMIN_TEMPLATE_PREFIX, cacheType = CacheType.LIST, cacheClass = TemplateVO.class)
+    public List<TemplateVO> templatePage(TemplatePageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiTemplate> poList = aiTemplateDao.page(dto.getKeyword(), offset, dto.getPageSize());
+        if (CollectionUtils.isEmpty(poList)) {
+            return List.of();
+        }
+        return poList.stream().map(this::toTemplateVO).toList();
+    }
+
+    @Override
+    @Cacheable(cachePrefix = ADMIN_TEMPLATE_PREFIX, cacheType = CacheType.VALUE, cacheClass = Integer.class)
+    public Integer templateCount(TemplatePageDTO dto) {
+        return aiTemplateDao.count(dto.getKeyword());
+    }
+
+    @Override
+    @Cacheable(cachePrefix = ADMIN_TEMPLATE_PREFIX, cacheType = CacheType.VALUE, cacheClass = TemplateVO.class)
+    public TemplateVO templateQuery(String templateId) {
+        return toTemplateVO(aiTemplateDao.queryByTemplateId(templateId));
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    public void templateInsert(TemplateManageDTO dto) {
+        aiTemplateDao.insert(toTemplatePO(dto));
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    public void templateUpdate(TemplateManageDTO dto) {
+        AiTemplate existed = aiTemplateDao.queryByTemplateId(dto.getTemplateId());
+        if (existed == null) {
+            return;
+        }
+        AiTemplate po = toTemplatePO(dto);
+        po.setId(existed.getId());
+        aiTemplateDao.update(po);
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    public void templateDelete(String templateId) {
+        aiRepoDao.deleteByTemplateId(templateId);
+        aiTemplateDao.deleteByTemplateId(templateId);
+    }
+
+    // -------------------- Plaza --------------------
+    @Override
+    @Cacheable(cachePrefix = ADMIN_PLAZA_PREFIX, cacheType = CacheType.LIST, cacheClass = PlazaVO.class)
+    public List<PlazaVO> plazaPage(PlazaPageDTO dto) {
+        Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
+        List<AiPlaza> poList = aiPlazaDao.page(dto.getKeyword(), dto.getSortBy(), dto.getSortOrder(), offset, dto.getPageSize());
+        if (CollectionUtils.isEmpty(poList)) {
+            return List.of();
+        }
+        return poList.stream().map(this::toPlazaVO).toList();
+    }
+
+    @Override
+    @Cacheable(cachePrefix = ADMIN_PLAZA_PREFIX, cacheType = CacheType.VALUE, cacheClass = Integer.class)
+    public Integer plazaCount(PlazaPageDTO dto) {
+        return aiPlazaDao.count(dto.getKeyword());
+    }
+
+    @Override
+    @Cacheable(cachePrefix = ADMIN_PLAZA_PREFIX, cacheType = CacheType.VALUE, cacheClass = PlazaVO.class)
+    public PlazaVO plazaQuery(String plazaId) {
+        return toPlazaVO(aiPlazaDao.queryByPlazaId(plazaId));
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    public void plazaInsert(PlazaManageDTO dto) {
+        aiPlazaDao.insert(toPlazaPO(dto));
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    public void plazaUpdate(PlazaManageDTO dto) {
+        AiPlaza existed = aiPlazaDao.queryByPlazaId(dto.getPlazaId());
+        if (existed == null) {
+            return;
+        }
+        AiPlaza po = toPlazaPO(dto);
+        po.setId(existed.getId());
+        aiPlazaDao.update(po);
+    }
+
+    @Override
+    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    public void plazaDelete(String plazaId) {
+        aiPlazaCommentDao.deleteByPlazaId(plazaId);
+        aiPlazaLikeDao.deleteByPlazaId(plazaId);
+        aiPlazaFavorDao.deleteByPlazaId(plazaId);
+        aiPlazaDao.deleteByPlazaId(plazaId);
+    }
+
     // -------------------- Depend --------------------
     @Override
     @Cacheable(cachePrefix = ADMIN_DEPEND_PREFIX, cacheType = CacheType.LIST, cacheClass = String.class)
@@ -889,6 +1041,16 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
+    @Cacheable(cachePrefix = ADMIN_DEPEND_PREFIX, cacheType = CacheType.LIST, cacheClass = String.class)
+    public List<String> queryPlazaDependOnTemplate(String templateId) {
+        List<AiPlaza> aiPlazaList = aiPlazaDao.listByTemplateId(templateId);
+        if (CollectionUtils.isEmpty(aiPlazaList)) {
+            return List.of();
+        }
+        return aiPlazaList.stream().map(AiPlaza::getPlazaId).toList();
+    }
+
+    @Override
     @Cacheable(cachePrefix = ADMIN_LIST_PREFIX, cacheType = CacheType.LIST, cacheClass = String.class)
     public List<String> listApiId() {
         return aiApiDao.listApiId();
@@ -901,6 +1063,16 @@ public class AdminRepository implements IAdminRepository {
     }
 
     // -------------------- Util --------------------
+    private String resolveUserName(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        if (userId == 0L) {
+            return "system";
+        }
+        return userDao.queryUserNameById(userId);
+    }
+
     private ApiVO toApiVO(AiApi po) {
         if (po == null) {
             return null;
@@ -910,6 +1082,9 @@ public class AdminRepository implements IAdminRepository {
                 .apiBaseUrl(po.getApiBaseUrl())
                 .apiKey(po.getApiKey())
                 .apiCompletionsPath(po.getApiCompletionsPath())
+                .apiEmbeddingsPath(po.getApiEmbeddingsPath())
+                .apiFrom(po.getApiFrom())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -920,6 +1095,7 @@ public class AdminRepository implements IAdminRepository {
                 .apiBaseUrl(dto.getApiBaseUrl())
                 .apiKey(dto.getApiKey())
                 .apiCompletionsPath(dto.getApiCompletionsPath())
+                .apiEmbeddingsPath(dto.getApiEmbeddingsPath())
                 .apiFrom(0L)
                 .build();
     }
@@ -943,6 +1119,8 @@ public class AdminRepository implements IAdminRepository {
                 .apiId(po.getApiId())
                 .modelName(po.getModelName())
                 .modelType(po.getModelType())
+                .modelFrom(po.getModelFrom())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -956,9 +1134,12 @@ public class AdminRepository implements IAdminRepository {
                 .mcpName(po.getMcpName())
                 .mcpType(po.getMcpType())
                 .mcpParam(po.getMcpParam())
+                .mcpSecret(po.getMcpSecret())
                 .mcpDesc(po.getMcpDesc())
                 .mcpTimeout(po.getMcpTimeout())
                 .mcpChat(po.getMcpChat())
+                .mcpFrom(po.getMcpFrom())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -969,6 +1150,7 @@ public class AdminRepository implements IAdminRepository {
                 .mcpName(dto.getMcpName())
                 .mcpType(dto.getMcpType())
                 .mcpParam(dto.getMcpParam())
+                .mcpSecret(dto.getMcpSecret())
                 .mcpDesc(dto.getMcpDesc())
                 .mcpTimeout(dto.getMcpTimeout())
                 .mcpChat(dto.getMcpChat())
@@ -1030,6 +1212,8 @@ public class AdminRepository implements IAdminRepository {
                 .modelName(po.getModelName())
                 .clientName(po.getClientName())
                 .clientStatus(po.getClientStatus())
+                .clientFrom(po.getClientFrom())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -1057,7 +1241,10 @@ public class AdminRepository implements IAdminRepository {
                 .agentType(po.getAgentType())
                 .agentDesc(po.getAgentDesc())
                 .modelId(po.getModelId())
+                .templateId(po.getTemplateId())
                 .agentStatus(po.getAgentStatus())
+                .agentFrom(po.getAgentFrom())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -1069,6 +1256,7 @@ public class AdminRepository implements IAdminRepository {
                 .agentType(dto.getAgentType())
                 .agentDesc(dto.getAgentDesc())
                 .modelId(dto.getModelId())
+                .templateId(dto.getTemplateId())
                 .agentStatus(dto.getAgentStatus())
                 .agentFrom(0L)
                 .build();
@@ -1117,6 +1305,7 @@ public class AdminRepository implements IAdminRepository {
                 .configValue(po.getConfigValue())
                 .configParam(po.getConfigParam())
                 .configStatus(po.getConfigStatus())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -1156,6 +1345,8 @@ public class AdminRepository implements IAdminRepository {
                 .taskDesc(po.getTaskDesc())
                 .taskParam(po.getTaskParam())
                 .taskStatus(po.getTaskStatus())
+                .taskFrom(po.getTaskFrom())
+                .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -1169,6 +1360,78 @@ public class AdminRepository implements IAdminRepository {
                 .taskParam(dto.getTaskParam())
                 .taskStatus(dto.getTaskStatus())
                 .taskFrom(0L)
+                .build();
+    }
+
+    private TemplateVO toTemplateVO(AiTemplate po) {
+        if (po == null) {
+            return null;
+        }
+        return TemplateVO.builder()
+                .templateId(po.getTemplateId())
+                .userId(po.getUserId())
+                .userName(resolveUserName(po.getUserId()))
+                .agentName(po.getAgentName())
+                .agentType(po.getAgentType())
+                .agentDesc(po.getAgentDesc())
+                .apiBaseUrl(po.getApiBaseUrl())
+                .apiCompletionUrl(po.getApiCompletionUrl())
+                .modelName(po.getModelName())
+                .modelType(po.getModelType())
+                .snapshot(po.getSnapshot())
+                .createTime(po.getCreateTime())
+                .updateTime(po.getUpdateTime())
+                .build();
+    }
+
+    private AiTemplate toTemplatePO(TemplateManageDTO dto) {
+        return AiTemplate.builder()
+                .templateId(dto.getTemplateId())
+                .userId(dto.getUserId())
+                .agentName(dto.getAgentName())
+                .agentType(dto.getAgentType())
+                .agentDesc(dto.getAgentDesc())
+                .apiBaseUrl(dto.getApiBaseUrl())
+                .apiCompletionUrl(dto.getApiCompletionUrl())
+                .modelName(dto.getModelName())
+                .modelType(dto.getModelType())
+                .snapshot(dto.getSnapshot())
+                .build();
+    }
+
+    private PlazaVO toPlazaVO(AiPlaza po) {
+        if (po == null) {
+            return null;
+        }
+        return PlazaVO.builder()
+                .plazaId(po.getPlazaId())
+                .templateId(po.getTemplateId())
+                .userId(po.getUserId())
+                .userName(resolveUserName(po.getUserId()))
+                .agentName(po.getAgentName())
+                .agentType(po.getAgentType())
+                .plazaTitle(po.getPlazaTitle())
+                .plazaDesc(po.getPlazaDesc())
+                .likeCount(po.getLikeCount())
+                .favorCount(po.getFavorCount())
+                .commentCount(po.getCommentCount())
+                .createTime(po.getCreateTime())
+                .updateTime(po.getUpdateTime())
+                .build();
+    }
+
+    private AiPlaza toPlazaPO(PlazaManageDTO dto) {
+        return AiPlaza.builder()
+                .plazaId(dto.getPlazaId())
+                .templateId(dto.getTemplateId())
+                .userId(dto.getUserId())
+                .agentName(dto.getAgentName())
+                .agentType(dto.getAgentType())
+                .plazaTitle(dto.getPlazaTitle())
+                .plazaDesc(dto.getPlazaDesc())
+                .likeCount(dto.getLikeCount())
+                .favorCount(dto.getFavorCount())
+                .commentCount(dto.getCommentCount())
                 .build();
     }
 

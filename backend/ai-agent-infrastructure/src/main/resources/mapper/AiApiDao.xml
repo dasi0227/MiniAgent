@@ -30,19 +30,23 @@
 
     <select id="page" resultMap="dataMap">
         SELECT id,
-        api_id,
-        api_base_url,
-        api_key,
-        api_completions_path,
-        api_embeddings_path,
-        api_from,
-        create_time,
-        update_time
+               api_id,
+               api_base_url,
+               api_key,
+               api_completions_path,
+               api_embeddings_path,
+               api_from,
+               create_time,
+               update_time
         FROM ai_api
         <where>
-            AND api_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND api_id LIKE CONCAT('%', #{idKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    api_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_base_url LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_completions_path LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_embeddings_path LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
         ORDER BY update_time DESC, id DESC
@@ -55,9 +59,13 @@
         SELECT COUNT(1)
         FROM ai_api
         <where>
-            AND api_from = 0
-            <if test="idKeyword != null and idKeyword != ''">
-                AND api_id LIKE CONCAT('%', #{idKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    api_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_base_url LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_completions_path LIKE CONCAT('%', #{keyword}, '%')
+                    OR api_embeddings_path LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
     </select>
@@ -65,13 +73,11 @@
     <select id="countAll" resultType="java.lang.Integer">
         SELECT COUNT(1)
         FROM ai_api
-        WHERE api_from = 0
     </select>
 
     <select id="listApiId" resultType="java.lang.String">
         SELECT api_id
         FROM ai_api
-        WHERE api_from = 0
     </select>
 
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiApi">

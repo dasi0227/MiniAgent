@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserPageDTO {
 
-    private String userNameKeyWord;
+    private String keyword;
 
     private String userRole;
 

@@ -2,7 +2,6 @@ package com.dasi.api;
 
 import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.vo.*;
-import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.result.PageResult;
 import com.dasi.types.result.Result;
@@ -117,6 +116,22 @@ public interface IAdminApi {
     Result<Void> taskToggle(String taskId, Integer taskStatus);
 
     Result<List<SessionVO>> listSession();
+
+    Result<PageResult<TemplateVO>> templatePage(TemplatePageDTO dto);
+
+    Result<Void> templateInsert(TemplateManageDTO dto);
+
+    Result<Void> templateUpdate(TemplateManageDTO dto);
+
+    Result<Void> templateDelete(String templateId);
+
+    Result<PageResult<PlazaVO>> plazaPage(PlazaPageDTO dto);
+
+    Result<Void> plazaInsert(PlazaManageDTO dto);
+
+    Result<Void> plazaUpdate(PlazaManageDTO dto);
+
+    Result<Void> plazaDelete(String plazaId);
 
     Result<List<String>> listClientType();
 

@@ -102,6 +102,11 @@
         </where>
     </select>
 
+    <select id="countAll" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM ai_plaza
+    </select>
+
     <select id="queryByPlazaId" resultMap="dataMap">
         SELECT p.id,
                p.plaza_id,

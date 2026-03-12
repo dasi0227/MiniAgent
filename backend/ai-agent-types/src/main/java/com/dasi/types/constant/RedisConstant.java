@@ -36,6 +36,8 @@ public class RedisConstant {
     public static final String ADMIN_CONFIG_PREFIX = "admin:config:";
     public static final String ADMIN_FLOW_PREFIX = "admin:flow:";
     public static final String ADMIN_TASK_PREFIX = "admin:task:";
+    public static final String ADMIN_PLAZA_PREFIX = "admin:plaza:";
+    public static final String ADMIN_TEMPLATE_PREFIX = "admin:template:";
     public static final String ADMIN_DEPEND_PREFIX = "admin:depend:";
     public static final String ADMIN_LIST_PREFIX = "admin:list:";
 

@@ -116,4 +116,10 @@
         WHERE agent_id = #{agentId}
     </delete>
 
+    <delete id="deleteByClientId">
+        DELETE
+        FROM ai_flow
+        WHERE client_id = #{clientId}
+    </delete>
+
 </mapper>

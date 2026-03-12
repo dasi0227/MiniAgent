@@ -17,6 +17,8 @@ public interface IAiPlazaDao {
 
     Integer count(@Param("keyword") String keyword);
 
+    Integer countAll();
+
     AiPlaza queryByPlazaId(@Param("plazaId") String plazaId);
 
     AiPlaza queryByTemplateId(@Param("templateId") String templateId);

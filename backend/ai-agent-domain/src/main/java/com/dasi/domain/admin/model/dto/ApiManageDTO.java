@@ -24,4 +24,7 @@ public class ApiManageDTO {
     @NotBlank
     private String apiCompletionsPath;
 
+    @NotBlank
+    private String apiEmbeddingsPath;
+
 }

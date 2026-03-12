@@ -65,11 +65,11 @@
                update_time
         FROM ai_config
         <where>
-            <if test="idKeyword != null and idKeyword != ''">
-                AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="valueKeyword != null and valueKeyword != ''">
-                AND config_value LIKE CONCAT('%', #{valueKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    client_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR config_value LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="configType != null and configType != ''">
                 AND config_type = #{configType}
@@ -82,11 +82,11 @@
         SELECT COUNT(1)
         FROM ai_config
         <where>
-            <if test="idKeyword != null and idKeyword != ''">
-                AND client_id LIKE CONCAT('%', #{idKeyword}, '%')
-            </if>
-            <if test="valueKeyword != null and valueKeyword != ''">
-                AND config_value LIKE CONCAT('%', #{valueKeyword}, '%')
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    client_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR config_value LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
             <if test="configType != null and configType != ''">
                 AND config_type = #{configType}

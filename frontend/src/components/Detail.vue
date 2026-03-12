@@ -4,8 +4,10 @@ import { useRoute, useRouter } from 'vue-router';
 import {
     queryModelList,
     queryRoleMap,
-    userApiList,
+    userModelUpdate,
+    userModelList,
     userMcpList,
+    userMcpUpdate,
     workspaceAgentBaseUpdate,
     workspaceAgentDetail,
     workspaceAgentMcpUpdate,
@@ -13,7 +15,7 @@ import {
     workspaceAgentSystemPromptUpdate,
     workspaceAgentUserPromptUpdate
 } from '../request/api';
-import { notifyAppError } from '../request/request';
+import { normalizeError, notifyAppError } from '../request/request';
 import { useSettingsStore } from '../router/pinia';
 import { getStrategyTone, normalizeStrategyType } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
@@ -71,6 +73,47 @@ const mcpInfoModal = reactive({
     open: false,
     title: '',
     rows: [],
+    secretRows: []
+});
+
+const modelItemModal = reactive({
+    open: false,
+    saving: false,
+    error: '',
+    form: {
+        apiId: '',
+        modelType: '',
+        modelName: '',
+        apiBaseUrl: '',
+        apiCompletionPath: '',
+        apiKey: ''
+    }
+});
+
+const MCP_TYPE_OPTIONS = [
+    { value: 'sse', label: 'SSE' },
+    { value: 'stdio', label: 'STDIO' }
+];
+const MCP_TYPE_SET = new Set(MCP_TYPE_OPTIONS.map((item) => item.value));
+let detailMcpSecretRowSeed = 0;
+const nextDetailMcpSecretRowId = () => {
+    detailMcpSecretRowSeed += 1;
+    return `detail-mcp-secret-${detailMcpSecretRowSeed}`;
+};
+
+const mcpItemModal = reactive({
+    open: false,
+    saving: false,
+    error: '',
+    paramError: '',
+    secretError: '',
+    form: {
+        mcpId: '',
+        mcpName: '',
+        mcpType: '',
+        mcpDesc: '',
+        mcpParam: '{}'
+    },
     secretRows: []
 });
 
@@ -181,9 +224,61 @@ const parseSecretRows = (raw) => {
     return Object.entries(value).map(([key, val]) => ({ key, value: String(val ?? '') }));
 };
 
+const parseSecretRowsForEdit = (raw) => {
+    const rows = parseSecretRows(raw).map((row) => ({
+        rowId: nextDetailMcpSecretRowId(),
+        key: row.key,
+        value: row.value
+    }));
+    return rows.length ? rows : [];
+};
+
+const formatJsonPretty = (value) => {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if (!raw) return '{}';
+    try {
+        return JSON.stringify(JSON.parse(raw), null, 2);
+    } catch {
+        return value;
+    }
+};
+
+const ensureJsonText = (value, fieldLabel) => {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if (!raw) {
+        return null;
+    }
+    try {
+        return JSON.stringify(JSON.parse(raw), null, 2);
+    } catch {
+        throw new Error(`${fieldLabel}必须是合法 JSON`);
+    }
+};
+
+const buildMcpSecretJson = (rows) => {
+    const result = {};
+    const keySet = new Set();
+    for (const row of rows) {
+        const key = (row?.key || '').trim();
+        const value = (row?.value || '').trim();
+        if (!key && !value) {
+            continue;
+        }
+        if (!key && value) {
+            throw new Error('MCP 密钥配置存在缺失 Key 的行');
+        }
+        if (keySet.has(key)) {
+            throw new Error(`MCP 密钥配置存在重复 Key：${key}`);
+        }
+        keySet.add(key);
+        result[key] = value;
+    }
+    return keySet.size ? JSON.stringify(result, null, 2) : null;
+};
+
 const loadReferenceData = async () => {
     try {
-        const [apiResp, mcpResp, modelResp] = await Promise.all([userApiList(''), userMcpList(''), queryModelList()]);
+        const [apiResp, mcpResp, modelResp] = await Promise.all([userModelList(''), userMcpList(''), queryModelList()]);
         const apiData = pickData(apiResp);
         const mcpData = pickData(mcpResp);
         const modelData = pickData(modelResp);
@@ -315,6 +410,60 @@ const closeModelEdit = () => {
     modelModal.open = false;
 };
 
+const openModelItemEdit = (apiId) => {
+    const item = userApiOptions.value.find((option) => option.apiId === apiId);
+    if (!item) {
+        notifyAppError(new Error('未找到可编辑的模型配置'), '未找到可编辑的模型配置');
+        return;
+    }
+    modelItemModal.error = '';
+    modelItemModal.form.apiId = (item.apiId || '').trim();
+    modelItemModal.form.modelType = item.modelType || '';
+    modelItemModal.form.modelName = item.modelName || '';
+    modelItemModal.form.apiBaseUrl = item.apiBaseUrl || '';
+    modelItemModal.form.apiCompletionPath = item.apiCompletionPath || '/v1/chat/completions';
+    modelItemModal.form.apiKey = item.apiKey || '';
+    modelItemModal.open = true;
+};
+
+const closeModelItemEdit = () => {
+    if (modelItemModal.saving) return;
+    modelItemModal.open = false;
+};
+
+const saveModelItemEdit = async () => {
+    modelItemModal.error = '';
+    const payload = {
+        apiId: (modelItemModal.form.apiId || '').trim(),
+        modelType: (modelItemModal.form.modelType || '').trim(),
+        modelName: (modelItemModal.form.modelName || '').trim(),
+        apiBaseUrl: (modelItemModal.form.apiBaseUrl || '').trim(),
+        apiCompletionPath: (modelItemModal.form.apiCompletionPath || '').trim(),
+        apiKey: (modelItemModal.form.apiKey || '').trim()
+    };
+    if (!payload.apiId || !payload.modelType || !payload.modelName || !payload.apiBaseUrl || !payload.apiCompletionPath || !payload.apiKey) {
+        modelItemModal.error = '请完整填写 MODEL 必填项';
+        return;
+    }
+    const previousSelected = modelModal.selectedApiId;
+    modelItemModal.saving = true;
+    try {
+        await userModelUpdate(payload);
+        modelItemModal.open = false;
+        await loadReferenceData();
+        modelModal.options = buildModelOptions();
+        if (previousSelected && modelModal.options.some((item) => item.apiId === previousSelected && !item.disabled)) {
+            modelModal.selectedApiId = previousSelected;
+        } else {
+            modelModal.selectedApiId = modelModal.options.find((item) => !item.disabled)?.apiId || '';
+        }
+    } catch (error) {
+        notifyAppError(error, '更新 MODEL 失败');
+    } finally {
+        modelItemModal.saving = false;
+    }
+};
+
 const saveModelEdit = async () => {
     const selected = modelModal.options.find((item) => item.apiId === modelModal.selectedApiId);
     if (!selected || !selected.modelId) {
@@ -355,6 +504,100 @@ const openMcpEdit = async () => {
 const closeMcpEdit = () => {
     if (mcpEditModal.saving) return;
     mcpEditModal.open = false;
+};
+
+const openMcpItemEdit = (mcpId) => {
+    const item = userMcpOptions.value.find((option) => option.mcpId === mcpId);
+    if (!item) {
+        notifyAppError(new Error('未找到可编辑的 MCP 配置'), '未找到可编辑的 MCP 配置');
+        return;
+    }
+    mcpItemModal.error = '';
+    mcpItemModal.paramError = '';
+    mcpItemModal.secretError = '';
+    mcpItemModal.form.mcpId = (item.mcpId || '').trim();
+    mcpItemModal.form.mcpName = item.mcpName || '';
+    mcpItemModal.form.mcpType = (item.mcpType || '').toString().trim().toLowerCase();
+    mcpItemModal.form.mcpDesc = item.mcpDesc || '';
+    mcpItemModal.form.mcpParam = formatJsonPretty(item.mcpParam || '{}');
+    mcpItemModal.secretRows = parseSecretRowsForEdit(item.mcpSecret);
+    mcpItemModal.open = true;
+};
+
+const closeMcpItemEdit = () => {
+    if (mcpItemModal.saving) return;
+    mcpItemModal.open = false;
+};
+
+const addMcpSecretRow = () => {
+    mcpItemModal.secretRows = [
+        ...mcpItemModal.secretRows,
+        {
+            rowId: nextDetailMcpSecretRowId(),
+            key: '',
+            value: ''
+        }
+    ];
+};
+
+const removeMcpSecretRow = (rowId) => {
+    mcpItemModal.secretRows = mcpItemModal.secretRows.filter((row) => row.rowId !== rowId);
+};
+
+const saveMcpItemEdit = async () => {
+    mcpItemModal.error = '';
+    mcpItemModal.paramError = '';
+    mcpItemModal.secretError = '';
+
+    const payload = {
+        mcpId: (mcpItemModal.form.mcpId || '').trim(),
+        mcpName: (mcpItemModal.form.mcpName || '').trim(),
+        mcpType: (mcpItemModal.form.mcpType || '').trim().toLowerCase(),
+        mcpDesc: (mcpItemModal.form.mcpDesc || '').trim(),
+        mcpParam: null,
+        mcpSecret: null
+    };
+
+    if (!payload.mcpId) {
+        mcpItemModal.error = 'MCP 标识缺失，请刷新后重试';
+        return;
+    }
+    if (!payload.mcpName || !payload.mcpType || !payload.mcpDesc) {
+        mcpItemModal.error = '请完整填写 MCP 必填项';
+        return;
+    }
+    if (!MCP_TYPE_SET.has(payload.mcpType)) {
+        mcpItemModal.error = '请选择 MCP 类型（SSE / STDIO）';
+        return;
+    }
+
+    try {
+        payload.mcpParam = ensureJsonText(mcpItemModal.form.mcpParam, 'MCP 配置');
+    } catch (error) {
+        mcpItemModal.paramError = normalizeError(error).message;
+        return;
+    }
+
+    try {
+        payload.mcpSecret = buildMcpSecretJson(mcpItemModal.secretRows);
+    } catch (error) {
+        mcpItemModal.secretError = normalizeError(error).message;
+        return;
+    }
+
+    const previousSelectedIds = [...mcpEditModal.selectedIds];
+    mcpItemModal.saving = true;
+    try {
+        await userMcpUpdate(payload);
+        mcpItemModal.open = false;
+        await loadReferenceData();
+        const selectableIds = new Set(userMcpOptions.value.map((item) => item.mcpId));
+        mcpEditModal.selectedIds = previousSelectedIds.filter((id) => selectableIds.has(id));
+    } catch (error) {
+        notifyAppError(error, '更新 MCP 失败');
+    } finally {
+        mcpItemModal.saving = false;
+    }
 };
 
 const toggleMcpId = (mcpId) => {
@@ -664,21 +907,36 @@ onMounted(async () => {
                             :disabled="option.disabled"
                             @click="modelModal.selectedApiId = option.apiId"
                         >
-                            <div class="flex items-center gap-[8px]">
-                                <div class="text-[15px] font-semibold text-[var(--text-primary)]">{{ option.modelName }}</div>
-                                <span
-                                    class="rounded-full border px-[8px] py-[2px] text-[11px]"
-                                    :class="
-                                        modelModal.selectedApiId === option.apiId
-                                            ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] text-[var(--detail-action-text)]'
-                                            : 'border-[var(--detail-divider)] text-[var(--text-secondary)]'
-                                    "
+                            <div class="flex items-center justify-between gap-[12px]">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-[8px]">
+                                        <div class="text-[15px] font-semibold text-[var(--text-primary)]">{{ option.modelName }}</div>
+                                        <span
+                                            class="rounded-full border px-[8px] py-[2px] text-[11px]"
+                                            :class="
+                                                modelModal.selectedApiId === option.apiId
+                                                    ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] text-[var(--detail-action-text)]'
+                                                    : 'border-[var(--detail-divider)] text-[var(--text-secondary)]'
+                                            "
+                                        >
+                                            {{ option.modelType }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-[4px] text-[13px] text-[var(--text-secondary)]">{{ option.apiAddress }}</div>
+                                    <div v-if="option.disabled" class="mt-[3px] text-[12px] text-[#f97316]">未找到可用 modelId</div>
+                                </div>
+                                <button
+                                    class="inline-flex h-[36px] w-[36px] shrink-0 items-center justify-center self-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    title="编辑 MODEL"
+                                    @click.stop="openModelItemEdit(option.apiId)"
                                 >
-                                    {{ option.modelType }}
-                                </span>
+                                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                    </svg>
+                                </button>
                             </div>
-                            <div class="mt-[4px] text-[13px] text-[var(--text-secondary)]">{{ option.apiAddress }}</div>
-                            <div v-if="option.disabled" class="mt-[3px] text-[12px] text-[#f97316]">未找到可用 modelId</div>
                         </button>
                     </div>
                 </div>
@@ -703,19 +961,147 @@ onMounted(async () => {
                             class="w-full rounded-[10px] border border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
                             @click="toggleMcpId(item.mcpId)"
                         >
-                            <div class="flex items-center gap-[8px]">
-                                <span class="inline-flex h-[16px] w-[16px] items-center justify-center rounded-[4px] border text-[11px]"
-                                      :class="mcpEditModal.selectedIds.includes(item.mcpId) ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] text-[var(--detail-action-text)]' : 'border-[var(--detail-divider)] text-transparent'">✓</span>
-                                <span class="text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName }}</span>
-                                <span class="rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] uppercase text-[var(--text-secondary)]">{{ item.mcpType || '--' }}</span>
+                            <div class="flex items-center justify-between gap-[12px]">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-[8px]">
+                                        <span class="inline-flex h-[16px] w-[16px] items-center justify-center rounded-[4px] border text-[11px]"
+                                              :class="mcpEditModal.selectedIds.includes(item.mcpId) ? 'border-[var(--detail-action-border)] bg-[var(--detail-action-bg)] text-[var(--detail-action-text)]' : 'border-[var(--detail-divider)] text-transparent'">✓</span>
+                                        <span class="text-[15px] font-semibold text-[var(--text-primary)]">{{ item.mcpName }}</span>
+                                        <span class="rounded-full border border-[var(--detail-divider)] px-[8px] py-[2px] text-[11px] uppercase text-[var(--text-secondary)]">{{ item.mcpType || '--' }}</span>
+                                    </div>
+                                    <div class="mt-[4px] text-[13px] text-[var(--text-secondary)]">{{ item.mcpDesc || '暂无描述' }}</div>
+                                </div>
+                                <button
+                                    class="inline-flex h-[36px] w-[36px] shrink-0 items-center justify-center self-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    type="button"
+                                    title="编辑 MCP"
+                                    @click.stop="openMcpItemEdit(item.mcpId)"
+                                >
+                                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                    </svg>
+                                </button>
                             </div>
-                            <div class="mt-[4px] text-[13px] text-[var(--text-secondary)]">{{ item.mcpDesc || '暂无描述' }}</div>
                         </button>
                     </div>
                 </div>
                 <div class="detail-modal-actions">
                     <button class="detail-btn muted" :disabled="mcpEditModal.saving" @click="closeMcpEdit">取消</button>
                     <button class="detail-btn primary" :disabled="mcpEditModal.saving" @click="saveMcpEdit">{{ mcpEditModal.saving ? '保存中...' : '确定' }}</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="modelItemModal.open" class="detail-modal-wrap" @click.self="closeModelItemEdit">
+            <div class="detail-modal-box h-[460px] w-[760px]">
+                <div class="detail-modal-header">
+                    <h3 class="detail-section-title text-[16px] font-semibold text-[var(--text-primary)]">编辑 MODEL</h3>
+                    <button class="text-[20px] text-[var(--text-secondary)]" @click="closeModelItemEdit">×</button>
+                </div>
+                <div class="detail-modal-body space-y-[10px] overflow-y-auto">
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">模型类别</span>
+                        <input v-model="modelItemModal.form.modelType" class="detail-input" />
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">模型名称</span>
+                        <input v-model="modelItemModal.form.modelName" class="detail-input" />
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">接口地址</span>
+                        <input v-model="modelItemModal.form.apiBaseUrl" class="detail-input" />
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">补全路径</span>
+                        <input v-model="modelItemModal.form.apiCompletionPath" class="detail-input" />
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">接口密钥</span>
+                        <input v-model="modelItemModal.form.apiKey" class="detail-input" />
+                    </label>
+                </div>
+                <div v-if="modelItemModal.error" class="mt-[8px] text-[12px] text-[#ef4444]">{{ modelItemModal.error }}</div>
+                <div class="detail-modal-actions">
+                    <button class="detail-btn muted" :disabled="modelItemModal.saving" @click="closeModelItemEdit">取消</button>
+                    <button class="detail-btn primary" :disabled="modelItemModal.saving" @click="saveModelItemEdit">{{ modelItemModal.saving ? '保存中...' : '确定' }}</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="mcpItemModal.open" class="detail-modal-wrap" @click.self="closeMcpItemEdit">
+            <div class="detail-modal-box h-[560px] w-[820px]">
+                <div class="detail-modal-header">
+                    <h3 class="detail-section-title text-[16px] font-semibold text-[var(--text-primary)]">编辑 MCP</h3>
+                    <button class="text-[20px] text-[var(--text-secondary)]" @click="closeMcpItemEdit">×</button>
+                </div>
+                <div class="detail-modal-body space-y-[10px] overflow-y-auto">
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">MCP 名称</span>
+                        <input v-model="mcpItemModal.form.mcpName" class="detail-input" />
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">MCP 描述</span>
+                        <input v-model="mcpItemModal.form.mcpDesc" class="detail-input" />
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">MCP 类型</span>
+                        <select v-model="mcpItemModal.form.mcpType" class="detail-input detail-select">
+                            <option value="" disabled>请选择 MCP 类型</option>
+                            <option v-for="type in MCP_TYPE_OPTIONS" :key="type.value" :value="type.value">{{ type.label }}</option>
+                        </select>
+                    </label>
+                    <label class="flex flex-col gap-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">MCP 配置</span>
+                        <textarea v-model="mcpItemModal.form.mcpParam" class="detail-textarea h-[128px]" />
+                    </label>
+                    <div class="space-y-[6px]">
+                        <span class="text-[13px] text-[var(--text-secondary)]">MCP 密钥配置</span>
+                        <div class="max-h-[150px] overflow-y-auto rounded-[10px] border border-[var(--detail-divider)]">
+                            <table class="w-full table-fixed border-collapse text-left text-[13px] text-[var(--text-primary)]">
+                                <thead>
+                                    <tr class="border-b border-[var(--detail-divider)]">
+                                        <th class="w-[34%] px-[10px] py-[8px] font-semibold">Key</th>
+                                        <th class="px-[10px] py-[8px] font-semibold">Value</th>
+                                        <th class="w-[64px] px-[8px] py-[8px] text-center font-semibold">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="row in mcpItemModal.secretRows" :key="row.rowId" class="border-b border-[var(--detail-divider)] last:border-b-0">
+                                        <td class="px-[8px] py-[6px]">
+                                            <input v-model="row.key" class="detail-table-input" placeholder="key" />
+                                        </td>
+                                        <td class="px-[8px] py-[6px]">
+                                            <input v-model="row.value" class="detail-table-input" placeholder="value" />
+                                        </td>
+                                        <td class="px-[8px] py-[6px] text-center">
+                                            <button
+                                                class="inline-flex h-[26px] min-w-[40px] items-center justify-center rounded-[8px] border border-[#fca5a5] px-[8px] text-[12px] text-[#ef4444] transition hover:bg-[rgba(239,68,68,0.08)]"
+                                                type="button"
+                                                @click="removeMcpSecretRow(row.rowId)"
+                                            >
+                                                删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button
+                            class="inline-flex h-[30px] items-center justify-center rounded-[10px] border border-[var(--detail-divider)] px-[10px] text-[12px] font-semibold text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                            type="button"
+                            @click="addMcpSecretRow"
+                        >
+                            + 新增键值
+                        </button>
+                    </div>
+                </div>
+                <div v-if="mcpItemModal.paramError" class="mt-[8px] text-[12px] text-[#ef4444]">{{ mcpItemModal.paramError }}</div>
+                <div v-if="mcpItemModal.secretError" class="mt-[4px] text-[12px] text-[#ef4444]">{{ mcpItemModal.secretError }}</div>
+                <div v-if="mcpItemModal.error" class="mt-[4px] text-[12px] text-[#ef4444]">{{ mcpItemModal.error }}</div>
+                <div class="detail-modal-actions">
+                    <button class="detail-btn muted" :disabled="mcpItemModal.saving" @click="closeMcpItemEdit">取消</button>
+                    <button class="detail-btn primary" :disabled="mcpItemModal.saving" @click="saveMcpItemEdit">{{ mcpItemModal.saving ? '保存中...' : '确定' }}</button>
                 </div>
             </div>
         </div>
@@ -919,6 +1305,31 @@ onMounted(async () => {
 
 .detail-input:focus,
 .detail-textarea:focus {
+    border-color: var(--detail-focus);
+}
+
+.detail-select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+        linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 13px) calc(50% - 3px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 28px;
+}
+
+.detail-table-input {
+    width: 100%;
+    border: 1px solid var(--detail-divider);
+    border-radius: 8px;
+    background: var(--surface-1);
+    color: var(--text-primary);
+    padding: 5px 8px;
+    font-size: 12px;
+    outline: none;
+}
+
+.detail-table-input:focus {
     border-color: var(--detail-focus);
 }
 

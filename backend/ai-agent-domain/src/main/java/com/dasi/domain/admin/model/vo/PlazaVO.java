@@ -11,15 +11,18 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AgentVO {
-    private String agentId;
+public class PlazaVO {
+    private String plazaId;
+    private String templateId;
+    private Long userId;
+    private String userName;
     private String agentName;
     private String agentType;
-    private String agentDesc;
-    private String modelId;
-    private String templateId;
-    private Integer agentStatus;
-    private Long agentFrom;
+    private String plazaTitle;
+    private String plazaDesc;
+    private Integer likeCount;
+    private Integer favorCount;
+    private Integer commentCount;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

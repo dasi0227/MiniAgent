@@ -13,13 +13,11 @@ public interface IAiPromptDao {
 
     void loadSystenPrompt(String promptId, String systenPrompt);
 
-    List<AiPrompt> page(@Param("idKeyword") String idKeyword,
-                        @Param("nameKeyword") String nameKeyword,
+    List<AiPrompt> page(@Param("keyword") String keyword,
                         @Param("offset") Integer offset,
                         @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("nameKeyword") String nameKeyword);
+    Integer count(@Param("keyword") String keyword);
 
     Integer countAll();
 

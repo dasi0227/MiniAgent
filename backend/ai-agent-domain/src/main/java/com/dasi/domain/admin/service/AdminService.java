@@ -4,7 +4,6 @@ import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.enumeration.*;
 import com.dasi.domain.admin.model.vo.*;
 import com.dasi.domain.admin.repository.IAdminRepository;
-import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.result.PageResult;
 import com.dasi.types.exception.AdminException;
@@ -289,7 +288,6 @@ public class AdminService implements IAdminService {
         if (clientVO == null) {
             throw new AdminException("CLIENT 不存在，请确认后重新删除");
         }
-        assertNoDependency("客户端", adminRepository.queryAgentDependOnClient(clientVO.getClientId()));
         adminRepository.clientDelete(clientId);
     }
 
@@ -298,9 +296,6 @@ public class AdminService implements IAdminService {
         ClientVO clientVO = adminRepository.clientQuery(clientId);
         if (clientVO == null) {
             throw new AdminException("CLIENT 不存在，请确认后重新切换");
-        }
-        if (status == 0) {
-            assertNoDependency("客户端", adminRepository.queryAgentDependOnClient(clientVO.getClientId()));
         }
         adminRepository.clientToggle(clientId, status);
     }
@@ -564,6 +559,88 @@ public class AdminService implements IAdminService {
     @Override
     public List<SessionVO> listSession() {
         return adminRepository.listSession();
+    }
+
+    // -------------------- Template --------------------
+    @Override
+    public PageResult<TemplateVO> templatePage(TemplatePageDTO dto) {
+        List<TemplateVO> list = adminRepository.templatePage(dto);
+        Integer total = adminRepository.templateCount(dto);
+        Integer size = dto.getPageSize();
+        Integer pageSum = (total + size - 1) / size;
+        return PageResult.<TemplateVO>builder()
+                .list(list)
+                .total(total)
+                .pageSum(pageSum)
+                .pageNum(dto.getPageNum())
+                .pageSize(size)
+                .build();
+    }
+
+    @Override
+    public void templateInsert(TemplateManageDTO dto) {
+        if (adminRepository.templateQuery(dto.getTemplateId()) != null) {
+            throw new AdminException("TEMPLATE 已存在，请修改后重新添加");
+        }
+        adminRepository.templateInsert(dto);
+    }
+
+    @Override
+    public void templateUpdate(TemplateManageDTO dto) {
+        if (adminRepository.templateQuery(dto.getTemplateId()) == null) {
+            throw new AdminException("TEMPLATE 不存在，请确认后重新更改");
+        }
+        adminRepository.templateUpdate(dto);
+    }
+
+    @Override
+    public void templateDelete(String templateId) {
+        TemplateVO templateVO = adminRepository.templateQuery(templateId);
+        if (templateVO == null) {
+            throw new AdminException("TEMPLATE 不存在，请确认后重新删除");
+        }
+        assertNoDependency("广场发布", adminRepository.queryPlazaDependOnTemplate(templateVO.getTemplateId()));
+        adminRepository.templateDelete(templateId);
+    }
+
+    // -------------------- Plaza --------------------
+    @Override
+    public PageResult<PlazaVO> plazaPage(PlazaPageDTO dto) {
+        List<PlazaVO> list = adminRepository.plazaPage(dto);
+        Integer total = adminRepository.plazaCount(dto);
+        Integer size = dto.getPageSize();
+        Integer pageSum = (total + size - 1) / size;
+        return PageResult.<PlazaVO>builder()
+                .list(list)
+                .total(total)
+                .pageSum(pageSum)
+                .pageNum(dto.getPageNum())
+                .pageSize(size)
+                .build();
+    }
+
+    @Override
+    public void plazaInsert(PlazaManageDTO dto) {
+        if (adminRepository.plazaQuery(dto.getPlazaId()) != null) {
+            throw new AdminException("PLAZA 已存在，请修改后重新添加");
+        }
+        adminRepository.plazaInsert(dto);
+    }
+
+    @Override
+    public void plazaUpdate(PlazaManageDTO dto) {
+        if (adminRepository.plazaQuery(dto.getPlazaId()) == null) {
+            throw new AdminException("PLAZA 不存在，请确认后重新更改");
+        }
+        adminRepository.plazaUpdate(dto);
+    }
+
+    @Override
+    public void plazaDelete(String plazaId) {
+        if (adminRepository.plazaQuery(plazaId) == null) {
+            throw new AdminException("PLAZA 不存在，请确认后重新删除");
+        }
+        adminRepository.plazaDelete(plazaId);
     }
 
     // -------------------- List --------------------

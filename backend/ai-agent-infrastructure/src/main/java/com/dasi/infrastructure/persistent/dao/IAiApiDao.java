@@ -12,11 +12,11 @@ public interface IAiApiDao {
 
     AiApi queryByApiId(@Param("apiId") String apiId);
 
-    List<AiApi> page(@Param("idKeyword") String idKeyword,
+    List<AiApi> page(@Param("keyword") String keyword,
                      @Param("offset") Integer offset,
                      @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword);
+    Integer count(@Param("keyword") String keyword);
 
     Integer countAll();
 

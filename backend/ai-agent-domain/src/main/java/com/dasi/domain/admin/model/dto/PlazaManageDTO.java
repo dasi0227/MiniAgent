@@ -9,12 +9,18 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class AgentManageDTO {
+@AllArgsConstructor
+public class PlazaManageDTO {
 
     @NotBlank
-    private String agentId;
+    private String plazaId;
+
+    @NotBlank
+    private String templateId;
+
+    @NotNull
+    private Long userId;
 
     @NotBlank
     private String agentName;
@@ -23,12 +29,18 @@ public class AgentManageDTO {
     private String agentType;
 
     @NotBlank
-    private String agentDesc;
+    private String plazaTitle;
 
-    private String modelId;
-
-    private String templateId;
+    @NotBlank
+    private String plazaDesc;
 
     @NotNull
-    private Integer agentStatus;
+    private Integer likeCount;
+
+    @NotNull
+    private Integer favorCount;
+
+    @NotNull
+    private Integer commentCount;
+
 }

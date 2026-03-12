@@ -4,7 +4,6 @@ import com.dasi.api.IAdminApi;
 import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.vo.*;
 import com.dasi.domain.admin.service.IAdminService;
-import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.result.PageResult;
 import com.dasi.types.result.Result;
@@ -344,6 +343,54 @@ public class AdminController implements IAdminApi {
     @PostMapping("/session/list")
     public Result<List<SessionVO>> listSession() {
         return Result.success(adminService.listSession());
+    }
+
+    // -------------------- Template --------------------
+    @PostMapping("/template/page")
+    public Result<PageResult<TemplateVO>> templatePage(@Valid @RequestBody TemplatePageDTO dto) {
+        return Result.success(adminService.templatePage(dto));
+    }
+
+    @PostMapping("/template/insert")
+    public Result<Void> templateInsert(@Valid @RequestBody TemplateManageDTO dto) {
+        adminService.templateInsert(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/template/update")
+    public Result<Void> templateUpdate(@Valid @RequestBody TemplateManageDTO dto) {
+        adminService.templateUpdate(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/template/delete")
+    public Result<Void> templateDelete(@RequestParam("templateId") String templateId) {
+        adminService.templateDelete(templateId);
+        return Result.success();
+    }
+
+    // -------------------- Plaza --------------------
+    @PostMapping("/plaza/page")
+    public Result<PageResult<PlazaVO>> plazaPage(@Valid @RequestBody PlazaPageDTO dto) {
+        return Result.success(adminService.plazaPage(dto));
+    }
+
+    @PostMapping("/plaza/insert")
+    public Result<Void> plazaInsert(@Valid @RequestBody PlazaManageDTO dto) {
+        adminService.plazaInsert(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/plaza/update")
+    public Result<Void> plazaUpdate(@Valid @RequestBody PlazaManageDTO dto) {
+        adminService.plazaUpdate(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/plaza/delete")
+    public Result<Void> plazaDelete(@RequestParam("plazaId") String plazaId) {
+        adminService.plazaDelete(plazaId);
+        return Result.success();
     }
 
     // -------------------- List --------------------

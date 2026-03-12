@@ -2,7 +2,6 @@ package com.dasi.domain.admin.service;
 
 import com.dasi.domain.admin.model.dto.*;
 import com.dasi.domain.admin.model.vo.*;
-import com.dasi.domain.session.model.vo.SessionVO;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.result.PageResult;
 
@@ -86,6 +85,18 @@ public interface IAdminService {
 
     // Session
     List<SessionVO> listSession();
+
+    // Template
+    PageResult<TemplateVO> templatePage(TemplatePageDTO dto);
+    void templateInsert(TemplateManageDTO dto);
+    void templateUpdate(TemplateManageDTO dto);
+    void templateDelete(String templateId);
+
+    // Plaza
+    PageResult<PlazaVO> plazaPage(PlazaPageDTO dto);
+    void plazaInsert(PlazaManageDTO dto);
+    void plazaUpdate(PlazaManageDTO dto);
+    void plazaDelete(String plazaId);
 
     // List
     List<String> listClientType();

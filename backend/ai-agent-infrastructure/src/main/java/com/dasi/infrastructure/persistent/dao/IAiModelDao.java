@@ -13,14 +13,13 @@ public interface IAiModelDao {
 
     List<AiModel> queryModelByUserId(@Param("userId") Long userId);
 
-    List<AiModel> page(@Param("idKeyword") String idKeyword,
-                       @Param("nameKeyword") String nameKeyword,
+    List<AiModel> page(@Param("keyword") String keyword,
                        @Param("apiId") String apiId,
                        @Param("offset") Integer offset,
                        @Param("size") Integer size);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("nameKeyword") String nameKeyword);
+    Integer count(@Param("keyword") String keyword,
+                  @Param("apiId") String apiId);
 
     Integer countAll();
 

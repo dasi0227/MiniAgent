@@ -38,6 +38,61 @@
         LIMIT 1
     </select>
 
+    <select id="page" resultMap="dataMap">
+        SELECT id,
+               template_id,
+               user_id,
+               agent_name,
+               agent_type,
+               agent_desc,
+               api_base_url,
+               api_completion_url,
+               model_name,
+               model_type,
+               snapshot,
+               create_time,
+               update_time
+        FROM ai_template
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    template_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR agent_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR agent_type LIKE CONCAT('%', #{keyword}, '%')
+                    OR agent_desc LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_type LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY update_time DESC, id DESC
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM ai_template
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    template_id LIKE CONCAT('%', #{keyword}, '%')
+                    OR agent_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR agent_type LIKE CONCAT('%', #{keyword}, '%')
+                    OR agent_desc LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR model_type LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <select id="countAll" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM ai_template
+    </select>
+
     <insert id="insert" parameterType="com.dasi.infrastructure.persistent.po.AiTemplate">
         INSERT INTO ai_template (template_id,
                                  user_id,

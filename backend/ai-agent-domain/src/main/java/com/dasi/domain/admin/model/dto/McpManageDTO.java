@@ -28,6 +28,8 @@ public class McpManageDTO {
     @NotBlank
     private String mcpParam;
 
+    private String mcpSecret;
+
     @NotNull
     private Integer mcpTimeout;
 

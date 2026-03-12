@@ -13,18 +13,15 @@ public interface IAiAgentDao {
 
     List<AiAgent> queryWorkAgentByUserId(@Param("userId") Long userId);
 
-    List<AiAgent> page(@Param("idKeyword") String idKeyword,
-                       @Param("nameKeyword") String nameKeyword,
+    List<AiAgent> page(@Param("keyword") String keyword,
                        @Param("agentType") String agentType,
                        @Param("offset") Integer offset,
                        @Param("size") Integer size);
 
-    List<AiAgent> list(@Param("idKeyword") String idKeyword,
-                       @Param("nameKeyword") String nameKeyword,
+    List<AiAgent> list(@Param("keyword") String keyword,
                        @Param("agentType") String agentType);
 
-    Integer count(@Param("idKeyword") String idKeyword,
-                  @Param("nameKeyword") String nameKeyword,
+    Integer count(@Param("keyword") String keyword,
                   @Param("agentType") String agentType);
 
     Integer countAll();

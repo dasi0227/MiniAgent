@@ -57,6 +57,7 @@ public class DashboardVO {
         private Integer sessionCount;
         private Integer messageCount;
         private Integer taskCount;
+        private Integer plazaCount;
     }
 
     @Data

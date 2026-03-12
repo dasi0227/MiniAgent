@@ -11,15 +11,19 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientVO {
-    private String clientId;
-    private String clientType;
-    private String clientRole;
-    private String modelId;
+public class TemplateVO {
+
+    private String templateId;
+    private Long userId;
+    private String userName;
+    private String agentName;
+    private String agentType;
+    private String agentDesc;
+    private String apiBaseUrl;
+    private String apiCompletionUrl;
     private String modelName;
-    private String clientName;
-    private Integer clientStatus;
-    private Long clientFrom;
+    private String modelType;
+    private String snapshot;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }
