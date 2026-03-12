@@ -438,7 +438,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .detail-section-panel {
-    border: 2px solid var(--detail-section-border);
+    border: 1.5px solid var(--detail-section-border);
     background: var(--detail-card-bg);
     border-radius: 14px;
     padding: 12px;
@@ -454,7 +454,7 @@ onBeforeUnmount(() => {
     position: absolute;
     left: 0;
     top: 50%;
-    width: 3px;
+    width: 2px;
     height: 16px;
     transform: translateY(-50%);
     border-radius: 999px;
@@ -465,7 +465,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     min-height: 46px;
-    border: 2px solid var(--detail-divider);
+    border: 1.5px solid var(--detail-divider);
     border-radius: 10px;
     padding: 0 12px;
     font-size: 15px;

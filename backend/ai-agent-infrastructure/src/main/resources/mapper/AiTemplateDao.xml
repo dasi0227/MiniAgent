@@ -78,11 +78,10 @@
         WHERE id = #{id}
     </update>
 
-    <delete id="deleteByTemplateIdAndUserId">
+    <delete id="deleteByTemplateId">
         DELETE
         FROM ai_template
         WHERE template_id = #{templateId}
-          AND user_id = #{userId}
     </delete>
 
 </mapper>

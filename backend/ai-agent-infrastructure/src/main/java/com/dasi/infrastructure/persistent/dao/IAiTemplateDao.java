@@ -13,6 +13,6 @@ public interface IAiTemplateDao {
 
     Integer update(AiTemplate aiTemplate);
 
-    Integer deleteByTemplateIdAndUserId(@Param("templateId") String templateId, @Param("userId") Long userId);
+    Integer deleteByTemplateId(@Param("templateId") String templateId);
 
 }

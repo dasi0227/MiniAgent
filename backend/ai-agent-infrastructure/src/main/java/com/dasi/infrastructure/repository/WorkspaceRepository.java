@@ -342,7 +342,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 }
             }
             aiRepoDao.deleteByTemplateId(templateId);
-            aiTemplateDao.deleteByTemplateIdAndUserId(templateId, userId);
+            aiTemplateDao.deleteByTemplateId(templateId);
         }
 
         List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(agentId);
@@ -821,9 +821,8 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                 .modelId(modelId)
                 .build());
 
-        List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(dto.getAgentId());
-        for (AiFlow aiFlow : aiFlowList) {
-            AiClient aiClient = aiClientDao.queryByClientId(aiFlow.getClientId());
+        for (String clientId : dto.getClientIdList()) {
+            AiClient aiClient = aiClientDao.queryByClientId(clientId);
             aiClientDao.update(AiClient.builder()
                     .id(aiClient.getId())
                     .modelId(modelId)
@@ -841,9 +840,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
             throw new MiniAgentException(ILLEGAL_USER);
         }
 
-        List<AiFlow> aiFlowList = aiFlowDao.queryByAgentId(dto.getAgentId());
-        for (AiFlow aiFlow : aiFlowList) {
-            String clientId = aiFlow.getClientId();
+        for (String clientId : dto.getClientIdList()) {
             aiConfigDao.deleteByClientIdAndConfigType(clientId, ConfigType.MCP.getType());
             for (String mcpId : dto.getMcpIdList()) {
                 AiConfig aiConfig = AiConfig.builder()
