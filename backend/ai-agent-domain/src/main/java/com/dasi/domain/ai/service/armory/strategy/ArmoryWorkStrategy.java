@@ -5,6 +5,7 @@ import com.dasi.domain.ai.model.vo.AiFlowVO;
 import com.dasi.domain.ai.repository.IAiRepository;
 import com.dasi.domain.ai.service.armory.ArmoryContext;
 import com.dasi.domain.ai.service.armory.IArmoryStrategy;
+import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.dasi.domain.ai.model.enumeration.AiArmoryType.ARMORY_WORK;
+import static com.dasi.types.constant.ExceptionMessage.ARMORY_EMPTY;
 
 @Slf4j
 @Service("armoryWorkStrategy")
@@ -30,8 +32,7 @@ public class ArmoryWorkStrategy implements IArmoryStrategy {
 
         Set<String> agentIdSet = armoryRequestEntity.getArmoryIdSet();
         if (agentIdSet == null || agentIdSet.isEmpty()) {
-            log.warn("【装配数据】Agent 装配：agentIdSet 为空");
-            throw new IllegalStateException("装配数据时 agentIdSet 为空");
+            throw new MissingException(ARMORY_EMPTY);
         }
 
         Set<String> clientIdSet = new HashSet<>();
@@ -48,8 +49,7 @@ public class ArmoryWorkStrategy implements IArmoryStrategy {
         }
 
         if (clientIdSet.isEmpty()) {
-            log.warn("【装配数据】Agent 装配：没有可用的 clientId");
-            return;
+            throw new MissingException(ARMORY_EMPTY);
         }
 
         ArmoryRequestEntity clientArmoryRequest = ArmoryRequestEntity.builder()

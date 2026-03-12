@@ -5,6 +5,7 @@ import com.dasi.domain.ai.model.vo.*;
 import com.dasi.domain.ai.repository.IAiRepository;
 import com.dasi.domain.ai.service.armory.ArmoryContext;
 import com.dasi.domain.ai.service.armory.IArmoryStrategy;
+import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import static com.dasi.domain.ai.model.enumeration.AiArmoryType.ARMORY_CHAT;
 import static com.dasi.domain.ai.model.enumeration.AiType.*;
+import static com.dasi.types.constant.ExceptionMessage.ARMORY_EMPTY;
 
 @Slf4j
 @Service("armoryChatStrategy")
@@ -32,8 +34,7 @@ public class ArmoryChatStrategy implements IArmoryStrategy {
 
         Set<String> clientIdSet = armoryRequestEntity.getArmoryIdSet();
         if (clientIdSet == null || clientIdSet.isEmpty()) {
-            log.warn("【装配数据】Agent 装配：clientIdSet 为空");
-            throw new IllegalStateException("装配数据时 clientIdSet 为空");
+            throw new MissingException(ARMORY_EMPTY);
         }
 
         CompletableFuture<Set<AiApiVO>> aiApiSetFuture = CompletableFuture.supplyAsync(

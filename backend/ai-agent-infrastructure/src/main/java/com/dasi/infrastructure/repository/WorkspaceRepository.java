@@ -20,7 +20,7 @@ import com.dasi.infrastructure.persistent.po.*;
 import com.dasi.types.annotation.CacheEvict;
 import com.dasi.types.annotation.Cacheable;
 import com.dasi.types.enumeration.CacheType;
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -271,7 +271,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiPlaza aiPlaza = aiPlazaDao.queryByPlazaId(plazaId);
         if (aiPlaza == null || !userId.equals(aiPlaza.getUserId())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         aiPlazaLikeDao.deleteByPlazaId(plazaId);
@@ -313,7 +313,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                         .agentType(aiTemplate.getAgentType())
                         .agentDesc(aiTemplate.getAgentDesc());
             } else {
-                throw new MiniAgentException(ILLEGAL_DATA);
+                throw new WorkException(ILLEGAL_DATA);
             }
 
             repoVOList.add(repoVOBuilder.build());
@@ -327,7 +327,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         String templateId = aiAgent.getTemplateId();
@@ -459,21 +459,21 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         String snapshot = snapshotUtil.buildSnapshot(agentId);
 
         AiModel aiModel = aiModelDao.queryByModelId(aiAgent.getModelId());
         if (aiModel == null) {
-            throw new MiniAgentException(com.dasi.types.constant.ExceptionMessage.PUBLISH_MODEL_MISSING);
+            throw new WorkException(com.dasi.types.constant.ExceptionMessage.PUBLISH_MODEL_MISSING);
         }
         String modelName = aiModel.getModelName();
         String modelType = aiModel.getModelType();
 
         AiApi aiApi = aiApiDao.queryByApiId(aiModel.getApiId());
         if (aiApi == null) {
-            throw new MiniAgentException(com.dasi.types.constant.ExceptionMessage.PUBLISH_API_MISSING);
+            throw new WorkException(com.dasi.types.constant.ExceptionMessage.PUBLISH_API_MISSING);
         }
         String apiBaseUrl = aiApi.getApiBaseUrl();
         String apiCompletionUrl = aiApi.getApiCompletionsPath();
@@ -565,7 +565,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
     public TemplateVO agentTemplate(String templateId) {
         AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
         if (aiTemplate == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         AiPlaza aiPlaza = aiPlazaDao.queryByTemplateId(templateId);
@@ -599,7 +599,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         AiModel aiModel = aiModelDao.queryByModelId(aiAgent.getModelId());
@@ -676,7 +676,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiTemplate aiTemplate = aiTemplateDao.queryByTemplateId(templateId);
         if (aiTemplate == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         AiRepo existedFork = aiRepoDao.queryByUserIdAndTemplateIdAndRepoType(userId, templateId, RepoType.FORK.getType());
@@ -687,7 +687,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         SnapshotView snapshotView = snapshotUtil.parseSnapshot(aiTemplate.getSnapshot());
         List<SnapshotView.PromptView> promptViewList = snapshotView.getPrompts();
         if (promptViewList == null || promptViewList.isEmpty()) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         // 新建 api
@@ -827,7 +827,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         aiAgentDao.update(AiAgent.builder()
@@ -843,13 +843,13 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         String modelId = dto.getModelId();
         AiModel aiModel = aiModelDao.queryByModelId(modelId);
         if (aiModel == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         aiAgentDao.update(AiAgent.builder()
@@ -873,7 +873,7 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         for (String clientId : dto.getClientIdList()) {
@@ -896,12 +896,12 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         AiFlow aiFlow = aiFlowDao.queryById(dto.getFlowId());
         if (aiFlow == null || !dto.getAgentId().equals(aiFlow.getAgentId())) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         aiFlowDao.update(AiFlow.builder()
@@ -916,12 +916,12 @@ public class WorkspaceRepository implements IWorkspaceRepository {
         Long userId = userContext.getUserId();
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
         if (!userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
 
         AiPrompt aiPrompt = aiPromptDao.queryByPromptId(dto.getPromptId());
         if (aiPrompt == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         aiPromptDao.update(AiPrompt.builder()

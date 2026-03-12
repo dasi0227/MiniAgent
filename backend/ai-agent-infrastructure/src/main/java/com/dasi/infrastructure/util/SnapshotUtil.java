@@ -9,7 +9,7 @@ import com.dasi.domain.workspace.model.enumeration.ConfigType;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.infrastructure.persistent.dao.*;
 import com.dasi.infrastructure.persistent.po.*;
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ public class SnapshotUtil implements ISnapshotUtil {
     public String buildSnapshot(String agentId) {
         List<AiFlow> aiFlowList = Optional.ofNullable(aiFlowDao.queryByAgentId(agentId)).orElse(List.of());
         if (aiFlowList.isEmpty()) {
-            throw new MiniAgentException(PUBLISH_FLOW_EMPTY);
+            throw new WorkException(PUBLISH_FLOW_EMPTY);
         }
         List<AiFlow> sortedFlowList = aiFlowList.stream()
                 .sorted(Comparator.comparing(AiFlow::getFlowSeq, Comparator.nullsLast(Integer::compareTo)))
@@ -55,7 +55,7 @@ public class SnapshotUtil implements ISnapshotUtil {
             String clientId = aiFlow.getClientId();
             AiClient aiClient = aiClientDao.queryByClientId(clientId);
             if (aiClient == null) {
-                throw new MiniAgentException(PUBLISH_CLIENT_MISSING);
+                throw new WorkException(PUBLISH_CLIENT_MISSING);
             }
             AiPrompt aiPrompt = queryPromptByClientId(clientId);
 
@@ -77,7 +77,7 @@ public class SnapshotUtil implements ISnapshotUtil {
                 }
                 AiMcp aiMcp = aiMcpDao.queryByMcpId(mcpId);
                 if (aiMcp == null) {
-                    throw new MiniAgentException(PUBLISH_MCP_MISSING);
+                    throw new WorkException(PUBLISH_MCP_MISSING);
                 }
                 JSONObject mcpInfo = new JSONObject();
                 mcpInfo.put("mcpName", aiMcp.getMcpName());
@@ -106,7 +106,7 @@ public class SnapshotUtil implements ISnapshotUtil {
                     parsePromptList(snapshot.getJSONArray("prompts"))
             );
         } catch (Exception e) {
-            log.warn("解析 Template 快照失败", e);
+            log.error("【解析快照】失败", e);
             return new SnapshotView(List.of(), List.of());
         }
     }
@@ -194,7 +194,7 @@ public class SnapshotUtil implements ISnapshotUtil {
                 return parseStringList(secretArray);
             }
         } catch (Exception e) {
-            log.warn("解析 mcp_secret 失败，secret={}", secretRaw, e);
+            log.error("【解析快照】失败", e);
         }
         return List.of();
     }
@@ -218,7 +218,7 @@ public class SnapshotUtil implements ISnapshotUtil {
             Object parsed = JSON.parse(raw);
             return JSON.toJSONString(parsed);
         } catch (Exception e) {
-            log.warn("解析 mcpParam 失败，按字符串原样返回");
+            log.error("【解析快照】失败", e);
             return raw;
         }
     }
@@ -226,12 +226,12 @@ public class SnapshotUtil implements ISnapshotUtil {
     private AiPrompt queryPromptByClientId(String clientId) {
         List<AiConfig> promptConfigList = aiConfigDao.queryByClientIdAndConfigType(clientId, ConfigType.PROMPT.getType());
         if (promptConfigList == null || promptConfigList.isEmpty()) {
-            throw new MiniAgentException(PUBLISH_PROMPT_CONFIG_MISSING);
+            throw new WorkException(PUBLISH_PROMPT_CONFIG_MISSING);
         }
         String promptId = promptConfigList.get(0).getConfigValue();
         AiPrompt aiPrompt = aiPromptDao.queryByPromptId(promptId);
         if (aiPrompt == null) {
-            throw new MiniAgentException(PUBLISH_PROMPT_MISSING);
+            throw new WorkException(PUBLISH_PROMPT_MISSING);
         }
         return aiPrompt;
     }

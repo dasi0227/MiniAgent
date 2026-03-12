@@ -6,7 +6,7 @@ import com.dasi.domain.util.mq.MqEventDTO;
 import com.dasi.domain.util.mq.MqEventEntity;
 import com.dasi.domain.util.mq.MqEventType;
 import com.dasi.domain.util.random.IRandomUtil;
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class MqService implements IMqService {
     @Override
     public MqEventEntity buildTask(MqEventType eventType, Object payload, UserInfo userInfo) {
         if (eventType == null || payload == null || userInfo == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
         return MqEventEntity.builder()
                 .eventId(randomUtil.randomTaskId())
@@ -77,13 +77,13 @@ public class MqService implements IMqService {
     @Override
     public MqEventDTO parsePayload(MqEventEntity event) {
         if (event == null || !StringUtils.hasText(event.getPayload())) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
         try {
             return objectMapper.readValue(event.getPayload(), MqEventDTO.class);
         } catch (Exception e) {
             log.error("【消息队列】解析 payload 失败：event={}", event, e);
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
     }
 
@@ -92,7 +92,7 @@ public class MqService implements IMqService {
             return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
             log.error("【消息队列】转换消息为 JSON 字符串出错：value={}", value, e);
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
     }
 

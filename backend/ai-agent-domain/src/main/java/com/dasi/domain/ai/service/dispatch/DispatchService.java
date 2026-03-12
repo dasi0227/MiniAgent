@@ -9,6 +9,8 @@ import com.dasi.domain.ai.service.armory.IArmoryStrategy;
 import com.dasi.domain.ai.service.execute.ExecuteStrategyFactory;
 import com.dasi.domain.ai.service.execute.IExecuteStrategy;
 import com.dasi.domain.util.redis.IRedisUtil;
+import com.dasi.types.exception.ArmoryException;
+import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static com.dasi.types.constant.RedisConstant.ARMORY_PREFIX;
+import static com.dasi.types.constant.ExceptionMessage.*;
 
 @Slf4j
 @Service
@@ -42,10 +45,10 @@ public class DispatchService implements IDispatchService {
         StrategyHandler<ArmoryRequestEntity, ArmoryContext, String> armoryRootNode = armoryStrategyFactory.getArmoryRootNode();
 
         if (armoryStrategy == null) {
-            throw new IllegalStateException("装配策略不存在");
+            throw new MissingException(DISPATCH_ARMORY_STRATEGY_NOT_FOUND);
         }
         if (armoryRootNode == null) {
-            throw new IllegalStateException("装配入口不存在");
+            throw new MissingException(DISPATCH_ARMORY_ENTRY_NOT_FOUND);
         }
 
         String armoryKey = ARMORY_PREFIX + armoryType;
@@ -70,8 +73,8 @@ public class DispatchService implements IDispatchService {
             armoryStrategy.armory(armoryRequestEntity, armoryContext);
             armoryRootNode.apply(armoryRequestEntity, armoryContext);
         } catch (Exception e) {
-            log.error("【装配数据】error={}", e.getMessage(), e);
-            throw new RuntimeException("装配数据失败：" + armoryType);
+            log.error("【装配数据】装配失败", e);
+            throw new ArmoryException(DISPATCH_ARMORY_FAIL);
         }
 
         redisUtil.addSet(armoryKey, armoryIdSet);
@@ -83,7 +86,7 @@ public class DispatchService implements IDispatchService {
         IExecuteStrategy executeStrategy = executeStrategyFactory.getStrategyByAgentId(executeRequestEntity.getAgentId());
 
         if (executeStrategy == null) {
-            throw new IllegalStateException("执行策略不存在");
+            throw new MissingException(DISPATCH_EXECUTE_STRATEGY_NOT_FOUND);
         }
 
         threadPoolExecutor.execute(() -> {
@@ -92,12 +95,12 @@ public class DispatchService implements IDispatchService {
                 executeStrategy.execute(executeRequestEntity, sseEmitter);
             } catch (Exception e) {
                 try {
-                    log.error("【Agent 执行】error={}", e.getMessage(), e);
+                    log.error("【任务执行】执行失败", e);
                     sseEmitter.send(SseEmitter.event()
                             .name("error")
                             .data("执行异常：" + e.getMessage()));
                 } catch (Exception ex) {
-                    log.error("【Agent 执行】error={}", e.getMessage(), e);
+                    log.error("【任务执行】发送 SSE 消息失败", e);
                 }
             } finally {
                 sseEmitter.complete();

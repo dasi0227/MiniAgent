@@ -59,11 +59,8 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         try {
             userVO = jwtUtil.parseToken(token);
-        } catch (JWTVerificationException e) {
-            log.warn("Token 校验失败：{}", e.getMessage());
-            return unauthorized(response, "登录状态无效，请重新登录");
         } catch (Exception e) {
-            log.warn("Token 解析异常：{}", e.getMessage());
+            log.error("【Token 校验】失败", e);
             return unauthorized(response, "登录状态无效，请重新登录");
         }
 

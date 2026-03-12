@@ -18,7 +18,7 @@ public class WorkspaceMqDeadListener {
     public void onDeadMessage(String message) {
         try {
             MqEventEntity task = objectMapper.readValue(message, MqEventEntity.class);
-            log.warn("【Listener】接收到死信消息，待人工处理：task={}", task);
+            log.info("【Listener】接收到死信消息，待人工处理：task={}", task);
         } catch (Exception e) {
             log.error("【Listener】死信消息解析失败：message={}", message, e);
         }

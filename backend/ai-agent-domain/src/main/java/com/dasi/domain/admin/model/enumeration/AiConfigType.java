@@ -1,8 +1,12 @@
 package com.dasi.domain.admin.model.enumeration;
 
+import com.dasi.types.exception.MissingException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.dasi.types.constant.ExceptionMessage.ENUM_STR_NULL;
+import static com.dasi.types.constant.ExceptionMessage.ENUM_TYPE_UNKNOWN;
 
 @Getter
 @AllArgsConstructor
@@ -16,7 +20,7 @@ public enum AiConfigType {
 
     public static AiConfigType fromString(String str) {
         if (str == null) {
-            throw new IllegalArgumentException("AiConfigType str is Null" );
+            throw new MissingException(String.format(ENUM_STR_NULL, "AiConfigType"));
         }
 
         for (AiConfigType configType : values()) {
@@ -25,7 +29,7 @@ public enum AiConfigType {
             }
         }
 
-        throw new IllegalArgumentException("Unknown AiConfigType str: " + str);
+        throw new MissingException(String.format(ENUM_TYPE_UNKNOWN, "AiConfigType", str));
     }
 
     private String name;

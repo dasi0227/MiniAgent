@@ -1,8 +1,12 @@
 package com.dasi.domain.ai.model.enumeration;
 
+import com.dasi.types.exception.MissingException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.dasi.types.constant.ExceptionMessage.ENUM_STR_NULL;
+import static com.dasi.types.constant.ExceptionMessage.ENUM_TYPE_UNKNOWN;
 
 @Getter
 @AllArgsConstructor
@@ -19,7 +23,7 @@ public enum AiMcpType {
 
     public static AiMcpType fromString(String str) {
         if (str == null) {
-            throw new IllegalArgumentException("AiMcpType str is Null" );
+            throw new MissingException(String.format(ENUM_STR_NULL, "AiMcpType"));
         }
 
         for (AiMcpType mcpType : values()) {
@@ -28,6 +32,6 @@ public enum AiMcpType {
             }
         }
 
-        throw new IllegalArgumentException("Unknown AiMcpType str: " + str);
+        throw new MissingException(String.format(ENUM_TYPE_UNKNOWN, "AiMcpType", str));
     }
 }

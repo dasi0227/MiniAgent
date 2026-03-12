@@ -52,7 +52,7 @@ public abstract class AbstractExecuteNode extends AbstractMultiThreadStrategyRou
                     .data(executeResponseEntity));
 
         } catch (Exception e) {
-            log.error("【Agent 执行】发送 SSE 消息失败：{}", e.getMessage(), e);
+            log.error("【任务执行】发送 SSE 消息失败", e);
         }
 
         persistWorkMessage(executeResponseEntity);
@@ -72,7 +72,7 @@ public abstract class AbstractExecuteNode extends AbstractMultiThreadStrategyRou
                 persistUtil.saveWorkAssistantMessage(sessionId, executeResponseEntity.getSectionContent());
             }
         } catch (Exception e) {
-            log.warn("【Agent 执行】保存消息失败：{}", e.getMessage());
+            log.error("【任务执行】持久化消息失败", e);
         }
     }
 
@@ -107,7 +107,7 @@ public abstract class AbstractExecuteNode extends AbstractMultiThreadStrategyRou
             cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n");
             return cleaned;
         } catch (Exception e) {
-            log.warn("【Agent 执行】JSON 提取失败：{}", e.getMessage());
+            log.error("【任务执行】JSON 提取失败", e);
             throw e;
         }
     }

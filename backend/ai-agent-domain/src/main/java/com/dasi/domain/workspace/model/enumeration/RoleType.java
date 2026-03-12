@@ -1,6 +1,6 @@
 package com.dasi.domain.workspace.model.enumeration;
 
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,13 +46,13 @@ public enum RoleType {
 
     public static List<RoleType> queryByStrategy(StrategyType strategyType) {
         if (strategyType == null) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
         List<RoleType> roleTypeList = Stream.of(values())
                 .filter(item -> strategyType.equals(item.getStrategyType()))
                 .toList();
         if (roleTypeList.isEmpty()) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
         return roleTypeList;
     }

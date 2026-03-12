@@ -7,6 +7,7 @@ import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.model.vo.AiFlowVO;
 import com.dasi.domain.ai.service.execute.AbstractExecuteNode;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
+import com.dasi.types.exception.MissingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import static com.dasi.domain.ai.model.enumeration.AiClientRole.SUMMARIZER;
 import static com.dasi.domain.ai.model.enumeration.AiSectionType.SUMMARIZER_OVERVIEW;
 import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
+import static com.dasi.types.constant.ExceptionMessage.EXECUTE_SUMMARIZER_RESULT_EMPTY;
 
 @Slf4j
 @Service(value = "summarizerNode")
@@ -54,13 +56,12 @@ public class LoopSummarizerNode extends AbstractExecuteNode {
             summarizerJson = extractJson(summarizerResponse, "{}");
             summarizerObject = parseJsonObject(summarizerJson);
             if (summarizerObject == null) {
-                throw new IllegalStateException("Summarizer 结果解析为空");
+                throw new MissingException(EXECUTE_SUMMARIZER_RESULT_EMPTY);
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】LoopSummarizerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】LoopSummarizerNode", e);
             summarizerObject = buildExceptionObject(SUMMARIZER.getExceptionType(), e.getMessage());
-            summarizerJson = summarizerObject.toJSONString();
         }
 
         // 发送客户端结果

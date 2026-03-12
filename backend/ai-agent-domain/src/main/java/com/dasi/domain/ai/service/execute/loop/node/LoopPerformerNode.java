@@ -7,6 +7,7 @@ import com.dasi.domain.ai.model.entity.ExecuteRequestEntity;
 import com.dasi.domain.ai.model.vo.AiFlowVO;
 import com.dasi.domain.ai.service.execute.AbstractExecuteNode;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
+import com.dasi.types.exception.MissingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
 import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WORK;
+import static com.dasi.types.constant.ExceptionMessage.EXECUTE_PERFORMER_RESULT_EMPTY;
 
 @Slf4j
 @Service(value = "performerNode")
@@ -61,11 +63,11 @@ public class LoopPerformerNode extends AbstractExecuteNode {
             performerJson = extractJson(performerResponse, "{}");
             performerObject = parseJsonObject(performerJson);
             if (performerObject == null) {
-                throw new IllegalStateException("Performer 结果解析为空");
+                throw new MissingException(EXECUTE_PERFORMER_RESULT_EMPTY);
             }
 
         } catch (Exception e) {
-            log.error("【执行节点】LoopPerformerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】LoopPerformerNode", e);
             performerObject = buildExceptionObject(PERFORMER.getExceptionType(), e.getMessage());
             performerJson = performerObject.toJSONString();
         }

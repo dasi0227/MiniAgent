@@ -1,8 +1,12 @@
 package com.dasi.domain.ai.model.enumeration;
 
+import com.dasi.types.exception.MissingException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.dasi.types.constant.ExceptionMessage.ENUM_STR_NULL;
+import static com.dasi.types.constant.ExceptionMessage.ENUM_TYPE_UNKNOWN;
 
 @Getter
 @AllArgsConstructor
@@ -20,7 +24,7 @@ public enum AiAdvisorType {
 
     public static AiAdvisorType fromString(String str) {
         if (str == null) {
-            throw new IllegalArgumentException("AiAdvisorType str is Null" );
+            throw new MissingException(String.format(ENUM_STR_NULL, "AiAdvisorType"));
         }
 
         for (AiAdvisorType advisorType : values()) {
@@ -29,7 +33,7 @@ public enum AiAdvisorType {
             }
         }
 
-        throw new IllegalArgumentException("Unknown AiAdvisorType str: " + str);
+        throw new MissingException(String.format(ENUM_TYPE_UNKNOWN, "AiAdvisorType", str));
     }
 
 }

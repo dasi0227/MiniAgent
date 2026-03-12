@@ -59,7 +59,7 @@ public class TaskService implements ITaskService {
                     SseEmitter sseEmitter = new SseEmitter(0L);
                     dispatchService.dispatchExecuteStrategy(executeRequestEntity, sseEmitter);
                 } catch (Exception e) {
-                    log.error("【定时任务】查询失败：error={}", e.getMessage(), e);
+                    log.error("【定时任务】查询失败", e);
                 }
             });
             scheduleVOList.add(scheduleVO);
@@ -119,7 +119,7 @@ public class TaskService implements ITaskService {
             scheduleMap.put(scheduleVO.getScheduleId(), scheduledFuture);
             signatureMap.put(scheduleVO.getScheduleId(), scheduleVO.getScheduleSignature());
         } catch (Exception e) {
-            log.error("【定时任务】注册失败：error={}", e.getMessage(), e);
+            log.error("【定时任务】注册失败", e);
         }
     }
 
@@ -133,7 +133,7 @@ public class TaskService implements ITaskService {
             }
             future.cancel(false);
         } catch (Exception e) {
-            log.error("【定时任务】取消失败：error={}", e.getMessage(), e);
+            log.error("【定时任务】取消失败", e);
         }
     }
 

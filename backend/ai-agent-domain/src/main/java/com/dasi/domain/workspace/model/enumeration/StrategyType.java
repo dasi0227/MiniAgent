@@ -1,6 +1,6 @@
 package com.dasi.domain.workspace.model.enumeration;
 
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,13 +28,13 @@ public enum StrategyType {
 
     public static StrategyType from(String strategy) {
         if (!StringUtils.hasText(strategy)) {
-            throw new MiniAgentException(ILLEGAL_DATA);
+            throw new WorkException(ILLEGAL_DATA);
         }
         String value = strategy.toLowerCase();
         return Stream.of(values())
                 .filter(item -> value.equals(item.getType()))
                 .findFirst()
-                .orElseThrow(() -> new MiniAgentException(ILLEGAL_DATA));
+                .orElseThrow(() -> new WorkException(ILLEGAL_DATA));
     }
 
     private static String stepDesc() {

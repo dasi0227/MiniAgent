@@ -1084,6 +1084,7 @@ public class AdminRepository implements IAdminRepository {
                 .apiCompletionsPath(po.getApiCompletionsPath())
                 .apiEmbeddingsPath(po.getApiEmbeddingsPath())
                 .apiFrom(po.getApiFrom())
+                .userName(resolveUserName(po.getApiFrom()))
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1120,6 +1121,7 @@ public class AdminRepository implements IAdminRepository {
                 .modelName(po.getModelName())
                 .modelType(po.getModelType())
                 .modelFrom(po.getModelFrom())
+                .userName(resolveUserName(po.getModelFrom()))
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1139,6 +1141,7 @@ public class AdminRepository implements IAdminRepository {
                 .mcpTimeout(po.getMcpTimeout())
                 .mcpChat(po.getMcpChat())
                 .mcpFrom(po.getMcpFrom())
+                .userName(resolveUserName(po.getMcpFrom()))
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1213,6 +1216,7 @@ public class AdminRepository implements IAdminRepository {
                 .clientName(po.getClientName())
                 .clientStatus(po.getClientStatus())
                 .clientFrom(po.getClientFrom())
+                .userName(resolveUserName(po.getClientFrom()))
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1244,6 +1248,7 @@ public class AdminRepository implements IAdminRepository {
                 .templateId(po.getTemplateId())
                 .agentStatus(po.getAgentStatus())
                 .agentFrom(po.getAgentFrom())
+                .userName(resolveUserName(po.getAgentFrom()))
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();
@@ -1346,6 +1351,7 @@ public class AdminRepository implements IAdminRepository {
                 .taskParam(po.getTaskParam())
                 .taskStatus(po.getTaskStatus())
                 .taskFrom(po.getTaskFrom())
+                .userName(resolveUserName(po.getTaskFrom()))
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
                 .build();

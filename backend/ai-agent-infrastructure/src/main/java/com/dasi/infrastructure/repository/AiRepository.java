@@ -10,6 +10,7 @@ import com.dasi.infrastructure.persistent.dao.*;
 import com.dasi.infrastructure.persistent.po.*;
 import com.dasi.types.annotation.Cacheable;
 import com.dasi.types.enumeration.CacheType;
+import com.dasi.types.exception.MissingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Repository;
 import java.util.*;
 
 import static com.dasi.domain.ai.model.enumeration.AiType.*;
+import static com.dasi.types.constant.ExceptionMessage.AI_TASK_PARAM_EMPTY;
 import static com.dasi.types.constant.RedisConstant.*;
 
 @Slf4j
@@ -163,8 +165,8 @@ public class AiRepository implements IAiRepository {
                             case RAG -> ragAnswer = JSON.parseObject(advisorParam, AiAdvisorVO.RagAnswer.class);
                         }
                     } catch (Exception e) {
-                        log.error("【查询数据】失败：{}", e.getMessage());
-                        throw new IllegalStateException(e);
+                        log.error("【查询数据】失败", e);
+                        throw new MissingException(e);
                     }
                 }
 
@@ -273,8 +275,8 @@ public class AiRepository implements IAiRepository {
 
                     aiMcpVOSet.add(aiMcpVO);
                 } catch (Exception e) {
-                    log.error("【查询数据】失败：{}", e.getMessage());
-                    throw new IllegalStateException(e);
+                    log.error("【查询数据】失败", e);
+                    throw new MissingException(e);
                 }
             }
         }
@@ -433,8 +435,8 @@ public class AiRepository implements IAiRepository {
                 }
                 aiMcpVOList.add(aiMcpVO);
             } catch (Exception e) {
-                log.error("【查询数据】失败：{}", e.getMessage());
-                throw new IllegalStateException(e);
+                log.error("【查询数据】失败", e);
+                throw new MissingException(e);
             }
         }
 
@@ -444,11 +446,11 @@ public class AiRepository implements IAiRepository {
     private AiTaskVO.TaskParam parseTaskParam(String taskParam, String taskId) {
         try {
             if (taskParam == null || taskParam.isBlank())
-                throw new IllegalStateException("taskParam 为空，taskId=" + taskId);
+                throw new MissingException(String.format(AI_TASK_PARAM_EMPTY, taskId));
             return JSON.parseObject(taskParam, AiTaskVO.TaskParam.class);
         } catch (Exception e) {
-            log.error("【查询数据】失败：{}", e.getMessage());
-            throw new IllegalStateException(e);
+            log.error("【查询数据】失败", e);
+            throw new MissingException(e);
         }
     }
 

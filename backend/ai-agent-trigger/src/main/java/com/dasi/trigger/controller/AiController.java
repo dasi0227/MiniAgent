@@ -139,12 +139,12 @@ public class AiController implements IAiApi {
             try {
                 persistUtil.saveWorkUserMessage(sessionId, userMessage);
             } catch (Exception e) {
-                log.warn("【AI 执行】持久化消息失败：sessionId={}, error={}", sessionId, e.getMessage());
+                log.error("【AI 执行】持久化消息失败：sessionId={}", sessionId, e);
             }
             try {
                 statUtil.recordWorkUsage(agentId);
             } catch (Exception e) {
-                log.warn("【AI 执行】记录统计失败：agentId={}, error={}", agentId, e.getMessage());
+                log.error("【AI 执行】记录统计失败：agentId={}", agentId, e);
             }
 
         }
@@ -156,7 +156,7 @@ public class AiController implements IAiApi {
 
         String clientId = aiChatDTO.getClientId();
         if (isInactiveChatClient(clientId)) {
-            log.warn("【AI 对话】client 未启用或不存在：clientId={}", clientId);
+            log.error("【AI 对话】client 未启用或不存在：clientId={}", clientId);
             return CHAT_ERROR_RESPONSE;
         }
 
@@ -165,7 +165,7 @@ public class AiController implements IAiApi {
         String sessionId = aiChatDTO.getSessionId();
         String invalidSessionReason = sessionService.validateSessionAccess(sessionId, SessionType.CHAT.getType());
         if (StringUtils.hasText(invalidSessionReason)) {
-            log.warn("【AI 对话】会话校验失败：sessionId={}, expectedType={}, error={}", sessionId, SessionType.CHAT.getType(), invalidSessionReason);
+            log.error("【AI 对话】会话校验失败：sessionId={}, expectedType={}, reason={}", sessionId, SessionType.CHAT.getType(), invalidSessionReason);
             return invalidSessionReason;
         }
         List<String> mcpIdList = aiChatDTO.getMcpIdList();
@@ -208,19 +208,19 @@ public class AiController implements IAiApi {
             try {
                 persistUtil.saveChatUserMessage(sessionId, userMessage);
             } catch (Exception e) {
-                log.warn("【AI 对话】持久化用户消息失败：sessionId={}, error={}", sessionId, e.getMessage());
+                log.error("【AI 对话】持久化用户消息失败：sessionId={}", sessionId, e);
             }
             if (StringUtils.hasText(response) && !CHAT_ERROR_RESPONSE.equals(response)) {
                 try {
                     persistUtil.saveChatAssistantMessage(sessionId, response);
                 } catch (Exception e) {
-                    log.warn("【AI 对话】持久化助手消息失败：sessionId={}, error={}", sessionId, e.getMessage());
+                    log.error("【AI 对话】持久化助手消息失败：sessionId={}", sessionId, e);
                 }
             }
             try {
                 statUtil.recordChatUsage(clientId, mcpIdList);
             } catch (Exception e) {
-                log.warn("【AI 对话】记录统计失败：clientId={}, error={}", clientId, e.getMessage());
+                log.error("【AI 对话】记录统计失败：clientId={}", clientId, e);
             }
         }
     }
@@ -231,7 +231,7 @@ public class AiController implements IAiApi {
 
         String clientId = aiChatDTO.getClientId();
         if (isInactiveChatClient(clientId)) {
-            log.warn("【AI 对话】client 未启用或不存在：clientId={}", clientId);
+            log.error("【AI 对话】client 未启用或不存在：clientId={}", clientId);
             return Flux.just(CHAT_ERROR_RESPONSE);
         }
 
@@ -240,7 +240,7 @@ public class AiController implements IAiApi {
         String sessionId = aiChatDTO.getSessionId();
         String invalidSessionReason = sessionService.validateSessionAccess(sessionId, SessionType.CHAT.getType());
         if (StringUtils.hasText(invalidSessionReason)) {
-            log.warn("【AI 对话】会话校验失败：sessionId={}, expectedType={}, error={}", sessionId, SessionType.CHAT.getType(), invalidSessionReason);
+            log.error("【AI 对话】会话校验失败：sessionId={}, expectedType={}, reason={}", sessionId, SessionType.CHAT.getType(), invalidSessionReason);
             return Flux.just(invalidSessionReason);
         }
         List<String> mcpIdList = aiChatDTO.getMcpIdList();
@@ -279,7 +279,7 @@ public class AiController implements IAiApi {
                         try {
                             persistUtil.saveChatAssistantMessage(sessionId, answerBuffer.toString());
                         } catch (Exception e) {
-                            log.warn("【AI 对话】持久化消息失败：{}", e.getMessage());
+                            log.error("【AI 对话】持久化消息失败", e);
                         }
                     })
                     .doFinally(signalType -> log.info("【AI 对话】流式对话结束：clientId={}, signal={}", clientId, signalType))
@@ -291,12 +291,12 @@ public class AiController implements IAiApi {
             try {
                 persistUtil.saveChatUserMessage(sessionId, userMessage);
             } catch (Exception e) {
-                log.warn("【AI 对话】持久化用户消息失败：sessionId={}, error={}", sessionId, e.getMessage());
+                log.error("【AI 对话】持久化用户消息失败：sessionId={}", sessionId, e);
             }
             try {
                 statUtil.recordChatUsage(clientId, mcpIdList);
             } catch (Exception e) {
-                log.warn("【AI 对话】记录统计失败：clientId={}, error={}", clientId, e.getMessage());
+                log.error("【AI 对话】记录统计失败：clientId={}", clientId, e);
             }
         }
     }
@@ -323,7 +323,7 @@ public class AiController implements IAiApi {
             ragService.uploadTextFile(ragTag, fileList);
             return Result.success();
         } catch (Exception e) {
-            log.error("【上传知识库】文件上传失败：ragTag={}, error={}", ragTag, e.getMessage(), e);
+            log.error("【上传知识库】文件上传失败：ragTag={}", ragTag, e);
             return Result.error(e.getMessage());
         }
     }
@@ -335,7 +335,7 @@ public class AiController implements IAiApi {
             ragService.uploadGitRepo(aiUploadDTO);
             return Result.success();
         } catch (Exception e) {
-            log.error("【上传知识库】Git 上传失败：repoUrl={}, error={}", aiUploadDTO.getRepoUrl(), e.getMessage(), e);
+            log.error("【上传知识库】Git 上传失败：repoUrl={}", aiUploadDTO.getRepoUrl(), e);
             return Result.error(e.getMessage());
         }
     }

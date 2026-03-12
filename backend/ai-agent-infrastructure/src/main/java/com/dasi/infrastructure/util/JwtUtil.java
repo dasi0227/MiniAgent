@@ -8,11 +8,16 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.dasi.domain.util.jwt.JwtProperties;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.util.jwt.IJwtUtil;
+import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
+
+import static com.dasi.types.constant.ExceptionMessage.JWT_TOKEN_CLAIM_MISSING;
+import static com.dasi.types.constant.ExceptionMessage.JWT_TOKEN_MISSING;
+import static com.dasi.types.constant.ExceptionMessage.JWT_USER_INFO_MISSING;
 
 @Service
 public class JwtUtil implements IJwtUtil {
@@ -27,7 +32,7 @@ public class JwtUtil implements IJwtUtil {
     @Override
     public String generateToken(UserVO userVO) {
         if (userVO == null || userVO.getUserId() == null) {
-            throw new IllegalArgumentException("用户信息缺失，无法签发 Token");
+            throw new MissingException(JWT_USER_INFO_MISSING);
         }
 
         Date now = new Date();
@@ -47,7 +52,7 @@ public class JwtUtil implements IJwtUtil {
     @Override
     public DecodedJWT verifyToken(String token) {
         if (!StringUtils.hasText(token)) {
-            throw new JWTVerificationException("Token 缺失");
+            throw new MissingException(JWT_TOKEN_MISSING);
         }
 
         JWTVerifier verifier = JWT.require(getAlgorithm())
@@ -64,7 +69,7 @@ public class JwtUtil implements IJwtUtil {
         String userName = jwt.getClaim(CLAIM_USER_NAME).asString();
         String userRole = jwt.getClaim(CLAIM_USER_ROLE).asString();
         if (userId == null || !StringUtils.hasText(userName) || !StringUtils.hasText(userRole)) {
-            throw new JWTVerificationException("Token 缺少必要用户信息");
+            throw new MissingException(JWT_TOKEN_CLAIM_MISSING);
         }
         return UserVO.builder()
                 .userId(userId)

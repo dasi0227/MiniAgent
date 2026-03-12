@@ -4,6 +4,7 @@ import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.redis.IRedisUtil;
 import com.dasi.types.annotation.Cacheable;
 import com.dasi.types.enumeration.CacheType;
+import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -16,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.dasi.types.constant.ExceptionMessage.CACHE_KEY_OR_PREFIX_REQUIRED;
 
 @Aspect
 @Component
@@ -107,7 +110,7 @@ public class CacheableAspect {
 
     private String buildCacheKey(Object[] args, String methodName, String cacheKey, String cachePrefix) {
         if (StringUtils.isBlank(cacheKey) == StringUtils.isBlank(cachePrefix)) {
-            throw new IllegalStateException("cacheKey 和 cachePrefix 必须有且只能有一个有值");
+            throw new MissingException(CACHE_KEY_OR_PREFIX_REQUIRED);
         }
 
         String baseKey;

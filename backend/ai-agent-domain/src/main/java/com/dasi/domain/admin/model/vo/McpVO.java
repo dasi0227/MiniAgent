@@ -21,6 +21,7 @@ public class McpVO {
     private Integer mcpTimeout;
     private Integer mcpChat;
     private Long mcpFrom;
+    private String userName;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

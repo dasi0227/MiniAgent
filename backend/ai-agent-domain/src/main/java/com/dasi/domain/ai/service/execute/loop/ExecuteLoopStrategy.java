@@ -23,7 +23,7 @@ public class ExecuteLoopStrategy implements IExecuteStrategy {
         ExecuteContext executeContext = new ExecuteContext();
         executeContext.setValue("sseEmitter", sseEmitter);
 
-        log.info("【Agent 执行】执行 LoopStrategy");
+        log.info("【任务执行】执行 LoopStrategy");
         loopRootNode.apply(executeRequestEntity, executeContext);
 
         try {
@@ -32,7 +32,7 @@ public class ExecuteLoopStrategy implements IExecuteStrategy {
                     .name("complete")
                     .data(completeResult));
         } catch (Exception e) {
-            log.error("【Agent 执行】error={}", e.getMessage(), e);
+            log.error("【任务执行】Loop 策略执行失败", e);
         }
 
     }

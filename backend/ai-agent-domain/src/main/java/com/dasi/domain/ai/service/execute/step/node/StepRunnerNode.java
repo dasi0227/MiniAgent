@@ -7,6 +7,7 @@ import com.dasi.domain.ai.model.entity.ExecuteResponseEntity;
 import com.dasi.domain.ai.model.vo.AiFlowVO;
 import com.dasi.domain.ai.service.execute.AbstractExecuteNode;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
+import com.dasi.types.exception.MissingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,6 +23,7 @@ import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
 import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 import static com.dasi.types.constant.ChatConstant.CHAT_MEMORY_RETRIEVE_SIZE_WORK;
+import static com.dasi.types.constant.ExceptionMessage.EXECUTE_STEP_RETRY_EXCEEDED;
 
 @Slf4j
 @Service(value = "runnerNode")
@@ -47,7 +49,7 @@ public class StepRunnerNode extends AbstractExecuteNode {
 
             List<String> plannerList = executeContext.getValue(PLANNER.getContextKey());
             if (plannerList == null || plannerList.isEmpty()) {
-                log.error("【执行节点】StepRunnerNode：执行步骤为空，错误");
+                log.error("【执行节点】StepRunnerNode：执行步骤为空");
                 return router(executeRequestEntity, executeContext);
             }
 
@@ -89,15 +91,15 @@ public class StepRunnerNode extends AbstractExecuteNode {
                         if ("FAIL".equalsIgnoreCase(status)) {
                             String runnerResult = runnerObject.get(RUNNER_RESULT.getType()).toString();
                             String failReason = StringUtils.isBlank(runnerResult) ? "客户端执行失败" : runnerResult;
-                            throw new IllegalStateException(failReason);
+                            throw new MissingException(failReason);
                         }
 
                         break;
 
                     } catch (Exception e) {
-                        log.error("【执行节点】StepRunnerNode：step={}, try={}/{}, error={}", step + 1, count++, maxRetry, e.getMessage());
+                        log.error("【执行节点】StepRunnerNode：step={}, try={}/{}", step + 1, count++, maxRetry, e);
                         if (count > maxRetry) {
-                            throw new IllegalStateException("超过最大重试次数 " + maxRetry + "，客户端仍然无法执行步骤 " + (step + 1));
+                            throw new MissingException(String.format(EXECUTE_STEP_RETRY_EXCEEDED, maxRetry, step + 1));
                         }
                     }
                 }
@@ -130,7 +132,7 @@ public class StepRunnerNode extends AbstractExecuteNode {
             executeContext.getExecutionHistory().append(executionHistory);
 
         } catch (Exception e) {
-            log.error("【执行节点】StepRunnerNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】StepRunnerNode", e);
             runnerObject = buildExceptionObject(RUNNER.getExceptionType(), e.getMessage());
             parseRunnerResponse(executeContext, runnerObject, executeRequestEntity.getSessionId());
         }

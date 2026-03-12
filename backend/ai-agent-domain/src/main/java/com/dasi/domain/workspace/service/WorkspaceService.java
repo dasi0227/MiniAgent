@@ -15,7 +15,7 @@ import com.dasi.domain.workspace.model.vo.PlazaVO;
 import com.dasi.domain.workspace.model.vo.RepoVO;
 import com.dasi.domain.workspace.model.vo.TemplateVO;
 import com.dasi.domain.workspace.repository.IWorkspaceRepository;
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import com.dasi.types.result.PageResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -233,17 +233,17 @@ public class WorkspaceService implements IWorkspaceService {
                 String systemPath = "classpath:template/" + strategy + "/" + SYSTEM_PROMPT.getType() + "/" + roleType.getTemplateName() + ".md";
                 systemPrompt = StreamUtils.copyToString(RESOURCE_RESOLVER.getResource(systemPath).getInputStream(), StandardCharsets.UTF_8);
                 if (!StringUtils.hasText(systemPrompt)) {
-                    throw new MiniAgentException(ILLEGAL_DATA);
+                    throw new WorkException(ILLEGAL_DATA);
                 }
 
                 String userPath = "classpath:template/" + strategy + "/" + USER_PROMPT.getType() + "/" + roleType.getTemplateName() + ".md";
                 userPrompt = StreamUtils.copyToString(RESOURCE_RESOLVER.getResource(userPath).getInputStream(), StandardCharsets.UTF_8);
                 if (!StringUtils.hasText(userPrompt)) {
-                    throw new MiniAgentException(ILLEGAL_DATA);
+                    throw new WorkException(ILLEGAL_DATA);
                 }
             } catch (Exception e) {
-                log.error("【Workspace】加载模板失败：strategy={}, roleType={}", strategy, roleType, e);
-                throw new MiniAgentException(ILLEGAL_DATA);
+                log.error("【加载模版】加载失败：strategy={}, roleType={}", strategy, roleType, e);
+                throw new WorkException(ILLEGAL_DATA);
             }
 
             // 获取每个角色要补充的约束内容
@@ -252,7 +252,7 @@ public class WorkspaceService implements IWorkspaceService {
             String roleDesc = roleType.getRoleDesc();
             String roleConstraint = promptGenerator.generateRoleConstraint(strategyDesc, clientRole, roleDesc, agentDesc);
             if (!StringUtils.hasText(roleConstraint)) {
-                throw new MiniAgentException(ILLEGAL_DATA);
+                throw new WorkException(ILLEGAL_DATA);
             }
 
             // 放入列表收集

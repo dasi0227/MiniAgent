@@ -26,6 +26,8 @@ public class TaskVO {
 
     private Long taskFrom;
 
+    private String userName;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

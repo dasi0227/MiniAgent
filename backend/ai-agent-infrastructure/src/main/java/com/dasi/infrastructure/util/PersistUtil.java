@@ -18,6 +18,8 @@ import static com.dasi.domain.session.model.enumeration.SessionType.CHAT;
 import static com.dasi.domain.session.model.enumeration.SessionType.WORK;
 import static com.dasi.types.constant.ChatConstant.CHAT_USER_LIMIT;
 import static com.dasi.types.constant.ChatConstant.WORK_USER_LIMIT;
+import static com.dasi.types.constant.ExceptionMessage.SESSION_NOT_FOUND;
+import static com.dasi.types.constant.ExceptionMessage.SESSION_USER_MESSAGE_LIMIT_REACHED;
 
 @Slf4j
 @Service
@@ -57,7 +59,7 @@ public class PersistUtil implements IPersistUtil {
     private void saveMessage(String sessionId, String messageType, String messageRole, String messageContent) {
         AiSession session = sessionDao.queryBySessionId(sessionId);
         if (session == null) {
-            throw new SessionException("会话不存在");
+            throw new SessionException(SESSION_NOT_FOUND);
         }
 
         checkUserLimit(session, messageRole);
@@ -91,7 +93,7 @@ public class PersistUtil implements IPersistUtil {
 
         int count = messageDao.countBySessionAndType(session.getSessionId(), messageType);
         if (count >= limit) {
-            throw new SessionException("当前会话已达到用户消息上限");
+            throw new SessionException(SESSION_USER_MESSAGE_LIMIT_REACHED);
         }
     }
 }

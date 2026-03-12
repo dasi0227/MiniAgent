@@ -3,6 +3,7 @@ package com.dasi.domain.ai.service.rag;
 import com.dasi.types.annotation.CacheEvict;
 import com.dasi.domain.ai.model.dto.AiUploadDTO;
 import com.dasi.domain.util.jwt.UserContext;
+import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -23,6 +24,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.dasi.types.constant.ExceptionMessage.RAG_IMPORT_FAIL;
+import static com.dasi.types.constant.ExceptionMessage.RAG_IMPORT_FILE_NOT_FOUND;
 import static com.dasi.types.constant.RedisConstant.QUERY_RAG_KEY;
 
 @Slf4j
@@ -48,7 +51,7 @@ public class RagService implements IRagService {
     public void uploadTextFile(String ragTag, List<MultipartFile> fileList) {
 
         if (fileList == null || fileList.isEmpty()) {
-            log.warn("【上传知识库】上传文件失败：fileList 为空");
+            log.error("【上传知识库】上传文件失败：fileList 为空");
             return;
         }
 
@@ -60,11 +63,11 @@ public class RagService implements IRagService {
         }
 
         if (successCount == 0) {
-            throw new IllegalStateException("知识库入库失败，请检查 Embedding 服务配置后重试");
+            throw new MissingException(RAG_IMPORT_FAIL);
         }
 
         if (successCount < fileList.size()) {
-            log.warn("【上传知识库】部分文件入库失败：ragTag={}, total={}, success={}", ragTag, fileList.size(), successCount);
+            log.error("【上传知识库】部分文件入库失败：ragTag={}, total={}, success={}", ragTag, fileList.size(), successCount);
         }
 
     }
@@ -81,7 +84,7 @@ public class RagService implements IRagService {
             String[] parts = repoUrl.split("/");
             String ragTag = parts[parts.length - 1].replace(".git", "");
             if (ragTag.isEmpty()) {
-                log.warn("【上传知识库】上传 Git 仓库失败：repoUrl 不符合 .git 后缀要求");
+                log.error("【上传知识库】上传 Git 仓库失败：repoUrl 不符合 .git 后缀要求");
                 return;
             }
 
@@ -145,15 +148,15 @@ public class RagService implements IRagService {
                 });
 
                 if (totalCount.get() == 0) {
-                    throw new IllegalStateException("未找到可入库文件，请检查仓库内容");
+                    throw new MissingException(RAG_IMPORT_FILE_NOT_FOUND);
                 }
 
                 if (successCount.get() == 0) {
-                    throw new IllegalStateException("知识库入库失败，请检查 Embedding 服务配置后重试");
+                    throw new MissingException(RAG_IMPORT_FAIL);
                 }
 
                 if (successCount.get() < totalCount.get()) {
-                    log.warn("【上传知识库】部分文件入库失败：ragTag={}, total={}, success={}", ragTag, totalCount.get(), successCount.get());
+                    log.error("【上传知识库】部分文件入库失败：ragTag={}, total={}, success={}", ragTag, totalCount.get(), successCount.get());
                 }
 
                 git.close();
@@ -163,25 +166,20 @@ public class RagService implements IRagService {
                 }
             }
         } catch (Exception e) {
-            log.error("【上传知识库】上传 Git 仓库失败：error={}", e.getMessage(), e);
-            throw new IllegalStateException(e.getMessage(), e);
+            log.error("【上传知识库】上传 Git 仓库失败", e);
+            throw new MissingException(e.getMessage(), e);
         }
     }
 
     private boolean addPgVectorStore(String ragTag, org.springframework.core.io.Resource resource, String fileName) {
         try {
             Long userId = userContext.getUserId();
-            if (userId == null) {
-                log.warn("【上传知识库】用户信息缺失：ragTag={}, fileName={}", ragTag, fileName);
-                return false;
-            }
-
             TikaDocumentReader reader = new TikaDocumentReader(resource);
 
             List<Document> documentList = reader.get();
             List<Document> documentSplitList = tokenTextSplitter.apply(documentList);
             if (documentSplitList == null || documentSplitList.isEmpty()) {
-                log.warn("【上传知识库】文档切分后为空：ragTag={}, fileName={}", ragTag, fileName);
+                log.error("【上传知识库】文档切分后为空：ragTag={}, fileName={}", ragTag, fileName);
                 return false;
             }
 
@@ -195,7 +193,7 @@ public class RagService implements IRagService {
             log.info("【上传知识库】入库成功：ragTag={}, fileName={}, userId={}", ragTag, fileName, userIdText);
             return true;
         } catch (Exception e) {
-            log.error("【上传知识库】入库失败：ragTag={}, fileName={}, error={}", ragTag, fileName, e.getMessage(), e);
+            log.error("【上传知识库】入库失败：ragTag={}, fileName={}", ragTag, fileName, e);
             return false;
         }
     }

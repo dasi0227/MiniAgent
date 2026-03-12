@@ -4,7 +4,7 @@ import com.aliyun.oss.OSS;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.oss.IOssUtil;
 import com.dasi.domain.util.oss.OssProperties;
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,28 +45,28 @@ public class OssUtil implements IOssUtil {
             ossClient.putObject(ossProperties.getBucket(), objectName, new ByteArrayInputStream(file.getBytes()));
             return objectName;
         } catch (Exception e) {
-            log.error("OSS 上传服务错误：{}", e.getMessage(), e);
-            throw new MiniAgentException(AVATAR_UPLOAD_FAIL);
+            log.error("【OSS】上传服务错误", e);
+            throw new WorkException(AVATAR_UPLOAD_FAIL);
         }
     }
 
     private static String getExtensionName(MultipartFile file) {
         if (file == null) {
-            throw new MiniAgentException(AVATAR_NOT_LEGAL);
+            throw new WorkException(AVATAR_NOT_LEGAL);
         }
 
         if (file.getSize() > 1024 * 1024) {
-            throw new MiniAgentException(AVATAR_SIZE_NOT_ALLOW);
+            throw new WorkException(AVATAR_SIZE_NOT_ALLOW);
         }
 
         String fileName = file.getOriginalFilename();
         if (fileName == null || !fileName.contains(".")) {
-            throw new MiniAgentException(AVATAR_NOT_LEGAL);
+            throw new WorkException(AVATAR_NOT_LEGAL);
         }
 
         String extensionName = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase(Locale.ROOT);
         if (!extensionName.equals("png") && !extensionName.equals("jpg")) {
-            throw new MiniAgentException(AVATAR_EXTENSION_NOT_ALLOW);
+            throw new WorkException(AVATAR_EXTENSION_NOT_ALLOW);
         }
 
         return extensionName;

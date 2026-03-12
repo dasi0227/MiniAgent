@@ -7,11 +7,8 @@ import java.util.List;
 @Getter
 public class DependencyConflictException extends MiniAgentException {
 
-    private final List<String> dependents;
-
-    public DependencyConflictException(String message, List<String> dependents) {
+    public DependencyConflictException(String message) {
         super(message);
-        this.dependents = dependents;
     }
 
 }

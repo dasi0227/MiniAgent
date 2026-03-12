@@ -37,7 +37,7 @@ public class RedisUtil implements IRedisUtil {
             String json = (value instanceof String) ? (String) value : objectMapper.writeValueAsString(value);
             redisTemplate.opsForValue().set(key, json);
         } catch (JsonProcessingException e) {
-            log.error("【Redis】序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】序列化失败：key={}", key, e);
         }
     }
 
@@ -56,7 +56,7 @@ public class RedisUtil implements IRedisUtil {
             String json = (value instanceof String) ? (String) value : objectMapper.writeValueAsString(value);
             redisTemplate.opsForValue().set(key, json, java.time.Duration.ofSeconds(ttlSeconds));
         } catch (JsonProcessingException e) {
-            log.error("【Redis】序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】序列化失败：key={}", key, e);
         }
     }
 
@@ -71,7 +71,7 @@ public class RedisUtil implements IRedisUtil {
         try {
             return objectMapper.readValue(json, type);
         } catch (Exception e) {
-            log.error("【Redis】反序列化失败：key={}, type={}, error={}", key, type.getName(), e.getMessage(), e);
+            log.error("【Redis】反序列化失败：key={}, type={}", key, type.getName(), e);
             return null;
         }
     }
@@ -87,7 +87,7 @@ public class RedisUtil implements IRedisUtil {
             String json = objectMapper.writeValueAsString(values);
             redisTemplate.opsForValue().set(key, json);
         } catch (JsonProcessingException e) {
-            log.error("【Redis】List 序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】List 序列化失败：key={}", key, e);
         }
     }
 
@@ -106,7 +106,7 @@ public class RedisUtil implements IRedisUtil {
             String json = objectMapper.writeValueAsString(values);
             redisTemplate.opsForValue().set(key, json, java.time.Duration.ofSeconds(ttlSeconds));
         } catch (JsonProcessingException e) {
-            log.error("【Redis】List 序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】List 序列化失败：key={}", key, e);
         }
     }
 
@@ -121,7 +121,7 @@ public class RedisUtil implements IRedisUtil {
             List<T> list = objectMapper.readValue(json, type);
             return list == null ? List.of() : list;
         } catch (Exception e) {
-            log.error("【Redis】List 反序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】List 反序列化失败：key={}", key, e);
             return null;
         }
     }
@@ -139,7 +139,7 @@ public class RedisUtil implements IRedisUtil {
             try {
                 jsonSet.add(objectMapper.writeValueAsString(value));
             } catch (JsonProcessingException e) {
-                log.error("【Redis】Set 序列化失败：key={}, error={}", key, e.getMessage(), e);
+                log.error("【Redis】Set 序列化失败：key={}", key, e);
             }
         }
         if (!jsonSet.isEmpty()) {
@@ -164,7 +164,7 @@ public class RedisUtil implements IRedisUtil {
             try {
                 jsonSet.add(objectMapper.writeValueAsString(value));
             } catch (JsonProcessingException e) {
-                log.error("【Redis】Set 序列化失败：key={}, error={}", key, e.getMessage(), e);
+                log.error("【Redis】Set 序列化失败：key={}", key, e);
             }
         }
         if (!jsonSet.isEmpty()) {
@@ -188,7 +188,7 @@ public class RedisUtil implements IRedisUtil {
                     try {
                         value = objectMapper.readValue(value, String.class);
                     } catch (Exception e) {
-                        log.error("【Redis】String 反序列化失败：key={}, error={}", key, e.getMessage(), e);
+                        log.error("【Redis】String 反序列化失败：key={}", key, e);
                     }
                 }
                 result.add(elementType.cast(value));
@@ -197,7 +197,7 @@ public class RedisUtil implements IRedisUtil {
             try {
                 result.add(objectMapper.readValue(json, elementType));
             } catch (Exception e) {
-                log.error("【Redis】Set 反序列化失败：key={}, error={}", key, e.getMessage(), e);
+                log.error("【Redis】Set 反序列化失败：key={}", key, e);
             }
         }
         return result;
@@ -214,7 +214,7 @@ public class RedisUtil implements IRedisUtil {
             String json = objectMapper.writeValueAsString(values);
             redisTemplate.opsForValue().set(key, json);
         } catch (JsonProcessingException e) {
-            log.error("【Redis】Map 序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】Map 序列化失败：key={}", key, e);
         }
     }
 
@@ -233,7 +233,7 @@ public class RedisUtil implements IRedisUtil {
             String json = objectMapper.writeValueAsString(values);
             redisTemplate.opsForValue().set(key, json, java.time.Duration.ofSeconds(ttlSeconds));
         } catch (JsonProcessingException e) {
-            log.error("【Redis】Map 序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】Map 序列化失败：key={}", key, e);
         }
     }
 
@@ -249,7 +249,7 @@ public class RedisUtil implements IRedisUtil {
                     objectMapper.getTypeFactory().constructMapType(Map.class, String.class, valueType)
             );
         } catch (Exception e) {
-            log.error("【Redis】Map 反序列化失败：key={}, error={}", key, e.getMessage(), e);
+            log.error("【Redis】Map 反序列化失败：key={}", key, e);
             return null;
         }
     }
@@ -277,7 +277,7 @@ public class RedisUtil implements IRedisUtil {
                 }
             }
         } catch (Exception e) {
-            log.error("【Redis】按前缀删除失败：prefix={}, error={}", prefix, e.getMessage(), e);
+            log.error("【Redis】按前缀删除失败：prefix={}", prefix, e);
         }
     }
 

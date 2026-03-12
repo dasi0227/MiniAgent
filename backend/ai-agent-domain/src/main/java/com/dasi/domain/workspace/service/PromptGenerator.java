@@ -55,7 +55,7 @@ public class PromptGenerator {
                     .call()
                     .content();
         } catch (Exception e) {
-            log.error("【workspace】ai 生成补充文本错误：{}", e.getMessage(), e);
+            log.error("【提示词生成】生成补充文本错误", e);
             return "暂无补充";
         }
     }

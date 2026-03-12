@@ -28,7 +28,7 @@ import com.dasi.domain.user.model.dto.SettingTaskDTO;
 import com.dasi.types.annotation.CacheEvict;
 import com.dasi.types.annotation.Cacheable;
 import com.dasi.types.enumeration.CacheType;
-import com.dasi.types.exception.MiniAgentException;
+import com.dasi.types.exception.WorkException;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
 
@@ -37,7 +37,7 @@ import java.util.List;
 
 import static com.dasi.domain.user.model.enumeration.UserRoleType.ACCOUNT;
 import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_USER;
-import static com.dasi.types.constant.ExceptionMessage.LACK_PARAM;
+import static com.dasi.types.constant.ExceptionMessage.ILLEGAL_DATA;
 import static com.dasi.types.constant.RedisConstant.*;
 
 @Repository
@@ -189,13 +189,13 @@ public class UserRepository implements IUserRepository {
     public void apiModelUpdate(SettingApiModelDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getApiId() == null) {
-            throw new MiniAgentException(LACK_PARAM);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         // 更改 api
         AiApi aiApi = apiDao.queryByApiId(dto.getApiId());
         if (aiApi == null || !aiApi.getApiFrom().equals(userId)) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         aiApi.setApiBaseUrl(dto.getApiBaseUrl());
         aiApi.setApiKey(dto.getApiKey());
@@ -206,7 +206,7 @@ public class UserRepository implements IUserRepository {
         String modelId = modelDao.queryModelIdByApiId(aiApi.getApiId()).get(0);
         AiModel aiModel = modelDao.queryByModelId(modelId);
         if (!aiModel.getModelFrom().equals(userId)) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         aiModel.setModelName(dto.getModelName());
         aiModel.setModelType(dto.getModelType());
@@ -243,21 +243,21 @@ public class UserRepository implements IUserRepository {
 
         AiApi aiApi = apiDao.queryByApiId(apiId);
         if (!aiApi.getApiFrom().equals(userId)) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         apiDao.deleteByApiId(apiId);
 
         AiModel aiModel = modelDao.queryByApiId(apiId);
         String modelId = aiModel.getModelId();
         if (!aiModel.getModelFrom().equals(userId)) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         modelDao.deleteByModelId(modelId);
 
         AiClient aiClient = clientDao.queryChatClientByModelIdAndUserId(modelId, userId);
         if (aiClient != null) {
             if (!aiClient.getClientFrom().equals(userId)) {
-                throw new MiniAgentException(ILLEGAL_USER);
+                throw new WorkException(ILLEGAL_USER);
             }
             clientDao.deleteByClientId(aiClient.getClientId());
         }
@@ -310,12 +310,12 @@ public class UserRepository implements IUserRepository {
     public void mcpUpdate(SettingMcpDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getMcpId() == null) {
-            throw new MiniAgentException(LACK_PARAM);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         AiMcp aiMcp = mcpDao.queryByMcpId(dto.getMcpId());
         if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         aiMcp.setMcpName(dto.getMcpName());
         aiMcp.setMcpType(dto.getMcpType());
@@ -332,7 +332,7 @@ public class UserRepository implements IUserRepository {
 
         AiMcp aiMcp = mcpDao.queryByMcpId(mcpId);
         if (aiMcp == null || !aiMcp.getMcpFrom().equals(userId)) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         mcpDao.deleteByMcpId(mcpId);
     }
@@ -376,12 +376,12 @@ public class UserRepository implements IUserRepository {
     public void taskUpdate(SettingTaskDTO dto) {
         Long userId = userContext.getUserId();
         if (dto.getTaskId() == null) {
-            throw new MiniAgentException(LACK_PARAM);
+            throw new WorkException(ILLEGAL_DATA);
         }
 
         AiTask aiTask = taskDao.queryByTaskIdAndFrom(dto.getTaskId(), userId);
         if (aiTask == null) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         validateOwnedAgent(dto.getAgentId(), userId);
 
@@ -399,7 +399,7 @@ public class UserRepository implements IUserRepository {
         Long userId = userContext.getUserId();
         AiTask aiTask = taskDao.queryByTaskIdAndFrom(taskId, userId);
         if (aiTask == null) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         taskDao.delete(aiTask.getId());
     }
@@ -410,7 +410,7 @@ public class UserRepository implements IUserRepository {
         Long userId = userContext.getUserId();
         AiTask aiTask = taskDao.queryByTaskIdAndFrom(taskId, userId);
         if (aiTask == null) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
         aiTask.setTaskStatus(taskStatus);
         taskDao.toggle(aiTask);
@@ -419,7 +419,7 @@ public class UserRepository implements IUserRepository {
     private void validateOwnedAgent(String agentId, Long userId) {
         AiAgent aiAgent = agentDao.queryAgentByAgentId(agentId);
         if (aiAgent == null || !userId.equals(aiAgent.getAgentFrom())) {
-            throw new MiniAgentException(ILLEGAL_USER);
+            throw new WorkException(ILLEGAL_USER);
         }
     }
 

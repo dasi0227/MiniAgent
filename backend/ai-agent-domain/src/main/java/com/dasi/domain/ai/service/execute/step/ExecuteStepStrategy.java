@@ -23,13 +23,17 @@ public class ExecuteStepStrategy implements IExecuteStrategy {
         ExecuteContext executeContext = new ExecuteContext();
         executeContext.setValue("sseEmitter", sseEmitter);
 
-        log.info("【Agent 执行】策略=StepStrategy");
+        log.info("【任务执行】策略=StepStrategy");
         stepRootNode.apply(executeRequestEntity, executeContext);
 
-        ExecuteResponseEntity completeResult = ExecuteResponseEntity.createCompleteResponse("执行完成", executeRequestEntity.getSessionId());
-        sseEmitter.send(SseEmitter.event()
-                .name("complete")
-                .data(completeResult));
+        try {
+            ExecuteResponseEntity completeResult = ExecuteResponseEntity.createCompleteResponse("执行完成", executeRequestEntity.getSessionId());
+            sseEmitter.send(SseEmitter.event()
+                    .name("complete")
+                    .data(completeResult));
+        } catch (Exception e) {
+            log.error("【任务执行】Step 策略执行失败", e);
+        }
     }
 
     @Override

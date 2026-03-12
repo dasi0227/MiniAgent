@@ -7,6 +7,7 @@ import com.dasi.domain.ai.model.entity.ExecuteResponseEntity;
 import com.dasi.domain.ai.model.vo.AiFlowVO;
 import com.dasi.domain.ai.service.execute.AbstractExecuteNode;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
+import com.dasi.types.exception.MissingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import static com.dasi.domain.ai.model.enumeration.AiClientRole.EVALUATOR;
 import static com.dasi.domain.ai.model.enumeration.AiSectionType.EVALUATOR_OVERVIEW;
 import static com.dasi.domain.ai.model.enumeration.AiType.CLIENT;
+import static com.dasi.types.constant.ExceptionMessage.EXECUTE_EVALUATOR_RESULT_EMPTY;
 
 @Slf4j
 @Service(value = "evaluatorNode")
@@ -49,10 +51,10 @@ public class ReactEvaluatorNode extends AbstractExecuteNode {
             evaluatorJson = extractJson(evaluatorResponse, "{}");
             evaluatorObject = parseJsonObject(evaluatorJson);
             if (evaluatorObject == null) {
-                throw new IllegalStateException("Evaluator 结果解析为空");
+                throw new MissingException(EXECUTE_EVALUATOR_RESULT_EMPTY);
             }
         } catch (Exception e) {
-            log.error("【执行节点】ReactEvaluatorNode：error={}", e.getMessage(), e);
+            log.error("【执行节点】ReactEvaluatorNode", e);
             evaluatorObject = buildExceptionObject(EVALUATOR.getExceptionType(), e.getMessage());
             evaluatorJson = evaluatorObject.toJSONString();
         }

@@ -20,6 +20,7 @@ public class AgentVO {
     private String templateId;
     private Integer agentStatus;
     private Long agentFrom;
+    private String userName;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

@@ -8,6 +8,7 @@ import com.dasi.domain.util.redis.IRedisUtil;
 import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.service.IWorkspaceService;
+import com.dasi.types.exception.MissingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import static com.dasi.types.constant.ExceptionMessage.MQ_EVENT_UNKNOWN;
 import static com.dasi.types.constant.RedisConstant.WORKSPACE_MQ_PROCESSED_PREFIX;
 
 @Slf4j
@@ -99,7 +101,7 @@ public class WorkspaceMqMainListener {
                     MqEventDTO payload = mqService.parsePayload(event);
                     workspaceService.executeAgentDelete(payload.getAgentId());
                 }
-                default -> throw new IllegalStateException("Unexpected event eventType: " + event.getEventType());
+                default -> throw new MissingException(String.format(MQ_EVENT_UNKNOWN, event.getEventType()));
             }
 
             redisUtil.setValue(processedKey, 1, 86400);
@@ -113,7 +115,7 @@ public class WorkspaceMqMainListener {
             event.setErrorMessage(e.getMessage());
             if (retryCount < maxRetry) {
                 mqService.sendRetry(event);
-                log.warn("【Listener】任务消费失败，发送重试队列：eventId={}, eventType={}, retryCount={}",
+                log.error("【Listener】任务消费失败，发送重试队列：eventId={}, eventType={}, retryCount={}",
                         event.getEventId(), event.getEventType(), retryCount, e);
             } else {
                 mqService.sendDead(event);

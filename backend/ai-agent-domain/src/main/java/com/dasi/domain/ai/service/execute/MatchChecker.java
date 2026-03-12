@@ -46,13 +46,13 @@ public class MatchChecker {
             ));
             String result = matchClient.prompt(prompt).call().content();
             if (StringUtils.isBlank(result)) {
-                log.warn("【MatchChecker】匹配结果为空，默认拒绝");
+                log.info("【任务检查】匹配结果为空，默认拒绝");
                 return false;
             } else {
                 return result.trim().toUpperCase().contains("YES");
             }
         } catch (Exception e) {
-            log.warn("【MatchChecker】匹配校验失败，默认拒绝：{}", e.getMessage());
+            log.error("【任务检查】匹配校验失败", e);
             return false;
         }
     }
