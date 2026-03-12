@@ -113,11 +113,12 @@ onBeforeUnmount(() => {
 <template>
     <aside class="admin-font flex h-full w-[240px] shrink-0 flex-col border-r border-[#e2e8f0] bg-[#f4f6fb] shadow-sm">
         <div class="flex items-center justify-between px-4 py-4 text-[24px] font-semibold text-[#0f172a]">
-            <button class="text-left bg-transparent" type="button" @click="goDashboard">管理菜单</button>
+            <button class="bg-transparent text-left" type="button" @click="goDashboard">管理后台</button>
             <button
-                class="grid h-[30px] w-[30px] place-items-center rounded-[10px] border border-[#e2e8f0] bg-white text-[#64748b] transition hover:border-[#c7d2fe] hover:text-[#1d4ed8]"
+                class="admin-icon-btn h-[30px] w-[30px] rounded-[10px]"
                 type="button"
                 :title="isDarkTheme ? '切换到白天' : '切换到黑天'"
+                :aria-label="isDarkTheme ? '切换到白天' : '切换到黑天'"
                 @click="toggleTheme"
             >
                 <svg v-if="isDarkTheme" viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
@@ -146,15 +147,15 @@ onBeforeUnmount(() => {
             </div>
             <div v-for="group in groups" :key="group.name" class="border-t border-[#e2e8f0]">
                 <button
-                    class="flex w-full items-center justify-between px-4 py-3 text-left text-[14px] font-semibold text-[#0f172a]"
+                    class="flex w-full items-center gap-2 px-4 py-3 text-left text-[16px] font-bold text-[#0f172a]"
                     type="button"
                     @click="toggle(group.name)"
                 >
-                    <span>{{ group.label }}</span>
                     <span
                         class="caret transition-transform duration-150"
                         :class="openGroups.has(group.name) ? 'caret-open' : 'caret-closed'"
                     />
+                    <span>{{ group.label }}</span>
                 </button>
                 <transition name="fade">
                     <div v-show="openGroups.has(group.name)" class="pb-2">
@@ -184,8 +185,21 @@ onBeforeUnmount(() => {
                     <div class="font-semibold">{{ currentUser.username || '访客' }}</div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button class="admin-logout rounded-[8px] px-2 py-1 text-[12px] text-[#64748b] transition hover:text-[#1d4ed8]" type="button" @click="handleLogout">
-                        退出登录
+                    <button
+                        class="admin-icon-btn h-[32px] w-[32px] rounded-[10px]"
+                        type="button"
+                        title="退出登录"
+                        aria-label="退出登录"
+                        @click="handleLogout"
+                    >
+                        <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
+                            <path
+                                d="M10.5 3.75a.75.75 0 000 1.5h6.75v13.5H10.5a.75.75 0 000 1.5H18a.75.75 0 00.75-.75V4.5A.75.75 0 0018 3.75h-7.5z"
+                            />
+                            <path
+                                d="M12.53 12.53a.75.75 0 000-1.06L9.81 8.75a.75.75 0 00-1.06 1.06l1.44 1.44H4.5a.75.75 0 000 1.5h5.69l-1.44 1.44a.75.75 0 101.06 1.06l2.72-2.72z"
+                            />
+                        </svg>
                     </button>
                 </div>
             </div>

@@ -13,14 +13,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ClientVO {
     private String clientId;
-    private String clientType;
-    private String clientRole;
+    private String clientName;
     private String modelId;
     private String modelName;
-    private String clientName;
-    private Integer clientStatus;
     private Long clientFrom;
     private String userName;
+    private Integer clientStatus;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

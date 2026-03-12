@@ -24,9 +24,6 @@ public class AiConfig {
     /** 配置值 */
     private String configValue;
 
-    /** 关联参数配置 */
-    private String configParam;
-
     /** 状态：0-禁用，1-启用 */
     private Integer configStatus;
 

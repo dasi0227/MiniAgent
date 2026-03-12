@@ -2,6 +2,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminSidebar from './AdminSidebar.vue';
+import AdminSelect from './AdminSelect.vue';
 import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { configList, configInsert, configUpdate, configDelete, configToggle, listConfigType } from '../request/api';
@@ -15,8 +16,7 @@ const menuGroups = adminMenuGroups;
 const currentKey = ref('config');
 
 const query = reactive({
-    idKeyword: '',
-    valueKeyword: '',
+    keyword: '',
     configType: ''
 });
 
@@ -36,7 +36,6 @@ const currentForm = reactive({
     clientId: '',
     configType: '',
     configValue: '',
-    configParam: '',
     configStatus: 1
 });
 
@@ -91,7 +90,6 @@ const openCreate = (clientId = '') => {
         clientId: clientId || '',
         configType: '',
         configValue: '',
-        configParam: '',
         configStatus: 1
     });
     modalVisible.value = true;
@@ -107,7 +105,6 @@ const openEdit = (row) => {
         clientId: row.clientId || '',
         configType: row.configType || '',
         configValue: row.configValue || '',
-        configParam: row.configParam || '',
         configStatus: row.configStatus ?? 1
     });
     modalVisible.value = true;
@@ -178,6 +175,10 @@ const switchStatus = async (row, val) => {
     }
 };
 
+const handleRefresh = async () => {
+    await Promise.all([loadConfigTypes(), fetchList()]);
+};
+
 const handleSelectModule = (key) => {
     const target = adminMenuGroups.flatMap((g) => g.items).find((i) => i.key === key);
     if (target?.path) {
@@ -197,36 +198,43 @@ onMounted(async () => {
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
                 <div class="text-[18px] font-semibold text-[#0f172a]">CONFIG 管理</div>
+                <button
+                    class="admin-icon-btn h-[34px] w-[34px] rounded-[10px] disabled:cursor-not-allowed disabled:opacity-70"
+                    type="button"
+                    title="刷新"
+                    aria-label="刷新"
+                    :disabled="loading"
+                    @click="handleRefresh"
+                >
+                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                        <path d="M20 4v6h-6" />
+                    </svg>
+                </button>
             </header>
 
             <div class="flex-1 overflow-auto p-5">
                 <div class="mb-4 flex flex-wrap items-center gap-3 rounded-[12px] border border-[#e2e8f0] bg-white px-4 py-3">
                     <input
-                        v-model="query.idKeyword"
+                        v-model="query.keyword"
                         class="w-[180px] rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
-                        placeholder="ID 关键字"
+                        placeholder="关键字"
                     />
-                    <input
-                        v-model="query.valueKeyword"
-                        class="w-[180px] rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
-                        placeholder="值关键字"
-                    />
-                    <select
+                    <AdminSelect
                         v-model="query.configType"
-                        class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
-                    >
-                        <option value="">选择类型</option>
-                        <option v-for="opt in options.configTypes" :key="opt" :value="opt">{{ opt }}</option>
-                    </select>
+                        class="w-[170px]"
+                        :options="options.configTypes"
+                        placeholder="选择类型"
+                    />
                     <button
-                        class="rounded-[10px] bg-[#1d4ed8] px-4 py-2 text-[13px] font-semibold text-white"
+                        class="admin-btn-primary rounded-[10px] px-4 py-2 text-[13px] font-semibold"
                         type="button"
                         @click="fetchList"
                     >
                         查询
                     </button>
                     <button
-                        class="rounded-[10px] bg-[#0f172a] px-4 py-2 text-[13px] font-semibold text-white shadow"
+                        class="admin-btn-secondary rounded-[10px] px-4 py-2 text-[13px] font-semibold shadow"
                         type="button"
                         @click="openCreate('')"
                     >
@@ -246,7 +254,7 @@ onMounted(async () => {
                             <div class="config-card-header flex items-center justify-between border-b border-[#e2e8f0] px-4 py-3">
                                 <div class="text-[20px] font-semibold text-[#0f172a]">{{ card.clientId }}</div>
                                 <button
-                                    class="rounded-[10px] bg-[#0f172a] px-3 py-2 text-[12px] font-semibold text-white shadow"
+                                    class="admin-btn-secondary rounded-[10px] px-3 py-2 text-[12px] font-semibold shadow"
                                     type="button"
                                     @click="openCreate(card.clientId)"
                                 >
@@ -259,7 +267,7 @@ onMounted(async () => {
                                         <tr>
                                             <th class="px-3 py-2 text-left font-semibold" style="width: 25%">配置类型</th>
                                             <th class="px-3 py-2 text-left font-semibold" style="width: 35%">配置ID</th>
-                                            <th class="px-3 py-2 text-left font-semibold" style="width: 20%">参数</th>
+                                            <th class="px-3 py-2 text-left font-semibold" style="width: 20%">状态</th>
                                             <th class="px-3 py-2 text-left font-semibold" style="width: 20%">操作</th>
                                         </tr>
                                     </thead>
@@ -274,7 +282,7 @@ onMounted(async () => {
                                         >
                                             <td class="px-3 py-2 text-[#0f172a] truncate" :title="row.configType">{{ row.configType }}</td>
                                             <td class="px-3 py-2 text-[#0f172a] truncate" :title="row.configValue">{{ row.configValue }}</td>
-                                            <td class="px-3 py-2 text-[#0f172a] truncate" :title="row.configParam">{{ row.configParam || '-' }}</td>
+                                            <td class="px-3 py-2 text-[#0f172a]">{{ row.configStatus === 1 ? '启用' : '禁用' }}</td>
                                             <td class="px-3 py-2">
                                                 <div class="admin-actions flex flex-wrap items-center gap-2">
                                                     <button
@@ -343,26 +351,16 @@ onMounted(async () => {
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-[13px] font-semibold text-[#0f172a]">配置类型 *</label>
-                        <select
+                        <AdminSelect
                             v-model="currentForm.configType"
-                            class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
-                        >
-                            <option value="">请选择</option>
-                            <option v-for="opt in options.configTypes" :key="opt" :value="opt">{{ opt }}</option>
-                        </select>
+                            :options="options.configTypes"
+                            placeholder="请选择"
+                        />
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-[13px] font-semibold text-[#0f172a]">配置值 *</label>
                         <textarea
                             v-model="currentForm.configValue"
-                            rows="2"
-                            class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
-                        />
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[13px] font-semibold text-[#0f172a]">配置参数</label>
-                        <textarea
-                            v-model="currentForm.configParam"
                             rows="2"
                             class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
                         />
@@ -393,14 +391,14 @@ onMounted(async () => {
                 </div>
                 <div class="mt-5 flex justify-end gap-3">
                     <button
-                        class="rounded-[10px] border border-[#e2e8f0] px-4 py-2 text-[13px] font-semibold text-[#0f172a]"
+                        class="admin-btn-page rounded-[10px] px-4 py-2 text-[13px] font-semibold"
                         type="button"
                         @click="modalVisible = false"
                     >
                         取消
                     </button>
                     <button
-                        class="rounded-[10px] bg-[#1d4ed8] px-4 py-2 text-[13px] font-semibold text-white"
+                        class="admin-btn-primary rounded-[10px] px-4 py-2 text-[13px] font-semibold"
                         type="button"
                         @click="saveForm"
                     >

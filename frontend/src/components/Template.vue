@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { plazaDetail, queryRoleMap as queryRoleMapApi, repoFork } from '../request/api';
 import { notifyAppError } from '../request/request';
 import { useSettingsStore } from '../router/pinia';
-import { pushErrorToast } from '../utils/errorToast';
 import { getStrategyTone, normalizeStrategyType } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
 
@@ -231,7 +230,6 @@ const doFork = async () => {
     try {
         await repoFork({ templateId: templateId.value });
         forkState.value = 'done';
-        pushErrorToast({ message: 'Fork 成功', type: 'success' });
         if (forkDoneTimer) clearTimeout(forkDoneTimer);
         forkDoneTimer = setTimeout(() => {
             forkState.value = 'idle';

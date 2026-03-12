@@ -7,7 +7,6 @@
         <result column="client_id" property="clientId"/>
         <result column="config_type" property="configType"/>
         <result column="config_value" property="configValue"/>
-        <result column="config_param" property="configParam"/>
         <result column="config_status" property="configStatus"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -18,7 +17,6 @@
                client_id,
                config_type,
                config_value,
-               config_param,
                config_status,
                create_time,
                update_time
@@ -33,7 +31,6 @@
                client_id,
                config_type,
                config_value,
-               config_param,
                config_status,
                create_time,
                update_time
@@ -59,7 +56,6 @@
                client_id,
                config_type,
                config_value,
-               config_param,
                config_status,
                create_time,
                update_time
@@ -104,7 +100,6 @@
                client_id,
                config_type,
                config_value,
-               config_param,
                config_status,
                create_time,
                update_time
@@ -118,12 +113,10 @@
         INSERT INTO ai_config (client_id,
                                config_type,
                                config_value,
-                               config_param,
                                config_status)
         VALUES (#{clientId},
                 #{configType},
                 #{configValue},
-                #{configParam},
                 #{configStatus})
     </insert>
 
@@ -133,7 +126,6 @@
             <if test="clientId != null">client_id = #{clientId},</if>
             <if test="configType != null">config_type = #{configType},</if>
             <if test="configValue != null">config_value = #{configValue},</if>
-            <if test="configParam != null">config_param = #{configParam},</if>
             <if test="configStatus != null">config_status = #{configStatus},</if>
         </set>
         WHERE id = #{id}

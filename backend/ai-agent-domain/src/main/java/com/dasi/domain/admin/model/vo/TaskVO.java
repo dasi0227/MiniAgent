@@ -13,22 +13,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TaskVO {
     private String taskId;
-
     private String agentId;
-
     private String taskCron;
-
     private String taskDesc;
-
     private String taskParam;
-
     private Integer taskStatus;
-
     private Long taskFrom;
-
     private String userName;
-
     private LocalDateTime createTime;
-
     private LocalDateTime updateTime;
 }

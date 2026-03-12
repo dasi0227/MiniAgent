@@ -14,6 +14,6 @@ import java.time.LocalDateTime;
 public class PromptVO {
     private String promptId;
     private String promptName;
-    private String systenPrompt;
+    private String systemPrompt;
     private LocalDateTime updateTime;
 }

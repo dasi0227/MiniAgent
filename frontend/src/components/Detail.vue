@@ -744,18 +744,8 @@ onMounted(async () => {
                             >
                                 {{ resolvedAgentType }}
                             </span>
-                            <div class="group relative justify-self-center">
+                            <div class="justify-self-center">
                                 <h1 class="text-center text-[42px] font-bold leading-[1.08] text-[var(--text-primary)] max-[980px]:text-[34px]">{{ resolvedAgentName }}</h1>
-                                <button
-                                    class="absolute -right-[38px] top-[6px] hidden h-[30px] w-[30px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition group-hover:inline-flex hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
-                                    title="编辑智能体"
-                                    @click="openBaseEdit"
-                                >
-                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M12 20h9" />
-                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                                    </svg>
-                                </button>
                             </div>
                             <div class="flex flex-wrap items-end justify-self-start gap-x-[14px] text-[14px] text-[var(--text-secondary)] max-[980px]:justify-self-center">
                                 <span>创建时间：{{ resolvedCreateTime }}</span>
@@ -769,11 +759,11 @@ onMounted(async () => {
                         <div class="flex items-center gap-[8px]">
                             <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">智能体概述</h2>
                             <button
-                                class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                class="detail-edit-icon-btn detail-edit-icon-btn--sm"
                                 title="编辑智能体"
                                 @click="openBaseEdit"
                             >
-                                <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" class="detail-edit-icon-svg" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M12 20h9" />
                                     <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                 </svg>
@@ -787,11 +777,11 @@ onMounted(async () => {
                             <div class="flex items-center gap-[8px]">
                                 <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">模型信息</h2>
                                 <button
-                                    class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="detail-edit-icon-btn detail-edit-icon-btn--sm"
                                     title="编辑模型"
                                     @click="openModelEdit"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" class="detail-edit-icon-svg" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M12 20h9" />
                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                     </svg>
@@ -808,11 +798,11 @@ onMounted(async () => {
                             <div class="flex items-center gap-[8px]">
                                 <h2 class="detail-section-title text-[18px] font-semibold text-[var(--text-primary)]">MCP 信息</h2>
                                 <button
-                                    class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="detail-edit-icon-btn detail-edit-icon-btn--sm"
                                     title="编辑 MCP"
                                     @click="openMcpEdit"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" class="detail-edit-icon-svg" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M12 20h9" />
                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                     </svg>
@@ -907,7 +897,7 @@ onMounted(async () => {
                             :disabled="option.disabled"
                             @click="modelModal.selectedApiId = option.apiId"
                         >
-                            <div class="flex items-center justify-between gap-[12px]">
+                            <div class="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-[12px]">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-[8px]">
                                         <div class="text-[15px] font-semibold text-[var(--text-primary)]">{{ option.modelName }}</div>
@@ -926,12 +916,12 @@ onMounted(async () => {
                                     <div v-if="option.disabled" class="mt-[3px] text-[12px] text-[#f97316]">未找到可用 modelId</div>
                                 </div>
                                 <button
-                                    class="inline-flex h-[36px] w-[36px] shrink-0 items-center justify-center self-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="detail-edit-icon-btn detail-edit-icon-btn--md justify-self-center"
                                     type="button"
                                     title="编辑 MODEL"
                                     @click.stop="openModelItemEdit(option.apiId)"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" class="detail-edit-icon-svg detail-edit-icon-svg--md" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M12 20h9" />
                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                     </svg>
@@ -961,7 +951,7 @@ onMounted(async () => {
                             class="w-full rounded-[10px] border border-[var(--detail-divider)] px-[12px] py-[10px] text-left transition hover:border-[var(--detail-focus)]"
                             @click="toggleMcpId(item.mcpId)"
                         >
-                            <div class="flex items-center justify-between gap-[12px]">
+                            <div class="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-[12px]">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-[8px]">
                                         <span class="inline-flex h-[16px] w-[16px] items-center justify-center rounded-[4px] border text-[11px]"
@@ -972,12 +962,12 @@ onMounted(async () => {
                                     <div class="mt-[4px] text-[13px] text-[var(--text-secondary)]">{{ item.mcpDesc || '暂无描述' }}</div>
                                 </div>
                                 <button
-                                    class="inline-flex h-[36px] w-[36px] shrink-0 items-center justify-center self-center rounded-full border border-[var(--detail-divider)] bg-[var(--surface-1)] text-[var(--text-secondary)] transition hover:border-[var(--detail-focus)] hover:text-[var(--text-primary)]"
+                                    class="detail-edit-icon-btn detail-edit-icon-btn--md justify-self-center"
                                     type="button"
                                     title="编辑 MCP"
                                     @click.stop="openMcpItemEdit(item.mcpId)"
                                 >
-                                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" class="detail-edit-icon-svg detail-edit-icon-svg--md" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M12 20h9" />
                                         <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                     </svg>
@@ -1335,5 +1325,46 @@ onMounted(async () => {
 
 .detail-textarea {
     resize: none;
+}
+
+.detail-edit-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1.5px solid var(--detail-divider);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.detail-edit-icon-btn:hover {
+    border-color: var(--detail-focus);
+    color: var(--text-primary);
+}
+
+.detail-edit-icon-btn--xs {
+    height: 30px;
+    width: 30px;
+}
+
+.detail-edit-icon-btn--sm {
+    height: 32px;
+    width: 32px;
+}
+
+.detail-edit-icon-btn--md {
+    height: 40px;
+    width: 40px;
+}
+
+.detail-edit-icon-svg {
+    height: 16px;
+    width: 16px;
+}
+
+.detail-edit-icon-svg--md {
+    height: 20px;
+    width: 20px;
 }
 </style>

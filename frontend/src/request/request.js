@@ -1,8 +1,12 @@
 import axios from 'axios';
 import router from '../router/router';
 import { useAuthStore } from '../router/pinia';
-import { pushAdminErrorToast } from '../utils/adminErrorToast';
-import { pushErrorToast } from '../utils/errorToast';
+import {
+    pushAdminErrorToast,
+    pushAdminSuccessToast,
+    pushAppErrorToast,
+    pushAppSuccessToast
+} from '../utils/toast';
 
 // Dev: VITE_API_BASE=http://localhost:8066/miniagent
 // Prod behind nginx under /miniagent: VITE_API_BASE=/miniagent
@@ -12,18 +16,38 @@ const AUTH_KEY = 'auth_info';
 const APP_BASE = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 const LOGIN_PATH = `${APP_BASE}/login`;
 
+const WRITE_ACTION_TEXT = {
+    insert: '新增成功',
+    update: '更新成功',
+    delete: '删除成功',
+    toggle: '状态更新成功',
+    save: '保存成功',
+    create: '创建成功',
+    edit: '编辑成功',
+    publish: '发布成功',
+    fork: '复制成功',
+    like: '点赞成功',
+    dislike: '取消点赞成功',
+    favor: '收藏成功',
+    disfavor: '取消收藏成功',
+    comment: '评论成功',
+    discomment: '删除评论成功'
+};
+
+const WRITE_ACTION_PATTERN =
+    /\/(insert|update|delete|toggle|save|create|edit|publish|fork|like|dislike|favor|disfavor|comment|discomment)(?:\/|$)/i;
+
+const APP_TOAST_EXCLUDED_ERROR_PATH_PREFIXES = [
+    '/api/v1/ai/chat/stream',
+    '/api/v1/ai/chat/complete',
+    '/api/v1/ai/work/execute',
+    '/api/v1/session/message/'
+];
+
 const http = axios.create({
     baseURL: BASE_URL,
     timeout: REQUEST_TIMEOUT
 });
-
-const getDuration = (config) => {
-    if (!config?.metadata?.startTime) {
-        return null;
-    }
-    const duration = Date.now() - config.metadata.startTime;
-    return `${duration}ms`;
-};
 
 export const normalizeError = (error) => {
     if (error?.name === 'AbortError') {
@@ -54,16 +78,83 @@ export const normalizeError = (error) => {
     };
 };
 
-const getRequestMeta = (errorLike) => {
-    const config = errorLike?.response?.config || errorLike?.config || errorLike?.raw?.config || null;
-    const methodRaw = config?.method || '';
-    const method = methodRaw ? String(methodRaw).toUpperCase() : '';
-    const url = config?.url ? String(config.url) : '';
+const normalizeUrlPath = (url = '') => {
+    const text = String(url || '').trim();
+    if (!text) return '';
+
+    let pathText = text;
+    if (/^https?:\/\//i.test(pathText)) {
+        try {
+            pathText = new URL(pathText).pathname || '';
+        } catch {
+            pathText = text;
+        }
+    }
+
+    if (BASE_URL && pathText.startsWith(BASE_URL)) {
+        pathText = pathText.slice(BASE_URL.length);
+    }
+    pathText = pathText.split('?')[0] || '';
+    if (!pathText.startsWith('/')) {
+        pathText = `/${pathText}`;
+    }
+    return pathText.replace(/\/{2,}/g, '/');
+};
+
+const parseRequestMeta = (config = {}) => {
+    const method = String(config?.method || '').toUpperCase();
+    const path = normalizeUrlPath(config?.url || '');
+    const segments = path.split('/').filter(Boolean);
+
+    const adminMatch = path.match(/\/api\/v1\/admin\/([^/]+)\/([^/?#]+)/i);
+    let moduleKey = adminMatch ? String(adminMatch[1] || '').toLowerCase() : String(segments[segments.length - 2] || '').toLowerCase();
+    let action = adminMatch ? String(adminMatch[2] || '').toLowerCase() : String(segments[segments.length - 1] || '').toLowerCase();
+
+    let actionToken = Object.prototype.hasOwnProperty.call(WRITE_ACTION_TEXT, action) ? action : '';
+    if (!actionToken) {
+        const matched = path.match(WRITE_ACTION_PATTERN);
+        actionToken = matched ? String(matched[1] || '').toLowerCase() : '';
+    }
+
+    if (actionToken) {
+        const actionIndex = segments.findIndex((item) => item.toLowerCase() === actionToken);
+        if (actionIndex > 0) {
+            moduleKey = segments[actionIndex - 1].toLowerCase();
+        }
+    }
+
     return {
         method,
-        url,
-        requestPath: [method, url].filter(Boolean).join(' ').trim()
+        path,
+        moduleKey,
+        action,
+        actionToken,
+        isAdmin: path.startsWith('/api/v1/admin/'),
+        requestPath: [method, path].filter(Boolean).join(' ').trim()
     };
+};
+
+const resolveRequestMeta = (errorLike) => {
+    const config = errorLike?.response?.config || errorLike?.config || errorLike?.raw?.config || null;
+    return parseRequestMeta(config || {});
+};
+
+const isWriteRequest = (meta = {}) => {
+    if (!meta.actionToken) return false;
+    return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(meta.method);
+};
+
+const isAppToastExcludedPath = (path = '') => {
+    const normalizedPath = normalizeUrlPath(path || '');
+    if (!normalizedPath) return false;
+    return APP_TOAST_EXCLUDED_ERROR_PATH_PREFIXES.some((prefix) => normalizedPath.startsWith(prefix));
+};
+
+const resolveSuccessMessage = ({ moduleKey, actionToken }) => {
+    const actionText = WRITE_ACTION_TEXT[actionToken];
+    if (!actionText) return '';
+    const moduleText = String(moduleKey || '').trim().toUpperCase();
+    return moduleText ? `${moduleText} ${actionText}` : actionText;
 };
 
 const isAdminPage = () => {
@@ -96,45 +187,75 @@ const shouldShowOperation = (operation) => {
     return !hidden.has(text);
 };
 
+const shouldShowSuccessOperation = (operation) => {
+    const text = String(operation || '').trim();
+    if (!text) return false;
+    const hidden = new Set(['操作成功', '请求成功', '成功']);
+    return !hidden.has(text);
+};
+
 export const notifyAdminError = (error, fallbackMessage = '操作失败') => {
-    const normalized = error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'message')
-        ? error
-        : normalizeError(error);
+    const normalized =
+        error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'message')
+            ? error
+            : normalizeError(error);
     const message = normalized?.message || fallbackMessage;
-    const meta = {
-        requestPath:
-            normalized?.requestPath ||
-            getRequestMeta(normalized).requestPath ||
-            getRequestMeta(normalized?.raw).requestPath ||
-            getRequestMeta(error).requestPath,
-        operation:
-            fallbackMessage && fallbackMessage !== message && shouldShowOperation(fallbackMessage)
-                ? fallbackMessage
-                : ''
-    };
+    const requestMeta = resolveRequestMeta(normalized);
     if (!isAdminPage() || !message || message === '请求已取消' || isNotifiedError(normalized, '__adminToastShown')) {
         return message;
     }
     pushAdminErrorToast({
         message,
-        requestPath: meta.requestPath,
-        operation: meta.operation
+        requestPath: normalized?.requestPath || requestMeta.requestPath,
+        operation: fallbackMessage && fallbackMessage !== message && shouldShowOperation(fallbackMessage) ? fallbackMessage : ''
     });
     markErrorNotified(normalized, '__adminToastShown');
     return message;
 };
 
+export const notifyAdminSuccess = (message, meta = {}) => {
+    const text = String(message || '').trim();
+    if (!isAdminPage() || !text) {
+        return text;
+    }
+    pushAdminSuccessToast({
+        message: text,
+        operation: shouldShowSuccessOperation(meta.operation) ? meta.operation : '',
+        requestPath: String(meta.requestPath || '').trim()
+    });
+    return text;
+};
+
 export const notifyAppError = (error, fallbackMessage = '操作失败') => {
-    const normalized = error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'message')
-        ? error
-        : normalizeError(error);
+    const normalized =
+        error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'message')
+            ? error
+            : normalizeError(error);
     const message = normalized?.message || fallbackMessage;
-    if (!isAppPage() || !message || message === '请求已取消' || isNotifiedError(normalized, '__appToastShown')) {
+    const requestMeta = resolveRequestMeta(normalized);
+
+    if (
+        !isAppPage() ||
+        !message ||
+        message === '请求已取消' ||
+        isNotifiedError(normalized, '__appToastShown') ||
+        isAppToastExcludedPath(requestMeta.path)
+    ) {
         return message;
     }
-    pushErrorToast({ message });
+
+    pushAppErrorToast({ message });
     markErrorNotified(normalized, '__appToastShown');
     return message;
+};
+
+export const notifyAppSuccess = (message) => {
+    const text = String(message || '').trim();
+    if (!isAppPage() || !text) {
+        return text;
+    }
+    pushAppSuccessToast({ message: text });
+    return text;
 };
 
 http.interceptors.request.use(
@@ -165,6 +286,24 @@ http.interceptors.request.use(
 
 http.interceptors.response.use(
     (response) => {
+        const body = response?.data;
+        const requestMeta = parseRequestMeta(response?.config || {});
+        const isResultEnvelope =
+            body && typeof body === 'object' && Object.prototype.hasOwnProperty.call(body, 'code');
+        const success = !isResultEnvelope || body.code === 200;
+
+        if (success && isWriteRequest(requestMeta)) {
+            const successMessage = resolveSuccessMessage(requestMeta);
+            if (requestMeta.isAdmin) {
+                notifyAdminSuccess(successMessage, {
+                    operation: requestMeta.actionToken,
+                    requestPath: requestMeta.requestPath
+                });
+            } else if (!isAppToastExcludedPath(requestMeta.path)) {
+                notifyAppSuccess(successMessage);
+            }
+        }
+
         return response.data;
     },
     (error) => {
@@ -176,20 +315,26 @@ http.interceptors.response.use(
         } catch (e) {
             authStore = null;
         }
+
         if (status === 401) {
             if (isAdminPage()) {
                 notifyAdminError(normalized, '未登录或登录已过期，请重新登录');
+            } else {
+                notifyAppError(normalized, '未登录或登录已过期，请重新登录');
             }
             authStore?.clear();
             if (router.currentRoute.value.path !== '/login' && router.currentRoute.value.path !== '/admin/login') {
                 router.replace('/login');
             }
-        } else if (status === 403 && !isAdminPage()) {
-            window.alert('无权限访问该资源');
+            return Promise.reject(normalized);
         }
-        if (isAdminPage() && status !== 401) {
+
+        if (isAdminPage()) {
             notifyAdminError(normalized);
+        } else {
+            notifyAppError(normalized, status === 403 ? '无权限访问该资源' : '操作失败');
         }
+
         return Promise.reject(normalized);
     }
 );

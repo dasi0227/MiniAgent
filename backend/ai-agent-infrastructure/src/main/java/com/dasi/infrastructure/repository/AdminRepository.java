@@ -60,7 +60,7 @@ public class AdminRepository implements IAdminRepository {
     private IAiAgentDao aiAgentDao;
 
     @Resource
-    private IAiUserDao userDao;
+    private IAiUserDao aiUserDao;
 
     @Resource
     private IAiFlowDao aiFlowDao;
@@ -75,10 +75,10 @@ public class AdminRepository implements IAdminRepository {
     private IAiRepoDao aiRepoDao;
 
     @Resource
-    private IAiSessionDao sessionDao;
+    private IAiSessionDao aiSessionDao;
 
     @Resource
-    private IAiMessageDao messageDao;
+    private IAiMessageDao aiMessageDao;
 
     @Resource
     private IAiStatDao aiStatDao;
@@ -108,9 +108,9 @@ public class AdminRepository implements IAdminRepository {
                 .mcpCount(safeInt(aiMcpDao.countAll()))
                 .configCount(safeInt(aiConfigDao.countAll()))
                 .flowCount(safeInt(aiFlowDao.countAll()))
-                .userCount(safeInt(userDao.countAll()))
-                .sessionCount(safeInt(sessionDao.countAll()))
-                .messageCount(safeInt(messageDao.countAll()))
+                .userCount(safeInt(aiUserDao.countAll()))
+                .sessionCount(safeInt(aiSessionDao.countAll()))
+                .messageCount(safeInt(aiMessageDao.countAll()))
                 .taskCount(safeInt(aiTaskDao.countAll()))
                 .plazaCount(safeInt(aiPlazaDao.countAll()))
                 .build();
@@ -129,8 +129,8 @@ public class AdminRepository implements IAdminRepository {
         Map<String, List<DashboardVO.BarValue>> chatUsage = buildUsageMap(STAT_CHAT);
 
         DashboardVO.PieValue sessionWorkVsChat = DashboardVO.PieValue.builder()
-                .workCount(safeInt(sessionDao.countByType(STAT_WORK)))
-                .chatCount(safeInt(sessionDao.countByType(STAT_CHAT)))
+                .workCount(safeInt(aiSessionDao.countByType(STAT_WORK)))
+                .chatCount(safeInt(aiSessionDao.countByType(STAT_CHAT)))
                 .build();
 
         return DashboardVO.GraphInfo.builder()
@@ -165,7 +165,7 @@ public class AdminRepository implements IAdminRepository {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = today.plusDays(1).atStartOfDay();
 
-        Map<String, Integer> countMap = messageDao.countByDateRange(start, end)
+        Map<String, Integer> countMap = aiMessageDao.countByDateRange(start, end)
                 .stream()
                 .collect(Collectors.toMap(
                         MessageDailyCount::getDay,
@@ -613,7 +613,7 @@ public class AdminRepository implements IAdminRepository {
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.LIST)
     public List<UserVO> userPage(UserPageDTO dto) {
         Integer offset = (dto.getPageNum() - 1) * dto.getPageSize();
-        List<AiUser> poList = userDao.page(dto.getKeyword(), dto.getUserRole(), offset, dto.getPageSize());
+        List<AiUser> poList = aiUserDao.page(dto.getKeyword(), dto.getUserRole(), offset, dto.getPageSize());
         if (CollectionUtils.isEmpty(poList)) {
             return List.of();
         }
@@ -623,50 +623,50 @@ public class AdminRepository implements IAdminRepository {
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = Integer.class, cacheType = CacheType.VALUE)
     public Integer userCount(UserPageDTO dto) {
-        Long count = userDao.count(dto.getKeyword(), dto.getUserRole());
+        Long count = aiUserDao.count(dto.getKeyword(), dto.getUserRole());
         return count == null ? 0 : count.intValue();
     }
 
     @Override
     @Cacheable(cachePrefix = ADMIN_USER_PREFIX, cacheClass = UserVO.class, cacheType = CacheType.VALUE)
     public UserVO userQuery(String userName) {
-        return toUserVO(userDao.queryByUserName(userName));
+        return toUserVO(aiUserDao.queryByUserName(userName));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void userInsert(UserManageDTO dto) {
-        userDao.insert(toUserPo(dto));
+        aiUserDao.insert(toUserPo(dto));
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void userUpdate(UserManageDTO dto) {
         String originUserName = dto.getOriginUserName() == null ? dto.getUserName() : dto.getOriginUserName();
-        AiUser existed = userDao.queryByUserName(originUserName);
+        AiUser existed = aiUserDao.queryByUserName(originUserName);
         if (existed == null) {
             return;
         }
         AiUser po = toUserPo(dto);
         po.setId(existed.getId());
-        userDao.update(po);
+        aiUserDao.update(po);
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void userDelete(String userName) {
-        AiUser existed = userDao.queryByUserName(userName);
+        AiUser existed = aiUserDao.queryByUserName(userName);
         if (existed != null) {
-            userDao.delete(existed.getId());
+            aiUserDao.delete(existed.getId());
         }
     }
 
     @Override
     @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
     public void userToggle(String userName, Integer status) {
-        AiUser existed = userDao.queryByUserName(userName);
+        AiUser existed = aiUserDao.queryByUserName(userName);
         if (existed != null) {
-            userDao.toggle(existed.getId(), status);
+            aiUserDao.toggle(existed.getId(), status);
         }
     }
 
@@ -899,7 +899,7 @@ public class AdminRepository implements IAdminRepository {
     // -------------------- AiSession --------------------
     @Override
     public List<SessionVO> listSession() {
-        List<AiSession> list = sessionDao.queryAll();
+        List<AiSession> list = aiSessionDao.queryAll();
         return list.stream().map(this::toSessionVO).toList();
     }
 
@@ -1070,7 +1070,7 @@ public class AdminRepository implements IAdminRepository {
         if (userId == 0L) {
             return "system";
         }
-        return userDao.queryUserNameById(userId);
+        return aiUserDao.queryUserNameById(userId);
     }
 
     private ApiVO toApiVO(AiApi po) {
@@ -1190,7 +1190,7 @@ public class AdminRepository implements IAdminRepository {
         return PromptVO.builder()
                 .promptId(po.getPromptId())
                 .promptName(po.getPromptName())
-                .systenPrompt(po.getSystenPrompt())
+                .systemPrompt(po.getSystenPrompt())
                 .updateTime(po.getUpdateTime())
                 .build();
     }
@@ -1209,8 +1209,6 @@ public class AdminRepository implements IAdminRepository {
         }
         return ClientVO.builder()
                 .clientId(po.getClientId())
-                .clientType(po.getClientType())
-                .clientRole(po.getClientRole())
                 .modelId(po.getModelId())
                 .modelName(po.getModelName())
                 .clientName(po.getClientName())
@@ -1239,12 +1237,14 @@ public class AdminRepository implements IAdminRepository {
         if (po == null) {
             return null;
         }
+        AiModel aiModel = aiModelDao.queryByModelId(po.getModelId());
         return AgentVO.builder()
                 .agentId(po.getAgentId())
                 .agentName(po.getAgentName())
                 .agentType(po.getAgentType())
                 .agentDesc(po.getAgentDesc())
                 .modelId(po.getModelId())
+                .modelName(aiModel.getModelName())
                 .templateId(po.getTemplateId())
                 .agentStatus(po.getAgentStatus())
                 .agentFrom(po.getAgentFrom())
@@ -1272,6 +1272,7 @@ public class AdminRepository implements IAdminRepository {
             return null;
         }
         return UserVO.builder()
+                .userId(po.getId())
                 .userName(po.getUserName())
                 .userRole(po.getUserRole())
                 .userAvatar(po.getUserAvatar())
@@ -1295,7 +1296,6 @@ public class AdminRepository implements IAdminRepository {
                 .clientId(dto.getClientId())
                 .configType(dto.getConfigType())
                 .configValue(dto.getConfigValue())
-                .configParam(dto.getConfigParam())
                 .configStatus(dto.getConfigStatus())
                 .build();
     }
@@ -1308,7 +1308,6 @@ public class AdminRepository implements IAdminRepository {
                 .clientId(po.getClientId())
                 .configType(po.getConfigType())
                 .configValue(po.getConfigValue())
-                .configParam(po.getConfigParam())
                 .configStatus(po.getConfigStatus())
                 .createTime(po.getCreateTime())
                 .updateTime(po.getUpdateTime())
@@ -1441,17 +1440,17 @@ public class AdminRepository implements IAdminRepository {
                 .build();
     }
 
-    private SessionVO toSessionVO(AiSession session) {
-        if (session == null) {
+    private SessionVO toSessionVO(AiSession po) {
+        if (po == null) {
             return null;
         }
-        AiUser user = session.getUserId() == null ? null : userDao.queryById(session.getUserId());
+        AiUser user = aiUserDao.queryById(po.getUserId());
         return SessionVO.builder()
-                .sessionId(session.getSessionId())
+                .sessionId(po.getSessionId())
                 .userName(user == null ? null : user.getUserName())
-                .sessionTitle(session.getSessionTitle())
-                .sessionType(session.getSessionType())
-                .createTime(session.getCreateTime())
+                .sessionTitle(po.getSessionTitle())
+                .sessionType(po.getSessionType())
+                .createTime(po.getCreateTime())
                 .build();
     }
 

@@ -3,16 +3,14 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AdminSidebar from './AdminSidebar.vue';
 import Footer from './Footer.vue';
-import arrowIcon from '../assets/arrow.svg';
+import arrowBlackIcon from '../assets/arrow-black.svg';
+import arrowWhiteIcon from '../assets/arrow-white.svg';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
-import { COLLAPSE_INNER_CLASS, getCollapseClasses } from '../utils/CollapseUtil';
-import { useAuthStore } from '../router/pinia';
-import { adminAgentList, flowAgent, flowClients, flowDelete, flowInsert } from '../request/api';
+import { adminAgentList, flowAgent, flowClients } from '../request/api';
 import { normalizeError, notifyAdminError } from '../request/request';
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
 const currentKey = ref('flow');
 const menuGroups = adminMenuGroups;
 
@@ -24,15 +22,13 @@ const ROLE_MAP = {
 const loading = reactive({
     agents: false,
     clients: false,
-    flows: false,
-    replacing: false
+    flows: false
 });
 
 const agents = ref([]);
 const allClients = ref([]);
 const selectedAgent = ref(null);
 const agentFlows = ref([]);
-const activeSlot = ref(null);
 
 const clientDetailMap = computed(() => {
     const map = new Map();
@@ -40,7 +36,6 @@ const clientDetailMap = computed(() => {
     return map;
 });
 
-const confirmDialog = reactive({ visible: false, roleLabel: '', fromClient: '', toClient: '', onConfirm: null });
 const promptDialog = reactive({ visible: false, title: '', content: '' });
 
 const pickData = (resp, msg = '操作失败') => {
@@ -66,11 +61,6 @@ const showError = (msg) => {
     notifyAdminError(new Error(msg), msg || '操作失败');
 };
 
-const openConfirm = (payload) => Object.assign(confirmDialog, { ...payload, visible: true });
-const closeConfirm = () => {
-    confirmDialog.visible = false;
-    confirmDialog.onConfirm = null;
-};
 const openPromptDialog = (slot) => {
     const prompt = (slot?.flow?.flowPrompt || '').trim();
     if (!prompt) return;
@@ -126,6 +116,21 @@ const loadFlows = async (agentId) => {
     }
 };
 
+const isRefreshing = computed(() => loading.agents || loading.clients || loading.flows);
+
+const handleRefresh = async () => {
+    const activeAgentId = selectedAgent.value?.agentId || String(route.query.agentId || '').trim();
+    await Promise.all([loadClients(), loadAgents()]);
+    if (!activeAgentId) {
+        return;
+    }
+    const matched = agents.value.find((item) => item.agentId === activeAgentId);
+    if (matched) {
+        selectedAgent.value = matched;
+    }
+    await loadFlows(activeAgentId);
+};
+
 const roleOrder = computed(() => ROLE_MAP[selectedAgent.value?.agentType || 'step'] || ROLE_MAP.step);
 
 const slotList = computed(() =>
@@ -138,18 +143,8 @@ const slotList = computed(() =>
     })
 );
 
-const pickedClientIds = computed(() => slotList.value.map((s) => s.flow?.clientId).filter(Boolean));
-const candidateClients = computed(() => {
-    if (activeSlot.value == null) return [];
-    const expectRole = roleOrder.value[activeSlot.value];
-    return (allClients.value || []).filter(
-        (c) => (c.clientRole || '').toUpperCase() === expectRole && !pickedClientIds.value.includes(c.clientId)
-    );
-});
-
 const enterDetail = async (agent) => {
     selectedAgent.value = agent;
-    activeSlot.value = null;
     await loadFlows(agent.agentId);
     router.replace({ path: '/admin/flow', query: { agentId: agent.agentId } });
 };
@@ -176,59 +171,11 @@ const openAgentFromRoute = async () => {
 const backToGrid = () => {
     selectedAgent.value = null;
     agentFlows.value = [];
-    activeSlot.value = null;
     router.replace({ path: '/admin/flow' });
-};
-
-const handleChooseSlot = (idx) => {
-    activeSlot.value = idx;
 };
 
 const getClientDetail = (clientId) => clientDetailMap.value.get(clientId);
 const getIdList = (list, key) => (list || []).map((item) => item?.[key]).filter(Boolean);
-const isLongPrompt = (prompt) => (prompt || '').trim().length > 20;
-
-const performReplace = async (slot, newClient) => {
-    if (!selectedAgent.value) return;
-    loading.replacing = true;
-    try {
-        const existing = slot.flow;
-        if (existing?.agentId && existing?.clientId) {
-            pickData(
-                await flowDelete({ agentId: existing.agentId, clientId: existing.clientId }),
-                '删除旧配置失败'
-            );
-        }
-        const prompt = (existing?.flowPrompt && existing.flowPrompt.trim()) || 'auto';
-        pickData(
-            await flowInsert({
-                agentId: selectedAgent.value.agentId,
-                clientId: newClient.clientId,
-                clientRole: (newClient.clientRole || '').toLowerCase(),
-                flowPrompt: prompt,
-                flowSeq: slot.seq
-            }),
-            '新增配置失败'
-        );
-        await loadFlows(selectedAgent.value.agentId);
-        activeSlot.value = null;
-    } catch (err) {
-        const msg = normalizeError(err).message || '替换失败';
-        notifyAdminError(err, msg);
-    } finally {
-        loading.replacing = false;
-        closeConfirm();
-    }
-};
-
-const openReplace = (slot, client) => {
-    openConfirm({
-        roleLabel: slot.roleLabel,
-        fromClient: slot.flow?.clientId || '未配置',
-        toClient: client.clientId,
-        onConfirm: () => performReplace(slot, client)
-    });
-};
 
 onMounted(async () => {
     await openAgentFromRoute();
@@ -238,14 +185,27 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="admin-font flex h-screen bg-[#f8fafc]">
+    <div class="admin-flow-page admin-font flex h-screen bg-[#f8fafc]">
         <AdminSidebar :groups="menuGroups" :current="currentKey" @select="handleSelectModule" />
         <div class="flex min-w-0 flex-1 flex-col">
-            <header class="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
+            <header class="flow-header flex items-center justify-between border-b border-[#e2e8f0] bg-white px-6 py-4 shadow-sm">
                 <div class="text-[18px] font-semibold text-[#0f172a]">
                     FLOW 管理
                     <span v-if="selectedAgent" class="ml-2 text-[14px] font-normal text-[#64748b]">/ {{ selectedAgent.agentId }}</span>
                 </div>
+                <button
+                    class="admin-icon-btn h-[34px] w-[34px] rounded-[10px] disabled:cursor-not-allowed disabled:opacity-70"
+                    type="button"
+                    title="刷新"
+                    aria-label="刷新"
+                    :disabled="isRefreshing"
+                    @click="handleRefresh"
+                >
+                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                        <path d="M20 4v6h-6" />
+                    </svg>
+                </button>
             </header>
 
             <div class="flex-1 overflow-auto p-6">
@@ -305,14 +265,14 @@ onMounted(async () => {
                         </div>
                         <div class="flex items-center gap-2">
                             <button
-                                class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] font-semibold text-[#0f172a] transition hover:bg-[#f1f5f9]"
+                                class="flow-top-action rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] font-semibold text-[#0f172a] transition hover:bg-[#f1f5f9]"
                                 type="button"
                                 @click="selectedAgent && router.push(`/admin/canvas?agentId=${selectedAgent.agentId}`)"
                             >
                                 查看配置图
                             </button>
                             <button
-                                class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] font-semibold text-[#0f172a] transition hover:bg-[#f1f5f9]"
+                                class="flow-top-action rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] font-semibold text-[#0f172a] transition hover:bg-[#f1f5f9]"
                                 type="button"
                                 @click="backToGrid"
                             >
@@ -321,44 +281,45 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4 overflow-visible lg:grid-cols-4 lg:gap-x-10">
+                    <div class="grid grid-cols-1 gap-3 overflow-visible lg:grid-cols-4 lg:gap-x-6">
                         <div
                             v-for="(slot, idx) in slotList"
                             :key="slot.roleLabel"
-                            class="relative z-0 overflow-visible rounded-[14px] bg-white p-4 shadow-sm transition hover:border-[#0ea5e9]"
-                            :class="activeSlot === idx ? 'border-2 border-[#0ea5e9] shadow-md' : 'border border-[#e2e8f0]'"
-                            @click="handleChooseSlot(idx)"
+                            class="flow-role-card relative overflow-visible rounded-[14px] border border-[#e2e8f0] bg-white p-3 shadow-sm transition"
                         >
                             <div class="mb-3 text-center">
                                 <div class="text-[24px] font-semibold text-[#0f172a]">{{ slot.roleLabel }}</div>
                             </div>
-                            <div v-if="slot.flow" class="flex min-h-[240px] flex-col gap-2 rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] p-3 text-left">
-                                <div class="flex items-center justify-between">
-                                    <div class="text-[16px] font-semibold text-[#0f172a]">{{ slot.flow.clientId }}</div>
-                                </div>
+                            <div v-if="slot.flow" class="flow-detail-card flex min-h-[240px] flex-col gap-2 rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] p-3 text-left">
                                 <div class="mt-1 flex flex-col gap-1 text-[12px] text-[#475569]">
-                                    <div class="flex items-start gap-2">
-                                        <span class="shrink-0 text-[#94a3b8]">API：</span>
+                                    <div class="flex items-start gap-0.5">
+                                        <span class="flow-meta-label">Client：</span>
+                                        <span class="flow-chip">
+                                            {{ slot.flow.clientId }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-start gap-0.5">
+                                        <span class="flow-meta-label">API：</span>
                                         <span
                                             v-if="getClientDetail(slot.flow.clientId)?.api?.apiId"
-                                            class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
+                                            class="flow-chip"
                                         >
                                             {{ getClientDetail(slot.flow.clientId)?.api?.apiId }}
                                         </span>
                                         <span v-else class="text-[#475569]">-</span>
                                     </div>
-                                    <div class="flex items-start gap-2">
-                                        <span class="shrink-0 text-[#94a3b8]">Model：</span>
+                                    <div class="flex items-start gap-0.5">
+                                        <span class="flow-meta-label">Model：</span>
                                         <span
                                             v-if="getClientDetail(slot.flow.clientId)?.model?.modelId"
-                                            class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
+                                            class="flow-chip"
                                         >
                                             {{ getClientDetail(slot.flow.clientId)?.model?.modelId }}
                                         </span>
                                         <span v-else class="text-[#475569]">-</span>
                                     </div>
-                                    <div class="flex items-start gap-2">
-                                        <span class="shrink-0 text-[#94a3b8]">MCP：</span>
+                                    <div class="flex items-start gap-0.5">
+                                        <span class="flow-meta-label">MCP：</span>
                                         <div
                                             v-if="getIdList(getClientDetail(slot.flow.clientId)?.mcpList, 'mcpId').length"
                                             class="flex flex-wrap gap-1"
@@ -366,15 +327,15 @@ onMounted(async () => {
                                             <span
                                                 v-for="item in getIdList(getClientDetail(slot.flow.clientId)?.mcpList, 'mcpId')"
                                                 :key="item"
-                                                class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
+                                                class="flow-chip"
                                             >
                                                 {{ item }}
                                             </span>
                                         </div>
                                         <span v-else class="text-[#475569]">-</span>
                                     </div>
-                                    <div class="flex items-start gap-2">
-                                        <span class="shrink-0 text-[#94a3b8]">Advisor：</span>
+                                    <div class="flex items-start gap-0.5">
+                                        <span class="flow-meta-label">Advisor：</span>
                                         <div
                                             v-if="getIdList(getClientDetail(slot.flow.clientId)?.advisorList, 'advisorId').length"
                                             class="flex flex-wrap gap-1"
@@ -382,15 +343,15 @@ onMounted(async () => {
                                             <span
                                                 v-for="item in getIdList(getClientDetail(slot.flow.clientId)?.advisorList, 'advisorId')"
                                                 :key="item"
-                                                class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
+                                                class="flow-chip"
                                             >
                                                 {{ item }}
                                             </span>
                                         </div>
                                         <span v-else class="text-[#475569]">-</span>
                                     </div>
-                                    <div class="flex items-start gap-2">
-                                        <span class="shrink-0 text-[#94a3b8]">Prompt：</span>
+                                    <div class="flex items-start gap-0.5">
+                                        <span class="flow-meta-label">Prompt：</span>
                                         <div
                                             v-if="getIdList(getClientDetail(slot.flow.clientId)?.promptList, 'promptId').length"
                                             class="flex flex-wrap gap-1"
@@ -398,7 +359,7 @@ onMounted(async () => {
                                             <span
                                                 v-for="item in getIdList(getClientDetail(slot.flow.clientId)?.promptList, 'promptId')"
                                                 :key="item"
-                                                class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
+                                                class="flow-chip"
                                             >
                                                 {{ item }}
                                             </span>
@@ -408,7 +369,7 @@ onMounted(async () => {
                                 </div>
                                 <div class="mt-auto flex justify-center pt-2">
                                     <button
-                                        class="rounded-full border border-[#e2e8f0] bg-white px-4 py-1 text-[12px] font-semibold text-[#475569] shadow-sm transition hover:border-[#0ea5e9] hover:text-[#0ea5e9] disabled:cursor-not-allowed disabled:text-[#cbd5e1]"
+                                        class="flow-setting-btn rounded-full border border-[#e2e8f0] bg-white px-4 py-1 text-[12px] font-semibold text-[#475569] shadow-sm transition hover:border-[#0ea5e9] hover:text-[#0ea5e9] disabled:cursor-not-allowed disabled:text-[#cbd5e1]"
                                         type="button"
                                         :disabled="!(slot.flow.flowPrompt && slot.flow.flowPrompt.trim())"
                                         @click.stop="openPromptDialog(slot)"
@@ -422,112 +383,10 @@ onMounted(async () => {
                             </div>
                             <div
                                 v-if="idx < slotList.length - 1"
-                                class="pointer-events-none absolute -right-8 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center lg:flex"
+                                class="pointer-events-none absolute -right-7 top-1/2 z-50 hidden -translate-y-1/2 items-center justify-center lg:flex"
                             >
-                                <img :src="arrowIcon" alt="arrow" class="h-6 w-6 drop-shadow-sm" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="relative z-10 mt-6 flex min-h-[180px] flex-col rounded-[14px] border border-[#e2e8f0] bg-white p-4 shadow-sm">
-                        <div
-                            :class="getCollapseClasses(activeSlot === null || activeSlot === undefined, { disablePointerWhenClosed: true })"
-                            :aria-hidden="!(activeSlot === null || activeSlot === undefined)"
-                        >
-                            <div :class="[COLLAPSE_INNER_CLASS, 'flex h-[140px] items-center justify-center text-center text-[48px] font-extrabold text-[#cbd5e1]']">
-                                点击卡片以更换 Client
-                            </div>
-                        </div>
-                        <div
-                            :class="getCollapseClasses(!(activeSlot === null || activeSlot === undefined), { disablePointerWhenClosed: true })"
-                            :aria-hidden="activeSlot === null || activeSlot === undefined"
-                        >
-                            <div :class="[COLLAPSE_INNER_CLASS, 'space-y-0']">
-                            <div class="mb-3 flex items-center justify-between">
-                                <div class="text-[14px] font-semibold text-[#0f172a]">
-                                    为 {{ slotList[activeSlot]?.roleLabel }} 选择 Client
-                                </div>
-                                <button
-                                    class="rounded-[8px] border border-[#e2e8f0] px-3 py-1 text-[12px] text-[#475569] hover:bg-[#f8fafc]"
-                                    type="button"
-                                    @click="activeSlot = null"
-                                >
-                                    收起
-                                </button>
-                            </div>
-                            <div class="relative z-20 flex gap-3 overflow-x-auto overflow-y-visible pb-2 pt-2">
-                                <div
-                                    v-for="client in candidateClients"
-                                    :key="client.clientId"
-                                    class="min-w-[280px] cursor-pointer rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#0ea5e9] hover:shadow-md"
-                                    @click.stop="openReplace(slotList[activeSlot], client)"
-                                >
-                                    <div class="flex items-center justify-between">
-                                        <div class="text-[13px] font-semibold text-[#0f172a]">{{ client.clientId }}</div>
-                                    </div>
-                                    <div class="mt-2 flex flex-col gap-1 text-[12px] text-[#475569]">
-                                        <div class="flex items-start gap-2">
-                                            <span class="shrink-0 text-[#94a3b8]">API：</span>
-                                            <span
-                                                v-if="client.api?.apiId"
-                                                class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
-                                            >
-                                                {{ client.api?.apiId }}
-                                            </span>
-                                            <span v-else class="text-[#475569]">-</span>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="shrink-0 text-[#94a3b8]">Model：</span>
-                                            <span
-                                                v-if="client.model?.modelId"
-                                                class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
-                                            >
-                                                {{ client.model?.modelId }}
-                                            </span>
-                                            <span v-else class="text-[#475569]">-</span>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="shrink-0 text-[#94a3b8]">MCP：</span>
-                                            <div v-if="getIdList(client.mcpList, 'mcpId').length" class="flex flex-wrap gap-1">
-                                                <span
-                                                    v-for="item in getIdList(client.mcpList, 'mcpId')"
-                                                    :key="item"
-                                                    class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
-                                                >
-                                                    {{ item }}
-                                                </span>
-                                            </div>
-                                            <span v-else class="text-[#475569]">-</span>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="shrink-0 text-[#94a3b8]">Advisor：</span>
-                                            <div v-if="getIdList(client.advisorList, 'advisorId').length" class="flex flex-wrap gap-1">
-                                                <span
-                                                    v-for="item in getIdList(client.advisorList, 'advisorId')"
-                                                    :key="item"
-                                                    class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
-                                                >
-                                                    {{ item }}
-                                                </span>
-                                            </div>
-                                            <span v-else class="text-[#475569]">-</span>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="shrink-0 text-[#94a3b8]">Prompt：</span>
-                                            <div v-if="getIdList(client.promptList, 'promptId').length" class="flex flex-wrap gap-1">
-                                                <span
-                                                    v-for="item in getIdList(client.promptList, 'promptId')"
-                                                    :key="item"
-                                                    class="rounded-full border border-[#e2e8f0] bg-white px-2 py-[1px] text-[11px] text-[#475569]"
-                                                >
-                                                    {{ item }}
-                                                </span>
-                                            </div>
-                                            <span v-else class="text-[#475569]">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                <img :src="arrowBlackIcon" alt="arrow" class="flow-arrow-light h-7 w-7 drop-shadow-sm" />
+                                <img :src="arrowWhiteIcon" alt="arrow" class="flow-arrow-dark h-7 w-7 drop-shadow-sm" />
                             </div>
                         </div>
                     </div>
@@ -536,53 +395,20 @@ onMounted(async () => {
             <Footer layout="admin" />
         </div>
 
-        <!-- 确认弹窗 -->
-        <div
-            v-if="confirmDialog.visible"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/30 backdrop-blur-[2px]"
-            @click="closeConfirm"
-        >
-            <div class="w-[380px] rounded-[14px] bg-white p-5 shadow-lg" @click.stop>
-                <div class="mb-3 text-[16px] font-semibold text-[#0f172a]">确认替换</div>
-                <div class="space-y-2 text-[13px] text-[#475569]">
-                    <div>槽位：{{ confirmDialog.roleLabel }}</div>
-                    <div>当前：{{ confirmDialog.fromClient }}</div>
-                    <div>替换为：{{ confirmDialog.toClient }}</div>
-                </div>
-                <div class="mt-5 flex justify-end gap-3">
-                    <button
-                        class="rounded-[10px] bg-[#ef4444] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#dc2626]"
-                        type="button"
-                        @click="closeConfirm"
-                    >
-                        取消
-                    </button>
-                    <button
-                        class="rounded-[10px] bg-[#22c55e] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#16a34a] disabled:opacity-60"
-                        type="button"
-                        :disabled="loading.replacing"
-                        @click="confirmDialog.onConfirm && confirmDialog.onConfirm()"
-                    >
-                        {{ loading.replacing ? '处理中...' : '确认' }}
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Prompt 详情弹窗 -->
         <div
             v-if="promptDialog.visible"
             class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/30 backdrop-blur-[2px]"
             @click="closePromptDialog"
         >
-            <div class="w-[520px] max-w-[90vw] rounded-[14px] bg-white p-5 shadow-lg" @click.stop>
+            <div class="flow-prompt-modal w-[520px] max-w-[90vw] rounded-[14px] bg-white p-5 shadow-lg" @click.stop>
                 <div class="text-[16px] font-semibold text-[#0f172a]">{{ promptDialog.title || 'Prompt 详情' }}</div>
-                <div class="mt-3 max-h-[360px] overflow-auto rounded-[10px] border border-[#e2e8f0] bg-[#f8fafc] p-3 text-[13px] text-[#475569] whitespace-pre-wrap break-all [overflow-wrap:anywhere]">
+                <div class="flow-prompt-content mt-3 max-h-[360px] overflow-auto rounded-[10px] border border-[#e2e8f0] bg-[#f8fafc] p-3 text-[13px] text-[#475569] whitespace-pre-wrap break-all [overflow-wrap:anywhere]">
                     {{ promptDialog.content }}
                 </div>
                 <div class="mt-4 flex justify-end">
                     <button
-                        class="rounded-[10px] bg-[#0ea5e9] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#0284c7]"
+                        class="flow-modal-close rounded-[10px] bg-[#0ea5e9] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#0284c7]"
                         type="button"
                         @click="closePromptDialog"
                     >
@@ -630,4 +456,51 @@ onMounted(async () => {
 .agent-card-back {
     transform: rotateY(180deg);
 }
+
+.flow-meta-label {
+    width: 62px;
+    flex-shrink: 0;
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.flow-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #d4dbe5;
+    background: #ffffff;
+    padding: 2px 10px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #475569;
+    max-width: 100%;
+}
+
+.flow-role-card:hover {
+    border-color: #0ea5e9;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+}
+
+.flow-detail-card {
+    transition: border-color 0.2s ease;
+}
+
+.flow-detail-card:hover {
+    border-color: #93c5fd;
+}
+
+.flow-arrow-dark {
+    display: none;
+}
+
+[data-theme='dark'] .flow-arrow-light {
+    display: none;
+}
+
+[data-theme='dark'] .flow-arrow-dark {
+    display: block;
+}
+
 </style>

@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AdminSidebar from './AdminSidebar.vue';
+import AdminSelect from './AdminSelect.vue';
 import Footer from './Footer.vue';
 import { adminMenuGroups } from '../utils/CommonDataUtil';
 import { useAuthStore } from '../router/pinia';
@@ -26,6 +27,7 @@ import {
     listConfigType,
     listModelId
 } from '../request/api';
+import { prettifyJsonString } from '../utils/StringUtil';
 import { normalizeError, notifyAdminError } from '../request/request';
 import { VueFlow, useVueFlow, MarkerType, Handle, Position } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
@@ -126,7 +128,7 @@ const fetchData = async () => {
     loading.page = true;
     try {
         const [agentResp, flowResp, clientResp, configResp, configTypeResp] = await Promise.all([
-            adminAgentList({ idKeyword: agentId.value }),
+            adminAgentList({ keyword: agentId.value }),
             flowAgent(agentId.value),
             flowClients(),
             configList({}),
@@ -147,6 +149,10 @@ const fetchData = async () => {
     } finally {
         loading.page = false;
     }
+};
+
+const handleRefresh = async () => {
+    await Promise.all([refreshOptions(), fetchData()]);
 };
 
 const clientDetailMap = computed(() => {
@@ -266,7 +272,7 @@ const buildGraph = () => {
                         id: `api:${clientId}:${apiId}`,
                         type: 'api',
                         position: { x: depX, y: API_Y },
-                        data: detail.api || { apiId, apiBaseUrl: '-', apiCompletionsPath: '-' }
+                        data: detail.api || { apiId, apiBaseUrl: '-', apiCompletionsPath: '-', apiEmbeddingsPath: '-' }
                     });
                 }
             }
@@ -390,9 +396,9 @@ const flowForm = reactive({
 const activeClientId = ref('');
 const configEditMap = reactive({});
 const configNewMap = reactive({
-    prompt: { configValue: '', configParam: '', configStatus: 1, configType: '' },
-    advisor: { configValue: '', configParam: '', configStatus: 1, configType: '' },
-    mcp: { configValue: '', configParam: '', configStatus: 1, configType: '' }
+    prompt: { configValue: '', configStatus: 1, configType: '' },
+    advisor: { configValue: '', configStatus: 1, configType: '' },
+    mcp: { configValue: '', configStatus: 1, configType: '' }
 });
 const pendingCreate = reactive({
     draftId: '',
@@ -411,14 +417,17 @@ const formSchemas = {
             { prop: 'agentName', label: '名称', required: true },
             { prop: 'agentType', label: '类型', type: 'select', optionsKey: 'agentTypes', required: true },
             { prop: 'agentDesc', label: '描述', type: 'textarea', required: true },
+            { prop: 'modelId', label: '模型ID' },
+            { prop: 'templateId', label: '模板ID' },
             { prop: 'agentStatus', label: '状态', type: 'switch' }
         ],
         defaults: () => ({
-            id: null,
             agentId: '',
             agentName: '',
             agentType: '',
             agentDesc: '',
+            modelId: '',
+            templateId: '',
             agentStatus: 1
         })
     },
@@ -434,7 +443,6 @@ const formSchemas = {
             { prop: 'clientStatus', label: '状态', type: 'switch' }
         ],
         defaults: () => ({
-            id: null,
             clientId: '',
             clientName: '',
             clientType: '',
@@ -453,7 +461,6 @@ const formSchemas = {
             { prop: 'apiId', label: 'API', type: 'select', optionsKey: 'apiIds', required: true }
         ],
         defaults: () => ({
-            id: null,
             modelId: '',
             modelName: '',
             modelType: '',
@@ -467,14 +474,15 @@ const formSchemas = {
             { prop: 'apiId', label: 'API ID', required: true },
             { prop: 'apiBaseUrl', label: 'Base URL', required: true },
             { prop: 'apiKey', label: 'Key', required: true },
-            { prop: 'apiCompletionsPath', label: '对话路径', required: true }
+            { prop: 'apiCompletionsPath', label: '对话路径', required: true },
+            { prop: 'apiEmbeddingsPath', label: '向量路径', required: true }
         ],
         defaults: () => ({
-            id: null,
             apiId: '',
             apiBaseUrl: '',
             apiKey: '',
-            apiCompletionsPath: '/v1/chat/completions'
+            apiCompletionsPath: '/v1/chat/completions',
+            apiEmbeddingsPath: '/v1/embeddings'
         })
     },
     prompt: {
@@ -483,13 +491,12 @@ const formSchemas = {
         fields: [
             { prop: 'promptId', label: 'Prompt ID', required: true },
             { prop: 'promptName', label: '名称', required: true },
-            { prop: 'promptContent', label: '系统提示词', type: 'textarea', required: true }
+            { prop: 'systemPrompt', label: '系统提示词', type: 'textarea', required: true }
         ],
         defaults: () => ({
-            id: null,
             promptId: '',
             promptName: '',
-            promptContent: ''
+            systemPrompt: ''
         })
     },
     advisor: {
@@ -502,7 +509,6 @@ const formSchemas = {
             { prop: 'advisorParam', label: '参数', type: 'textarea' }
         ],
         defaults: () => ({
-            id: null,
             advisorId: '',
             advisorName: '',
             advisorType: '',
@@ -516,17 +522,18 @@ const formSchemas = {
             { prop: 'mcpId', label: 'MCP ID', required: true },
             { prop: 'mcpName', label: '名称', required: true },
             { prop: 'mcpType', label: '类型', required: true },
-            { prop: 'mcpConfig', label: '配置', type: 'textarea', required: true },
+            { prop: 'mcpParam', label: '配置', type: 'textarea', required: true },
+            { prop: 'mcpSecret', label: '密钥', type: 'textarea' },
             { prop: 'mcpDesc', label: '描述', type: 'textarea', required: true },
             { prop: 'mcpTimeout', label: '超时时间', type: 'number' },
             { prop: 'mcpChat', label: '聊天可用', type: 'switch' }
         ],
         defaults: () => ({
-            id: null,
             mcpId: '',
             mcpName: '',
             mcpType: '',
-            mcpConfig: '',
+            mcpParam: '',
+            mcpSecret: '',
             mcpDesc: '',
             mcpTimeout: 180,
             mcpChat: 0
@@ -535,6 +542,15 @@ const formSchemas = {
 };
 
 const currentSchema = computed(() => formSchemas[modalType.value]);
+const JSON_FORM_FIELDS = new Set(['mcpParam', 'mcpSecret', 'advisorParam', 'taskParam', 'snapshot']);
+
+const prettifyCurrentFormJson = () => {
+    Object.keys(currentForm).forEach((field) => {
+        if (JSON_FORM_FIELDS.has(field) && typeof currentForm[field] === 'string') {
+            currentForm[field] = prettifyJsonString(currentForm[field]);
+        }
+    });
+};
 
 const resetForm = (schema) => {
     const defaults = schema?.defaults ? schema.defaults() : {};
@@ -548,6 +564,7 @@ const openCreateModal = (type) => {
     editingId.value = null;
     modalError.value = '';
     resetForm(formSchemas[type]);
+    prettifyCurrentFormJson();
     activeClientId.value = '';
     modalVisible.value = true;
 };
@@ -602,11 +619,20 @@ const openNodeModal = (node) => {
         const payload = node.data || {};
         editingId.value = payload.apiId || null;
         Object.assign(currentForm, payload);
+        if (!currentForm.apiCompletionsPath) {
+            currentForm.apiCompletionsPath = '/v1/chat/completions';
+        }
+        if (!currentForm.apiEmbeddingsPath) {
+            currentForm.apiEmbeddingsPath = '/v1/embeddings';
+        }
     }
     if (node.type === 'prompt') {
         const payload = node.data || {};
         editingId.value = payload.promptId || null;
         Object.assign(currentForm, payload);
+        if (!currentForm.systemPrompt && payload.systenPrompt) {
+            currentForm.systemPrompt = payload.systenPrompt;
+        }
     }
     if (node.type === 'advisor') {
         const payload = node.data || {};
@@ -617,8 +643,12 @@ const openNodeModal = (node) => {
         const payload = node.data || {};
         editingId.value = payload.mcpId || null;
         Object.assign(currentForm, payload);
+        if (!currentForm.mcpParam && payload.mcpConfig) {
+            currentForm.mcpParam = payload.mcpConfig;
+        }
         currentForm.mcpChat = payload.mcpChat ?? 0;
     }
+    prettifyCurrentFormJson();
     modalVisible.value = true;
 };
 
@@ -731,16 +761,15 @@ const resolveConfigKey = (item = {}) => `${item.clientId || ''}::${item.configTy
 const prepareConfigForms = () => {
     Object.keys(configEditMap).forEach((key) => delete configEditMap[key]);
     Object.assign(configNewMap, {
-        prompt: { configValue: '', configParam: '', configStatus: 1, configType: resolveConfigType('prompt') },
-        advisor: { configValue: '', configParam: '', configStatus: 1, configType: resolveConfigType('advisor') },
-        mcp: { configValue: '', configParam: '', configStatus: 1, configType: resolveConfigType('mcp') }
+        prompt: { configValue: '', configStatus: 1, configType: resolveConfigType('prompt') },
+        advisor: { configValue: '', configStatus: 1, configType: resolveConfigType('advisor') },
+        mcp: { configValue: '', configStatus: 1, configType: resolveConfigType('mcp') }
     });
 
     const list = configMapByClient.value[activeClientId.value] || [];
     list.forEach((item) => {
         configEditMap[resolveConfigKey(item)] = {
             configValue: item.configValue,
-            configParam: item.configParam,
             configStatus: item.configStatus ?? 1
         };
     });
@@ -776,7 +805,6 @@ const saveConfigItem = async (item) => {
                 clientId: item.clientId,
                 configType: item.configType,
                 configValue: draft.configValue,
-                configParam: draft.configParam,
                 configStatus: draft.configStatus ?? 1
             }),
             '更新配置失败'
@@ -837,7 +865,6 @@ const addConfigItem = async (groupKey) => {
                 clientId: activeClientId.value,
                 configType,
                 configValue: draft.configValue,
-                configParam: draft.configParam,
                 configStatus: draft.configStatus ?? 1
             }),
             '新增配置失败'
@@ -985,7 +1012,6 @@ const handlePendingRelationAfterCreate = async () => {
                 clientId: pendingCreate.sourceId,
                 configType,
                 configValue: currentForm[idField],
-                configParam: '',
                 configStatus: 1
             }),
             '新增配置失败'
@@ -1091,6 +1117,19 @@ onMounted(async () => {
                     CONFIG CANVAS
                     <span v-if="agentId" class="ml-2 text-[14px] font-normal text-[#64748b]">/ {{ agentId }}</span>
                 </div>
+                <button
+                    class="admin-icon-btn h-[34px] w-[34px] rounded-[10px] disabled:cursor-not-allowed disabled:opacity-70"
+                    type="button"
+                    title="刷新"
+                    aria-label="刷新"
+                    :disabled="loading.page || loading.save"
+                    @click="handleRefresh"
+                >
+                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                        <path d="M20 4v6h-6" />
+                    </svg>
+                </button>
             </header>
 
             <div class="flex items-center justify-between gap-3 border-b border-[#e2e8f0] bg-white px-6 py-3">
@@ -1173,6 +1212,7 @@ onMounted(async () => {
                                 <div class="canvas-id">{{ data.apiId }}</div>
                                 <div class="canvas-text line-clamp-2">基础路径：{{ data.apiBaseUrl || '-' }}</div>
                                 <div class="canvas-text">补全路径：{{ data.apiCompletionsPath || '-' }}</div>
+                                <div class="canvas-text">向量路径：{{ data.apiEmbeddingsPath || '-' }}</div>
                             </div>
                         </template>
 
@@ -1181,7 +1221,7 @@ onMounted(async () => {
                                 <Handle type="target" :position="Position.Top" class="canvas-handle" />
                                 <div class="canvas-id">{{ data.promptId }}</div>
                                 <div class="canvas-text">名称：{{ data.promptName || '-' }}</div>
-                                <div class="canvas-desc">概述：{{ data.promptDesc || '-' }}</div>
+                                <div class="canvas-desc">提示词：{{ data.systemPrompt || data.systenPrompt || '-' }}</div>
                             </div>
                         </template>
 
@@ -1191,7 +1231,7 @@ onMounted(async () => {
                                 <div class="canvas-id">{{ data.advisorId }}</div>
                                 <div class="canvas-text">名称：{{ data.advisorName || '-' }}</div>
                                 <div class="canvas-text">类型：{{ data.advisorType || '-' }}</div>
-                                <div class="canvas-desc">概述：{{ data.advisorDesc || '-' }}</div>
+                                <div class="canvas-desc">参数：{{ data.advisorParam || '-' }}</div>
                             </div>
                         </template>
 
@@ -1250,19 +1290,11 @@ onMounted(async () => {
                             />
                         </template>
                         <template v-else-if="field.type === 'select'">
-                            <select
+                            <AdminSelect
                                 v-model="currentForm[field.prop]"
-                                class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]"
-                            >
-                                <option value="">请选择</option>
-                                <option
-                                    v-for="opt in options[field.optionsKey || ''] || []"
-                                    :key="opt.value || opt"
-                                    :value="opt.value || opt"
-                                >
-                                    {{ opt.label || opt }}
-                                </option>
-                            </select>
+                                :options="options[field.optionsKey || ''] || []"
+                                placeholder="请选择"
+                            />
                         </template>
                         <template v-else-if="field.type === 'number'">
                             <input
@@ -1308,10 +1340,11 @@ onMounted(async () => {
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="text-[13px] font-semibold text-[#0f172a]">Client Role</label>
-                            <select v-model="flowForm.clientRole" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px] outline-none focus:border-[#1d4ed8]">
-                                <option value="">请选择</option>
-                                <option v-for="opt in options.clientRoles" :key="opt" :value="opt">{{ opt }}</option>
-                            </select>
+                            <AdminSelect
+                                v-model="flowForm.clientRole"
+                                :options="options.clientRoles"
+                                placeholder="请选择"
+                            />
                         </div>
                         <div class="flex flex-col gap-1 sm:col-span-2">
                             <label class="text-[13px] font-semibold text-[#0f172a]">Flow Prompt</label>
@@ -1319,10 +1352,10 @@ onMounted(async () => {
                         </div>
                     </div>
                     <div class="mt-4 flex gap-3">
-                        <button class="rounded-[10px] bg-[#1d4ed8] px-4 py-2 text-[13px] font-semibold text-white" type="button" @click="saveFlow">保存 Flow</button>
+                        <button class="admin-btn-primary rounded-[10px] px-4 py-2 text-[13px] font-semibold" type="button" @click="saveFlow">保存 Flow</button>
                         <button
                             v-if="flowForm.originAgentId && flowForm.originClientId"
-                            class="rounded-[10px] border border-[#e2e8f0] px-4 py-2 text-[13px] font-semibold text-[#0f172a]"
+                            class="admin-btn-page rounded-[10px] px-4 py-2 text-[13px] font-semibold"
                             type="button"
                             @click="deleteFlow"
                         >
@@ -1339,9 +1372,8 @@ onMounted(async () => {
                             <div class="text-[13px] font-semibold text-[#0f172a]">Prompt</div>
                             <div class="mt-2 space-y-2">
                                 <div v-for="item in configGroups.prompt" :key="resolveConfigKey(item)" class="rounded-[10px] border border-[#e2e8f0] p-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="grid gap-2">
                                         <input v-model="configEditMap[resolveConfigKey(item)].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Prompt ID" />
-                                        <input v-model="configEditMap[resolveConfigKey(item)].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div class="mt-2 flex items-center justify-between">
                                         <button class="text-[12px] text-[#0f172a]" type="button" @click="toggleConfigStatus(item)">
@@ -1354,15 +1386,16 @@ onMounted(async () => {
                                     </div>
                                 </div>
                                 <div class="rounded-[10px] border border-dashed border-[#e2e8f0] p-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="grid gap-2">
                                         <input v-model="configNewMap.prompt.configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Prompt ID" />
-                                        <input v-model="configNewMap.prompt.configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div v-if="!configNewMap.prompt.configType" class="mt-2">
-                                        <select v-model="configNewMap.prompt.configType" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]">
-                                            <option value="">选择 ConfigType</option>
-                                            <option v-for="opt in configTypes" :key="opt" :value="opt">{{ opt }}</option>
-                                        </select>
+                                        <AdminSelect
+                                            v-model="configNewMap.prompt.configType"
+                                            class="w-[210px]"
+                                            :options="configTypes"
+                                            placeholder="选择 ConfigType"
+                                        />
                                     </div>
                                     <div class="mt-2 flex justify-end">
                                         <button class="text-[12px] text-[#1d4ed8]" type="button" @click="addConfigItem('prompt')">新增 Prompt</button>
@@ -1375,9 +1408,8 @@ onMounted(async () => {
                             <div class="text-[13px] font-semibold text-[#0f172a]">Advisor</div>
                             <div class="mt-2 space-y-2">
                                 <div v-for="item in configGroups.advisor" :key="resolveConfigKey(item)" class="rounded-[10px] border border-[#e2e8f0] p-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="grid gap-2">
                                         <input v-model="configEditMap[resolveConfigKey(item)].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Advisor ID" />
-                                        <input v-model="configEditMap[resolveConfigKey(item)].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div class="mt-2 flex items-center justify-between">
                                         <button class="text-[12px] text-[#0f172a]" type="button" @click="toggleConfigStatus(item)">
@@ -1390,15 +1422,16 @@ onMounted(async () => {
                                     </div>
                                 </div>
                                 <div class="rounded-[10px] border border-dashed border-[#e2e8f0] p-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="grid gap-2">
                                         <input v-model="configNewMap.advisor.configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="Advisor ID" />
-                                        <input v-model="configNewMap.advisor.configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div v-if="!configNewMap.advisor.configType" class="mt-2">
-                                        <select v-model="configNewMap.advisor.configType" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]">
-                                            <option value="">选择 ConfigType</option>
-                                            <option v-for="opt in configTypes" :key="opt" :value="opt">{{ opt }}</option>
-                                        </select>
+                                        <AdminSelect
+                                            v-model="configNewMap.advisor.configType"
+                                            class="w-[210px]"
+                                            :options="configTypes"
+                                            placeholder="选择 ConfigType"
+                                        />
                                     </div>
                                     <div class="mt-2 flex justify-end">
                                         <button class="text-[12px] text-[#1d4ed8]" type="button" @click="addConfigItem('advisor')">新增 Advisor</button>
@@ -1411,9 +1444,8 @@ onMounted(async () => {
                             <div class="text-[13px] font-semibold text-[#0f172a]">MCP</div>
                             <div class="mt-2 space-y-2">
                                 <div v-for="item in configGroups.mcp" :key="resolveConfigKey(item)" class="rounded-[10px] border border-[#e2e8f0] p-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="grid gap-2">
                                         <input v-model="configEditMap[resolveConfigKey(item)].configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="MCP ID" />
-                                        <input v-model="configEditMap[resolveConfigKey(item)].configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div class="mt-2 flex items-center justify-between">
                                         <button class="text-[12px] text-[#0f172a]" type="button" @click="toggleConfigStatus(item)">
@@ -1426,15 +1458,16 @@ onMounted(async () => {
                                     </div>
                                 </div>
                                 <div class="rounded-[10px] border border-dashed border-[#e2e8f0] p-3">
-                                    <div class="grid gap-2 sm:grid-cols-2">
+                                    <div class="grid gap-2">
                                         <input v-model="configNewMap.mcp.configValue" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="MCP ID" />
-                                        <input v-model="configNewMap.mcp.configParam" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]" placeholder="参数" />
                                     </div>
                                     <div v-if="!configNewMap.mcp.configType" class="mt-2">
-                                        <select v-model="configNewMap.mcp.configType" class="rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]">
-                                            <option value="">选择 ConfigType</option>
-                                            <option v-for="opt in configTypes" :key="opt" :value="opt">{{ opt }}</option>
-                                        </select>
+                                        <AdminSelect
+                                            v-model="configNewMap.mcp.configType"
+                                            class="w-[210px]"
+                                            :options="configTypes"
+                                            placeholder="选择 ConfigType"
+                                        />
                                     </div>
                                     <div class="mt-2 flex justify-end">
                                         <button class="text-[12px] text-[#1d4ed8]" type="button" @click="addConfigItem('mcp')">新增 MCP</button>
@@ -1451,17 +1484,19 @@ onMounted(async () => {
 
                 <div v-if="pendingCreate.relationType === 'config'" class="mt-4 rounded-[10px] border border-[#e2e8f0] bg-[#f8fafc] p-3">
                     <div class="text-[13px] font-semibold text-[#0f172a]">ConfigType</div>
-                    <select v-model="pendingCreate.configType" class="mt-2 rounded-[10px] border border-[#e2e8f0] px-3 py-2 text-[13px]">
-                        <option value="">请选择</option>
-                        <option v-for="opt in configTypes" :key="opt" :value="opt">{{ opt }}</option>
-                    </select>
+                    <AdminSelect
+                        v-model="pendingCreate.configType"
+                        class="mt-2 w-[220px]"
+                        :options="configTypes"
+                        placeholder="请选择"
+                    />
                 </div>
 
                 <div class="mt-5 flex justify-end gap-3">
-                    <button class="rounded-[10px] border border-[#e2e8f0] px-4 py-2 text-[13px] font-semibold text-[#0f172a]" type="button" @click="handleModalCancel">
+                    <button class="admin-btn-page rounded-[10px] px-4 py-2 text-[13px] font-semibold" type="button" @click="handleModalCancel">
                         取消
                     </button>
-                    <button class="rounded-[10px] bg-[#1d4ed8] px-4 py-2 text-[13px] font-semibold text-white" type="button" :disabled="loading.save" @click="saveEntity">
+                    <button class="admin-btn-primary rounded-[10px] px-4 py-2 text-[13px] font-semibold" type="button" :disabled="loading.save" @click="saveEntity">
                         {{ loading.save ? '保存中...' : '保存' }}
                     </button>
                 </div>

@@ -28,8 +28,6 @@ public class ConfigManageDTO {
     @NotBlank
     private String configValue;
 
-    private String configParam;
-
     @NotNull
     private Integer configStatus;
 

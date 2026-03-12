@@ -396,6 +396,87 @@
     color: #f87171 !important;
 }
 
+.admin-btn-primary,
+.admin-btn-secondary,
+.admin-btn-page,
+.admin-icon-btn {
+    transition: all 0.2s ease;
+}
+
+.admin-btn-primary {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.admin-btn-primary:hover {
+    background: #1e40af;
+}
+
+.admin-btn-primary:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.4);
+    outline-offset: 2px;
+}
+
+.admin-btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.admin-btn-secondary {
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.admin-btn-secondary:hover {
+    background: #1e293b;
+}
+
+.admin-btn-secondary:focus-visible {
+    outline: 2px solid rgba(30, 64, 175, 0.35);
+    outline-offset: 2px;
+}
+
+.admin-btn-secondary:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.admin-btn-page {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.admin-btn-page:hover:not(:disabled) {
+    border-color: #bfdbfe;
+    background: #e0f2fe;
+}
+
+.admin-btn-page:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.3);
+    outline-offset: 2px;
+}
+
+.admin-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dbe2eb;
+    background: #ffffff;
+    color: #64748b;
+}
+
+.admin-icon-btn:hover {
+    border-color: #c7d2fe;
+    color: #1d4ed8;
+    background: #f8fafc;
+}
+
+.admin-icon-btn:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.35);
+    outline-offset: 2px;
+}
+
 [data-theme='dark'] .bg-\[\#0f172a\] {
     background-color: #1f2d44 !important;
 }
@@ -404,9 +485,45 @@
     color: #f1f5f9 !important;
 }
 
-[data-theme='dark'] .admin-logout:hover {
-    color: #93c5fd !important;
-    background-color: rgba(96, 165, 250, 0.14);
+[data-theme='dark'] .admin-btn-primary {
+    background: #2563eb;
+    color: #f8fafc;
+}
+
+[data-theme='dark'] .admin-btn-primary:hover {
+    background: #3b82f6;
+}
+
+[data-theme='dark'] .admin-btn-secondary {
+    background: #1f2d44;
+    color: #e2e8f0;
+}
+
+[data-theme='dark'] .admin-btn-secondary:hover {
+    background: #334155;
+}
+
+[data-theme='dark'] .admin-btn-page {
+    border-color: rgba(148, 163, 184, 0.4);
+    background: #1b2740;
+    color: #e2e8f0;
+}
+
+[data-theme='dark'] .admin-btn-page:hover:not(:disabled) {
+    border-color: rgba(147, 197, 253, 0.65);
+    background: rgba(56, 189, 248, 0.18);
+}
+
+[data-theme='dark'] .admin-icon-btn {
+    border-color: rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.42);
+    color: #cbd5e1;
+}
+
+[data-theme='dark'] .admin-icon-btn:hover {
+    border-color: rgba(147, 197, 253, 0.72);
+    color: #93c5fd;
+    background: rgba(96, 165, 250, 0.2);
 }
 
 [data-theme='dark'] .main-logout:hover {
@@ -445,6 +562,80 @@
 [data-theme='dark'] .hover\:bg-\[\#f7f9fc\]:hover,
 [data-theme='dark'] .hover\:bg-\[\#f5f7fb\]:hover {
     background-color: var(--surface-4) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-header {
+    background-color: var(--surface-1) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-top-action {
+    background-color: var(--surface-1) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-top-action:hover {
+    background-color: var(--surface-4) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-role-card {
+    background-color: var(--surface-3) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-role-card:hover {
+    border-color: rgba(96, 165, 250, 0.72) !important;
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.42);
+}
+
+[data-theme='dark'] .admin-flow-page .flow-detail-card {
+    background-color: var(--surface-2) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-detail-card:hover {
+    border-color: rgba(147, 197, 253, 0.62) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-meta-label {
+    color: var(--text-muted) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-chip {
+    border-color: var(--border-color) !important;
+    background-color: var(--surface-1) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-setting-btn {
+    border-color: var(--border-color) !important;
+    background-color: var(--surface-1) !important;
+    color: var(--text-secondary) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-setting-btn:hover {
+    border-color: rgba(96, 165, 250, 0.72) !important;
+    background-color: rgba(96, 165, 250, 0.18) !important;
+    color: #dbeafe !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-prompt-modal {
+    background-color: var(--surface-1) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-prompt-content {
+    border-color: var(--border-color) !important;
+    background-color: var(--surface-2) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-modal-close {
+    background-color: var(--accent-strong) !important;
+}
+
+[data-theme='dark'] .admin-flow-page .flow-modal-close:hover {
+    background-color: #3b82f6 !important;
 }
 
 .ui-collapse {

@@ -17,6 +17,7 @@ public class AgentVO {
     private String agentType;
     private String agentDesc;
     private String modelId;
+    private String modelName;
     private String templateId;
     private Integer agentStatus;
     private Long agentFrom;

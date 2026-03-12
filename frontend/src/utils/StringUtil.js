@@ -93,7 +93,9 @@ export const applyStreamToken = (accumulator, token) => {
 const isLikelyJson = (text) => {
     if (!text || typeof text !== 'string') return false;
     const trimmed = text.trim();
-    if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return false;
+    const isObject = trimmed.startsWith('{') && trimmed.endsWith('}');
+    const isArray = trimmed.startsWith('[') && trimmed.endsWith(']');
+    if (!isObject && !isArray) return false;
     try {
         JSON.parse(trimmed);
         return true;
@@ -123,6 +125,16 @@ export const formatMcpJson = (content) => {
             }
         }
         return JSON.stringify(parsed, null, 2);
+    } catch (error) {
+        return content;
+    }
+};
+
+export const prettifyJsonString = (content) => {
+    if (typeof content !== 'string') return content;
+    if (!isLikelyJson(content)) return content;
+    try {
+        return JSON.stringify(JSON.parse(content.trim()), null, 2);
     } catch (error) {
         return content;
     }

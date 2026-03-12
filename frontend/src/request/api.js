@@ -1,5 +1,5 @@
 import http, { streamFetch } from './request';
-import { trimStrings } from '../utils/StringUtil';
+import { trimStrings, prettifyJsonString } from '../utils/StringUtil';
 
 const AI_BASE_PATH = '/api/v1/ai';
 const CHAT_COMPLETE_PATH = `${AI_BASE_PATH}/chat/complete`;
@@ -51,8 +51,46 @@ const ADMIN_PRIMARY_PARAM = {
     client: 'clientId',
     agent: 'agentId',
     user: 'userName',
-    task: 'taskId'
+    task: 'taskId',
+    template: 'templateId',
+    plaza: 'plazaId'
 };
+
+const ADMIN_PAGE_PAYLOAD_FIELDS = {
+    api: ['keyword', 'pageNum', 'pageSize'],
+    model: ['keyword', 'apiId', 'pageNum', 'pageSize'],
+    mcp: ['keyword', 'pageNum', 'pageSize'],
+    advisor: ['keyword', 'pageNum', 'pageSize'],
+    prompt: ['keyword', 'pageNum', 'pageSize'],
+    client: ['keyword', 'modelId', 'clientType', 'clientRole', 'pageNum', 'pageSize'],
+    agent: ['keyword', 'agentType', 'pageNum', 'pageSize'],
+    user: ['keyword', 'userRole', 'pageNum', 'pageSize'],
+    task: ['keyword', 'agentId', 'pageNum', 'pageSize'],
+    template: ['keyword', 'pageNum', 'pageSize'],
+    plaza: ['keyword', 'sortBy', 'sortOrder', 'pageNum', 'pageSize']
+};
+
+const ADMIN_MANAGE_PAYLOAD_FIELDS = {
+    api: ['apiId', 'apiBaseUrl', 'apiKey', 'apiCompletionsPath', 'apiEmbeddingsPath'],
+    model: ['modelId', 'apiId', 'modelName', 'modelType'],
+    mcp: ['mcpId', 'mcpName', 'mcpType', 'mcpDesc', 'mcpParam', 'mcpSecret', 'mcpTimeout', 'mcpChat'],
+    advisor: ['advisorId', 'advisorName', 'advisorType', 'advisorParam'],
+    prompt: ['promptId', 'promptName', 'systenPrompt'],
+    client: ['clientId', 'clientType', 'clientRole', 'modelId', 'modelName', 'clientName', 'clientStatus'],
+    agent: ['agentId', 'agentName', 'agentType', 'agentDesc', 'modelId', 'templateId', 'agentStatus'],
+    user: ['originUserName', 'userName', 'password', 'userRole', 'userAvatar', 'userStatus'],
+    task: ['taskId', 'agentId', 'taskCron', 'taskDesc', 'taskParam', 'taskStatus'],
+    template: ['templateId', 'userId', 'agentName', 'agentType', 'agentDesc', 'apiBaseUrl', 'apiCompletionUrl', 'modelName', 'modelType', 'snapshot'],
+    plaza: ['plazaId', 'templateId', 'userId', 'agentName', 'agentType', 'plazaTitle', 'plazaDesc', 'likeCount', 'favorCount', 'commentCount']
+};
+
+const ADMIN_LIST_PAYLOAD_FIELDS = {
+    agent: ['keyword', 'agentType'],
+    config: ['keyword', 'configType']
+};
+
+const FLOW_MANAGE_PAYLOAD_FIELDS = ['originAgentId', 'originClientId', 'agentId', 'clientId', 'clientRole', 'userPrompt', 'flowSeq'];
+const CONFIG_MANAGE_PAYLOAD_FIELDS = ['originClientId', 'originConfigType', 'originConfigValue', 'clientId', 'configType', 'configValue', 'configStatus'];
 
 const USER_MCP_BASE_PATH = `${USER_BASE_PATH}/mcp`;
 const USER_MCP_LIST_PATH = `${USER_MCP_BASE_PATH}/list`;
@@ -104,6 +142,38 @@ const isUnset = (value) => value === null || value === undefined || isBlank(valu
 const isResultEnvelope = (resp) =>
     resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code');
 
+const pickPayloadFields = (source = {}, fields = []) =>
+    fields.reduce((acc, field) => {
+        if (Object.prototype.hasOwnProperty.call(source, field)) {
+            acc[field] = source[field];
+        }
+        return acc;
+    }, {});
+
+const normalizePageSize = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num) || num < 1) {
+        return 10;
+    }
+    return Math.min(Math.floor(num), 10);
+};
+
+const normalizePositiveInt = (value, fallback = 1) => {
+    const num = Number(value);
+    if (!Number.isFinite(num) || num < 1) {
+        return fallback;
+    }
+    return Math.floor(num);
+};
+
+const normalizeNumber = (value, fallback) => {
+    if (value === '' || value === null || value === undefined) {
+        return fallback;
+    }
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+};
+
 const mapResultData = (resp, mapper) => {
     if (!resp || typeof mapper !== 'function') {
         return resp;
@@ -117,58 +187,68 @@ const mapResultData = (resp, mapper) => {
     return mapper(resp);
 };
 
-const normalizeAdminPayload = (moduleKey, payload = {}) => {
-    const normalized = trimStrings(payload);
-    if (!normalized || typeof normalized !== 'object') {
+const normalizeAdminPayload = (moduleKey, payload = {}, scene = 'manage') => {
+    const source = trimStrings(payload);
+    if (!source || typeof source !== 'object') {
+        return source;
+    }
+
+    const working = { ...source };
+
+    if (moduleKey === 'mcp' && isUnset(working.mcpParam) && !isUnset(working.mcpConfig)) {
+        working.mcpParam = working.mcpConfig;
+    }
+    if (moduleKey === 'prompt' && isUnset(working.systenPrompt) && !isUnset(working.promptContent)) {
+        working.systenPrompt = working.promptContent;
+    }
+    if (moduleKey === 'prompt' && isUnset(working.systenPrompt) && !isUnset(working.systemPrompt)) {
+        working.systenPrompt = working.systemPrompt;
+    }
+
+    const fieldMap = scene === 'page' ? ADMIN_PAGE_PAYLOAD_FIELDS : ADMIN_MANAGE_PAYLOAD_FIELDS;
+    const fields = fieldMap[moduleKey] || [];
+    const normalized = fields.length > 0 ? pickPayloadFields(working, fields) : { ...working };
+
+    if (scene === 'page') {
+        normalized.pageNum = normalizePositiveInt(normalized.pageNum, 1);
+        normalized.pageSize = normalizePageSize(normalized.pageSize);
         return normalized;
     }
+
     if (moduleKey === 'api') {
-        delete normalized.apiEmbeddingsPath;
         if (isUnset(normalized.apiCompletionsPath)) {
             normalized.apiCompletionsPath = '/v1/chat/completions';
         }
-    }
-    if (moduleKey === 'mcp') {
-        if (!normalized.mcpParam && normalized.mcpConfig) {
-            normalized.mcpParam = normalized.mcpConfig;
+        if (isUnset(normalized.apiEmbeddingsPath)) {
+            normalized.apiEmbeddingsPath = '/v1/embeddings';
         }
+    }
+
+    if (moduleKey === 'mcp') {
         if (isUnset(normalized.mcpParam)) {
             normalized.mcpParam = '{}';
         }
         if (isUnset(normalized.mcpDesc)) {
             normalized.mcpDesc = '暂无描述';
         }
-        if (normalized.mcpTimeout === '' || normalized.mcpTimeout === null || normalized.mcpTimeout === undefined) {
-            normalized.mcpTimeout = 180;
-        }
-        if (normalized.mcpChat === '' || normalized.mcpChat === null || normalized.mcpChat === undefined) {
-            normalized.mcpChat = 0;
-        }
-        delete normalized.mcpConfig;
+        normalized.mcpTimeout = normalizeNumber(normalized.mcpTimeout, 180);
+        normalized.mcpChat = normalizeNumber(normalized.mcpChat, 0);
     }
-    if (moduleKey === 'prompt') {
-        if (!normalized.systenPrompt && normalized.promptContent) {
-            normalized.systenPrompt = normalized.promptContent;
-        }
-        delete normalized.promptContent;
-    }
+
     if (moduleKey === 'client') {
         if (isUnset(normalized.modelName) && !isUnset(normalized.modelId)) {
             normalized.modelName = normalized.modelId;
         }
-        if (normalized.clientStatus === '' || normalized.clientStatus === null || normalized.clientStatus === undefined) {
-            normalized.clientStatus = 1;
-        }
-        delete normalized.clientDesc;
+        normalized.clientStatus = normalizeNumber(normalized.clientStatus, 1);
     }
+
     if (moduleKey === 'agent') {
         if (isUnset(normalized.agentDesc)) {
             normalized.agentDesc = '暂无描述';
         }
-        if (normalized.agentStatus === '' || normalized.agentStatus === null || normalized.agentStatus === undefined) {
-            normalized.agentStatus = 1;
-        }
+        normalized.agentStatus = normalizeNumber(normalized.agentStatus, 1);
     }
+
     if (moduleKey === 'task') {
         if (isUnset(normalized.taskDesc)) {
             normalized.taskDesc = '暂无描述';
@@ -176,30 +256,49 @@ const normalizeAdminPayload = (moduleKey, payload = {}) => {
         if (isUnset(normalized.taskParam)) {
             normalized.taskParam = '{}';
         }
-        if (normalized.taskStatus === '' || normalized.taskStatus === null || normalized.taskStatus === undefined) {
-            normalized.taskStatus = 1;
+        normalized.taskStatus = normalizeNumber(normalized.taskStatus, 1);
+    }
+
+    if (moduleKey === 'template') {
+        normalized.userId = normalizeNumber(normalized.userId, normalized.userId);
+        if (isUnset(normalized.snapshot)) {
+            normalized.snapshot = '{}';
         }
     }
+
+    if (moduleKey === 'plaza') {
+        normalized.userId = normalizeNumber(normalized.userId, normalized.userId);
+        normalized.likeCount = normalizeNumber(normalized.likeCount, 0);
+        normalized.favorCount = normalizeNumber(normalized.favorCount, 0);
+        normalized.commentCount = normalizeNumber(normalized.commentCount, 0);
+    }
+
     if (moduleKey === 'user') {
         if (isUnset(normalized.userAvatar)) {
             normalized.userAvatar = 'avatar/default.png';
         }
-        if (normalized.userStatus === '' || normalized.userStatus === null || normalized.userStatus === undefined) {
-            normalized.userStatus = 1;
-        }
+        normalized.userStatus = normalizeNumber(normalized.userStatus, 1);
     }
-    if (moduleKey === 'config') {
-        if (normalized.configStatus === '' || normalized.configStatus === null || normalized.configStatus === undefined) {
-            normalized.configStatus = 1;
-        }
+
+    return normalized;
+};
+
+const normalizeAdminListPayload = (moduleKey, payload = {}) => {
+    const source = trimStrings(payload);
+    if (!source || typeof source !== 'object') {
+        return source;
     }
-    if (moduleKey === 'advisor') {
-        delete normalized.advisorDesc;
-        delete normalized.advisorOrder;
+    const fields = ADMIN_LIST_PAYLOAD_FIELDS[moduleKey] || [];
+    return fields.length > 0 ? pickPayloadFields(source, fields) : source;
+};
+
+const normalizeConfigPayload = (payload = {}) => {
+    const source = trimStrings(payload);
+    if (!source || typeof source !== 'object') {
+        return source;
     }
-    if (moduleKey === 'prompt') {
-        delete normalized.promptDesc;
-    }
+    const normalized = pickPayloadFields(source, CONFIG_MANAGE_PAYLOAD_FIELDS);
+    normalized.configStatus = normalizeNumber(normalized.configStatus, 1);
     return normalized;
 };
 
@@ -210,7 +309,8 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
     if (moduleKey === 'api') {
         return {
             ...item,
-            apiCompletionsPath: item.apiCompletionsPath || '/v1/chat/completions'
+            apiCompletionsPath: item.apiCompletionsPath || '/v1/chat/completions',
+            apiEmbeddingsPath: item.apiEmbeddingsPath || '/v1/embeddings'
         };
     }
     if (moduleKey === 'mcp') {
@@ -219,20 +319,22 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
             mcpDesc: item.mcpDesc || '暂无描述',
             mcpTimeout: item.mcpTimeout ?? 180,
             mcpChat: item.mcpChat ?? 0,
-            mcpConfig: item.mcpConfig || item.mcpParam || ''
+            mcpParam: prettifyJsonString(item.mcpParam || item.mcpConfig || ''),
+            mcpSecret: prettifyJsonString(item.mcpSecret || '')
         };
     }
     if (moduleKey === 'prompt') {
+        const systemPrompt = item.systemPrompt || item.systenPrompt || '';
         return {
             ...item,
-            promptContent: item.promptContent || item.systenPrompt || ''
+            systemPrompt,
+            systenPrompt: item.systenPrompt || systemPrompt
         };
     }
     if (moduleKey === 'client') {
         return {
             ...item,
-            modelName: item.modelName || item.modelId || '',
-            clientDesc: item.clientDesc || ''
+            modelName: item.modelName || item.modelId || ''
         };
     }
     if (moduleKey === 'agent') {
@@ -247,7 +349,7 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
             ...item,
             taskDesc: item.taskDesc || '暂无描述',
             taskStatus: item.taskStatus ?? 1,
-            taskParam: item.taskParam || '{}'
+            taskParam: prettifyJsonString(item.taskParam || '{}')
         };
     }
     if (moduleKey === 'user') {
@@ -257,17 +359,24 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
             userStatus: item.userStatus ?? 1
         };
     }
+    if (moduleKey === 'template') {
+        return {
+            ...item,
+            snapshot: prettifyJsonString(item.snapshot || '{}')
+        };
+    }
+    if (moduleKey === 'plaza') {
+        return {
+            ...item,
+            likeCount: item.likeCount ?? 0,
+            favorCount: item.favorCount ?? 0,
+            commentCount: item.commentCount ?? 0
+        };
+    }
     if (moduleKey === 'advisor') {
         return {
             ...item,
-            advisorDesc: item.advisorDesc || '',
-            advisorOrder: item.advisorOrder ?? 0
-        };
-    }
-    if (moduleKey === 'prompt') {
-        return {
-            ...item,
-            promptDesc: item.promptDesc || ''
+            advisorParam: prettifyJsonString(item.advisorParam || '')
         };
     }
     return item;
@@ -285,15 +394,15 @@ const normalizeAdminPageResponse = (moduleKey, resp) =>
     });
 
 const normalizeFlowPayload = (payload = {}) => {
-    const normalized = trimStrings(payload);
-    if (!normalized || typeof normalized !== 'object') {
-        return normalized;
+    const source = trimStrings(payload);
+    if (!source || typeof source !== 'object') {
+        return source;
     }
-    if (!normalized.userPrompt && normalized.flowPrompt) {
-        normalized.userPrompt = normalized.flowPrompt;
+    if (!source.userPrompt && source.flowPrompt) {
+        source.userPrompt = source.flowPrompt;
     }
-    delete normalized.flowPrompt;
-    delete normalized.id;
+    const normalized = pickPayloadFields(source, FLOW_MANAGE_PAYLOAD_FIELDS);
+    normalized.flowSeq = normalizePositiveInt(normalized.flowSeq, normalized.flowSeq || 1);
     return normalized;
 };
 
@@ -585,13 +694,13 @@ export const fetchAdminDashboard = async () => http.post(ADMIN_DASHBOARD_PATH);
 const buildAdminPath = (moduleKey, action) => `${ADMIN_BASE_PATH}/${moduleKey}/${action}`;
 
 export const adminPage = async (moduleKey, payload = {}) =>
-    normalizeAdminPageResponse(moduleKey, await http.post(buildAdminPath(moduleKey, 'page'), normalizeAdminPayload(moduleKey, payload)));
+    normalizeAdminPageResponse(moduleKey, await http.post(buildAdminPath(moduleKey, 'page'), normalizeAdminPayload(moduleKey, payload, 'page')));
 
 export const adminInsert = async (moduleKey, payload = {}) =>
-    http.post(buildAdminPath(moduleKey, 'insert'), normalizeAdminPayload(moduleKey, payload));
+    http.post(buildAdminPath(moduleKey, 'insert'), normalizeAdminPayload(moduleKey, payload, 'manage'));
 
 export const adminUpdate = async (moduleKey, payload = {}) =>
-    http.post(buildAdminPath(moduleKey, 'update'), normalizeAdminPayload(moduleKey, payload));
+    http.post(buildAdminPath(moduleKey, 'update'), normalizeAdminPayload(moduleKey, payload, 'manage'));
 
 export const adminDelete = async (moduleKey, value) => {
     const paramKey = ADMIN_PRIMARY_PARAM[moduleKey];
@@ -615,11 +724,11 @@ export const flowUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/
 export const flowDelete = async ({ agentId, clientId }) =>
     http.post(`${ADMIN_BASE_PATH}/flow/delete`, null, { params: { agentId, clientId } });
 
-export const adminAgentList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/agent/list`, trimStrings(payload));
+export const adminAgentList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/agent/list`, normalizeAdminListPayload('agent', payload));
 
-export const configList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/list`, trimStrings(payload));
-export const configInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/insert`, trimStrings(payload));
-export const configUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/update`, trimStrings(payload));
+export const configList = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/list`, normalizeAdminListPayload('config', payload));
+export const configInsert = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/insert`, normalizeConfigPayload(payload));
+export const configUpdate = async (payload = {}) => http.post(`${ADMIN_BASE_PATH}/config/update`, normalizeConfigPayload(payload));
 export const configDelete = async ({ clientId, configType, configValue }) =>
     http.post(`${ADMIN_BASE_PATH}/config/delete`, null, { params: { clientId, configType, configValue } });
 export const configToggle = async ({ clientId, configType, configValue }, status) =>

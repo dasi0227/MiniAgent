@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
             <header class="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--surface-1)] px-6 py-4 shadow-[var(--shadow-soft)]">
                 <div class="text-[18px] font-semibold">DASHBOARD</div>
                 <button
-                    class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[var(--border-color)] bg-white text-[var(--text-primary)] transition hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-70"
+                    class="admin-icon-btn h-[34px] w-[34px] rounded-[10px] disabled:cursor-not-allowed disabled:opacity-70"
                     type="button"
                     title="刷新"
                     aria-label="刷新"
@@ -389,13 +389,7 @@ onBeforeUnmount(() => {
 
             <div class="flex-1 overflow-auto p-6">
                 <div class="mb-6 flex items-center justify-center text-center">
-                    <div class="text-[26px] font-extrabold tracking-[0.02em] text-[var(--text-primary)]">
-                        Dasi AI 目前已经处理了
-                        <span class="mx-2 text-[42px] font-black text-[var(--accent-strong)] tabular-nums">
-                            {{ dashboard?.countInfo?.messageCount ?? 0 }}
-                        </span>
-                        条消息
-                    </div>
+                    <div class="text-[34px] font-extrabold tracking-[0.03em] text-[var(--text-primary)]">Dasi MiniAgent</div>
                 </div>
 
                 <div class="space-y-4">

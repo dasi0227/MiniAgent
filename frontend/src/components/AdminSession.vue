@@ -217,6 +217,21 @@ const backToGrid = () => {
     clearDetail();
 };
 
+const handleRefresh = async () => {
+    const activeSessionId = selectedSession.value?.sessionId || '';
+    await loadSessions();
+    if (!activeSessionId) {
+        return;
+    }
+    const matched = sessions.value.find((item) => item.sessionId === activeSessionId);
+    if (!matched) {
+        selectedSession.value = null;
+        clearDetail();
+        return;
+    }
+    selectedSession.value = matched;
+    await loadDetail(matched);
+};
 
 onMounted(() => {
     loadSessions();
@@ -231,7 +246,19 @@ onMounted(() => {
                 <div class="text-[18px] font-semibold">
                     SESSION 查看
                 </div>
-                <div v-if="selectedSession" class="flex items-center gap-2"></div>
+                <button
+                    class="admin-icon-btn h-[34px] w-[34px] rounded-[10px] disabled:cursor-not-allowed disabled:opacity-70"
+                    type="button"
+                    title="刷新"
+                    aria-label="刷新"
+                    :disabled="loading.list || loading.detail"
+                    @click="handleRefresh"
+                >
+                    <svg viewBox="0 0 24 24" class="h-[16px] w-[16px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                        <path d="M20 4v6h-6" />
+                    </svg>
+                </button>
             </header>
 
             <div class="flex-1 overflow-auto p-6">
