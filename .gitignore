@@ -1,0 +1,54 @@
+# ==================== Personal ====================
+
+
+# ==================== OS ====================
+._*
+.DS_Store
+.Trashes
+.Spotlight-V100
+Thumbs.db
+
+# ==================== Editor ====================
+.idea/
+.vscode/
+.history/
+.tmp/
+tmp/
+*~
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+
+# ==================== Logs ====================
+*.log
+*.pid
+*.pid.lock
+
+# ==================== Backend ====================
+target/
+out/
+build/
+.settings/
+.metadata/
+.recommenders/
+.mvn/
+*.class
+application-*.yml
+!application-dev.yml
+.env
+.env.*
+!.env.example
+
+# ==================== Frontend ====================
+node_modules/
+.vite/
+.cache/
+dist/
+
+# ==================== Docker ====================
+.docker/
+*.db
+*.sqlite
+*.sqlite3
