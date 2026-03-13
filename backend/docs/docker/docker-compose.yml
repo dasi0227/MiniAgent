@@ -13,8 +13,7 @@ services:
       TZ: ${TZ}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-#      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./conf/my.cnf:/etc/mysql/conf.d/my.cnf:ro
     depends_on:
       - pgvector
     healthcheck:
@@ -41,7 +40,7 @@ services:
       - ${PASSWORD}
     volumes:
       - redis_data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./conf/redis.conf:/usr/local/etc/redis/redis.conf:ro
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${PASSWORD}", "ping" ]
       interval: 5s
@@ -64,7 +63,7 @@ services:
       TZ: ${TZ}
     volumes:
       - pgvector_data:/var/lib/postgresql/data
-      - ./pgvector/table.sql:/docker-entrypoint-initdb.d/table.sql:ro
+      - ./conf/table.sql:/docker-entrypoint-initdb.d/table.sql:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -h localhost -U ${USERNAME} -d ai-agent" ]
       interval: 5s
@@ -122,88 +121,47 @@ services:
 
   # ===================== MCP Servers =====================
   mcp-server-csdn:
-    image: dasi0227/mcp-server-csdn:0.1.0
+    image: dasi0227/mcp-server-csdn:0.2.0
     container_name: mcp-server-csdn
     restart: unless-stopped
     ports:
       - "9001:9001"
-    environment:
-      TZ: ${TZ}
-      CSDN_COOKIE: ${CSDN_COOKIE}
-      CSDN_COVER_URL: ${CSDN_COVER_URL}
     networks:
       - ai-agent
 
   mcp-server-wecom:
-    image: dasi0227/mcp-server-wecom:0.1.0
+    image: dasi0227/mcp-server-wecom:0.2.0
     container_name: mcp-server-wecom
     restart: unless-stopped
     ports:
       - "9002:9002"
-    environment:
-      TZ: ${TZ}
-      WECOM_AGENT_ID: ${WECOM_AGENT_ID}
-      WECOM_CORP_ID: ${WECOM_CORP_ID}
-      WECOM_CORP_SECRET: ${WECOM_CORP_SECRET}
     networks:
       - ai-agent
 
   mcp-server-amap:
-    image: dasi0227/mcp-server-amap:0.1.0
+    image: dasi0227/mcp-server-amap:0.2.0
     container_name: mcp-server-amap
     restart: unless-stopped
     ports:
       - "9003:9003"
-    environment:
-      TZ: ${TZ}
-      AMAP_API_KEY: ${AMAP_API_KEY}
     networks:
       - ai-agent
 
   mcp-server-email:
-    image: dasi0227/mcp-server-email:0.1.0
+    image: dasi0227/mcp-server-email:0.2.0
     container_name: mcp-server-email
     restart: unless-stopped
     ports:
       - "9004:9004"
-    environment:
-      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST}
-      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT}
-      EMAIL_SMTP_USERNAME: ${EMAIL_SMTP_USERNAME}
-      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
-      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
-      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
-      TZ: ${TZ}
     networks:
       - ai-agent
       
   mcp-server-bocha:
-    image: dasi0227/mcp-server-bocha:0.1.0
+    image: dasi0227/mcp-server-bocha:0.2.0
     container_name: mcp-server-bocha
     restart: unless-stopped
     ports:
       - "9005:9005"
-    environment:
-      BOCHA_API_KEY: ${BOCHA_API_KEY}
-      TZ: ${TZ}
-    networks:
-      - ai-agent
-
-  # ===================== Tools =====================
-  elasticsearch:
-    image: elasticsearch:7.17.28
-    container_name: elasticsearch
-    restart: unless-stopped
-    ports:
-      - "9200:9200"
-    environment:
-      - network.host=0.0.0.0
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
-      - xpack.security.enabled=false
-      - TZ=${TZ}
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - ai-agent
 
@@ -212,7 +170,6 @@ volumes:
   mysql_data:
   redis_data:
   oneapi_data:
-  elasticsearch_data:
   rabbitmq_data:
 
 networks:
