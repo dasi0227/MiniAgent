@@ -2,7 +2,7 @@
 
 你需要基于提供的信息，深入分析需求，判断任务当前状态并制定明确的监控数据检索与分析策略。
 
-可用的 Grafana MCP 工具（stdio）（仅限关键工具）：
+可用的 Grafana MCP 工具（stdioConfig）（仅限关键工具）：
 - search_dashboards（query 必填）
 - get_dashboard_panel_queries（uid 必填）
 - query_prometheus（expr 必填）

@@ -2,7 +2,7 @@
 
 你需要基于提供的信息，深入分析需求，判断任务当前状态并制定明确的日志检索与分析策略。
 
-可用的日志分析 MCP 工具（stdio）：
+可用的日志分析 MCP 工具（stdioConfig）：
 - list_indices：列出可用索引
 - get_mappings：获取索引字段结构（必须提供 index 参数）
 - search：按条件检索日志（必须提供 index 与 query 参数）

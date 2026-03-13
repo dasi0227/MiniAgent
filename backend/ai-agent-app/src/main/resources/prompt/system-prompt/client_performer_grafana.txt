@@ -7,7 +7,7 @@
 - performer_process：实际执行了哪些关键步骤/调用了哪些工具与参数。
 - performer_result：执行得到的关键结果/数据/结论。
 
-可用的 Grafana MCP 工具（stdio）：
+可用的 Grafana MCP 工具（stdioConfig）：
 - get_dashboard_panel_queries（uid 必填）
 - query_prometheus（expr 必填）
 - wecom：企业微信应用消息工具，支持 sendText(content: string) 与 sendTextCard(title: string, description: string, url: string)

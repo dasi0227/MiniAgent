@@ -256,7 +256,8 @@ export const useSettingsStore = defineStore('settings', {
 
 const defaultAgentSettings = () => ({
     maxRetry: 2,
-    maxRound: 2
+    maxRound: 2,
+    maxPace: 3
 });
 
 const loadAgentSettings = () => {
@@ -284,7 +285,8 @@ export const useAgentSettingsStore = defineStore('agentSettings', {
         persist() {
             const payload = {
                 maxRetry: this.maxRetry,
-                maxRound: this.maxRound
+                maxRound: this.maxRound,
+                maxPace: this.maxPace
             };
             localStorage.setItem(AGENT_SETTINGS_KEY, JSON.stringify(payload));
         },
@@ -648,6 +650,7 @@ export const useAgentStore = defineStore('agent', {
                 sectionType: payload.sectionType || '',
                 sectionContent: payload.sectionContent || '',
                 round: payload.round ?? null,
+                pace: payload.pace ?? null,
                 step: payload.step ?? null,
                 timestamp: payload.timestamp ?? null
             };

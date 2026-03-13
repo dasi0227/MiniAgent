@@ -1,11 +1,10 @@
 package com.dasi.trigger.interceptor;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.alibaba.fastjson2.JSON;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.user.model.vo.UserVO;
 import com.dasi.domain.util.jwt.IJwtUtil;
 import com.dasi.types.result.Result;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,9 +33,6 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Resource
     private UserContext userContext;
-
-    @Resource
-    private ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -97,7 +93,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private void writeResponse(HttpServletResponse response, int status, Result<Void> body) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+        response.getWriter().write(JSON.toJSONString(body));
     }
 
 }

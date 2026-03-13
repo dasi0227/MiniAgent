@@ -19,7 +19,6 @@ public class McpVO {
     private String mcpSecret;
     private String mcpDesc;
     private Integer mcpTimeout;
-    private Integer mcpChat;
     private Long mcpFrom;
     private String userName;
     private LocalDateTime createTime;

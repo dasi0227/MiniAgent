@@ -1,5 +1,6 @@
 package com.dasi.trigger.listener;
 
+import com.alibaba.fastjson2.JSON;
 import com.dasi.domain.util.jwt.UserContext;
 import com.dasi.domain.util.mq.IMqService;
 import com.dasi.domain.util.mq.MqEventDTO;
@@ -9,7 +10,6 @@ import com.dasi.domain.workspace.model.dto.AgentPublishDTO;
 import com.dasi.domain.workspace.model.dto.PlazaCommentDTO;
 import com.dasi.domain.workspace.service.IWorkspaceService;
 import com.dasi.types.exception.MissingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -23,9 +23,6 @@ import static com.dasi.types.constant.RedisConstant.WORKSPACE_MQ_PROCESSED_PREFI
 @Slf4j
 @Component
 public class WorkspaceMqMainListener {
-
-    @Resource
-    private ObjectMapper objectMapper;
 
     @Resource
     private IMqService mqService;
@@ -46,7 +43,7 @@ public class WorkspaceMqMainListener {
     public void onMessage(String message) {
         MqEventEntity event = null;
         try {
-            event = objectMapper.readValue(message, MqEventEntity.class);
+            event = JSON.parseObject(message, MqEventEntity.class);
             if (event == null || !StringUtils.hasText(event.getEventId()) || event.getEventType() == null) {
                 log.error("【Listener】无效消息体：message={}", message);
                 return;

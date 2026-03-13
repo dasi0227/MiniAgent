@@ -154,13 +154,11 @@ public class AugmentService implements IAugmentService {
                 }
                 case STDIO -> {
                     AiMcpVO.StdioConfig stdioConfig = aiMcpVO.getStdioConfig();
-                    Map<String, AiMcpVO.StdioConfig.Stdio> stdioMap = stdioConfig.getStdio();
-                    AiMcpVO.StdioConfig.Stdio stdio = stdioMap.get(aiMcpVO.getMcpId());
 
                     ServerParameters serverParameters = ServerParameters
-                            .builder(stdio.getCommand())
-                            .args(stdio.getArgs())
-                            .env(stdio.getEnv())
+                            .builder(stdioConfig.getCommand())
+                            .args(stdioConfig.getArgs())
+                            .env(stdioConfig.getEnv())
                             .build();
 
                     StdioClientTransport stdioClient = new StdioClientTransport(serverParameters);

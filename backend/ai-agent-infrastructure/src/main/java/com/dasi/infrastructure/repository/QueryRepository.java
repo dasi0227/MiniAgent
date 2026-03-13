@@ -67,6 +67,7 @@ public class QueryRepository implements IQueryRepository {
                 .filter(a -> a != null && Integer.valueOf(1).equals(a.getAgentStatus()))
                 .map(aiAgent -> QueryWorkAgentVO.builder()
                         .agentId(aiAgent.getAgentId())
+                        .agentType(aiAgent.getAgentType())
                         .agentName(aiAgent.getAgentName())
                         .agentDesc(aiAgent.getAgentDesc())
                         .build())
@@ -89,6 +90,7 @@ public class QueryRepository implements IQueryRepository {
                 .map(aiClient -> QueryChatClientVO.builder()
                         .clientId(aiClient.getClientId())
                         .modelName(aiClient.getModelName())
+                        .clientName(aiClient.getClientName())
                         .build())
                 .toList();
     }

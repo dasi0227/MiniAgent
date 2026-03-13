@@ -525,8 +525,7 @@ const formSchemas = {
             { prop: 'mcpParam', label: '配置', type: 'textarea', required: true },
             { prop: 'mcpSecret', label: '密钥', type: 'textarea' },
             { prop: 'mcpDesc', label: '描述', type: 'textarea', required: true },
-            { prop: 'mcpTimeout', label: '超时时间', type: 'number' },
-            { prop: 'mcpChat', label: '聊天可用', type: 'switch' }
+            { prop: 'mcpTimeout', label: '超时时间', type: 'number' }
         ],
         defaults: () => ({
             mcpId: '',
@@ -535,8 +534,7 @@ const formSchemas = {
             mcpParam: '',
             mcpSecret: '',
             mcpDesc: '',
-            mcpTimeout: 180,
-            mcpChat: 0
+            mcpTimeout: 180
         })
     }
 };
@@ -646,7 +644,6 @@ const openNodeModal = (node) => {
         if (!currentForm.mcpParam && payload.mcpConfig) {
             currentForm.mcpParam = payload.mcpConfig;
         }
-        currentForm.mcpChat = payload.mcpChat ?? 0;
     }
     prettifyCurrentFormJson();
     modalVisible.value = true;

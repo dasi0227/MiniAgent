@@ -1,5 +1,6 @@
 package com.dasi.infrastructure.util;
 
+import com.alibaba.fastjson2.JSON;
 import com.dasi.domain.util.jwt.UserContext.UserInfo;
 import com.dasi.domain.util.mq.IMqService;
 import com.dasi.domain.util.mq.MqEventDTO;
@@ -7,7 +8,6 @@ import com.dasi.domain.util.mq.MqEventEntity;
 import com.dasi.domain.util.mq.MqEventType;
 import com.dasi.domain.util.random.IRandomUtil;
 import com.dasi.types.exception.WorkException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -25,9 +25,6 @@ public class MqService implements IMqService {
 
     @Resource
     private RabbitTemplate rabbitTemplate;
-
-    @Resource
-    private ObjectMapper objectMapper;
 
     @Resource
     private IRandomUtil randomUtil;
@@ -80,7 +77,7 @@ public class MqService implements IMqService {
             throw new WorkException(ILLEGAL_DATA);
         }
         try {
-            return objectMapper.readValue(event.getPayload(), MqEventDTO.class);
+            return JSON.parseObject(event.getPayload(), MqEventDTO.class);
         } catch (Exception e) {
             log.error("【消息队列】解析 payload 失败：event={}", event, e);
             throw new WorkException(ILLEGAL_DATA);
@@ -89,7 +86,7 @@ public class MqService implements IMqService {
 
     private String toJson(Object value) {
         try {
-            return objectMapper.writeValueAsString(value);
+            return JSON.toJSONString(value);
         } catch (Exception e) {
             log.error("【消息队列】转换消息为 JSON 字符串出错：value={}", value, e);
             throw new WorkException(ILLEGAL_DATA);

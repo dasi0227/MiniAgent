@@ -13,6 +13,8 @@ public class QueryChatClientVO {
 
     private String clientId;
 
+    private String clientName;
+
     private String modelName;
 
 }

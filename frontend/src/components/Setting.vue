@@ -89,11 +89,22 @@ const MCP_TYPE_OPTIONS = [
     { value: 'stdio', label: 'STDIO' }
 ];
 const MCP_TYPE_SET = new Set(MCP_TYPE_OPTIONS.map((item) => item.value));
+const MCP_PARAM_TEMPLATE = {
+    sse: {
+        baseUri: '',
+        sseEndPoint: ''
+    },
+    stdio: {
+        command: '',
+        args: ['', ''],
+        env: {}
+    }
+};
 const mcpForm = reactive({
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
-    mcpParam: '{}',
+    mcpParam: '',
     mcpSecret: '{}'
 });
 const mcpCreateDialogOpen = ref(false);
@@ -108,7 +119,7 @@ const mcpDialogForm = reactive({
     mcpName: '',
     mcpType: '',
     mcpDesc: '',
-    mcpParam: '{}',
+    mcpParam: '',
     mcpSecret: '{}'
 });
 const mcpDialogParamFormatError = ref('');
@@ -389,6 +400,25 @@ const normalizeMcpTypeValue = (value) => {
     return MCP_TYPE_SET.has(normalized) ? normalized : '';
 };
 
+const getMcpParamTemplateText = (type) => {
+    const normalized = normalizeMcpTypeValue(type);
+    if (!normalized) return '{}';
+    return JSON.stringify(MCP_PARAM_TEMPLATE[normalized], null, 4);
+};
+
+const selectMcpType = (scope = 'form', type) => {
+    const normalized = normalizeMcpTypeValue(type);
+    if (!normalized) return;
+    const targetForm = scope === 'dialog' ? mcpDialogForm : mcpForm;
+    const targetParamError = scope === 'dialog' ? mcpDialogParamFormatError : mcpParamFormatError;
+    targetForm.mcpType = normalized;
+    const currentParam = String(targetForm.mcpParam || '').trim();
+    if (!currentParam) {
+        targetForm.mcpParam = getMcpParamTemplateText(normalized);
+    }
+    targetParamError.value = '';
+};
+
 const createMcpSecretRow = (key = '', value = '') => {
     const rowId = `mcp-secret-${Date.now()}-${mcpSecretRowIdSeed}`;
     mcpSecretRowIdSeed += 1;
@@ -505,7 +535,7 @@ const resetMcpForm = () => {
     mcpForm.mcpName = '';
     mcpForm.mcpType = '';
     mcpForm.mcpDesc = '';
-    mcpForm.mcpParam = '{}';
+    mcpForm.mcpParam = '';
     mcpForm.mcpSecret = '{}';
     mcpParamFormatError.value = '';
     mcpSecretTableError.value = '';
@@ -650,7 +680,7 @@ const openMcpDialog = (item) => {
     const normalizedType = normalizeMcpTypeValue(item.mcpType);
     mcpDialogForm.mcpType = normalizedType;
     mcpDialogForm.mcpDesc = item.mcpDesc || '';
-    mcpDialogForm.mcpParam = prettifyJsonForEditor(item.mcpParam, '{}');
+    mcpDialogForm.mcpParam = prettifyJsonForEditor(item.mcpParam, '');
     mcpDialogForm.mcpSecret = item.mcpSecret || '{}';
     mcpDialogSecretRows.value = parseMcpSecretRows(item.mcpSecret);
     if (!normalizedType && String(item.mcpType || '').trim()) {
@@ -1479,23 +1509,21 @@ onBeforeUnmount(() => {
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
-                        <div class="relative">
-                            <select
-                                v-model="mcpForm.mcpType"
-                                class="w-full appearance-none rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] pr-[34px] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                        <div class="flex flex-wrap gap-[8px]">
+                            <button
+                                v-for="option in MCP_TYPE_OPTIONS"
+                                :key="`create-mcp-type-${option.value}`"
+                                type="button"
+                                class="inline-flex min-h-[34px] items-center rounded-full border px-[14px] py-[7px] text-[12px] font-semibold transition"
+                                :class="
+                                    mcpForm.mcpType === option.value
+                                        ? 'border-[var(--accent-color)] bg-[rgba(47,124,246,0.12)] text-[var(--accent-color)]'
+                                        : 'border-[var(--border-color)] bg-white text-[var(--text-secondary)] hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]'
+                                "
+                                @click="selectMcpType('form', option.value)"
                             >
-                                <option value="" disabled>请选择 MCP 类型</option>
-                                <option v-for="option in MCP_TYPE_OPTIONS" :key="option.value" :value="option.value">
-                                    {{ option.label }}
-                                </option>
-                            </select>
-                            <svg class="pointer-events-none absolute right-[10px] top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--text-secondary)]" viewBox="0 0 20 20" fill="currentColor">
-                                <path
-                                    fill-rule="evenodd"
-                                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.113l3.71-3.884a.75.75 0 1 1 1.08 1.04l-4.25 4.45a.75.75 0 0 1-1.08 0l-4.25-4.45a.75.75 0 0 1 .02-1.06Z"
-                                    clip-rule="evenodd"
-                                />
-                            </svg>
+                                {{ option.label }}
+                            </button>
                         </div>
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
@@ -1779,23 +1807,21 @@ onBeforeUnmount(() => {
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">
                         <span class="pt-[10px] text-[var(--text-secondary)]">MCP 类型</span>
-                        <div class="relative">
-                            <select
-                                v-model="mcpDialogForm.mcpType"
-                                class="w-full appearance-none rounded-[10px] border border-[var(--border-color)] bg-white px-[10px] py-[10px] pr-[34px] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent-color)]"
+                        <div class="flex flex-wrap gap-[8px]">
+                            <button
+                                v-for="option in MCP_TYPE_OPTIONS"
+                                :key="`dialog-mcp-type-${option.value}`"
+                                type="button"
+                                class="inline-flex min-h-[34px] items-center rounded-full border px-[14px] py-[7px] text-[12px] font-semibold transition"
+                                :class="
+                                    mcpDialogForm.mcpType === option.value
+                                        ? 'border-[var(--accent-color)] bg-[rgba(47,124,246,0.12)] text-[var(--accent-color)]'
+                                        : 'border-[var(--border-color)] bg-white text-[var(--text-secondary)] hover:border-[var(--accent-color)] hover:text-[var(--accent-color)]'
+                                "
+                                @click="selectMcpType('dialog', option.value)"
                             >
-                                <option value="" disabled>请选择 MCP 类型</option>
-                                <option v-for="option in MCP_TYPE_OPTIONS" :key="option.value" :value="option.value">
-                                    {{ option.label }}
-                                </option>
-                            </select>
-                            <svg class="pointer-events-none absolute right-[10px] top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--text-secondary)]" viewBox="0 0 20 20" fill="currentColor">
-                                <path
-                                    fill-rule="evenodd"
-                                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.113l3.71-3.884a.75.75 0 1 1 1.08 1.04l-4.25 4.45a.75.75 0 0 1-1.08 0l-4.25-4.45a.75.75 0 0 1 .02-1.06Z"
-                                    clip-rule="evenodd"
-                                />
-                            </svg>
+                                {{ option.label }}
+                            </button>
                         </div>
                     </label>
                     <label class="grid items-start gap-[10px] text-[13px] md:grid-cols-[140px_1fr]">

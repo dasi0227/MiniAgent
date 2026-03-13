@@ -13,6 +13,8 @@ public class QueryWorkAgentVO {
 
     private String agentId;
 
+    private String agentType;
+
     private String agentName;
 
     private String agentDesc;

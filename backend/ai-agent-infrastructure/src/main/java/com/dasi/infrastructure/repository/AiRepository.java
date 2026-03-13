@@ -1,7 +1,6 @@
 package com.dasi.infrastructure.repository;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.dasi.domain.ai.model.enumeration.AiAdvisorType;
 import com.dasi.domain.ai.model.enumeration.AiMcpType;
 import com.dasi.domain.ai.model.vo.*;
@@ -11,7 +10,6 @@ import com.dasi.infrastructure.persistent.po.*;
 import com.dasi.types.annotation.Cacheable;
 import com.dasi.types.enumeration.CacheType;
 import com.dasi.types.exception.MissingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -260,15 +258,11 @@ public class AiRepository implements IAiRepository {
                 try {
                     switch (AiMcpType.fromString(aiMcp.getMcpType())) {
                         case SSE -> {
-                            ObjectMapper objectMapper = new ObjectMapper();
-                            AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpParam(), AiMcpVO.SseConfig.class);
+                            AiMcpVO.SseConfig sseConfig = JSON.parseObject(aiMcp.getMcpParam(), AiMcpVO.SseConfig.class);
                             aiMcpVO.setSseConfig(sseConfig);
                         }
                         case STDIO -> {
-                            Map<String, AiMcpVO.StdioConfig.Stdio> stdio = JSON.parseObject(aiMcp.getMcpParam(), new TypeReference<>() {
-                            });
-                            AiMcpVO.StdioConfig stdioConfig = new AiMcpVO.StdioConfig();
-                            stdioConfig.setStdio(stdio);
+                            AiMcpVO.StdioConfig stdioConfig = JSON.parseObject(aiMcp.getMcpParam(), AiMcpVO.StdioConfig.class);
                             aiMcpVO.setStdioConfig(stdioConfig);
                         }
                     }
@@ -421,15 +415,11 @@ public class AiRepository implements IAiRepository {
             try {
                 switch (AiMcpType.fromString(aiMcp.getMcpType())) {
                     case SSE -> {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        AiMcpVO.SseConfig sseConfig = objectMapper.readValue(aiMcp.getMcpParam(), AiMcpVO.SseConfig.class);
+                        AiMcpVO.SseConfig sseConfig = JSON.parseObject(aiMcp.getMcpParam(), AiMcpVO.SseConfig.class);
                         aiMcpVO.setSseConfig(sseConfig);
                     }
                     case STDIO -> {
-                        Map<String, AiMcpVO.StdioConfig.Stdio> stdio = JSON.parseObject(aiMcp.getMcpParam(), new TypeReference<>() {
-                        });
-                        AiMcpVO.StdioConfig stdioConfig = new AiMcpVO.StdioConfig();
-                        stdioConfig.setStdio(stdio);
+                        AiMcpVO.StdioConfig stdioConfig = JSON.parseObject(aiMcp.getMcpParam(), AiMcpVO.StdioConfig.class);
                         aiMcpVO.setStdioConfig(stdioConfig);
                     }
                 }

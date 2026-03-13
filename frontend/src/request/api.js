@@ -73,7 +73,7 @@ const ADMIN_PAGE_PAYLOAD_FIELDS = {
 const ADMIN_MANAGE_PAYLOAD_FIELDS = {
     api: ['apiId', 'apiBaseUrl', 'apiKey', 'apiCompletionsPath', 'apiEmbeddingsPath'],
     model: ['modelId', 'apiId', 'modelName', 'modelType'],
-    mcp: ['mcpId', 'mcpName', 'mcpType', 'mcpDesc', 'mcpParam', 'mcpSecret', 'mcpTimeout', 'mcpChat'],
+    mcp: ['mcpId', 'mcpName', 'mcpType', 'mcpDesc', 'mcpParam', 'mcpSecret', 'mcpTimeout'],
     advisor: ['advisorId', 'advisorName', 'advisorType', 'advisorParam'],
     prompt: ['promptId', 'promptName', 'systenPrompt'],
     client: ['clientId', 'clientType', 'clientRole', 'modelId', 'modelName', 'clientName', 'clientStatus'],
@@ -232,7 +232,6 @@ const normalizeAdminPayload = (moduleKey, payload = {}, scene = 'manage') => {
             normalized.mcpDesc = '暂无描述';
         }
         normalized.mcpTimeout = normalizeNumber(normalized.mcpTimeout, 180);
-        normalized.mcpChat = normalizeNumber(normalized.mcpChat, 0);
     }
 
     if (moduleKey === 'client') {
@@ -318,7 +317,6 @@ const normalizeAdminItem = (moduleKey, item = {}) => {
             ...item,
             mcpDesc: item.mcpDesc || '暂无描述',
             mcpTimeout: item.mcpTimeout ?? 180,
-            mcpChat: item.mcpChat ?? 0,
             mcpParam: prettifyJsonString(item.mcpParam || item.mcpConfig || ''),
             mcpSecret: prettifyJsonString(item.mcpSecret || '')
         };
@@ -612,6 +610,10 @@ export const executeAgentStream = async ({
     const url = AGENT_EXECUTE_PATH;
     const resolvedAgentId = (agentId || aiAgentId || '').trim();
     const resolvedAgentDesc = (agentDesc || '').trim() || '暂无';
+    const normalizedMaxPace = Number(maxPace);
+    const clampedMaxPace = Number.isFinite(normalizedMaxPace)
+        ? Math.min(5, Math.max(3, Math.floor(normalizedMaxPace)))
+        : 3;
     return streamFetch(
         url,
         {
@@ -621,7 +623,7 @@ export const executeAgentStream = async ({
             sessionId,
             maxRound,
             maxRetry,
-            maxPace: Number(maxPace) > 0 ? Number(maxPace) : 1
+            maxPace: clampedMaxPace
         },
         onData,
         onError,

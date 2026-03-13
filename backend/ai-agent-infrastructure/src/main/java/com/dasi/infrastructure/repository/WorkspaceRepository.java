@@ -729,7 +729,6 @@ public class WorkspaceRepository implements IWorkspaceRepository {
                     .mcpParam(mcpInfo.getMcpParam())
                     .mcpSecret(mcpSecret)
                     .mcpTimeout(180)
-                    .mcpChat(0)
                     .mcpFrom(userId)
                     .mcpDesc(mcpInfo.getMcpDesc())
                     .build());

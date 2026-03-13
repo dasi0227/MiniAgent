@@ -11,7 +11,6 @@
         <result column="mcp_secret" property="mcpSecret"/>
         <result column="mcp_desc" property="mcpDesc"/>
         <result column="mcp_timeout" property="mcpTimeout"/>
-        <result column="mcp_chat" property="mcpChat"/>
         <result column="mcp_from" property="mcpFrom"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -26,7 +25,6 @@
                mcp_secret,
                mcp_desc,
                mcp_timeout,
-               mcp_chat,
                mcp_from,
                create_time,
                update_time
@@ -43,12 +41,11 @@
                mcp_secret,
                mcp_desc,
                mcp_timeout,
-               mcp_chat,
                mcp_from,
                create_time,
                update_time
         FROM ai_mcp
-        WHERE mcp_chat = 1 AND mcp_id IN
+        WHERE mcp_id IN
         <foreach collection="mcpIdList" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
@@ -63,13 +60,11 @@
                mcp_secret,
                mcp_desc,
                mcp_timeout,
-               mcp_chat,
                mcp_from,
                create_time,
                update_time
         FROM ai_mcp
-        WHERE mcp_chat = 1
-          AND mcp_from = #{userId}
+        WHERE mcp_from = #{userId}
     </select>
 
     <select id="page" resultMap="dataMap">
@@ -81,7 +76,6 @@
                mcp_secret,
                mcp_desc,
                mcp_timeout,
-               mcp_chat,
                mcp_from,
                create_time,
                update_time
@@ -130,7 +124,6 @@
                             mcp_secret,
                             mcp_desc,
                             mcp_timeout,
-                            mcp_chat,
                             mcp_from)
         VALUES (#{mcpId},
                 #{mcpName},
@@ -139,7 +132,6 @@
                 #{mcpSecret},
                 #{mcpDesc},
                 #{mcpTimeout},
-                #{mcpChat},
                 #{mcpFrom})
     </insert>
 
@@ -153,7 +145,6 @@
             <if test="mcpSecret != null">mcp_secret = #{mcpSecret},</if>
             <if test="mcpDesc != null">mcp_desc = #{mcpDesc},</if>
             <if test="mcpTimeout != null">mcp_timeout = #{mcpTimeout},</if>
-            <if test="mcpChat != null">mcp_chat = #{mcpChat},</if>
         </set>
         WHERE id = #{id}
     </update>
@@ -167,7 +158,6 @@
                mcp_secret,
                mcp_desc,
                mcp_timeout,
-               mcp_chat,
                mcp_from,
                create_time,
                update_time

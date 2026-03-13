@@ -220,8 +220,7 @@ const moduleDefs = [
             mcpParam: '',
             mcpSecret: '',
             mcpDesc: '',
-            mcpTimeout: 180,
-            mcpChat: 0
+            mcpTimeout: 180
         }),
         fields: [
             { prop: 'mcpId', label: 'MCP ID', required: true },
@@ -230,8 +229,7 @@ const moduleDefs = [
             { prop: 'mcpParam', label: '配置', type: 'textarea', required: true, placeholder: 'JSON' },
             { prop: 'mcpSecret', label: '密钥', type: 'textarea', placeholder: 'JSON' },
             { prop: 'mcpDesc', label: '描述', type: 'textarea', required: true },
-            { prop: 'mcpTimeout', label: '超时时间', type: 'number' },
-            { prop: 'mcpChat', label: '聊天可用', type: 'switch' }
+            { prop: 'mcpTimeout', label: '超时时间', type: 'number' }
         ],
         listColumns: [
             { prop: 'mcpId', label: 'ID', width: 220 },

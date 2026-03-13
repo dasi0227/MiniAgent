@@ -1139,7 +1139,6 @@ public class AdminRepository implements IAdminRepository {
                 .mcpSecret(po.getMcpSecret())
                 .mcpDesc(po.getMcpDesc())
                 .mcpTimeout(po.getMcpTimeout())
-                .mcpChat(po.getMcpChat())
                 .mcpFrom(po.getMcpFrom())
                 .userName(resolveUserName(po.getMcpFrom()))
                 .createTime(po.getCreateTime())
@@ -1156,7 +1155,6 @@ public class AdminRepository implements IAdminRepository {
                 .mcpSecret(dto.getMcpSecret())
                 .mcpDesc(dto.getMcpDesc())
                 .mcpTimeout(dto.getMcpTimeout())
-                .mcpChat(dto.getMcpChat())
                 .mcpFrom(0L)
                 .build();
     }

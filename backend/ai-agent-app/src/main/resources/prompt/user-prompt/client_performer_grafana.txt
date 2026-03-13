@@ -2,7 +2,7 @@
 
 你需要基于提供的信息，根据用户需求和任务分析专家的输出，调用 Grafana MCP 工具完成监控数据检索与结果整理。
 
-可用的 Grafana MCP 工具（stdio）（仅限关键工具）：
+可用的 Grafana MCP 工具（stdioConfig）（仅限关键工具）：
 - search_dashboards（query 必填）
 - get_dashboard_panel_queries（uid 必填）
 - query_prometheus（expr 必填）

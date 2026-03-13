@@ -17,13 +17,15 @@ import {
 import { normalizeError, notifyAppError } from '../request/request';
 import { formatMcpJson } from '../utils/StringUtil';
 import { areCardListsEqual, areMessageListsEqual, createStableRecordId, toSafeTimestamp } from '../utils/MessageRenderUtil';
-import { useAgentSettingsStore, useAgentStore, useChatStore, useWelcomeLaunchStore } from '../router/pinia';
+import { useAgentSettingsStore, useAgentStore, useChatStore, useSettingsStore, useWelcomeLaunchStore } from '../router/pinia';
+import { getStrategyTone } from '../utils/StrategyTone';
 import Footer from './Footer.vue';
 
 const router = useRouter();
 const agentStore = useAgentStore();
 const chatStore = useChatStore();
 const settingsStore = useAgentSettingsStore();
+const uiSettingsStore = useSettingsStore();
 const welcomeLaunchStore = useWelcomeLaunchStore();
 
 const agentOptions = ref([]);
@@ -44,8 +46,15 @@ let autoRefreshTimer = null;
 
 const settingsForm = reactive({
     maxRetry: settingsStore.maxRetry,
-    maxRound: settingsStore.maxRound
+    maxRound: settingsStore.maxRound,
+    maxPace: settingsStore.maxPace
 });
+
+const OVERVIEW_SECTION_TYPES = new Set(['summarizer_overview', 'replier_overview', 'evaluator_overview']);
+const resolveAgentType = (value) => {
+    const normalized = (value || '').toString().trim().toLowerCase();
+    return normalized === 'step' || normalized === 'loop' || normalized === 'react' ? normalized : '';
+};
 
 const pickData = (resp, message = '操作失败') => {
     if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
@@ -161,13 +170,14 @@ const mapCard = (message, sessionId = '', seenMap = new Map()) => {
             sourceId: message?.messageSeq || payload?.id || message?.id,
             sessionId,
             prefix: 'card',
-            signatureParts: [createTime, payload.sectionType, payload.sectionContent, payload.round, payload.step, payload.timestamp],
+            signatureParts: [createTime, payload.sectionType, payload.sectionContent, payload.round, payload.pace, payload.step, payload.timestamp],
             seenMap
         }),
         clientType: payload.clientType || '',
         sectionType: payload.sectionType || '',
         sectionContent: payload.sectionContent || '',
         round: payload.round ?? null,
+        pace: payload.pace ?? null,
         step: payload.step ?? null,
         timestamp: payload.timestamp ?? null
     };
@@ -226,6 +236,30 @@ const currentAgentLabel = computed(() => {
     return match?.label || currentAgentId.value;
 });
 
+const currentAgentType = computed(() => {
+    if (!currentAgentId.value) return '';
+    const match = agentOptions.value.find((item) => item.value === currentAgentId.value);
+    return resolveAgentType(match?.agentType || '');
+});
+
+const isReactAgent = computed(() => currentAgentType.value === 'react');
+const isDarkTheme = computed(() => uiSettingsStore.theme === 'dark');
+const currentAgentTone = computed(() => getStrategyTone(currentAgentType.value || 'react', isDarkTheme.value));
+const currentAgentTypeLabel = computed(() => (currentAgentType.value || '').toUpperCase());
+const getStrategyBadgeStyle = (strategy) => {
+    const tone = getStrategyTone(strategy, isDarkTheme.value);
+    return {
+        borderColor: tone.badgeBorder,
+        backgroundColor: tone.badgeBg,
+        color: tone.badgeText
+    };
+};
+const currentAgentDesc = computed(() => {
+    if (!currentAgentId.value) return '';
+    const match = agentOptions.value.find((item) => item.value === currentAgentId.value);
+    return (match?.desc || '').trim() || '暂无描述';
+});
+
 const fetchAgents = async () => {
     try {
         const resp = await queryAgentList();
@@ -236,8 +270,9 @@ const fetchAgents = async () => {
                 const agentId = item.agentId || '';
                 const agentName = item.agentName || item.name || agentId;
                 const agentDesc = item.agentDesc || item.desc || '';
+                const agentType = resolveAgentType(item.agentType || item.type || '');
                 if (!agentId) return null;
-                return { label: agentName || agentId, value: agentId, desc: agentDesc };
+                return { label: agentName || agentId, value: agentId, desc: agentDesc, agentType };
             })
             .filter(Boolean);
         const seen = new Set();
@@ -315,10 +350,7 @@ const loadWorkMessages = async (sessionId, options = {}) => {
         const messageSeenMap = new Map();
         const mappedCards = (Array.isArray(sseList) ? sseList : [])
             .map((item) => mapCard(item, sessionId, cardSeenMap))
-            .filter(
-                (card) =>
-                    card.sectionType !== 'summarizer_overview' && card.sectionType !== 'replier_overview'
-            );
+            .filter((card) => !OVERVIEW_SECTION_TYPES.has(card.sectionType));
         const mappedMessages = (Array.isArray(answerList) ? answerList : []).map((item) => mapMessage(item, sessionId, messageSeenMap));
         if (sessionId) {
             const existingSession = agentStore.sessions.find((item) => item.sessionId === sessionId);
@@ -496,20 +528,29 @@ const handleKeydown = (event) => {
 const openSettings = () => {
     settingsForm.maxRetry = settingsStore.maxRetry;
     settingsForm.maxRound = settingsStore.maxRound;
+    settingsForm.maxPace = settingsStore.maxPace;
     showSettings.value = true;
+};
+
+const clampNumber = (value, min, max, fallback = min) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    return Math.min(max, Math.max(min, Math.floor(num)));
 };
 
 const saveSettings = () => {
     settingsStore.updateSettings({
-        maxRetry: Number(settingsForm.maxRetry) || 2,
-        maxRound: Number(settingsForm.maxRound) || 2
+        maxRetry: clampNumber(settingsForm.maxRetry, 1, 3, 2),
+        maxRound: clampNumber(settingsForm.maxRound, 1, 3, 2),
+        maxPace: clampNumber(settingsForm.maxPace, 3, 5, 3)
     });
     showSettings.value = false;
 };
 
-const rangeStyle = (value) => {
-    const clamped = Math.min(3, Math.max(1, Number(value) || 1));
-    const percent = ((clamped - 1) / 2) * 100;
+const rangeStyle = (value, min = 1, max = 3) => {
+    const clamped = clampNumber(value, min, max, min);
+    const denominator = Math.max(1, max - min);
+    const percent = ((clamped - min) / denominator) * 100;
     return {
         background: `linear-gradient(90deg, var(--accent-color) ${percent}%, var(--progress-track) ${percent}%)`
     };
@@ -527,7 +568,7 @@ const buildExecutePayload = (userMessage, sessionId, agentId) => ({
     sessionId,
     maxRound: settingsStore.maxRound,
     maxRetry: settingsStore.maxRetry,
-    maxPace: 1
+    maxPace: clampNumber(settingsStore.maxPace, 3, 5, 3)
 });
 
 const sendMessage = async (options = {}) => {
@@ -576,7 +617,8 @@ const runExecute = async (content, controller, sessionId, agentId) => {
         const reversed = [...events].reverse();
         const summarizerEvent = reversed.find((item) => item?.sectionType === 'summarizer_overview');
         const replierEvent = reversed.find((item) => item?.sectionType === 'replier_overview');
-        const answer = summarizerEvent?.sectionContent || replierEvent?.sectionContent || '';
+        const evaluatorEvent = reversed.find((item) => item?.sectionType === 'evaluator_overview');
+        const answer = summarizerEvent?.sectionContent || replierEvent?.sectionContent || evaluatorEvent?.sectionContent || '';
         agentStore.updateAssistantMessage(assistantMessage.id, {
             content: answer || '（无内容）',
             pending: false,
@@ -616,16 +658,12 @@ const runExecute = async (content, controller, sessionId, agentId) => {
                     sectionType: payload.sectionType || '',
                     sectionContent: payload.sectionContent || '',
                     round: payload.round ?? null,
+                    pace: payload.pace ?? null,
                     step: payload.step ?? null,
                     timestamp: payload.timestamp ?? null
                 };
                 events.push(event);
-                if (
-                    !(
-                        event.sectionType === 'summarizer_overview' ||
-                        event.sectionType === 'replier_overview'
-                    )
-                ) {
+                if (!OVERVIEW_SECTION_TYPES.has(event.sectionType)) {
                     agentStore.addCard(event);
                 }
                 if (isLeftAtBottom.value) scrollLeftToBottom(true);
@@ -788,6 +826,32 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
                         </div>
+                        <div v-if="currentAgentTypeLabel" class="inline-flex items-center gap-[8px]">
+                            <span
+                                class="inline-flex h-[28px] items-center rounded-full border px-[12px] text-[12px] font-bold uppercase tracking-[0.08em]"
+                                :style="{
+                                    borderColor: currentAgentTone.badgeBorder,
+                                    backgroundColor: currentAgentTone.badgeBg,
+                                    color: currentAgentTone.badgeText
+                                }"
+                            >
+                                {{ currentAgentTypeLabel }}
+                            </span>
+                            <div class="group relative inline-flex items-center">
+                                <button
+                                    type="button"
+                                    class="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full border border-[rgba(148,163,184,0.55)] bg-[rgba(148,163,184,0.14)] text-[12px] font-bold text-[#94a3b8] transition-colors duration-150 hover:border-[rgba(148,163,184,0.78)] hover:bg-[rgba(148,163,184,0.2)]"
+                                    aria-label="查看智能体描述"
+                                >
+                                    ?
+                                </button>
+                                <div
+                                    class="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] z-[20] w-[260px] -translate-x-1/2 rounded-[10px] border border-[var(--border-color)] bg-[var(--surface-1)] px-[10px] py-[8px] text-[12px] leading-[1.5] text-[var(--text-secondary)] opacity-0 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                                >
+                                    {{ currentAgentDesc }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -833,7 +897,13 @@ onBeforeUnmount(() => {
                                     round: {{ card.round }}
                                 </span>
                                 <span
-                                    v-if="card.step !== null && card.step !== undefined"
+                                    v-if="isReactAgent && card.pace !== null && card.pace !== undefined"
+                                    class="rounded-full border border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.12)] px-[10px] py-[2px] text-[12px] font-semibold text-[#f59e0b]"
+                                >
+                                    pace: {{ card.pace }}
+                                </span>
+                                <span
+                                    v-if="!isReactAgent && card.step !== null && card.step !== undefined"
                                     class="rounded-full border border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.12)] px-[10px] py-[2px] text-[12px] font-semibold text-[#f59e0b]"
                                 >
                                     step: {{ card.step }}
@@ -956,7 +1026,15 @@ onBeforeUnmount(() => {
                 </div>
                 <div class="flex flex-col gap-[14px] px-[18px] py-[14px]">
                     <div class="flex flex-col gap-[8px]">
-                        <label class="font-semibold text-[var(--text-primary)]">maxRetry（最多重试）</label>
+                        <div class="inline-flex items-center gap-[8px]">
+                            <label class="font-semibold text-[var(--text-primary)]">maxRetry / 最多重试</label>
+                            <span
+                                class="inline-flex h-[24px] items-center rounded-full border px-[10px] text-[11px] font-bold uppercase tracking-[0.08em]"
+                                :style="getStrategyBadgeStyle('step')"
+                            >
+                                STEP
+                            </span>
+                        </div>
                         <div class="flex flex-col gap-[10px]">
                             <input
                                 v-model.number="settingsForm.maxRetry"
@@ -965,7 +1043,7 @@ onBeforeUnmount(() => {
                                 max="3"
                                 step="1"
                                 class="h-[6px] w-full cursor-pointer appearance-none rounded-full bg-[var(--progress-track)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent-color)] [&::-webkit-slider-thumb]:shadow-[0_6px_14px_rgba(47,124,246,0.35)] [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[var(--accent-color)]"
-                                :style="rangeStyle(settingsForm.maxRetry)"
+                                :style="rangeStyle(settingsForm.maxRetry, 1, 3)"
                             />
                             <div class="flex items-center justify-between px-[2px]">
                                 <div v-for="value in [1, 2, 3]" :key="`retry-dot-${value}`" class="flex flex-col items-center gap-[6px]">
@@ -984,7 +1062,15 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
                     <div class="flex flex-col gap-[8px]">
-                        <label class="font-semibold text-[var(--text-primary)]">maxRound（最大轮次）</label>
+                        <div class="inline-flex items-center gap-[8px]">
+                            <label class="font-semibold text-[var(--text-primary)]">maxRound / 最大轮次</label>
+                            <span
+                                class="inline-flex h-[24px] items-center rounded-full border px-[10px] text-[11px] font-bold uppercase tracking-[0.08em]"
+                                :style="getStrategyBadgeStyle('loop')"
+                            >
+                                LOOP
+                            </span>
+                        </div>
                         <div class="flex flex-col gap-[10px]">
                             <input
                                 v-model.number="settingsForm.maxRound"
@@ -993,7 +1079,7 @@ onBeforeUnmount(() => {
                                 max="3"
                                 step="1"
                                 class="h-[6px] w-full cursor-pointer appearance-none rounded-full bg-[var(--progress-track)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent-color)] [&::-webkit-slider-thumb]:shadow-[0_6px_14px_rgba(47,124,246,0.35)] [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[var(--accent-color)]"
-                                :style="rangeStyle(settingsForm.maxRound)"
+                                :style="rangeStyle(settingsForm.maxRound, 1, 3)"
                             />
                             <div class="flex items-center justify-between px-[2px]">
                                 <div v-for="value in [1, 2, 3]" :key="`round-dot-${value}`" class="flex flex-col items-center gap-[6px]">
@@ -1004,6 +1090,42 @@ onBeforeUnmount(() => {
                                     <span
                                         class="text-[12px]"
                                         :class="settingsForm.maxRound === value ? 'text-[var(--accent-color)] font-semibold' : 'text-[var(--text-secondary)]'"
+                                    >
+                                        {{ value }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-[8px]">
+                        <div class="inline-flex items-center gap-[8px]">
+                            <label class="font-semibold text-[var(--text-primary)]">maxPace / 最大步伐</label>
+                            <span
+                                class="inline-flex h-[24px] items-center rounded-full border px-[10px] text-[11px] font-bold uppercase tracking-[0.08em]"
+                                :style="getStrategyBadgeStyle('react')"
+                            >
+                                REACT
+                            </span>
+                        </div>
+                        <div class="flex flex-col gap-[10px]">
+                            <input
+                                v-model.number="settingsForm.maxPace"
+                                type="range"
+                                min="3"
+                                max="5"
+                                step="1"
+                                class="h-[6px] w-full cursor-pointer appearance-none rounded-full bg-[var(--progress-track)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent-color)] [&::-webkit-slider-thumb]:shadow-[0_6px_14px_rgba(47,124,246,0.35)] [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[var(--accent-color)]"
+                                :style="rangeStyle(settingsForm.maxPace, 3, 5)"
+                            />
+                            <div class="flex items-center justify-between px-[2px]">
+                                <div v-for="value in [3, 4, 5]" :key="`pace-dot-${value}`" class="flex flex-col items-center gap-[6px]">
+                                    <span
+                                        class="h-[8px] w-[8px] rounded-full"
+                                        :class="value === settingsForm.maxPace ? 'bg-[var(--accent-color)]' : 'bg-[#cbd5e1]'"
+                                    ></span>
+                                    <span
+                                        class="text-[12px]"
+                                        :class="settingsForm.maxPace === value ? 'text-[var(--accent-color)] font-semibold' : 'text-[var(--text-secondary)]'"
                                     >
                                         {{ value }}
                                     </span>

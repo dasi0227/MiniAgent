@@ -33,7 +33,4 @@ public class McpManageDTO {
     @NotNull
     private Integer mcpTimeout;
 
-    @NotNull
-    private Integer mcpChat;
-
 }

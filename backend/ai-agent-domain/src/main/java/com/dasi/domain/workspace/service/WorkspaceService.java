@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static com.dasi.domain.workspace.model.enumeration.PromptType.SYSTEM_PROMPT;
@@ -260,7 +261,7 @@ public class WorkspaceService implements IWorkspaceService {
                     .clientRole(clientRole)
                     .flowSeq(roleType.getFlowSeq())
                     .systemPrompt(systemPrompt)
-                    .userPrompt(userPrompt.formatted(roleConstraint))
+                    .userPrompt(userPrompt.replaceFirst("%s", Matcher.quoteReplacement(roleConstraint)))
                     .build();
             rolePromptEntityList.add(rolePromptEntity);
         }

@@ -299,7 +299,6 @@ public class UserRepository implements IUserRepository {
                 .mcpSecret(dto.getMcpSecret())
                 .mcpDesc(dto.getMcpDesc())
                 .mcpTimeout(180)
-                .mcpChat(0)
                 .mcpFrom(userId)
                 .build();
         mcpDao.insert(aiMcp);

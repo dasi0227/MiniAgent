@@ -52,15 +52,9 @@ public class AiMcpVO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class StdioConfig {
-
-        private Map<String, Stdio> stdio;
-
-        @Data
-        public static class Stdio {
-            private String command;
-            private List<String> args;
-            private Map<String, String> env;
-        }
+        private String command;
+        private List<String> args;
+        private Map<String, String> env;
     }
 
 }

@@ -20,7 +20,6 @@ import org.springframework.util.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
-import java.util.Map;
 import java.util.Set;
 
 import static com.dasi.domain.ai.model.enumeration.AiType.MCP;
@@ -81,13 +80,11 @@ public class ArmoryMcpNode extends AbstractArmoryNode {
                 }
                 case STDIO -> {
                     AiMcpVO.StdioConfig stdioConfig = aiMcpVO.getStdioConfig();
-                    Map<String, AiMcpVO.StdioConfig.Stdio> stdioMap = stdioConfig.getStdio();
-                    AiMcpVO.StdioConfig.Stdio stdio = stdioMap.get(aiMcpVO.getMcpId());
 
                     ServerParameters serverParameters = ServerParameters
-                            .builder(stdio.getCommand())
-                            .args(stdio.getArgs())
-                            .env(stdio.getEnv())
+                            .builder(stdioConfig.getCommand())
+                            .args(stdioConfig.getArgs())
+                            .env(stdioConfig.getEnv())
                             .build();
 
                     StdioClientTransport stdioClient = new StdioClientTransport(serverParameters);

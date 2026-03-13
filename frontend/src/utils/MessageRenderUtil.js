@@ -63,6 +63,7 @@ export const areCardListsEqual = (prevList = [], nextList = []) => {
             toText(prev.sectionType) !== toText(next.sectionType) ||
             toText(prev.sectionContent) !== toText(next.sectionContent) ||
             toText(prev.round) !== toText(next.round) ||
+            toText(prev.pace) !== toText(next.pace) ||
             toText(prev.step) !== toText(next.step) ||
             toText(prev.timestamp) !== toText(next.timestamp)
         ) {
