@@ -187,6 +187,26 @@ const mapResultData = (resp, mapper) => {
     return mapper(resp);
 };
 
+const resolveRequestConfig = (options = {}) => {
+    if (!options || typeof options !== 'object') return {};
+    const requestConfig = options.requestConfig && typeof options.requestConfig === 'object' ? { ...options.requestConfig } : {};
+    if (options.toast === false) {
+        requestConfig.toast = false;
+    }
+    return requestConfig;
+};
+
+const buildParamsConfig = (params = {}, options = {}) => {
+    const requestConfig = resolveRequestConfig(options);
+    return {
+        ...requestConfig,
+        params: {
+            ...(requestConfig.params || {}),
+            ...params
+        }
+    };
+};
+
 const normalizeAdminPayload = (moduleKey, payload = {}, scene = 'manage') => {
     const source = trimStrings(payload);
     if (!source || typeof source !== 'object') {
@@ -668,15 +688,15 @@ export const updatePassword = async ({ username, userName, oldPassword, newPassw
 };
 
 // -------------------- Session --------------------
-export const listSessions = async () => http.post(SESSION_LIST_PATH);
+export const listSessions = async (options = {}) => http.post(SESSION_LIST_PATH, null, resolveRequestConfig(options));
 
 export const listAdminSessions = async () => http.post(SESSION_ADMIN_LIST_PATH);
 
-export const insertSession = async ({ sessionTitle, sessionType }) =>
-    http.post(SESSION_INSERT_PATH, null, { params: trimStrings({ sessionTitle, sessionType }) });
+export const insertSession = async ({ sessionTitle, sessionType }, options = {}) =>
+    http.post(SESSION_INSERT_PATH, null, buildParamsConfig(trimStrings({ sessionTitle, sessionType }), options));
 
-export const updateSession = async ({ sessionId, sessionTitle }) =>
-    http.post(SESSION_UPDATE_PATH, null, { params: trimStrings({ sessionId, sessionTitle }) });
+export const updateSession = async ({ sessionId, sessionTitle }, options = {}) =>
+    http.post(SESSION_UPDATE_PATH, null, buildParamsConfig(trimStrings({ sessionId, sessionTitle }), options));
 
 export const deleteSession = async ({ sessionId }) =>
     http.post(SESSION_DELETE_PATH, null, { params: { sessionId } });

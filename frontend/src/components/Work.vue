@@ -96,15 +96,15 @@ const isInvalidSessionErrorMessage = (message) => {
     );
 };
 
-const listRemoteWorkSessions = async () => {
-    const resp = await listSessions();
+const listRemoteWorkSessions = async (options = {}) => {
+    const resp = await listSessions(options);
     const list = pickData(resp, '获取会话失败') || [];
     const mapped = (Array.isArray(list) ? list : []).map(mapSession).filter(Boolean);
     return mapped.filter((item) => item.sessionType === 'work');
 };
 
-const refreshWorkSessions = async () => {
-    const workList = await listRemoteWorkSessions();
+const refreshWorkSessions = async (options = {}) => {
+    const workList = await listRemoteWorkSessions(options);
     agentStore.setSessions(workList);
     return workList;
 };
@@ -119,10 +119,11 @@ const dropInvalidWorkSession = (sessionId = agentStore.currentSessionId) => {
     sendError.value = SESSION_INVALID_HINT;
 };
 
-const ensureWorkSessionValid = async (session) => {
+const ensureWorkSessionValid = async (session, options = {}) => {
     if (!session?.sessionId) return null;
+    const silentToast = Boolean(options.silentToast);
     try {
-        const workList = await listRemoteWorkSessions();
+        const workList = await listRemoteWorkSessions(silentToast ? { toast: false } : {});
         const matched = workList.find((item) => item.sessionId === session.sessionId);
         if (!matched) {
             dropInvalidWorkSession(session.sessionId);
@@ -130,7 +131,11 @@ const ensureWorkSessionValid = async (session) => {
         }
         return matched;
     } catch (error) {
-        notifyAppError(error, '获取会话失败');
+        if (silentToast) {
+            sendError.value = normalizeError(error).message || '获取会话失败';
+        } else {
+            notifyAppError(error, '获取会话失败');
+        }
         return null;
     }
 };
@@ -377,7 +382,7 @@ const loadWorkMessages = async (sessionId, options = {}) => {
     }
 };
 
-const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话' } = {}) => {
+const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话', silentToast = false } = {}) => {
     if (!forceNew && agentStore.currentSession) {
         if (!agentStore.currentSessionId && agentStore.currentSession?.sessionId) {
             agentStore.setCurrentSessionId(agentStore.currentSession.sessionId);
@@ -385,7 +390,10 @@ const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话' 
         return agentStore.currentSession;
     }
     try {
-        const resp = await insertSession({ sessionTitle: sessionTitle || '新会话', sessionType: 'work' });
+        const resp = await insertSession(
+            { sessionTitle: sessionTitle || '新会话', sessionType: 'work' },
+            silentToast ? { toast: false } : {}
+        );
         const created = mapSession(pickData(resp, '创建会话失败'));
         if (created) {
             agentStore.upsertSession(created);
@@ -398,26 +406,33 @@ const ensureWorkSession = async ({ forceNew = false, sessionTitle = '新会话' 
             }
             return created;
         }
-        const workList = await refreshWorkSessions();
+        const workList = await refreshWorkSessions(silentToast ? { toast: false } : {});
         const session = workList[0] || null;
         if (!session) return null;
         agentStore.setCurrentSessionId(session.sessionId);
         return session;
     } catch (error) {
-        notifyAppError(error, '创建会话失败');
+        if (silentToast) {
+            sendError.value = normalizeError(error).message || '创建会话失败';
+        } else {
+            notifyAppError(error, '创建会话失败');
+        }
         return null;
     }
 };
 
-const renameSessionIfNeeded = async (session, content) => {
+const renameSessionIfNeeded = async (session, content, options = {}) => {
     if (!session) return;
     if (session.title && session.title !== '新会话') return;
+    const silentToast = Boolean(options.silentToast);
     const nextTitle = content.slice(0, 20) || '新会话';
     agentStore.updateSessionTitle(session.sessionId, nextTitle);
     try {
-        await updateSession({ sessionId: session.sessionId, sessionTitle: nextTitle });
+        await updateSession({ sessionId: session.sessionId, sessionTitle: nextTitle }, silentToast ? { toast: false } : {});
     } catch (error) {
-        notifyAppError(error, '更新会话失败');
+        if (!silentToast) {
+            notifyAppError(error, '更新会话失败');
+        }
     }
 };
 
@@ -579,10 +594,11 @@ const sendMessage = async (options = {}) => {
     sendError.value = '';
     const session = await ensureWorkSession({
         forceNew: Boolean(options.forceNew),
-        sessionTitle: options.sessionTitle || '新会话'
+        sessionTitle: options.sessionTitle || '新会话',
+        silentToast: true
     });
     if (!session) return;
-    const validSession = await ensureWorkSessionValid(session);
+    const validSession = await ensureWorkSessionValid(session, { silentToast: true });
     if (!validSession) return;
     if (userMessageCount.value >= 3) {
         sendError.value = '当前会话已达到 3 条用户消息上限，请新建会话';
@@ -598,7 +614,7 @@ const sendMessage = async (options = {}) => {
     agentStore.setSessionSelectionLocked(validSession.sessionId, true);
     agentDropdownOpen.value = false;
     agentStore.addUserMessage(content);
-    renameSessionIfNeeded(validSession, content);
+    renameSessionIfNeeded(validSession, content, { silentToast: true });
     if (!Object.prototype.hasOwnProperty.call(options, 'content')) {
         inputValue.value = '';
     }
@@ -729,10 +745,11 @@ const consumeWelcomeLaunchTask = async () => {
 
     const session = await ensureWorkSession({
         forceNew: true,
-        sessionTitle: task.sessionTitle || '新会话'
+        sessionTitle: task.sessionTitle || '新会话',
+        silentToast: true
     });
     if (!session) return;
-    const validSession = await ensureWorkSessionValid(session);
+    const validSession = await ensureWorkSessionValid(session, { silentToast: true });
     if (!validSession) return;
 
     const resolvedAgentId = (task.agentId || currentAgentId.value || '').trim();

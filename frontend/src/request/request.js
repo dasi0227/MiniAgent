@@ -144,6 +144,13 @@ const isWriteRequest = (meta = {}) => {
     return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(meta.method);
 };
 
+const isToastSuppressed = (config = {}) => {
+    if (!config || typeof config !== 'object') return false;
+    if (config.toast === false) return true;
+    if (config.meta && typeof config.meta === 'object' && config.meta.toast === false) return true;
+    return false;
+};
+
 const isAppToastExcludedPath = (path = '') => {
     const normalizedPath = normalizeUrlPath(path || '');
     if (!normalizedPath) return false;
@@ -292,7 +299,7 @@ http.interceptors.response.use(
             body && typeof body === 'object' && Object.prototype.hasOwnProperty.call(body, 'code');
         const success = !isResultEnvelope || body.code === 200;
 
-        if (success && isWriteRequest(requestMeta)) {
+        if (success && isWriteRequest(requestMeta) && !isToastSuppressed(response?.config)) {
             const successMessage = resolveSuccessMessage(requestMeta);
             if (requestMeta.isAdmin) {
                 notifyAdminSuccess(successMessage, {
@@ -318,9 +325,13 @@ http.interceptors.response.use(
 
         if (status === 401) {
             if (isAdminPage()) {
-                notifyAdminError(normalized, '未登录或登录已过期，请重新登录');
+                if (!isToastSuppressed(error?.response?.config || error?.config)) {
+                    notifyAdminError(normalized, '未登录或登录已过期，请重新登录');
+                }
             } else {
-                notifyAppError(normalized, '未登录或登录已过期，请重新登录');
+                if (!isToastSuppressed(error?.response?.config || error?.config)) {
+                    notifyAppError(normalized, '未登录或登录已过期，请重新登录');
+                }
             }
             authStore?.clear();
             if (router.currentRoute.value.path !== '/login' && router.currentRoute.value.path !== '/admin/login') {
@@ -329,10 +340,12 @@ http.interceptors.response.use(
             return Promise.reject(normalized);
         }
 
-        if (isAdminPage()) {
-            notifyAdminError(normalized);
-        } else {
-            notifyAppError(normalized, status === 403 ? '无权限访问该资源' : '操作失败');
+        if (!isToastSuppressed(error?.response?.config || error?.config)) {
+            if (isAdminPage()) {
+                notifyAdminError(normalized);
+            } else {
+                notifyAppError(normalized, status === 403 ? '无权限访问该资源' : '操作失败');
+            }
         }
 
         return Promise.reject(normalized);

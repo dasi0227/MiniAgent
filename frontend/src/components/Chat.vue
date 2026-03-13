@@ -110,15 +110,15 @@ const isInvalidSessionErrorMessage = (message) => {
     );
 };
 
-const listRemoteChatSessions = async () => {
-    const resp = await listSessions();
+const listRemoteChatSessions = async (options = {}) => {
+    const resp = await listSessions(options);
     const list = pickData(resp, '获取会话失败') || [];
     const mapped = (Array.isArray(list) ? list : []).map(mapSession).filter(Boolean);
     return mapped.filter((item) => item.sessionType === 'chat');
 };
 
-const refreshChatSessions = async () => {
-    const chatList = await listRemoteChatSessions();
+const refreshChatSessions = async (options = {}) => {
+    const chatList = await listRemoteChatSessions(options);
     chatStore.setChats(chatList);
     return chatList;
 };
@@ -133,10 +133,11 @@ const dropInvalidChatSession = (chatId = chatStore.currentChatId) => {
     sendError.value = SESSION_INVALID_HINT;
 };
 
-const ensureChatSessionValid = async (chat) => {
+const ensureChatSessionValid = async (chat, options = {}) => {
     if (!chat?.sessionId) return null;
+    const silentToast = Boolean(options.silentToast);
     try {
-        const chatList = await listRemoteChatSessions();
+        const chatList = await listRemoteChatSessions(silentToast ? { toast: false } : {});
         const matched = chatList.find((item) => item.sessionId === chat.sessionId);
         if (!matched) {
             dropInvalidChatSession(chat.sessionId);
@@ -144,7 +145,11 @@ const ensureChatSessionValid = async (chat) => {
         }
         return matched;
     } catch (error) {
-        notifyAppError(error, '获取会话失败');
+        if (silentToast) {
+            sendError.value = normalizeError(error).message || '获取会话失败';
+        } else {
+            notifyAppError(error, '获取会话失败');
+        }
         return null;
     }
 };
@@ -308,7 +313,7 @@ const loadChatMessages = async (sessionId, chatId = chatStore.currentChatId, opt
     }
 };
 
-const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, sessionTitle = '新会话' } = {}) => {
+const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, sessionTitle = '新会话', silentToast = false } = {}) => {
     if (!forceNew && chatStore.currentChat) {
         if (!chatStore.currentChatId && chatStore.currentChat?.sessionId) {
             chatStore.setCurrentChatId(chatStore.currentChat.sessionId);
@@ -316,13 +321,16 @@ const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, se
         return chatStore.currentChat;
     }
     try {
-        const resp = await insertSession({ sessionTitle: sessionTitle || '新会话', sessionType: 'chat' });
+        const resp = await insertSession(
+            { sessionTitle: sessionTitle || '新会话', sessionType: 'chat' },
+            silentToast ? { toast: false } : {}
+        );
         const created = mapSession(pickData(resp, '创建会话失败'));
         if (created) {
             let resolvedChat = created;
             chatStore.upsertChat(created);
             if (!resolvedChat.sessionId) {
-                const chatList = await refreshChatSessions();
+                const chatList = await refreshChatSessions(silentToast ? { toast: false } : {});
                 resolvedChat = chatList.find((item) => item.sessionId === created.sessionId) || resolvedChat;
             }
             if (skipInitialLoad) {
@@ -334,7 +342,7 @@ const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, se
             }
             return resolvedChat;
         }
-        const chatList = await refreshChatSessions();
+        const chatList = await refreshChatSessions(silentToast ? { toast: false } : {});
         const session = chatList[0] || null;
         if (!session) return null;
         if (skipInitialLoad) {
@@ -343,20 +351,27 @@ const ensureChatSession = async ({ skipInitialLoad = false, forceNew = false, se
         chatStore.setCurrentChatId(session.sessionId);
         return session;
     } catch (error) {
-        notifyAppError(error, '创建会话失败');
+        if (silentToast) {
+            sendError.value = normalizeError(error).message || '创建会话失败';
+        } else {
+            notifyAppError(error, '创建会话失败');
+        }
         return null;
     }
 };
 
-const renameChatIfNeeded = async (chat, content) => {
+const renameChatIfNeeded = async (chat, content, options = {}) => {
     if (!chat) return;
     if (chat.title && chat.title !== '新会话') return;
+    const silentToast = Boolean(options.silentToast);
     const nextTitle = content.slice(0, 20) || '新会话';
     chatStore.updateChatTitle(chat.sessionId, nextTitle);
     try {
-        await updateSession({ sessionId: chat.sessionId, sessionTitle: nextTitle });
+        await updateSession({ sessionId: chat.sessionId, sessionTitle: nextTitle }, silentToast ? { toast: false } : {});
     } catch (error) {
-        notifyAppError(error, '更新会话失败');
+        if (!silentToast) {
+            notifyAppError(error, '更新会话失败');
+        }
     }
 };
 
@@ -749,10 +764,11 @@ const sendMessage = async (options = {}) => {
     const chat = await ensureChatSession({
         skipInitialLoad: forceNew || !chatStore.currentChat,
         forceNew,
-        sessionTitle: options.sessionTitle || '新会话'
+        sessionTitle: options.sessionTitle || '新会话',
+        silentToast: true
     });
     if (!chat) return;
-    const validChat = await ensureChatSessionValid(chat);
+    const validChat = await ensureChatSessionValid(chat, { silentToast: true });
     if (!validChat) return;
     if (validChat?.sessionId) {
         chatStore.setChatClient(validChat.sessionId, resolvedClientId);
@@ -774,7 +790,7 @@ const sendMessage = async (options = {}) => {
     chatStore.setChatSelectionLocked(sessionId, true);
     modelDropdownOpen.value = false;
     chatStore.addUserMessage(content);
-    renameChatIfNeeded(validChat, content);
+    renameChatIfNeeded(validChat, content, { silentToast: true });
     if (!Object.prototype.hasOwnProperty.call(options, 'content')) {
         inputValue.value = '';
     }
