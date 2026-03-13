@@ -28,5 +28,6 @@ public class SettingTaskDTO {
     private String taskParam;
 
     @NotNull
+    @Builder.Default
     private Integer taskStatus = 1;
 }
