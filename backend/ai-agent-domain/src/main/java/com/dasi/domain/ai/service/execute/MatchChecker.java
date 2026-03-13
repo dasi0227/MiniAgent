@@ -1,7 +1,6 @@
 package com.dasi.domain.ai.service.execute;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -9,6 +8,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class MatchChecker {
                     new UserMessage(MATCH_USER.formatted(agentDesc, userMessage))
             ));
             String result = matchClient.prompt(prompt).call().content();
-            if (StringUtils.isBlank(result)) {
+            if (!StringUtils.hasText(result)) {
                 log.info("【任务检查】匹配结果为空，默认拒绝");
                 return false;
             } else {

@@ -9,9 +9,9 @@ import com.dasi.domain.ai.service.execute.AbstractExecuteNode;
 import com.dasi.domain.ai.service.execute.ExecuteContext;
 import com.dasi.types.exception.MissingException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +90,7 @@ public class StepRunnerNode extends AbstractExecuteNode {
 
                         if ("FAIL".equalsIgnoreCase(status)) {
                             String runnerResult = runnerObject.get(RUNNER_RESULT.getType()).toString();
-                            String failReason = StringUtils.isBlank(runnerResult) ? "客户端执行失败" : runnerResult;
+                            String failReason = !StringUtils.hasText(runnerResult) ? "客户端执行失败" : runnerResult;
                             throw new MissingException(failReason);
                         }
 

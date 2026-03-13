@@ -8,8 +8,10 @@ import {
     updatePassword,
     userModelInsert,
     userModelList,
+    userModelDelete,
     userModelUpdate,
     userMcpInsert,
+    userMcpDelete,
     userMcpList,
     userMcpUpdate,
     userTaskDelete,
@@ -170,12 +172,17 @@ const taskForm = reactive({
     taskParam: '{"maxRetry":2,"maxRound":2,"userMessage":""}',
     taskStatus: 1
 });
-const taskDeleteTarget = ref(null);
-const taskDeleteConfirmOpen = ref(false);
 const taskAgentDropdownOpen = ref(false);
 const taskStatusDropdownOpen = ref(false);
 const taskAgentDropdownRef = ref(null);
 const taskStatusDropdownRef = ref(null);
+const deleteConfirmOpen = ref(false);
+const deleteConfirmLoading = ref(false);
+const deleteConfirmState = reactive({
+    targetType: '',
+    targetId: '',
+    targetLabel: ''
+});
 const taskStatusOptions = [
     { value: 1, label: '启用' },
     { value: 0, label: '禁用' }
@@ -960,6 +967,47 @@ const formatTaskTime = (value) => {
 
 const getTaskStatusLabel = (status) => (Number(status) === 1 ? '启用中' : '已禁用');
 
+const openDeleteConfirm = (targetType, item) => {
+    if (!item) return;
+    if (targetType === 'model') {
+        deleteConfirmState.targetType = 'model';
+        deleteConfirmState.targetId = String(item.apiId || '').trim();
+        deleteConfirmState.targetLabel = String(item.modelName || item.apiId || '').trim();
+    } else if (targetType === 'mcp') {
+        deleteConfirmState.targetType = 'mcp';
+        deleteConfirmState.targetId = String(item.mcpId || '').trim();
+        deleteConfirmState.targetLabel = String(item.mcpName || item.mcpId || '').trim();
+    } else if (targetType === 'task') {
+        deleteConfirmState.targetType = 'task';
+        deleteConfirmState.targetId = String(item.taskId || '').trim();
+        deleteConfirmState.targetLabel = String(item.taskDesc || item.taskId || '').trim();
+    } else {
+        return;
+    }
+    if (!deleteConfirmState.targetId) return;
+    deleteConfirmOpen.value = true;
+};
+
+const closeDeleteConfirm = (force = false) => {
+    if (deleteConfirmLoading.value && !force) return;
+    deleteConfirmOpen.value = false;
+    deleteConfirmState.targetType = '';
+    deleteConfirmState.targetId = '';
+    deleteConfirmState.targetLabel = '';
+};
+
+const deleteConfirmTitle = computed(() => {
+    if (deleteConfirmState.targetType === 'model') return '删除 MODEL';
+    if (deleteConfirmState.targetType === 'mcp') return '删除 MCP';
+    if (deleteConfirmState.targetType === 'task') return '删除 Task';
+    return '删除配置';
+});
+
+const deleteConfirmMessage = computed(() => {
+    const label = deleteConfirmState.targetLabel || deleteConfirmState.targetId || '该项';
+    return `确认删除 ${label} 吗？删除后将无法恢复。`;
+});
+
 const buildTaskPayload = (form) => {
     const agentId = (form.agentId || '').trim();
     const taskCron = (form.taskCron || '').trim();
@@ -1030,27 +1078,37 @@ const submitTask = async () => {
     }
 };
 
-const confirmDeleteTask = (item) => {
-    taskDeleteTarget.value = item || null;
-    taskDeleteConfirmOpen.value = Boolean(item?.taskId);
-};
-
-const doDeleteTask = async () => {
-    if (!taskDeleteTarget.value?.taskId) return;
-    taskError.value = '';
-    taskSaving.value = true;
+const submitDeleteConfirm = async () => {
+    if (!deleteConfirmState.targetId || !deleteConfirmState.targetType) return;
+    const targetType = deleteConfirmState.targetType;
+    const targetId = deleteConfirmState.targetId;
+    deleteConfirmLoading.value = true;
     try {
-        await userTaskDelete(taskDeleteTarget.value.taskId);
-        if (taskForm.taskId && taskForm.taskId === taskDeleteTarget.value.taskId) {
-            resetTaskForm();
+        if (targetType === 'model') {
+            await userModelDelete(targetId);
+            if (apiDialogForm.apiId && apiDialogForm.apiId === targetId) {
+                apiDialogOpen.value = false;
+            }
+            await loadApiList(apiKeyword.value);
+        } else if (targetType === 'mcp') {
+            await userMcpDelete(targetId);
+            if (mcpDialogForm.mcpId && mcpDialogForm.mcpId === targetId) {
+                mcpDialogOpen.value = false;
+            }
+            await loadMcpList(mcpKeyword.value);
+        } else if (targetType === 'task') {
+            await userTaskDelete(targetId);
+            if (taskForm.taskId && taskForm.taskId === targetId) {
+                resetTaskForm();
+            }
+            await loadTaskList();
         }
-        taskDeleteConfirmOpen.value = false;
-        taskDeleteTarget.value = null;
-        await loadTaskList();
+        closeDeleteConfirm(true);
     } catch (error) {
-        notifyAppError(error, '删除 Task 失败');
+        const fallback = targetType === 'model' ? '删除 MODEL 失败' : targetType === 'mcp' ? '删除 MCP 失败' : '删除 Task 失败';
+        notifyAppError(error, fallback);
     } finally {
-        taskSaving.value = false;
+        deleteConfirmLoading.value = false;
     }
 };
 
@@ -1278,24 +1336,41 @@ onBeforeUnmount(() => {
                         <div v-if="apiLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
                         <div v-else-if="apiList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 MODEL 配置</div>
                         <div v-else class="grid gap-[10px] lg:grid-cols-3">
-                            <button
+                            <article
                                 v-for="item in apiList"
                                 :key="item.apiId"
-                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                                @click="openApiDialog(item)"
+                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             >
-                                <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
-                                    <div class="text-[15px] font-semibold text-[var(--text-primary)]">
-                                        {{ item.modelName || '-' }}
-                                    </div>
-                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold text-[#4f6f95]">
-                                        {{ formatModelTypeLabel(item.modelType || 'chat') }}
-                                    </span>
+                                <div class="flex items-start gap-[10px]">
+                                    <button class="min-w-0 flex-1 text-left" type="button" @click="openApiDialog(item)">
+                                        <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                                            <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                                {{ item.modelName || '-' }}
+                                            </div>
+                                            <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold text-[#4f6f95]">
+                                                {{ formatModelTypeLabel(item.modelType || 'chat') }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)] break-all">
+                                            {{ formatApiDisplayUrl(item) }}
+                                        </div>
+                                    </button>
+                                    <button
+                                        class="setting-delete-icon-btn"
+                                        type="button"
+                                        title="删除 MODEL"
+                                        aria-label="删除 MODEL"
+                                        @click.stop="openDeleteConfirm('model', item)"
+                                    >
+                                        <svg viewBox="0 0 24 24" class="h-[15px] w-[15px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path d="M3 6h18" stroke-linecap="round" />
+                                            <path d="M8 6V4.8A1.8 1.8 0 0 1 9.8 3h4.4A1.8 1.8 0 0 1 16 4.8V6" stroke-linecap="round" />
+                                            <path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke-linecap="round" />
+                                            <path d="M10 11v6M14 11v6" stroke-linecap="round" />
+                                        </svg>
+                                    </button>
                                 </div>
-                                <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)] break-all">
-                                    {{ formatApiDisplayUrl(item) }}
-                                </div>
-                            </button>
+                            </article>
                         </div>
                     </div>
                 </div>
@@ -1338,24 +1413,41 @@ onBeforeUnmount(() => {
                         <div v-if="mcpLoading" class="text-[12px] text-[var(--text-secondary)]">加载中...</div>
                         <div v-else-if="mcpList.length === 0" class="text-[12px] text-[var(--text-secondary)]">暂无 MCP 配置</div>
                         <div v-else class="grid gap-[10px] lg:grid-cols-3">
-                            <button
+                            <article
                                 v-for="item in mcpList"
                                 :key="item.mcpId"
-                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] text-left transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
-                                @click="openMcpDialog(item)"
+                                class="w-full rounded-[12px] border border-[var(--border-color)] p-[14px] transition hover:border-[var(--accent-color)] hover:bg-[#f8fafc]"
                             >
-                                <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
-                                    <div class="text-[15px] font-semibold text-[var(--text-primary)]">
-                                        {{ item.mcpName || '-' }}
-                                    </div>
-                                    <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
-                                        {{ formatMcpTypeLabel(item.mcpType) }}
-                                    </span>
+                                <div class="flex items-start gap-[10px]">
+                                    <button class="min-w-0 flex-1 text-left" type="button" @click="openMcpDialog(item)">
+                                        <div class="flex min-w-0 flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                                            <div class="text-[15px] font-semibold text-[var(--text-primary)]">
+                                                {{ item.mcpName || '-' }}
+                                            </div>
+                                            <span class="shrink-0 rounded-full border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.08)] px-[9px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#4f6f95]">
+                                                {{ formatMcpTypeLabel(item.mcpType) }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)]">
+                                            {{ item.mcpDesc || '暂无描述' }}
+                                        </div>
+                                    </button>
+                                    <button
+                                        class="setting-delete-icon-btn"
+                                        type="button"
+                                        title="删除 MCP"
+                                        aria-label="删除 MCP"
+                                        @click.stop="openDeleteConfirm('mcp', item)"
+                                    >
+                                        <svg viewBox="0 0 24 24" class="h-[15px] w-[15px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path d="M3 6h18" stroke-linecap="round" />
+                                            <path d="M8 6V4.8A1.8 1.8 0 0 1 9.8 3h4.4A1.8 1.8 0 0 1 16 4.8V6" stroke-linecap="round" />
+                                            <path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke-linecap="round" />
+                                            <path d="M10 11v6M14 11v6" stroke-linecap="round" />
+                                        </svg>
+                                    </button>
                                 </div>
-                                <div class="mt-[6px] text-[12px] leading-[1.6] text-[var(--text-secondary)]">
-                                    {{ item.mcpDesc || '暂无描述' }}
-                                </div>
-                            </button>
+                            </article>
                         </div>
                     </div>
                 </div>
@@ -1431,10 +1523,18 @@ onBeforeUnmount(() => {
                                             {{ Number(item.taskStatus) === 1 ? '禁用' : '启用' }}
                                         </button>
                                         <button
-                                            class="rounded-[10px] border border-[rgba(248,113,113,0.28)] px-[10px] py-[7px] text-[12px] font-semibold text-[#dc2626] transition hover:bg-[rgba(254,242,242,0.9)]"
-                                            @click="confirmDeleteTask(item)"
+                                            class="setting-delete-icon-btn"
+                                            type="button"
+                                            title="删除 Task"
+                                            aria-label="删除 Task"
+                                            @click="openDeleteConfirm('task', item)"
                                         >
-                                            删除
+                                            <svg viewBox="0 0 24 24" class="h-[15px] w-[15px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                <path d="M3 6h18" stroke-linecap="round" />
+                                                <path d="M8 6V4.8A1.8 1.8 0 0 1 9.8 3h4.4A1.8 1.8 0 0 1 16 4.8V6" stroke-linecap="round" />
+                                                <path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke-linecap="round" />
+                                                <path d="M10 11v6M14 11v6" stroke-linecap="round" />
+                                            </svg>
                                         </button>
                                     </div>
                                 </div>
@@ -1944,23 +2044,29 @@ onBeforeUnmount(() => {
         </div>
 
         <div
-            v-if="taskDeleteConfirmOpen"
-            class="fixed inset-0 z-[41] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
-            @click.self="taskDeleteConfirmOpen = false"
+            v-if="deleteConfirmOpen"
+            class="fixed inset-0 z-[42] grid place-items-center bg-[rgba(0,0,0,0.35)] p-[20px]"
+            @click.self="closeDeleteConfirm"
         >
-            <div class="w-full max-w-[420px] rounded-[14px] bg-white p-[18px] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
-                <div class="text-[16px] font-semibold text-[var(--text-primary)]">删除 Task</div>
+            <div class="w-full max-w-[440px] rounded-[14px] border border-[var(--border-color)] bg-[var(--surface-1)] p-[18px] text-[var(--text-primary)] shadow-[0_20px_50px_rgba(15,23,42,0.24)]">
+                <div class="text-[16px] font-semibold">{{ deleteConfirmTitle }}</div>
                 <div class="mt-[10px] text-[13px] leading-[1.7] text-[var(--text-secondary)]">
-                    确认删除该 Task 吗？删除后将无法恢复。
+                    {{ deleteConfirmMessage }}
                 </div>
                 <div class="mt-[14px] flex justify-end gap-[8px]">
-                    <button class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[13px]" @click="taskDeleteConfirmOpen = false">取消</button>
                     <button
-                        class="rounded-[10px] border border-[rgba(248,113,113,0.28)] bg-[rgba(254,242,242,0.92)] px-[12px] py-[8px] text-[13px] font-semibold text-[#dc2626] disabled:opacity-70"
-                        :disabled="taskSaving"
-                        @click="doDeleteTask"
+                        class="rounded-[10px] border border-[var(--border-color)] px-[12px] py-[8px] text-[13px] text-[var(--text-primary)] transition hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-70"
+                        :disabled="deleteConfirmLoading"
+                        @click="closeDeleteConfirm"
                     >
-                        {{ taskSaving ? '删除中...' : '确认删除' }}
+                        取消
+                    </button>
+                    <button
+                        class="rounded-[10px] border border-[rgba(248,113,113,0.28)] bg-[rgba(254,242,242,0.92)] px-[12px] py-[8px] text-[13px] font-semibold text-[#dc2626] transition hover:bg-[rgba(254,226,226,0.92)] disabled:cursor-not-allowed disabled:opacity-70"
+                        :disabled="deleteConfirmLoading"
+                        @click="submitDeleteConfirm"
+                    >
+                        {{ deleteConfirmLoading ? '删除中...' : '确认删除' }}
                     </button>
                 </div>
             </div>
@@ -1998,5 +2104,40 @@ onBeforeUnmount(() => {
 .profile-avatar-cropper :deep(.cropper-line),
 .profile-avatar-cropper :deep(.cropper-point) {
     background-color: rgba(47, 124, 246, 0.75) !important;
+}
+
+.setting-delete-icon-btn {
+    display: inline-flex;
+    height: 30px;
+    width: 30px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(248, 113, 113, 0.34);
+    background: rgba(254, 242, 242, 0.75);
+    color: #dc2626;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.setting-delete-icon-btn:hover {
+    border-color: rgba(248, 113, 113, 0.58);
+    background: rgba(254, 226, 226, 0.9);
+    color: #b91c1c;
+}
+
+:global([data-theme='dark']) .setting-delete-icon-btn {
+    border-color: rgba(248, 113, 113, 0.4);
+    background: rgba(127, 29, 29, 0.24);
+    color: #fca5a5;
+}
+
+:global([data-theme='dark']) .setting-delete-icon-btn:hover {
+    border-color: rgba(248, 113, 113, 0.62);
+    background: rgba(127, 29, 29, 0.4);
+    color: #fecaca;
 }
 </style>

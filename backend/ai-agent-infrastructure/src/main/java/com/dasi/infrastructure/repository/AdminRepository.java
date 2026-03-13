@@ -11,6 +11,7 @@ import com.dasi.types.annotation.CacheEvict;
 import com.dasi.types.annotation.Cacheable;
 import com.dasi.domain.admin.model.vo.DashboardVO;
 import com.dasi.types.enumeration.CacheType;
+import com.dasi.types.enumeration.CacheEvictType;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -215,14 +216,14 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void apiInsert(ApiManageDTO apiManageDTO) {
         AiApi aiApi = toApiPO(apiManageDTO);
         aiApiDao.insert(aiApi);
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void apiUpdate(ApiManageDTO apiManageDTO) {
         AiApi existed = aiApiDao.queryByApiId(apiManageDTO.getApiId());
         if (existed == null) {
@@ -234,7 +235,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void apiDelete(String apiId) {
         aiApiDao.deleteByApiId(apiId);
     }
@@ -270,13 +271,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void modelInsert(ModelManageDTO dto) {
         aiModelDao.insert(toModelPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void modelUpdate(ModelManageDTO dto) {
         AiModel existed = aiModelDao.queryByModelId(dto.getModelId());
         if (existed == null) {
@@ -288,7 +289,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void modelDelete(String modelId) {
         aiModelDao.deleteByModelId(modelId);
     }
@@ -318,13 +319,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void mcpInsert(McpManageDTO dto) {
         aiMcpDao.insert(toMcpPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void mcpUpdate(McpManageDTO dto) {
         AiMcp existed = aiMcpDao.queryByMcpId(dto.getMcpId());
         if (existed == null) {
@@ -336,7 +337,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void mcpDelete(String mcpId) {
         aiMcpDao.deleteByMcpId(mcpId);
     }
@@ -366,13 +367,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void advisorInsert(AdvisorManageDTO dto) {
         aiAdvisorDao.insert(toAdvisorPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void advisorUpdate(AdvisorManageDTO dto) {
         AiAdvisor existed = aiAdvisorDao.queryByAdvisorId(dto.getAdvisorId());
         if (existed == null) {
@@ -384,7 +385,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void advisorDelete(String advisorId) {
         AiAdvisor po = aiAdvisorDao.queryByAdvisorId(advisorId);
         if (po != null) {
@@ -417,13 +418,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void promptInsert(PromptManageDTO dto) {
         aiPromptDao.insert(toPromptPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void promptUpdate(PromptManageDTO dto) {
         AiPrompt existed = aiPromptDao.queryByPromptId(dto.getPromptId());
         if (existed == null) {
@@ -435,7 +436,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void promptDelete(String promptId) {
         AiPrompt po = aiPromptDao.queryByPromptId(promptId);
         if (po != null) {
@@ -468,13 +469,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void clientInsert(ClientManageDTO dto) {
         aiClientDao.insert(toClientPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void clientUpdate(ClientManageDTO dto) {
         AiClient existed = aiClientDao.queryByClientId(dto.getClientId());
         if (existed == null) {
@@ -486,7 +487,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void clientDelete(String clientId) {
         aiConfigDao.deleteByClientId(clientId);
         aiFlowDao.deleteByClientId(clientId);
@@ -494,7 +495,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void clientToggle(String clientId, Integer status) {
         AiClient existed = aiClientDao.queryByClientId(clientId);
         if (existed == null) {
@@ -539,13 +540,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void agentInsert(AgentManageDTO dto) {
         aiAgentDao.insert(toAgentPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void agentUpdate(AgentManageDTO dto) {
         AiAgent existed = aiAgentDao.queryAgentByAgentId(dto.getAgentId());
         if (existed == null) {
@@ -557,7 +558,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void agentDelete(String agentId) {
         AiAgent aiAgent = aiAgentDao.queryAgentByAgentId(agentId);
         if (aiAgent == null) {
@@ -595,7 +596,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void agentToggle(String agentId, Integer status) {
         AiAgent existed = aiAgentDao.queryAgentByAgentId(agentId);
         if (existed == null) {
@@ -634,13 +635,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void userInsert(UserManageDTO dto) {
         aiUserDao.insert(toUserPo(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void userUpdate(UserManageDTO dto) {
         String originUserName = dto.getOriginUserName() == null ? dto.getUserName() : dto.getOriginUserName();
         AiUser existed = aiUserDao.queryByUserName(originUserName);
@@ -653,7 +654,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void userDelete(String userName) {
         AiUser existed = aiUserDao.queryByUserName(userName);
         if (existed != null) {
@@ -662,7 +663,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void userToggle(String userName, Integer status) {
         AiUser existed = aiUserDao.queryByUserName(userName);
         if (existed != null) {
@@ -685,13 +686,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void configInsert(ConfigManageDTO dto) {
         aiConfigDao.insert(toConfigPO(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void configUpdate(ConfigManageDTO dto) {
         String originClientId = dto.getOriginClientId() == null ? dto.getClientId() : dto.getOriginClientId();
         String originConfigType = dto.getOriginConfigType() == null ? dto.getConfigType() : dto.getOriginConfigType();
@@ -706,7 +707,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void configDelete(String clientId, String configType, String configValue) {
         AiConfig existed = aiConfigDao.queryByUniqueKey(clientId, configType, configValue);
         if (existed != null) {
@@ -715,7 +716,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void configToggle(String clientId, String configType, String configValue, Integer status) {
         AiConfig existed = aiConfigDao.queryByUniqueKey(clientId, configType, configValue);
         if (existed != null) {
@@ -803,13 +804,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void flowInsert(FlowManageDTO dto) {
         aiFlowDao.insert(toFlowPO(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void flowUpdate(FlowManageDTO dto) {
         String originAgentId = dto.getOriginAgentId() == null ? dto.getAgentId() : dto.getOriginAgentId();
         String originClientId = dto.getOriginClientId() == null ? dto.getClientId() : dto.getOriginClientId();
@@ -823,7 +824,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void flowDelete(String agentId, String clientId) {
         AiFlow existed = aiFlowDao.queryByAgentIdAndClientId(agentId, clientId);
         if (existed != null) {
@@ -856,13 +857,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void taskInsert(TaskManageDTO dto) {
         aiTaskDao.insert(toTaskPO(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void taskUpdate(TaskManageDTO dto) {
         AiTask existed = aiTaskDao.queryByTaskId(dto.getTaskId());
         if (existed == null) {
@@ -874,7 +875,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void taskDelete(String taskId) {
         AiTask existed = aiTaskDao.queryByTaskId(taskId);
         if (existed != null) {
@@ -883,7 +884,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void taskToggle(String taskId, Integer status) {
         AiTask existed = aiTaskDao.queryByTaskId(taskId);
         if (existed == null) {
@@ -928,13 +929,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void templateInsert(TemplateManageDTO dto) {
         aiTemplateDao.insert(toTemplatePO(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void templateUpdate(TemplateManageDTO dto) {
         AiTemplate existed = aiTemplateDao.queryByTemplateId(dto.getTemplateId());
         if (existed == null) {
@@ -946,7 +947,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void templateDelete(String templateId) {
         aiRepoDao.deleteByTemplateId(templateId);
         aiTemplateDao.deleteByTemplateId(templateId);
@@ -977,13 +978,13 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void plazaInsert(PlazaManageDTO dto) {
         aiPlazaDao.insert(toPlazaPO(dto));
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void plazaUpdate(PlazaManageDTO dto) {
         AiPlaza existed = aiPlazaDao.queryByPlazaId(dto.getPlazaId());
         if (existed == null) {
@@ -995,7 +996,7 @@ public class AdminRepository implements IAdminRepository {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {"ai:", "query:", "admin:"})
+    @CacheEvict(evictType = CacheEvictType.ADMIN)
     public void plazaDelete(String plazaId) {
         aiPlazaCommentDao.deleteByPlazaId(plazaId);
         aiPlazaLikeDao.deleteByPlazaId(plazaId);

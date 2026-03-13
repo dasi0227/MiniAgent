@@ -6,11 +6,11 @@ import com.dasi.types.annotation.Cacheable;
 import com.dasi.types.enumeration.CacheType;
 import com.dasi.types.exception.MissingException;
 import jakarta.annotation.Resource;
-import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -109,12 +109,14 @@ public class CacheableAspect {
     }
 
     private String buildCacheKey(Object[] args, String methodName, String cacheKey, String cachePrefix) {
-        if (StringUtils.isBlank(cacheKey) == StringUtils.isBlank(cachePrefix)) {
+        boolean hasCacheKey = StringUtils.hasText(cacheKey);
+        boolean hasCachePrefix = StringUtils.hasText(cachePrefix);
+        if (hasCacheKey == hasCachePrefix) {
             throw new MissingException(CACHE_KEY_OR_PREFIX_REQUIRED);
         }
 
         String baseKey;
-        if (StringUtils.isNotBlank(cacheKey)) {
+        if (hasCacheKey) {
             baseKey = cacheKey;
         } else if (args == null || args.length == 0) {
             baseKey = cachePrefix + methodName;

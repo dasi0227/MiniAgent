@@ -47,7 +47,7 @@ public class RagService implements IRagService {
     private UserContext userContext;
 
     @Override
-    @CacheEvict(keyPrefix = {QUERY_RAG_KEY})
+    @CacheEvict(keyPrefix = QUERY_RAG_KEY)
     public void uploadTextFile(String ragTag, List<MultipartFile> fileList) {
 
         if (fileList == null || fileList.isEmpty()) {
@@ -73,7 +73,7 @@ public class RagService implements IRagService {
     }
 
     @Override
-    @CacheEvict(keyPrefix = {QUERY_RAG_KEY})
+    @CacheEvict(keyPrefix = QUERY_RAG_KEY)
     public void uploadGitRepo(AiUploadDTO aiUploadDTO) {
 
         String repoUrl = aiUploadDTO.getRepoUrl();
