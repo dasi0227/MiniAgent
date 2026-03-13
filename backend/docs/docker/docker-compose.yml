@@ -174,4 +174,4 @@ volumes:
 
 networks:
   ai-agent:
-    external: true
+    driver: bridge
