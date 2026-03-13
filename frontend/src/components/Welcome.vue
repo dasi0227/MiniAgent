@@ -1,10 +1,16 @@
 <script setup>
-import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { insertSession } from '../request/api';
+import { useAgentStore, useChatStore } from '../router/pinia';
+import { notifyAppError } from '../request/request';
 import { createTypewriter, DEFAULT_TYPEWRITER_SEGMENTS } from '../utils/TypeWriter';
 import Footer from './Footer.vue';
 
 const router = useRouter();
+const chatStore = useChatStore();
+const agentStore = useAgentStore();
+const creatingSessionType = ref('');
 
 const typewriterState = reactive({
     lines: [],
@@ -16,16 +22,16 @@ const featureCards = [
     {
         key: 'chat',
         title: '新建 Chat',
-        description: '快速开始对话会话入口，后续将接入会话配置。',
-        cta: '立即尝试',
-        route: ''
+        description: '立即创建一个 Chat 会话，开始你的对话。',
+        cta: '立即新建',
+        action: 'create-chat'
     },
     {
         key: 'work',
         title: '新建 Work',
-        description: '快速开始执行会话入口，后续将接入执行配置。',
-        cta: '立即尝试',
-        route: ''
+        description: '立即创建一个 Work 会话，开始你的任务执行。',
+        cta: '立即新建',
+        action: 'create-work'
     },
     {
         key: 'repository',
@@ -57,6 +63,56 @@ const featureCards = [
     }
 ];
 
+const pickData = (resp, fallbackMessage = '操作失败') => {
+    if (resp && typeof resp === 'object' && Object.prototype.hasOwnProperty.call(resp, 'code')) {
+        if (resp.code !== 200) {
+            throw new Error(resp.info || fallbackMessage);
+        }
+        return resp.data;
+    }
+    return resp?.data ?? resp?.result ?? resp;
+};
+
+const normalizeSessionType = (value) => (value ? value.toString().toLowerCase() : '');
+
+const mapSession = (session) => {
+    if (!session) return null;
+    return {
+        sessionId: session.sessionId,
+        sessionUser: session.userName || session.sessionUser || '',
+        title: session.sessionTitle || '新会话',
+        sessionType: normalizeSessionType(session.sessionType || session.type),
+        createdAt: session.createTime ? Date.parse(session.createTime) : Date.now(),
+        messages: [],
+        cards: []
+    };
+};
+
+const createSessionAndNavigate = async (sessionType) => {
+    if (creatingSessionType.value) return;
+    creatingSessionType.value = sessionType;
+    try {
+        const resp = await insertSession({ sessionTitle: '新会话', sessionType });
+        const created = mapSession(pickData(resp, '创建会话失败'));
+        if (!created?.sessionId) {
+            throw new Error('创建会话失败');
+        }
+        if (sessionType === 'work') {
+            agentStore.upsertSession(created);
+            agentStore.setCurrentSessionId(created.sessionId);
+            await router.push('/work');
+            return;
+        }
+        chatStore.upsertChat(created);
+        chatStore.setCurrentChatId(created.sessionId);
+        await router.push('/chat');
+    } catch (error) {
+        notifyAppError(error, '创建会话失败');
+    } finally {
+        creatingSessionType.value = '';
+    }
+};
+
 const typewriterController = createTypewriter({
     segments: DEFAULT_TYPEWRITER_SEGMENTS,
     charDelay: 45,
@@ -69,9 +125,28 @@ const typewriterController = createTypewriter({
     }
 });
 
-const handleCardClick = (route) => {
-    if (!route) return;
-    router.push(route);
+const handleCardClick = async (card) => {
+    if (!card) return;
+    if (card.action === 'create-chat') {
+        await createSessionAndNavigate('chat');
+        return;
+    }
+    if (card.action === 'create-work') {
+        await createSessionAndNavigate('work');
+        return;
+    }
+    if (!card.route) return;
+    router.push(card.route);
+};
+
+const resolveCardCta = (card) => {
+    if (card?.action === 'create-chat' && creatingSessionType.value === 'chat') {
+        return '创建中...';
+    }
+    if (card?.action === 'create-work' && creatingSessionType.value === 'work') {
+        return '创建中...';
+    }
+    return card?.cta || '';
 };
 
 onMounted(() => {
@@ -137,12 +212,14 @@ onBeforeUnmount(() => {
                                     {{ card.description }}
                                 </p>
                                 <button
-                                    v-if="card.route"
+                                    v-if="card.route || card.action"
                                     type="button"
                                     class="mt-[10px] inline-flex w-fit items-center gap-[6px] text-[13px] font-semibold text-[var(--accent-color)]"
-                                    @click="handleCardClick(card.route)"
+                                    :class="creatingSessionType ? 'opacity-70' : ''"
+                                    :disabled="Boolean(creatingSessionType)"
+                                    @click="handleCardClick(card)"
                                 >
-                                    {{ card.cta }}
+                                    {{ resolveCardCta(card) }}
                                     <span aria-hidden="true">→</span>
                                 </button>
                                 <span
