@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watchEffect } from 'vue';
+import { computed, onBeforeUnmount, watch } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import Toast from './components/Toast.vue';
@@ -9,11 +9,30 @@ const route = useRoute();
 const hideSidebar = computed(() => route.meta?.hideSidebar);
 
 const settingsStore = useSettingsStore();
+const resolvedTheme = computed(() => (settingsStore.theme === 'dark' ? 'dark' : 'light'));
+let switchRaf = 0;
 
-watchEffect(() => {
-    const theme = settingsStore.theme === 'dark' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.style.colorScheme = theme;
+watch(
+    resolvedTheme,
+    (theme) => {
+        const root = document.documentElement;
+        root.classList.add('theme-switching');
+        root.setAttribute('data-theme', theme);
+        root.style.colorScheme = theme;
+        if (switchRaf) cancelAnimationFrame(switchRaf);
+        switchRaf = requestAnimationFrame(() => {
+            root.classList.remove('theme-switching');
+            switchRaf = 0;
+        });
+    },
+    { immediate: true }
+);
+
+onBeforeUnmount(() => {
+    if (switchRaf) {
+        cancelAnimationFrame(switchRaf);
+    }
+    document.documentElement.classList.remove('theme-switching');
 });
 </script>
 

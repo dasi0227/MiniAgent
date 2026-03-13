@@ -86,6 +86,20 @@
     }
 }
 
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+html.theme-switching .welcome-page .welcome-mark-line,
+html.theme-switching .welcome-page .welcome-mark-line::before,
+html.theme-switching .welcome-page .welcome-mark-line::after {
+    text-shadow: none !important;
+    filter: none !important;
+}
+
 ::-webkit-scrollbar {
     width: 10px;
 }
@@ -636,6 +650,44 @@
 
 [data-theme='dark'] .admin-flow-page .flow-modal-close:hover {
     background-color: #3b82f6 !important;
+}
+
+[data-theme='dark'] .welcome-page .welcome-mark-line {
+    color: #7fb0ff;
+    background:
+        radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.68) 0%, rgba(196, 223, 255, 0.26) 12%, rgba(255, 255, 255, 0.1) 18%, transparent 19%),
+        radial-gradient(circle at 68% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 10%, transparent 18%),
+        radial-gradient(circle at 50% 120%, #2c5fd8 0%, #3b82f6 25%, #5597ff 55%, #76adff 78%, #a1c7ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 4px #3e74e6;
+    text-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.18),
+        0 5px 0 rgba(83, 139, 245, 0.9),
+        0 8px 0 rgba(67, 119, 221, 0.88),
+        0 12px 0 rgba(56, 99, 191, 0.85),
+        0 20px 22px rgba(36, 78, 160, 0.38),
+        0 34px 42px rgba(18, 30, 52, 0.42);
+    filter: drop-shadow(0 16px 24px rgba(34, 78, 166, 0.45));
+}
+
+[data-theme='dark'] .welcome-page .welcome-mark-line::before {
+    color: rgba(67, 125, 231, 0.82);
+    -webkit-text-stroke: 8px rgba(67, 125, 231, 0.72);
+    opacity: 0.55;
+}
+
+[data-theme='dark'] .welcome-page .welcome-mark-line::after {
+    opacity: 0.88;
+}
+
+[data-theme='dark'] .welcome-page .welcome-feature-card {
+    background-image: linear-gradient(135deg, rgba(30, 64, 175, 0.34), rgba(30, 41, 59, 0.78));
+}
+
+[data-theme='dark'] .welcome-page .welcome-feature-glow {
+    background-image: radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.2), transparent 62%);
 }
 
 .ui-collapse {
