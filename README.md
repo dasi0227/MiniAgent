@@ -43,7 +43,7 @@ Dasi MiniAgent 是一个集成了 AI 对话、多角色 Agent 工作流、RAG �
 │
 └── mcp                         # MCP 自建服务集合
     ├── docker-build.sh         # MCP 构建脚本
-    ├── start-mcp.sh         		# MCP 运行脚本
+    ├── start-mcp.sh            # MCP 运行脚本
     ├── mcp-server-amap         # 高德地图 MCP 服务
     ├── mcp-server-bocha        # 博查搜索 MCP 服务
     ├── mcp-server-csdn         # CSDN MCP 服务
@@ -93,7 +93,7 @@ Dasi MiniAgent 是一个集成了 AI 对话、多角色 Agent 工作流、RAG �
 
 ### Panel
 
-- **仪表盘  `Dashboard` **：总量统计、消息趋势（7d/30d）、chat/work 使用分布、Top 使用排行。
+- **仪表盘 `Dashboard`**：总量统计、消息趋势（7d/30d）、chat/work 使用分布、Top 使用排行。
 - **库表操作 `Table`**：支持管理员在线对核心配置做 CRUD 与状态切换（启用/禁用）。
 - **客户端绑定 `Config`**：按 `clientId` 分组管理配置项（`prompt/advisor/mcp` 等）。
 - **智能体工作流 `Flow`**：按 Agent 类型（loop/step/react）维护角色链路与顺序。
@@ -139,4 +139,12 @@ Dasi MiniAgent 是一个集成了 AI 对话、多角色 Agent 工作流、RAG �
 - 📧 Email：1740929297@qq.com
 
 - 📕 小红书：dasi0227
+
+# 版权声明
+
+© 2026 Dasi. All Rights Reserved.
+
+本项目由 Dasi 独立开发完成，仅用于学习研究与技术交流。未经作者许可，任何组织或个人不得将本项目代码或其衍生作品用于商业用途。在遵守相关开源协议的前提下，允许个人进行学习、研究、二次开发与非商业使用，但需保留原作者署名。
+
+本项目部分功能依赖第三方开源组件及模型服务，其版权归各自作者或组织所有。作者不对因使用本项目代码而产生的任何直接或间接损失承担责任。
 
