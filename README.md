@@ -65,7 +65,7 @@ Dasi MiniAgent 是一个集成了 AI 对话、多角色 Agent 工作流、RAG �
 - **阶段性输出**：节点输出按 `sectionType` 包装为统一结构对象，利用 SSE 消息事件输出执行过程中的分段结果。
 - **动态策略**：通过 `DispatchService` + `ExecuteStrategyFactory`，使用工厂设计模式，按 `agentId` 动态选择执行策略。
 - **灵活配置**：智能体的提示词、MCP 工具和 API 接入支持用户进行自定义修改。
-- **loop 策略**：`Analyzer -> Performer -> Supervisor` 多轮执行，按需求循环执行直到完成或达到 `maxRound`。
+- **loop 策略**：`Analyzer -> Performer -> Supervisor -> Summarizer` 多轮执行，按需求循环执行直到完成或达到 `maxRound`。
 - **step 策略**：`Inspector -> Planner -> Runner -> Replier` 顺序执行，按步骤重复执行直到完成或达到 `maxRetry`。
 - **react 策略**：`Observer -> Reasoner -> Actor -> Evaluator` 单步滚动，按现状逐步执行直到完成或达到 `maxPace`。
 

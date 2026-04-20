@@ -55,7 +55,6 @@ public class PersistUtil implements IPersistUtil {
     public void saveWorkUserMessage(String sessionId, String messageContent) {
         saveMessage(sessionId, WORK_ANSWER.getType(), USER.getRole(), messageContent);
     }
-
     private void saveMessage(String sessionId, String messageType, String messageRole, String messageContent) {
         AiSession session = sessionDao.queryBySessionId(sessionId);
         if (session == null) {
@@ -75,6 +74,7 @@ public class PersistUtil implements IPersistUtil {
                 .build();
         messageDao.insert(message);
     }
+
 
     private void checkUserLimit(AiSession session, String messageRole) {
         if (!USER.getRole().equalsIgnoreCase(messageRole)) {

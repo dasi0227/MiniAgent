@@ -49,10 +49,6 @@ public class StatUtil implements IStatUtil {
                 .forEach(clientId -> recordClientUsage(STAT_WORK, clientId));
     }
 
-    private void increase(String statCategory, String statKey, String statValue) {
-        aiStatDao.upsert(LocalDate.now(), statCategory, statKey, statValue, 1);
-    }
-
     private void recordClientUsage(String statCategory, String clientId) {
         recordClientUsage(statCategory, clientId, null);
     }
@@ -85,5 +81,9 @@ public class StatUtil implements IStatUtil {
                 increase(statCategory, STAT_MCP, mcpId);
             }
         }
+    }
+
+    private void increase(String statCategory, String statKey, String statValue) {
+        aiStatDao.upsert(LocalDate.now(), statCategory, statKey, statValue, 1);
     }
 }
